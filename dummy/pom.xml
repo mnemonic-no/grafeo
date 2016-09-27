@@ -1,0 +1,48 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>dummy</artifactId>
+  <packaging>jar</packaging>
+  <name>dummy</name>
+  <url>http://www.mnemonic.no</url>
+
+  <parent>
+    <groupId>no.mnemonic.act.platform</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../parent</relativePath>
+  </parent>
+
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <testSourceDirectory>testsrc</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <includes>
+          <include>**/*.properties</include>
+          <include>**/*.xml</include>
+        </includes>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>testsrc</directory>
+        <includes>
+          <include>**/*.jar</include>
+        </includes>
+      </testResource>
+    </testResources>
+  </build>
+
+  <!-- configure dependencies -->
+  <dependencies>
+    <!-- runtime dependencies -->
+    <!-- test jars -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
