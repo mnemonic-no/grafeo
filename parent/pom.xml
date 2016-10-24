@@ -10,11 +10,13 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <cassandra.version>3.1.1</cassandra.version>
+    <jackson.version>2.8.4</jackson.version>
     <junit.version>4.12</junit.version>
   </properties>
 
   <modules>
-    <module>../dummy</module>
+    <module>../entity</module>
   </modules>
 
   <scm>
