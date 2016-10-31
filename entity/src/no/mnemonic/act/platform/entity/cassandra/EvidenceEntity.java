@@ -3,13 +3,18 @@ package no.mnemonic.act.platform.entity.cassandra;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
 
+import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.*;
+import static no.mnemonic.act.platform.entity.cassandra.EvidenceEntity.TABLE;
+
 @Table(
-        keyspace = "act",
-        name = "evidence",
-        readConsistency = "LOCAL_QUORUM",
-        writeConsistency = "LOCAL_QUORUM"
+        keyspace = KEY_SPACE,
+        name = TABLE,
+        readConsistency = READ_CONSISTENCY,
+        writeConsistency = WRITE_CONSISTENCY
 )
 public class EvidenceEntity implements CassandraEntity {
+
+  public static final String TABLE = "evidence";
 
   @PartitionKey
   private String checksum;

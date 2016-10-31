@@ -1,11 +1,15 @@
 package no.mnemonic.act.platform.entity.cassandra;
 
-import java.util.HashMap;
 import java.util.Map;
+
+import static java.util.Collections.unmodifiableMap;
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+import static no.mnemonic.commons.utilities.collections.MapUtils.map;
 
 public enum AccessMode implements CassandraEnum<AccessMode> {
   Public(0), RoleBased(1), Explicit(2);
 
+  private static final Map<Integer, AccessMode> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
   private int value;
 
   AccessMode(int value) {
@@ -18,13 +22,6 @@ public enum AccessMode implements CassandraEnum<AccessMode> {
   }
 
   public static Map<Integer, AccessMode> getValueMap() {
-    // After we have moved the *Util classes we can be a little bit smarter here
-    // and not generate the map on every access.
-    Map<Integer, AccessMode> enumValues = new HashMap<>();
-    for (AccessMode type : values()) {
-      enumValues.put(type.value(), type);
-    }
-
     return enumValues;
   }
 }

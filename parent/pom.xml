@@ -10,12 +10,18 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <mnemonic.commons.version>0.0.4</mnemonic.commons.version>
+
+    <achilles.version>5.1.1</achilles.version>
     <cassandra.version>3.1.1</cassandra.version>
+    <guava.version>19.0</guava.version>
     <jackson.version>2.8.4</jackson.version>
+    <javax.inject.version>1</javax.inject.version>
     <junit.version>4.12</junit.version>
   </properties>
 
   <modules>
+    <module>../dao</module>
     <module>../entity</module>
   </modules>
 

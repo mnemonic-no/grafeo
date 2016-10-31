@@ -6,13 +6,18 @@ import com.datastax.driver.mapping.annotations.Table;
 
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.*;
+import static no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity.TABLE;
+
 @Table(
-        keyspace = "act",
-        name = "object_type",
-        readConsistency = "LOCAL_QUORUM",
-        writeConsistency = "LOCAL_QUORUM"
+        keyspace = KEY_SPACE,
+        name = TABLE,
+        readConsistency = READ_CONSISTENCY,
+        writeConsistency = WRITE_CONSISTENCY
 )
 public class ObjectTypeEntity implements CassandraEntity {
+
+  public static final String TABLE = "object_type";
 
   @PartitionKey
   private UUID id;

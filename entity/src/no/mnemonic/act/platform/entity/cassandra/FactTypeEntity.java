@@ -15,13 +15,18 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.*;
+import static no.mnemonic.act.platform.entity.cassandra.FactTypeEntity.TABLE;
+
 @Table(
-        keyspace = "act",
-        name = "fact_type",
-        readConsistency = "LOCAL_QUORUM",
-        writeConsistency = "LOCAL_QUORUM"
+        keyspace = KEY_SPACE,
+        name = TABLE,
+        readConsistency = READ_CONSISTENCY,
+        writeConsistency = WRITE_CONSISTENCY
 )
 public class FactTypeEntity implements CassandraEntity {
+
+  public static final String TABLE = "fact_type";
 
   private static final ObjectMapper mapper = new ObjectMapper();
   private static final ObjectReader reader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBindingDefinition.class));

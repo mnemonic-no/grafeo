@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>entity</artifactId>
+  <artifactId>dao</artifactId>
   <packaging>jar</packaging>
-  <name>entity</name>
+  <name>dao</name>
   <url>http://www.mnemonic.no</url>
 
   <parent>
@@ -31,6 +31,13 @@
           <include>**/*.jar</include>
         </includes>
       </testResource>
+      <testResource>
+        <directory>testsrc/resources</directory>
+        <targetPath>resources</targetPath>
+        <includes>
+          <include>**/**</include>
+        </includes>
+      </testResource>
     </testResources>
   </build>
 
@@ -38,9 +45,19 @@
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>
+      <groupId>no.mnemonic.act.platform</groupId>
+      <artifactId>entity</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>no.mnemonic.commons</groupId>
       <artifactId>utilities</artifactId>
       <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>${javax.inject.version}</version>
     </dependency>
     <dependency>
       <groupId>com.datastax.cassandra</groupId>
@@ -57,26 +74,24 @@
       <artifactId>cassandra-driver-extras</artifactId>
       <version>${cassandra.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
     <!-- test jars -->
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>testtools</artifactId>
+      <version>${mnemonic.commons.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Guava is needed for achilles-embedded to run. -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
