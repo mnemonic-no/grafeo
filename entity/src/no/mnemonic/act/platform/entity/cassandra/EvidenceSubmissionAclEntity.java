@@ -7,13 +7,18 @@ import com.datastax.driver.mapping.annotations.Table;
 
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.*;
+import static no.mnemonic.act.platform.entity.cassandra.EvidenceSubmissionAclEntity.TABLE;
+
 @Table(
-        keyspace = "act",
-        name = "evidence_submission_acl",
-        readConsistency = "LOCAL_QUORUM",
-        writeConsistency = "LOCAL_QUORUM"
+        keyspace = KEY_SPACE,
+        name = TABLE,
+        readConsistency = READ_CONSISTENCY,
+        writeConsistency = WRITE_CONSISTENCY
 )
 public class EvidenceSubmissionAclEntity implements CassandraEntity {
+
+  public static final String TABLE = "evidence_submission_acl";
 
   @PartitionKey
   @Column(name = "submission_id")

@@ -12,18 +12,21 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.*;
+import static no.mnemonic.act.platform.entity.cassandra.FactEntity.TABLE;
+
 @Table(
-        keyspace = "act",
-        name = "fact",
-        readConsistency = "LOCAL_QUORUM",
-        writeConsistency = "LOCAL_QUORUM"
+        keyspace = KEY_SPACE,
+        name = TABLE,
+        readConsistency = READ_CONSISTENCY,
+        writeConsistency = WRITE_CONSISTENCY
 )
 public class FactEntity implements CassandraEntity {
+
+  public static final String TABLE = "fact";
 
   private static final ObjectMapper mapper = new ObjectMapper();
   private static final ObjectReader reader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBinding.class));

@@ -7,13 +7,18 @@ import com.datastax.driver.mapping.annotations.Table;
 
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.*;
+import static no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity.TABLE;
+
 @Table(
-        keyspace = "act",
-        name = "object_fact_binding",
-        readConsistency = "LOCAL_QUORUM",
-        writeConsistency = "LOCAL_QUORUM"
+        keyspace = KEY_SPACE,
+        name = TABLE,
+        readConsistency = READ_CONSISTENCY,
+        writeConsistency = WRITE_CONSISTENCY
 )
 public class ObjectFactBindingEntity implements CassandraEntity {
+
+  public static final String TABLE = "object_fact_binding";
 
   @PartitionKey
   @Column(name = "object_id")

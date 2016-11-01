@@ -1,11 +1,15 @@
 package no.mnemonic.act.platform.entity.cassandra;
 
-import java.util.HashMap;
 import java.util.Map;
+
+import static java.util.Collections.unmodifiableMap;
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+import static no.mnemonic.commons.utilities.collections.MapUtils.map;
 
 public enum Direction implements CassandraEnum<Direction> {
   None(0), FactIsSource(1), FactIsDestination(2), BiDirectional(3);
 
+  private static final Map<Integer, Direction> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
   private int value;
 
   Direction(int value) {
@@ -18,13 +22,6 @@ public enum Direction implements CassandraEnum<Direction> {
   }
 
   public static Map<Integer, Direction> getValueMap() {
-    // After we have moved the *Util classes we can be a little bit smarter here
-    // and not generate the map on every access.
-    Map<Integer, Direction> enumValues = new HashMap<>();
-    for (Direction direction : values()) {
-      enumValues.put(direction.value(), direction);
-    }
-
     return enumValues;
   }
 }

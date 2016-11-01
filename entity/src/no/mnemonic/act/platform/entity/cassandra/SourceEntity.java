@@ -4,21 +4,29 @@ import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static java.util.Collections.unmodifiableMap;
+import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.*;
+import static no.mnemonic.act.platform.entity.cassandra.SourceEntity.TABLE;
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+import static no.mnemonic.commons.utilities.collections.MapUtils.map;
+
 @Table(
-        keyspace = "act",
-        name = "source",
-        readConsistency = "LOCAL_QUORUM",
-        writeConsistency = "LOCAL_QUORUM"
+        keyspace = KEY_SPACE,
+        name = TABLE,
+        readConsistency = READ_CONSISTENCY,
+        writeConsistency = WRITE_CONSISTENCY
 )
 public class SourceEntity implements CassandraEntity {
+
+  public static final String TABLE = "source";
 
   public enum Type implements CassandraEnum<Type> {
     User(0), InputPort(1), AnalysisModule(2);
 
+    private static final Map<Integer, Type> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
     private int value;
 
     Type(int value) {
@@ -31,13 +39,6 @@ public class SourceEntity implements CassandraEntity {
     }
 
     public static Map<Integer, Type> getValueMap() {
-      // After we have moved the *Util classes we can be a little bit smarter here
-      // and not generate the map on every access.
-      Map<Integer, Type> enumValues = new HashMap<>();
-      for (Type type : values()) {
-        enumValues.put(type.value(), type);
-      }
-
       return enumValues;
     }
   }
