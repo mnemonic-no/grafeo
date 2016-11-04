@@ -60,6 +60,7 @@
     <mockito.version>2.7.22</mockito.version>
     <resteasy.version>3.1.2.Final</resteasy.version>
     <swagger.version>1.5.13</swagger.version>
+    <tinkerpop.version>3.2.5</tinkerpop.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.0.0</maven.clean.version>

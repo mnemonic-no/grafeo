@@ -81,6 +81,11 @@
       <artifactId>cassandra-driver-extras</artifactId>
       <version>${cassandra.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.tinkerpop</groupId>
+      <artifactId>gremlin-core</artifactId>
+      <version>${tinkerpop.version}</version>
+    </dependency>
     <!-- test jars -->
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
