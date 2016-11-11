@@ -4,21 +4,25 @@ import no.mnemonic.act.platform.entity.cassandra.ObjectByTypeValueEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.entity.handlers.EntityHandler;
+import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.testtools.cassandra.CassandraTestResource;
 import no.mnemonic.commons.testtools.cassandra.CassandraTruncateRule;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.junit.*;
 
 import javax.inject.Provider;
 
 import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public abstract class AbstractManagerTest {
 
   private static final ClusterManagerProvider clusterManagerProvider = new ClusterManagerProvider();
-  private static ObjectManager objectManager;
+  private ObjectManager objectManager;
+  private EntityHandler entityHandler;
 
   @ClassRule
   public static CassandraTestResource cassandra = CassandraTestResource.builder()
@@ -38,7 +42,8 @@ public abstract class AbstractManagerTest {
 
   @BeforeClass
   public static void startup() {
-    objectManager = new ObjectManager(clusterManagerProvider);
+    // Just to get the cluster initialized once before all tests.
+    clusterManagerProvider.get();
   }
 
   @AfterClass
@@ -46,8 +51,23 @@ public abstract class AbstractManagerTest {
     clusterManagerProvider.get().stop();
   }
 
+  @Before
+  public void initialize() {
+    EntityHandlerFactory factory = mock(EntityHandlerFactory.class);
+    entityHandler = mock(EntityHandler.class);
+    objectManager = new ObjectManager(clusterManagerProvider, factory);
+
+    when(factory.get(any(), any())).thenReturn(entityHandler);
+    when(entityHandler.encode(any())).then(returnsFirstArg());
+    when(entityHandler.decode(any())).then(returnsFirstArg());
+  }
+
   protected ObjectManager getObjectManager() {
     return objectManager;
+  }
+
+  protected EntityHandler getEntityHandler() {
+    return entityHandler;
   }
 
   private static class ClusterManagerProvider implements Provider<ClusterManager> {

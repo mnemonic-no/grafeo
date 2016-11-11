@@ -52,4 +52,12 @@ public class ObjectEntity implements CassandraEntity {
     return this;
   }
 
+  @Override
+  public ObjectEntity clone() {
+    return new ObjectEntity()
+            .setId(getId())
+            .setTypeID(getTypeID())
+            .setValue(getValue());
+  }
+
 }

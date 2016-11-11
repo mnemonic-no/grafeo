@@ -55,6 +55,11 @@
       <version>${mnemonic.commons.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+    <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <version>${javax.inject.version}</version>
@@ -87,11 +92,10 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- Guava is needed for achilles-embedded to run. -->
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>${guava.version}</version>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
