@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS act.namespace;
 DROP TABLE IF EXISTS act.source;
+DROP INDEX IF EXISTS act.object_type_name_index;
 DROP TABLE IF EXISTS act.object_type;
 DROP TABLE IF EXISTS act.object;
 DROP TABLE IF EXISTS act.object_fact_binding;
@@ -41,6 +42,8 @@ CREATE TABLE IF NOT EXISTS act.object_type (
   entity_handler_parameter VARCHAR,
   PRIMARY KEY (id)
 );
+
+CREATE INDEX IF NOT EXISTS object_type_name_index ON act.object_type (name);
 
 CREATE TABLE IF NOT EXISTS act.object (
   id UUID,
