@@ -168,6 +168,26 @@ public class FactEntity implements CassandraEntity {
     return this;
   }
 
+  @Override
+  public FactEntity clone() {
+    try {
+      return new FactEntity()
+              .setId(getId())
+              .setTypeID(getTypeID())
+              .setValue(getValue())
+              .setInReferenceToID(getInReferenceToID())
+              .setCustomerID(getCustomerID())
+              .setSourceID(getSourceID())
+              .setAccessMode(getAccessMode())
+              .setConfidenceLevel(getConfidenceLevel())
+              .setTimestamp(getTimestamp())
+              .setLastSeenTimestamp(getLastSeenTimestamp())
+              .setBindingsStored(getBindingsStored());
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Cannot clone FactEntity with id = %s.", getId()));
+    }
+  }
+
   public static class FactObjectBinding {
 
     private UUID objectID;
