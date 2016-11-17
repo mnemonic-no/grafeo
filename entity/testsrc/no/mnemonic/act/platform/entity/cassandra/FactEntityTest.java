@@ -7,10 +7,12 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 
 public class FactEntityTest {
   private static final ObjectMapper mapper = new ObjectMapper();
@@ -35,10 +37,48 @@ public class FactEntityTest {
     assertFactObjectBindings(entity.getBindings(), bindings);
   }
 
+  @Test
+  public void testCloneEntity() throws IOException {
+    FactEntity original = createFact();
+    FactEntity clone = original.clone();
+
+    assertNotSame(original, clone);
+    assertFact(original, clone);
+  }
+
+  private FactEntity createFact() throws IOException {
+    return new FactEntity()
+            .setId(UUID.randomUUID())
+            .setTypeID(UUID.randomUUID())
+            .setValue("value")
+            .setInReferenceToID(UUID.randomUUID())
+            .setCustomerID(UUID.randomUUID())
+            .setSourceID(UUID.randomUUID())
+            .setAccessMode(AccessMode.Public)
+            .setConfidenceLevel(0)
+            .setTimestamp(1)
+            .setLastSeenTimestamp(2)
+            .setBindings(Collections.singletonList(createFactObjectBinding(Direction.None)));
+  }
+
   private FactEntity.FactObjectBinding createFactObjectBinding(Direction direction) {
     return new FactEntity.FactObjectBinding()
             .setObjectID(UUID.randomUUID())
             .setDirection(direction);
+  }
+
+  private void assertFact(FactEntity expected, FactEntity actual) {
+    assertEquals(expected.getId(), actual.getId());
+    assertEquals(expected.getTypeID(), actual.getTypeID());
+    assertEquals(expected.getValue(), actual.getValue());
+    assertEquals(expected.getInReferenceToID(), actual.getInReferenceToID());
+    assertEquals(expected.getCustomerID(), actual.getCustomerID());
+    assertEquals(expected.getSourceID(), actual.getSourceID());
+    assertEquals(expected.getAccessMode(), actual.getAccessMode());
+    assertEquals(expected.getConfidenceLevel(), actual.getConfidenceLevel());
+    assertEquals(expected.getTimestamp(), actual.getTimestamp());
+    assertEquals(expected.getLastSeenTimestamp(), actual.getLastSeenTimestamp());
+    assertEquals(expected.getBindingsStored(), actual.getBindingsStored());
   }
 
   private void assertFactObjectBindings(List<FactEntity.FactObjectBinding> bindings, String json) throws IOException {

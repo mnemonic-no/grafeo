@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS act.object_type;
 DROP TABLE IF EXISTS act.object;
 DROP TABLE IF EXISTS act.object_fact_binding;
 DROP TABLE IF EXISTS act.object_by_type_value;
+DROP INDEX IF EXISTS act.fact_type_name_index;
 DROP TABLE IF EXISTS act.fact_type;
 DROP TABLE IF EXISTS act.fact;
 DROP TABLE IF EXISTS act.fact_comment;
@@ -77,6 +78,8 @@ CREATE TABLE IF NOT EXISTS act.fact_type (
   relevant_object_bindings VARCHAR,
   PRIMARY KEY (id)
 );
+
+CREATE INDEX IF NOT EXISTS fact_type_name_index ON act.fact_type (name);
 
 CREATE TABLE IF NOT EXISTS act.fact (
   id UUID,
