@@ -47,8 +47,8 @@ public class SourceEntity implements CassandraEntity {
   private UUID id;
   @Column(name = "namespace_id")
   private UUID namespaceID;
-  @Column(name = "customer_id")
-  private UUID customerID;
+  @Column(name = "organization_id")
+  private UUID organizationID;
   private String name;
   private Type type;
   // TODO: Change to enum after we have defined trust levels.
@@ -73,12 +73,12 @@ public class SourceEntity implements CassandraEntity {
     return this;
   }
 
-  public UUID getCustomerID() {
-    return customerID;
+  public UUID getOrganizationID() {
+    return organizationID;
   }
 
-  public SourceEntity setCustomerID(UUID customerID) {
-    this.customerID = customerID;
+  public SourceEntity setOrganizationID(UUID organizationID) {
+    this.organizationID = organizationID;
     return this;
   }
 

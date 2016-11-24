@@ -39,8 +39,8 @@ public class FactEntity implements CassandraEntity {
   private String value;
   @Column(name = "in_reference_to_id")
   private UUID inReferenceToID;
-  @Column(name = "customer_id")
-  private UUID customerID;
+  @Column(name = "organization_id")
+  private UUID organizationID;
   @Column(name = "source_id")
   private UUID sourceID;
   @Column(name = "access_mode")
@@ -94,12 +94,12 @@ public class FactEntity implements CassandraEntity {
     return this;
   }
 
-  public UUID getCustomerID() {
-    return customerID;
+  public UUID getOrganizationID() {
+    return organizationID;
   }
 
-  public FactEntity setCustomerID(UUID customerID) {
-    this.customerID = customerID;
+  public FactEntity setOrganizationID(UUID organizationID) {
+    this.organizationID = organizationID;
     return this;
   }
 
@@ -176,7 +176,7 @@ public class FactEntity implements CassandraEntity {
               .setTypeID(getTypeID())
               .setValue(getValue())
               .setInReferenceToID(getInReferenceToID())
-              .setCustomerID(getCustomerID())
+              .setOrganizationID(getOrganizationID())
               .setSourceID(getSourceID())
               .setAccessMode(getAccessMode())
               .setConfidenceLevel(getConfidenceLevel())

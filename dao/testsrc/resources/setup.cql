@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS act.namespace (
 CREATE TABLE IF NOT EXISTS act.source (
   id UUID,
   namespace_id UUID,
-  customer_id UUID,
+  organization_id UUID,
   name VARCHAR,
   type INT,
   trust_level INT,
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS act.fact (
   type_id UUID,
   value VARCHAR,
   in_reference_to_id UUID,
-  customer_id UUID,
+  organization_id UUID,
   source_id UUID,
   access_mode INT,
   confidence_level INT,
