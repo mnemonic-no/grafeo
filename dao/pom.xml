@@ -15,22 +15,7 @@
   <build>
     <sourceDirectory>src</sourceDirectory>
     <testSourceDirectory>testsrc</testSourceDirectory>
-    <resources>
-      <resource>
-        <directory>src</directory>
-        <includes>
-          <include>**/*.properties</include>
-          <include>**/*.xml</include>
-        </includes>
-      </resource>
-    </resources>
     <testResources>
-      <testResource>
-        <directory>testsrc</directory>
-        <includes>
-          <include>**/*.jar</include>
-        </includes>
-      </testResource>
       <testResource>
         <directory>testsrc/resources</directory>
         <targetPath>resources</targetPath>
