@@ -1,5 +1,8 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import no.mnemonic.act.platform.api.json.TimestampSerializer;
+
 import java.util.UUID;
 
 public class FactComment {
@@ -8,9 +11,10 @@ public class FactComment {
   private final UUID replyTo;
   private final Source.Info source;
   private final String comment;
-  private final String timestamp;
+  @JsonSerialize(using = TimestampSerializer.class)
+  private final Long timestamp;
 
-  private FactComment(UUID id, UUID replyTo, Source.Info source, String comment, String timestamp) {
+  private FactComment(UUID id, UUID replyTo, Source.Info source, String comment, Long timestamp) {
     this.id = id;
     this.replyTo = replyTo;
     this.source = source;
@@ -34,7 +38,7 @@ public class FactComment {
     return comment;
   }
 
-  public String getTimestamp() {
+  public Long getTimestamp() {
     return timestamp;
   }
 
@@ -47,7 +51,7 @@ public class FactComment {
     private UUID replyTo;
     private Source.Info source;
     private String comment;
-    private String timestamp;
+    private Long timestamp;
 
     private Builder() {
     }
@@ -76,7 +80,7 @@ public class FactComment {
       return this;
     }
 
-    public Builder setTimestamp(String timestamp) {
+    public Builder setTimestamp(Long timestamp) {
       this.timestamp = timestamp;
       return this;
     }

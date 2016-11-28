@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import no.mnemonic.act.platform.api.json.TimestampSerializer;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import java.util.List;
@@ -14,13 +16,15 @@ public class Fact {
   private final Organization.Info organization;
   private final Source.Info source;
   private final AccessMode accessMode;
-  private final String timestamp;
-  private final String lastSeenTimestamp;
+  @JsonSerialize(using = TimestampSerializer.class)
+  private final Long timestamp;
+  @JsonSerialize(using = TimestampSerializer.class)
+  private final Long lastSeenTimestamp;
   private final List<FactObjectBinding> objects;
   // TODO: Add confidenceLevel once defined.
 
   private Fact(UUID id, FactType.Info type, String value, Info inReferenceTo, Organization.Info organization, Source.Info source,
-               AccessMode accessMode, String timestamp, String lastSeenTimestamp, List<FactObjectBinding> objects) {
+               AccessMode accessMode, Long timestamp, Long lastSeenTimestamp, List<FactObjectBinding> objects) {
     this.id = id;
     this.type = type;
     this.value = value;
@@ -61,11 +65,11 @@ public class Fact {
     return accessMode;
   }
 
-  public String getTimestamp() {
+  public Long getTimestamp() {
     return timestamp;
   }
 
-  public String getLastSeenTimestamp() {
+  public Long getLastSeenTimestamp() {
     return lastSeenTimestamp;
   }
 
@@ -89,8 +93,8 @@ public class Fact {
     private Organization.Info organization;
     private Source.Info source;
     private AccessMode accessMode;
-    private String timestamp;
-    private String lastSeenTimestamp;
+    private Long timestamp;
+    private Long lastSeenTimestamp;
     private List<FactObjectBinding> objects;
 
     private Builder() {
@@ -135,12 +139,12 @@ public class Fact {
       return this;
     }
 
-    public Builder setTimestamp(String timestamp) {
+    public Builder setTimestamp(Long timestamp) {
       this.timestamp = timestamp;
       return this;
     }
 
-    public Builder setLastSeenTimestamp(String lastSeenTimestamp) {
+    public Builder setLastSeenTimestamp(Long lastSeenTimestamp) {
       this.lastSeenTimestamp = lastSeenTimestamp;
       return this;
     }

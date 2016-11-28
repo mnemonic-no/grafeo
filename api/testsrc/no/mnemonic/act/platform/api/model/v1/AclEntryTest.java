@@ -19,14 +19,14 @@ public class AclEntryTest {
             .setId(UUID.randomUUID())
             .setSubject(Subject.builder().setId(UUID.randomUUID()).setName("subject").build().toInfo())
             .setSource(Source.builder().setId(UUID.randomUUID()).setName("source").build().toInfo())
-            .setTimestamp("timestamp")
+            .setTimestamp(1480520821000L)
             .build();
 
     JsonNode root = mapper.valueToTree(entry);
     assertEquals(entry.getId().toString(), root.get("id").textValue());
     assertTrue(root.get("subject").isObject());
     assertTrue(root.get("source").isObject());
-    assertEquals(entry.getTimestamp(), root.get("timestamp").textValue());
+    assertEquals("2016-11-30T15:47:01Z", root.get("timestamp").textValue());
   }
 
 }

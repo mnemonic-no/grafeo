@@ -1,14 +1,19 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import no.mnemonic.act.platform.api.json.TimestampSerializer;
+
 public class ObjectFactsStatistic {
 
   private final FactType.Info type;
   private final int count;
-  private final String lastAddedTimestamp;
-  private final String lastSeenTimestamp;
+  @JsonSerialize(using = TimestampSerializer.class)
+  private final Long lastAddedTimestamp;
+  @JsonSerialize(using = TimestampSerializer.class)
+  private final Long lastSeenTimestamp;
   // TODO: Add minConfidenceLevel/maxConfidenceLevel once confidence levels are defined.
 
-  private ObjectFactsStatistic(FactType.Info type, int count, String lastAddedTimestamp, String lastSeenTimestamp) {
+  private ObjectFactsStatistic(FactType.Info type, int count, Long lastAddedTimestamp, Long lastSeenTimestamp) {
     this.type = type;
     this.count = count;
     this.lastAddedTimestamp = lastAddedTimestamp;
@@ -23,11 +28,11 @@ public class ObjectFactsStatistic {
     return count;
   }
 
-  public String getLastAddedTimestamp() {
+  public Long getLastAddedTimestamp() {
     return lastAddedTimestamp;
   }
 
-  public String getLastSeenTimestamp() {
+  public Long getLastSeenTimestamp() {
     return lastSeenTimestamp;
   }
 
@@ -38,8 +43,8 @@ public class ObjectFactsStatistic {
   public static class Builder {
     private FactType.Info type;
     private int count;
-    private String lastAddedTimestamp;
-    private String lastSeenTimestamp;
+    private Long lastAddedTimestamp;
+    private Long lastSeenTimestamp;
 
     private Builder() {
     }
@@ -58,12 +63,12 @@ public class ObjectFactsStatistic {
       return this;
     }
 
-    public Builder setLastAddedTimestamp(String lastAddedTimestamp) {
+    public Builder setLastAddedTimestamp(Long lastAddedTimestamp) {
       this.lastAddedTimestamp = lastAddedTimestamp;
       return this;
     }
 
-    public Builder setLastSeenTimestamp(String lastSeenTimestamp) {
+    public Builder setLastSeenTimestamp(Long lastSeenTimestamp) {
       this.lastSeenTimestamp = lastSeenTimestamp;
       return this;
     }

@@ -46,8 +46,8 @@ public class ObjectTest {
     return ObjectFactsStatistic.builder()
             .setType(FactType.builder().setId(UUID.randomUUID()).setName("factType").build().toInfo())
             .setCount(42)
-            .setLastAddedTimestamp("lastAdded")
-            .setLastSeenTimestamp("lastSeen")
+            .setLastAddedTimestamp(1480520821L)
+            .setLastSeenTimestamp(1480520822L)
             .build();
   }
 

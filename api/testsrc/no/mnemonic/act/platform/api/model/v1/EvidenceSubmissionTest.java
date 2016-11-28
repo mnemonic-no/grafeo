@@ -21,8 +21,8 @@ public class EvidenceSubmissionTest {
             .setDataType("dataType")
             .setMediaType("mediaType")
             .setLength(42)
-            .setTimestamp("timestamp")
-            .setObservationTimestamp("observation")
+            .setTimestamp(1480520821000L)
+            .setObservationTimestamp(1480520822000L)
             .setSource(Source.builder().setId(UUID.randomUUID()).setName("source").build().toInfo())
             .setAccessMode(AccessMode.Explicit)
             .setChecksum("checksum")
@@ -34,8 +34,8 @@ public class EvidenceSubmissionTest {
     assertEquals(submission.getDataType(), root.get("dataType").textValue());
     assertEquals(submission.getMediaType(), root.get("mediaType").textValue());
     assertEquals(submission.getLength(), root.get("length").longValue());
-    assertEquals(submission.getTimestamp(), root.get("timestamp").textValue());
-    assertEquals(submission.getObservationTimestamp(), root.get("observationTimestamp").textValue());
+    assertEquals("2016-11-30T15:47:01Z", root.get("timestamp").textValue());
+    assertEquals("2016-11-30T15:47:02Z", root.get("observationTimestamp").textValue());
     assertTrue(root.get("source").isObject());
     assertEquals(submission.getAccessMode().toString(), root.get("accessMode").textValue());
     assertEquals(submission.getChecksum(), root.get("checksum").textValue());
