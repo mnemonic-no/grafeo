@@ -24,8 +24,8 @@ public class FactTest {
     assertTrue(root.get("organization").isObject());
     assertTrue(root.get("source").isObject());
     assertEquals(fact.getAccessMode().toString(), root.get("accessMode").textValue());
-    assertEquals(fact.getTimestamp(), root.get("timestamp").textValue());
-    assertEquals(fact.getLastSeenTimestamp(), root.get("lastSeenTimestamp").textValue());
+    assertEquals("2016-11-30T15:47:01Z", root.get("timestamp").textValue());
+    assertEquals("2016-11-30T15:47:02Z", root.get("lastSeenTimestamp").textValue());
     assertTrue(root.get("objects").isArray());
     assertTrue(root.get("objects").get(0).get("object").isObject());
     assertEquals(fact.getObjects().get(0).getDirection().toString(), root.get("objects").get(0).get("direction").textValue());
@@ -49,8 +49,8 @@ public class FactTest {
             .setOrganization(Organization.builder().setId(UUID.randomUUID()).setName("organization").build().toInfo())
             .setSource(Source.builder().setId(UUID.randomUUID()).setName("source").build().toInfo())
             .setAccessMode(AccessMode.Explicit)
-            .setTimestamp("timestamp")
-            .setLastSeenTimestamp("lastSeen")
+            .setTimestamp(1480520821000L)
+            .setLastSeenTimestamp(1480520822000L)
             .addObject(new Fact.FactObjectBinding(createObjectInfo(), Direction.BiDirectional))
             .build();
   }

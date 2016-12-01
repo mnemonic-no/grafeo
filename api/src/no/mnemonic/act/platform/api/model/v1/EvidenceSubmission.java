@@ -1,5 +1,8 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import no.mnemonic.act.platform.api.json.TimestampSerializer;
+
 import java.util.UUID;
 
 public class EvidenceSubmission {
@@ -9,14 +12,16 @@ public class EvidenceSubmission {
   private final String dataType;
   private final String mediaType;
   private final long length;
-  private final String timestamp;
-  private final String observationTimestamp;
+  @JsonSerialize(using = TimestampSerializer.class)
+  private final Long timestamp;
+  @JsonSerialize(using = TimestampSerializer.class)
+  private final Long observationTimestamp;
   private final Source.Info source;
   private final AccessMode accessMode;
   private final String checksum;
 
-  private EvidenceSubmission(UUID id, String name, String dataType, String mediaType, long length, String timestamp,
-                             String observationTimestamp, Source.Info source, AccessMode accessMode, String checksum) {
+  private EvidenceSubmission(UUID id, String name, String dataType, String mediaType, long length, Long timestamp,
+                             Long observationTimestamp, Source.Info source, AccessMode accessMode, String checksum) {
     this.id = id;
     this.name = name;
     this.dataType = dataType;
@@ -49,11 +54,11 @@ public class EvidenceSubmission {
     return length;
   }
 
-  public String getTimestamp() {
+  public Long getTimestamp() {
     return timestamp;
   }
 
-  public String getObservationTimestamp() {
+  public Long getObservationTimestamp() {
     return observationTimestamp;
   }
 
@@ -79,8 +84,8 @@ public class EvidenceSubmission {
     private String dataType;
     private String mediaType;
     private long length;
-    private String timestamp;
-    private String observationTimestamp;
+    private Long timestamp;
+    private Long observationTimestamp;
     private Source.Info source;
     private AccessMode accessMode;
     private String checksum;
@@ -117,12 +122,12 @@ public class EvidenceSubmission {
       return this;
     }
 
-    public Builder setTimestamp(String timestamp) {
+    public Builder setTimestamp(Long timestamp) {
       this.timestamp = timestamp;
       return this;
     }
 
-    public Builder setObservationTimestamp(String observationTimestamp) {
+    public Builder setObservationTimestamp(Long observationTimestamp) {
       this.observationTimestamp = observationTimestamp;
       return this;
     }

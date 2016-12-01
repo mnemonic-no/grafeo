@@ -18,15 +18,15 @@ public class ObjectFactsStatisticTest {
     ObjectFactsStatistic statistic = ObjectFactsStatistic.builder()
             .setType(FactType.builder().setId(UUID.randomUUID()).setName("factType").build().toInfo())
             .setCount(42)
-            .setLastAddedTimestamp("lastAdded")
-            .setLastSeenTimestamp("lastSeen")
+            .setLastAddedTimestamp(1480520821000L)
+            .setLastSeenTimestamp(1480520822000L)
             .build();
 
     JsonNode root = mapper.valueToTree(statistic);
     assertTrue(root.get("type").isObject());
     assertEquals(statistic.getCount(), root.get("count").intValue());
-    assertEquals(statistic.getLastAddedTimestamp(), root.get("lastAddedTimestamp").textValue());
-    assertEquals(statistic.getLastSeenTimestamp(), root.get("lastSeenTimestamp").textValue());
+    assertEquals("2016-11-30T15:47:01Z", root.get("lastAddedTimestamp").textValue());
+    assertEquals("2016-11-30T15:47:02Z", root.get("lastSeenTimestamp").textValue());
   }
 
 }
