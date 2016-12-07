@@ -1,7 +1,9 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,7 +27,7 @@ public class FactType {
     this.validatorParameter = validatorParameter;
     this.entityHandler = entityHandler;
     this.entityHandlerParameter = entityHandlerParameter;
-    this.relevantObjectBindings = relevantObjectBindings;
+    this.relevantObjectBindings = ObjectUtils.ifNotNull(relevantObjectBindings, Collections::unmodifiableList);
   }
 
   public UUID getId() {
