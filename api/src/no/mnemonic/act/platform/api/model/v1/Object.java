@@ -1,7 +1,9 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,7 +18,7 @@ public class Object {
     this.id = id;
     this.type = type;
     this.value = value;
-    this.statistics = statistics;
+    this.statistics = ObjectUtils.ifNotNull(statistics, Collections::unmodifiableList);
   }
 
   public UUID getId() {

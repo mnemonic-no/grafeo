@@ -2,8 +2,10 @@ package no.mnemonic.act.platform.api.model.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import no.mnemonic.act.platform.api.json.TimestampSerializer;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +36,7 @@ public class Fact {
     this.accessMode = accessMode;
     this.timestamp = timestamp;
     this.lastSeenTimestamp = lastSeenTimestamp;
-    this.objects = objects;
+    this.objects = ObjectUtils.ifNotNull(objects, Collections::unmodifiableList);
   }
 
   public UUID getId() {
