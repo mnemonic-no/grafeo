@@ -19,6 +19,8 @@
     <javax.el.version>2.2.5</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>1.1.0.Final</javax.validation.version>
+    <javax.ws.rx.version>2.0.1</javax.ws.rx.version>
+    <jersey.version>2.24.1</jersey.version>
     <junit.version>4.12</junit.version>
     <mockito.version>2.2.15</mockito.version>
   </properties>
@@ -27,6 +29,7 @@
     <module>../api</module>
     <module>../dao</module>
     <module>../entity</module>
+    <module>../rest</module>
     <module>../service</module>
   </modules>
 
