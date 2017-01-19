@@ -15,7 +15,6 @@ import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.util.List;
 import java.util.UUID;
@@ -37,8 +36,7 @@ public class ObjectManager {
   private final LoadingCache<String, ObjectTypeEntity> objectTypeByNameCache;
 
   @Inject
-  public ObjectManager(Provider<ClusterManager> provider, EntityHandlerFactory factory) {
-    ClusterManager clusterManager = provider.get();
+  public ObjectManager(ClusterManager clusterManager, EntityHandlerFactory factory) {
     entityHandlerFactory = factory;
     objectTypeMapper = clusterManager.getMapper(ObjectTypeEntity.class);
     objectMapper = clusterManager.getMapper(ObjectEntity.class);

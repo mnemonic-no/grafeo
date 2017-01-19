@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.rest;
+package no.mnemonic.act.platform.rest.api;
 
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;

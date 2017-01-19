@@ -1,28 +1,30 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
-@Singleton
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+
 public class ClusterManagerProvider implements Provider<ClusterManager> {
 
-  private ClusterManager manager;
+  @Inject
+  @Named("cassandra.cluster.name")
+  private String clusterName;
+  @Inject
+  @Named("cassandra.port")
+  private String port;
+  @Inject
+  @Named("cassandra.contact.points")
+  private String contactPoints;
 
   @Override
-  public synchronized ClusterManager get() {
-    // Set up cluster manager, but only once!
-    if (manager == null) {
-      // For now just statically define all settings. At one point this should be read from a config file.
-      manager = ClusterManager.builder()
-              .setClusterName("ACT Cluster")
-              .setPort(9042)
-              .addContactPoint("127.0.0.1")
-              .build();
-
-      manager.start();
-    }
-
-    return manager;
+  public ClusterManager get() {
+    return ClusterManager.builder()
+            .setClusterName(clusterName)
+            .setPort(Integer.parseInt(port))
+            .setContactPoints(SetUtils.set(contactPoints.split(",")))
+            .build();
   }
 
 }

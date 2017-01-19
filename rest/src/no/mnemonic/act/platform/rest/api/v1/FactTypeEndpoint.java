@@ -9,8 +9,8 @@ import no.mnemonic.act.platform.api.request.v1.GetFactTypeByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.rest.AbstractEndpoint;
-import no.mnemonic.act.platform.rest.ResultStash;
+import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
+import no.mnemonic.act.platform.rest.api.ResultStash;
 
 import javax.inject.Inject;
 import javax.validation.Valid;

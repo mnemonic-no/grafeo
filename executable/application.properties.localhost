@@ -1,0 +1,5 @@
+cassandra.cluster.name=ActPlatform
+cassandra.port=9042
+cassandra.contact.points=localhost
+
+api.server.port=8888

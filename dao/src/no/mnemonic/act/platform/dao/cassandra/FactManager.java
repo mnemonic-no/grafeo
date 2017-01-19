@@ -17,7 +17,6 @@ import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.time.Clock;
 import java.time.Instant;
@@ -45,8 +44,7 @@ public class FactManager {
   private Clock clock = Clock.systemUTC();
 
   @Inject
-  public FactManager(Provider<ClusterManager> provider, EntityHandlerFactory factory) {
-    ClusterManager clusterManager = provider.get();
+  public FactManager(ClusterManager clusterManager, EntityHandlerFactory factory) {
     entityHandlerFactory = factory;
     factTypeMapper = clusterManager.getMapper(FactTypeEntity.class);
     factMapper = clusterManager.getMapper(FactEntity.class);

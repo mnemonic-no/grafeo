@@ -10,12 +10,13 @@ import no.mnemonic.act.platform.entity.cassandra.AccessMode;
 import no.mnemonic.act.platform.entity.cassandra.CassandraEnumCodec;
 import no.mnemonic.act.platform.entity.cassandra.Direction;
 import no.mnemonic.act.platform.entity.cassandra.SourceEntity;
+import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Set;
 
-public class ClusterManager {
+public class ClusterManager implements LifecycleAspect {
 
   private Cluster cluster;
   private MappingManager manager;
@@ -30,7 +31,8 @@ public class ClusterManager {
     this.contactPoints = contactPoints;
   }
 
-  public void start() {
+  @Override
+  public void startComponent() {
     if (cluster == null) {
       // Configure and build up the Cassandra cluster.
       cluster = Cluster.builder()
@@ -53,7 +55,8 @@ public class ClusterManager {
     }
   }
 
-  public void stop() {
+  @Override
+  public void stopComponent() {
     // Close session and cluster to free up any resources.
     if (manager != null) manager.getSession().close();
     if (cluster != null) cluster.close();
