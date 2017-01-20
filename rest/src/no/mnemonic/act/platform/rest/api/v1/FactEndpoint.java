@@ -6,8 +6,8 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.rest.AbstractEndpoint;
-import no.mnemonic.act.platform.rest.ResultStash;
+import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
+import no.mnemonic.act.platform.rest.api.ResultStash;
 import no.mnemonic.commons.utilities.StringUtils;
 
 import javax.inject.Inject;

@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.rest;
+package no.mnemonic.act.platform.rest.api;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;

@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.rest.AbstractEndpoint;
+import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 
 import javax.inject.Inject;
 import javax.validation.Valid;

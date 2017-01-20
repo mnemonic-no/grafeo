@@ -2,27 +2,53 @@ package no.mnemonic.act.platform.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.name.Names;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
+import no.mnemonic.act.platform.rest.container.ApiServer;
+import no.mnemonic.commons.testtools.AvailablePortFinder;
+import org.junit.After;
+import org.junit.Before;
+import org.mockito.Mock;
 
-import javax.ws.rs.core.Application;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import java.io.IOException;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class AbstractEndpointTest extends JerseyTest {
+public class AbstractEndpointTest {
 
   private final static ObjectMapper mapper = new ObjectMapper();
-  private final ThreatIntelligenceService tiService = mock(ThreatIntelligenceService.class);
+  private final static int port = AvailablePortFinder.getAvailablePort(9000);
+
+  @Mock
+  private ThreatIntelligenceService tiService;
+
+  private ApiServer server;
+
+  @Before
+  public void initialize() {
+    initMocks(this);
+    Injector injector = Guice.createInjector(new TestRestModule());
+    server = injector.getInstance(ApiServer.class);
+    server.startComponent();
+  }
+
+  @After
+  public void shutdown() {
+    server.stopComponent();
+  }
 
   protected ThreatIntelligenceService getTiService() {
     return tiService;
+  }
+
+  protected WebTarget target(String url) {
+    return ClientBuilder.newClient().target("http://localhost:" + port + url);
   }
 
   protected JsonNode getPayload(Response response) throws IOException {
@@ -30,18 +56,15 @@ public class AbstractEndpointTest extends JerseyTest {
     return mapper.readTree(response.readEntity(String.class)).get("data");
   }
 
-  @Override
-  protected Application configure() {
-    return new ResourceConfig()
-            .packages(true, "no.mnemonic.act.platform.rest.api")
-            .register(JacksonJaxbJsonProvider.class, MessageBodyReader.class, MessageBodyWriter.class)
-            .register(new AbstractBinder() {
-              @Override
-              protected void configure() {
-                // Add more service injections here.
-                bind(tiService).to(ThreatIntelligenceService.class);
-              }
-            });
+  private class TestRestModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+      install(new RestModule());
+      bind(ThreatIntelligenceService.class).toInstance(tiService);
+      bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(port));
+    }
+
   }
 
 }

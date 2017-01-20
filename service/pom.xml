@@ -21,6 +21,16 @@
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>
+      <groupId>no.mnemonic.act.platform</groupId>
+      <artifactId>api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.act.platform</groupId>
+      <artifactId>dao</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>no.mnemonic.commons</groupId>
       <artifactId>utilities</artifactId>
       <version>${mnemonic.commons.version}</version>
@@ -29,6 +39,16 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>${guice.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>${javax.inject.version}</version>
     </dependency>
     <!-- test jars -->
     <dependency>
