@@ -1,19 +1,28 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
+@ApiModel(description = "Retract an existing Fact.")
 public class RetractFactRequest {
 
+  @ApiModelProperty(hidden = true)
   @NotNull
   private UUID fact;
+  @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)")
   private UUID organization;
+  @ApiModelProperty(value = "Set Source of new Fact. If not set the current user will be used as Source (takes Source UUID)")
   private UUID source;
+  @ApiModelProperty(value = "Set access mode of new Fact. If not set the accessMode from the retracted Fact will be used")
   private AccessMode accessMode;
+  @ApiModelProperty(value = "If set adds a comment to new Fact", example = "Hello World!")
   private String comment;
+  @ApiModelProperty(value = "If set defines explicitly who has access to new Fact (takes Subject UUIDs)")
   private List<UUID> acl;
   // TODO: Add confidenceLevel once defined.
 

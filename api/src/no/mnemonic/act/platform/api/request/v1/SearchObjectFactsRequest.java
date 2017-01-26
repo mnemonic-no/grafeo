@@ -1,27 +1,40 @@
 package no.mnemonic.act.platform.api.request.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampDeserializer;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Set;
 import java.util.UUID;
 
+@ApiModel(description = "Search for Facts bound to a specific Object.")
 public class SearchObjectFactsRequest {
 
   // Either objectID or objectType + objectValue must be set.
+  @ApiModelProperty(hidden = true)
   private UUID objectID;
+  @ApiModelProperty(hidden = true)
   private String objectType;
+  @ApiModelProperty(hidden = true)
   private String objectValue;
   // Restrict returned Facts bound to one Object.
+  @ApiModelProperty(value = "Only return Facts with a specific FactType")
   private Set<String> factType;
+  @ApiModelProperty(value = "Only return Facts matching a specific value")
   private Set<String> factValue;
+  @ApiModelProperty(value = "Only return Facts coming from a specific Source")
   private Set<String> source;
+  @ApiModelProperty(value = "Include retracted Facts (default false)", example = "false")
   private Boolean includeRetracted;
+  @ApiModelProperty(value = "Only return Facts added before a specific timestamp", example = "2016-09-28T21:26:22", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long before;
+  @ApiModelProperty(value = "Only return Facts added after a specific timestamp", example = "2016-09-28T21:26:22", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
+  @ApiModelProperty(value = "Limit the number of returned Facts (default 25, 0 means all)", example = "25")
   private Integer limit;
   // TODO: Add minConfidence/maxConfidence once confidence level is defined.
 

@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
@@ -7,11 +9,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+@ApiModel(value = "ObjectModel", description = "An Object represents a globally unique piece of information, e.g. an IP address or a domain.")
 public class Object {
 
+  @ApiModelProperty(value = "Uniquely identifies the Object", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
   private final UUID id;
+  @ApiModelProperty(value = "Type of the Object", required = true)
   private final ObjectType.Info type;
+  @ApiModelProperty(value = "Contains the actual information. Encoding depends on the used ObjectType", example = "27.13.4.125", required = true)
   private final String value;
+  @ApiModelProperty(value = "Contains meta data about Facts bound to the Object")
   private final List<ObjectFactsStatistic> statistics;
 
   private Object(UUID id, ObjectType.Info type, String value, List<ObjectFactsStatistic> statistics) {
@@ -84,9 +91,13 @@ public class Object {
     }
   }
 
+  @ApiModel(value = "ObjectInfo", description = "Short summary of an Object.")
   public class Info {
+    @ApiModelProperty(value = "Uniquely identifies the Object", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
     private final UUID id;
+    @ApiModelProperty(value = "Type of the Object", required = true)
     private final ObjectType.Info type;
+    @ApiModelProperty(value = "Contains the actual information", example = "27.13.4.125", required = true)
     private final String value;
 
     private Info(UUID id, ObjectType.Info type, String value) {

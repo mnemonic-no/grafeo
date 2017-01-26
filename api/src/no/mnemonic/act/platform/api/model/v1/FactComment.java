@@ -1,16 +1,24 @@
 package no.mnemonic.act.platform.api.model.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampSerializer;
 
 import java.util.UUID;
 
+@ApiModel(description = "Comment added to a Fact.")
 public class FactComment {
 
+  @ApiModelProperty(value = "Uniquely identifies the comment", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
   private final UUID id;
+  @ApiModelProperty(value = "Links to another comment to which this comment is a reply", example = "123e4567-e89b-12d3-a456-426655440000")
   private final UUID replyTo;
+  @ApiModelProperty(value = "Who made the comment", required = true)
   private final Source.Info source;
+  @ApiModelProperty(value = "Contains the content of the comment", example = "Hello World!", required = true)
   private final String comment;
+  @ApiModelProperty(value = "When the comment was made", example = "2016-09-28T21:26:22", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
 

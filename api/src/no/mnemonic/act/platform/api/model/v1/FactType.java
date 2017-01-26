@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
@@ -7,15 +9,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+@ApiModel(description = "A FactType defines how a Fact will be handled inside the system.")
 public class FactType {
 
+  @ApiModelProperty(value = "Uniquely identifies the FactType", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
   private final UUID id;
+  @ApiModelProperty(value = "Namespace the FactType belongs to", required = true)
   private final Namespace namespace;
+  @ApiModelProperty(value = "Name of the FactType. Unique per Namespace", example = "ThreatActorAlias", required = true)
   private final String name;
+  @ApiModelProperty(value = "Validator used to validate new Facts of this type", example = "RegexValidator", required = true)
   private final String validator;
+  @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private final String validatorParameter;
+  @ApiModelProperty(value = "EntityHandler used to store new Facts of this type", example = "StringEntityHandler", required = true)
   private final String entityHandler;
+  @ApiModelProperty(value = "Parameters used to customize EntityHandler")
   private final String entityHandlerParameter;
+  @ApiModelProperty(value = "Defines to which Objects new Facts of this type can be linked")
   private final List<FactObjectBindingDefinition> relevantObjectBindings;
 
   private FactType(UUID id, Namespace namespace, String name, String validator, String validatorParameter,
@@ -133,8 +144,11 @@ public class FactType {
     }
   }
 
+  @ApiModel(value = "FactObjectBindingDefinitionModel", description = "Defines to which Objects new Facts of a particular type can be linked.")
   public static class FactObjectBindingDefinition {
+    @ApiModelProperty(value = "Type linked Objects must have", required = true)
     private final ObjectType.Info objectType;
+    @ApiModelProperty(value = "Direction the link must have", required = true)
     private final Direction direction;
 
     public FactObjectBindingDefinition(ObjectType.Info objectType, Direction direction) {
@@ -151,8 +165,11 @@ public class FactType {
     }
   }
 
+  @ApiModel(value = "FactTypeInfo", description = "Short summary of a FactType.")
   public class Info {
+    @ApiModelProperty(value = "Uniquely identifies the FactType", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
     private final UUID id;
+    @ApiModelProperty(value = "Name of the FactType", example = "ThreatActorAlias", required = true)
     private final String name;
 
     private Info(UUID id, String name) {
