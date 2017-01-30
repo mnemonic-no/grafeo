@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
@@ -7,15 +9,22 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 
+@ApiModel(description = "Create a new FactType.")
 public class CreateFactTypeRequest {
 
+  @ApiModelProperty(value = "Name of new FactType. Needs to be unique per Namespace", example = "ThreatActorAlias", required = true)
   @NotNull
   @Size(min = 1)
   private String name;
+  @ApiModelProperty(value = "Validator used to validate new Facts of this type", example = "RegexValidator")
   private String validator;
+  @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private String validatorParameter;
+  @ApiModelProperty(value = "EntityHandler used to store new Facts of this type", example = "StringEntityHandler")
   private String entityHandler;
+  @ApiModelProperty(value = "Parameters used to customize EntityHandler")
   private String entityHandlerParameter;
+  @ApiModelProperty(value = "Define to which Objects new Facts of this type can be linked", required = true)
   @Valid
   @NotNull
   @Size(min = 1)

@@ -1,14 +1,23 @@
 package no.mnemonic.act.platform.rest.api;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@ApiModel(description = "Container for all responses from the API.")
 public class ResultStash<T> {
 
+  @ApiModelProperty(value = "Status code returned from API", example = "200", required = true)
   private final int responseCode;
+  @ApiModelProperty(value = "Maximum number of returned results", example = "25", required = true)
   private final int limit;
+  @ApiModelProperty(value = "Number of available results on server", example = "100", required = true)
   private final int count;
+  @ApiModelProperty(value = "Actual number of returned results", example = "25", required = true)
   private final int size;
+  @ApiModelProperty(value = "Returned results (might be an array or a single object)", required = true)
   private final T data;
 
   private ResultStash(int responseCode, int limit, int count, int size, T data) {

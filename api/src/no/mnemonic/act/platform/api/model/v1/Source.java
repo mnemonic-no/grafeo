@@ -1,17 +1,28 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import java.util.UUID;
 
+@ApiModel(description = "Every piece of information (e.g. Facts) put into the system is marked with a Source " +
+        "in order to define it's origin. A Source can be a user or an automatic (import) system."
+)
 public class Source {
 
   public enum Type {
     User, InputPort, AnalysisModule
   }
 
+  @ApiModelProperty(value = "Uniquely identifies the Source", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
   private final UUID id;
+  @ApiModelProperty(value = "Namespace the Source belongs to", required = true)
   private final Namespace namespace;
+  @ApiModelProperty(value = "Organization the Source belongs to", required = true)
   private final Organization.Info organization;
+  @ApiModelProperty(value = "Name of the Source", example = "AnalysisModuleXYZ", required = true)
   private final String name;
+  @ApiModelProperty(value = "Type of the Source", required = true)
   private final Type type;
   // TODO: Add trustLevel when it's defined.
 
@@ -91,8 +102,11 @@ public class Source {
     }
   }
 
+  @ApiModel(value = "SourceInfo", description = "Short summary of a Source.")
   public class Info {
+    @ApiModelProperty(value = "Uniquely identifies the Source", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
     private final UUID id;
+    @ApiModelProperty(value = "Name of the Source", example = "AnalysisModuleXYZ", required = true)
     private final String name;
 
     private Info(UUID id, String name) {

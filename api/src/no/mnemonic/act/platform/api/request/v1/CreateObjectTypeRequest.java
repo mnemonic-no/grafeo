@@ -1,16 +1,25 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@ApiModel(description = "Create a new ObjectType.")
 public class CreateObjectTypeRequest {
 
+  @ApiModelProperty(value = "Name of new ObjectType. Needs to be unique per Namespace", example = "ip", required = true)
   @NotNull
   @Size(min = 1)
   private String name;
+  @ApiModelProperty(value = "Validator used to validate new Objects of this type", example = "RegexValidator")
   private String validator;
+  @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private String validatorParameter;
+  @ApiModelProperty(value = "EntityHandler used to store new Objects of this type", example = "IpEntityHandler")
   private String entityHandler;
+  @ApiModelProperty(value = "Parameters used to customize EntityHandler")
   private String entityHandlerParameter;
 
   public String getName() {

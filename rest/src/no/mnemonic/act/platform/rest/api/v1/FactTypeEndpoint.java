@@ -1,9 +1,11 @@
 package no.mnemonic.act.platform.rest.api.v1;
 
+import io.swagger.annotations.*;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
+import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.GetFactTypeByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
@@ -21,6 +23,7 @@ import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Path("/v1/factType")
+@Api(tags = {"experimental"})
 public class FactTypeEndpoint extends AbstractEndpoint {
 
   private final ThreatIntelligenceService service;
@@ -33,14 +36,36 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   @GET
   @Path("/uuid/{id}")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Retrieve a FactType by its UUID.",
+          notes = "This operation returns a FactType identified by its UUID.",
+          response = FactType.class
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 404, message = "Requested FactType does not exist."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
   public Response getFactTypeById(
-          @PathParam("id") @NotNull @Valid UUID id
+          @PathParam("id") @ApiParam(value = "UUID of the requested FactType.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.getFactType(getHeader(), new GetFactTypeByIdRequest().setId(id)));
   }
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "List available FactTypes.",
+          notes = "This operation returns all available FactTypes.",
+          response = FactType.class,
+          responseContainer = "list"
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
   public Response searchFactTypes()
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildResponse(service.searchFactTypes(getHeader(), new SearchFactTypeRequest()));
@@ -49,8 +74,19 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Create a new FactType.",
+          notes = "This operation creates a new FactType with its bindings to ObjectTypes in the Namespace of the running instance.",
+          response = FactType.class,
+          code = 201
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
   public Response createFactType(
-          @NotNull @Valid CreateFactTypeRequest request
+          @ApiParam(value = "Request to create FactType.") @NotNull @Valid CreateFactTypeRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
@@ -62,9 +98,21 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   @Path("/uuid/{id}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Update an existing FactType.",
+          notes = "This operation updates an existing FactType. It is only possible to add new bindings between the " +
+                  "FactType and other ObjectTypes. It is not allowed to remove existing bindings.",
+          response = FactType.class
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 404, message = "FactType does not exist."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
   public Response updateFactType(
-          @PathParam("id") @NotNull @Valid UUID id,
-          @NotNull @Valid UpdateFactTypeRequest request
+          @PathParam("id") @ApiParam(value = "UUID of FactType.") @NotNull @Valid UUID id,
+          @ApiParam(value = "Request to update FactType.") @NotNull @Valid UpdateFactTypeRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.updateFactType(getHeader(), request.setId(id)));
   }
