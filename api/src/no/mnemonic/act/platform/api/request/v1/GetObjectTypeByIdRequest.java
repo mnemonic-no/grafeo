@@ -1,9 +1,11 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
+
 import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
-public class GetObjectTypeByIdRequest {
+public class GetObjectTypeByIdRequest implements ValidatingRequest {
 
   @NotNull
   private UUID id;

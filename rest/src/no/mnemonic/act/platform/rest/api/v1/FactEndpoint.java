@@ -188,8 +188,8 @@ public class FactEndpoint extends AbstractEndpoint {
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.getFactComments(getHeader(), new GetFactCommentsRequest()
             .setFact(fact)
-            .setBefore(parseTimestamp(before))
-            .setAfter(parseTimestamp(after))
+            .setBefore(parseTimestamp("before", before))
+            .setAfter(parseTimestamp("after", after))
     ));
   }
 
@@ -220,11 +220,11 @@ public class FactEndpoint extends AbstractEndpoint {
             .buildResponse();
   }
 
-  private Long parseTimestamp(String timestamp) throws InvalidArgumentException {
+  private Long parseTimestamp(String parameter, String timestamp) throws InvalidArgumentException {
     try {
       return !StringUtils.isBlank(timestamp) ? Instant.parse(timestamp).toEpochMilli() : null;
     } catch (DateTimeParseException ex) {
-      throw new InvalidArgumentException("Cannot parse timestamp: " + timestamp);
+      throw new InvalidArgumentException().addValidationError(InvalidArgumentException.ErrorMessage.PARSE, parameter, timestamp);
     }
   }
 

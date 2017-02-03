@@ -2,11 +2,12 @@ package no.mnemonic.act.platform.api.request.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import no.mnemonic.act.platform.api.json.TimestampDeserializer;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 
 import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
-public class GetFactCommentsRequest {
+public class GetFactCommentsRequest implements ValidatingRequest {
 
   @NotNull
   private UUID fact;

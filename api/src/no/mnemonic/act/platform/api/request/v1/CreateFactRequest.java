@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.api.request.v1;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @ApiModel(description = "Create a new Fact.")
-public class CreateFactRequest {
+public class CreateFactRequest implements ValidatingRequest {
 
   @ApiModelProperty(value = "Type of new Fact. Can either be the UUID or name of an existing FactType",
           example = "ThreatActorAlias", required = true)

@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.api.request.v1;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @ApiModel(description = "Update an existing FactType.")
-public class UpdateFactTypeRequest {
+public class UpdateFactTypeRequest implements ValidatingRequest {
 
   @ApiModelProperty(hidden = true)
   @NotNull

@@ -31,6 +31,7 @@
     <swagger.version>1.5.12</swagger.version>
 
     <!-- build dependencies -->
+    <maven.compile.version>3.6.1</maven.compile.version>
     <maven.shade.version>2.4.3</maven.shade.version>
   </properties>
 
@@ -69,11 +70,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>${maven.compile.version}</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
           <encoding>UTF-8</encoding>
+          <compilerArgs>
+            <!-- Needed to get real parameter names during reflection instead of 'argN' (JEP 118). -->
+            <arg>-parameters</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
       <!-- run tests -->
