@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.service.Service;
+import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import org.junit.Test;
 
@@ -135,6 +136,11 @@ public class ValidationAspectTest {
     @Override
     public SecurityContext createSecurityContext() {
       return new SecurityContext();
+    }
+
+    @Override
+    public RequestContext createRequestContext() {
+      return new RequestContext();
     }
   }
 

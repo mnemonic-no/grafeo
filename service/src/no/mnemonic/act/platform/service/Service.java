@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service;
 
+import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 
 /**
@@ -7,6 +8,18 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
  */
 public interface Service {
 
+  /**
+   * Create a service-specific SecurityContext.
+   *
+   * @return New SecurityContext
+   */
   SecurityContext createSecurityContext();
+
+  /**
+   * Create a service-specific RequestContext.
+   *
+   * @return New RequestContext
+   */
+  RequestContext createRequestContext();
 
 }
