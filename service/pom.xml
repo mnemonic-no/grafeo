@@ -50,6 +50,19 @@
       <artifactId>javax.inject</artifactId>
       <version>${javax.inject.version}</version>
     </dependency>
+    <!-- Need a javax.validation and javax.el implementation for request validation. -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <version>${hibernate.validator.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.web</groupId>
+      <artifactId>javax.el</artifactId>
+      <version>${javax.el.version}</version>
+      <scope>runtime</scope>
+    </dependency>
     <!-- test jars -->
     <dependency>
       <groupId>junit</groupId>

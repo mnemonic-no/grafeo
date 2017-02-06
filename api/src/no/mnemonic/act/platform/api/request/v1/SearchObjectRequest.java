@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampDeserializer;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Set;
 
 @ApiModel(description = "Search for Objects.")
-public class SearchObjectRequest {
+public class SearchObjectRequest implements ValidatingRequest {
 
   @ApiModelProperty(value = "Shortcut which combines both 'objectType' and 'factType'")
   private Set<String> type;

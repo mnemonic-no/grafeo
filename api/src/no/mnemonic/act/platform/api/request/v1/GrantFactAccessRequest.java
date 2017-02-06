@@ -1,9 +1,11 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
+
 import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
-public class GrantFactAccessRequest {
+public class GrantFactAccessRequest implements ValidatingRequest {
 
   @NotNull
   private UUID fact;

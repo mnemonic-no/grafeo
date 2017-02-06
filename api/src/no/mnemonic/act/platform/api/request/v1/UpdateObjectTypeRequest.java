@@ -2,13 +2,14 @@ package no.mnemonic.act.platform.api.request.v1;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.UUID;
 
 @ApiModel(description = "Update an existing ObjectType.")
-public class UpdateObjectTypeRequest {
+public class UpdateObjectTypeRequest implements ValidatingRequest {
 
   @ApiModelProperty(hidden = true)
   @NotNull

@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.api.request.v1;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.constraints.NotNull;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @ApiModel(description = "Retract an existing Fact.")
-public class RetractFactRequest {
+public class RetractFactRequest implements ValidatingRequest {
 
   @ApiModelProperty(hidden = true)
   @NotNull

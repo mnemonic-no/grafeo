@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.api.request.v1;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
@@ -10,7 +11,7 @@ import javax.validation.constraints.Size;
 import java.util.List;
 
 @ApiModel(description = "Create a new FactType.")
-public class CreateFactTypeRequest {
+public class CreateFactTypeRequest implements ValidatingRequest {
 
   @ApiModelProperty(value = "Name of new FactType. Needs to be unique per Namespace", example = "ThreatActorAlias", required = true)
   @NotNull

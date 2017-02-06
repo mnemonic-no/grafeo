@@ -4,13 +4,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampDeserializer;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Set;
 import java.util.UUID;
 
 @ApiModel(description = "Search for Facts bound to a specific Object.")
-public class SearchObjectFactsRequest {
+public class SearchObjectFactsRequest implements ValidatingRequest {
 
   // Either objectID or objectType + objectValue must be set.
   @ApiModelProperty(hidden = true)

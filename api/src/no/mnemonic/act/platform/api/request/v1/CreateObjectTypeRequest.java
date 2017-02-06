@@ -2,12 +2,13 @@ package no.mnemonic.act.platform.api.request.v1;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @ApiModel(description = "Create a new ObjectType.")
-public class CreateObjectTypeRequest {
+public class CreateObjectTypeRequest implements ValidatingRequest {
 
   @ApiModelProperty(value = "Name of new ObjectType. Needs to be unique per Namespace", example = "ip", required = true)
   @NotNull
