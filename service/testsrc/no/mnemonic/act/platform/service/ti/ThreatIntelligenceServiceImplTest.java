@@ -41,6 +41,7 @@ public class ThreatIntelligenceServiceImplTest {
     TiRequestContext context = (TiRequestContext) service.createRequestContext();
     assertNotNull(context);
     assertNotNull(context.getObjectTypeConverter());
+    assertNotNull(context.getFactTypeConverter());
     assertSame(factManager, context.getFactManager());
     assertSame(objectManager, context.getObjectManager());
     assertSame(entityHandlerFactory, context.getEntityHandlerFactory());

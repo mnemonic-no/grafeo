@@ -1,8 +1,10 @@
 package no.mnemonic.act.platform.service.ti;
 
+import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
@@ -21,15 +23,18 @@ public class TiRequestContext extends RequestContext {
   private final EntityHandlerFactory entityHandlerFactory;
   private final ValidatorFactory validatorFactory;
   private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+  private final Function<FactTypeEntity, FactType> factTypeConverter;
 
   private TiRequestContext(ObjectManager objectManager, FactManager factManager,
                            EntityHandlerFactory entityHandlerFactory, ValidatorFactory validatorFactory,
-                           Function<ObjectTypeEntity, ObjectType> objectTypeConverter) {
+                           Function<ObjectTypeEntity, ObjectType> objectTypeConverter,
+                           Function<FactTypeEntity, FactType> factTypeConverter) {
     this.objectManager = objectManager;
     this.factManager = factManager;
     this.entityHandlerFactory = entityHandlerFactory;
     this.validatorFactory = validatorFactory;
     this.objectTypeConverter = objectTypeConverter;
+    this.factTypeConverter = factTypeConverter;
   }
 
   public static TiRequestContext get() {
@@ -56,6 +61,10 @@ public class TiRequestContext extends RequestContext {
     return ObjectUtils.notNull(objectTypeConverter, "ObjectTypeConverter not set in RequestContext.");
   }
 
+  public Function<FactTypeEntity, FactType> getFactTypeConverter() {
+    return ObjectUtils.notNull(factTypeConverter, "FactTypeConverter not set in RequestContext.");
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -66,12 +75,13 @@ public class TiRequestContext extends RequestContext {
     private EntityHandlerFactory entityHandlerFactory;
     private ValidatorFactory validatorFactory;
     private Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+    private Function<FactTypeEntity, FactType> factTypeConverter;
 
     private Builder() {
     }
 
     public TiRequestContext build() {
-      return new TiRequestContext(objectManager, factManager, entityHandlerFactory, validatorFactory, objectTypeConverter);
+      return new TiRequestContext(objectManager, factManager, entityHandlerFactory, validatorFactory, objectTypeConverter, factTypeConverter);
     }
 
     public Builder setObjectManager(ObjectManager objectManager) {
@@ -96,6 +106,11 @@ public class TiRequestContext extends RequestContext {
 
     public Builder setObjectTypeConverter(Function<ObjectTypeEntity, ObjectType> objectTypeConverter) {
       this.objectTypeConverter = objectTypeConverter;
+      return this;
+    }
+
+    public Builder setFactTypeConverter(Function<FactTypeEntity, FactType> factTypeConverter) {
+      this.factTypeConverter = factTypeConverter;
       return this;
     }
   }
