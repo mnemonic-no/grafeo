@@ -9,35 +9,35 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class AuthenticationAspectTest {
+public class RequestContextAspectTest {
 
   @Test
-  public void testInjectNewSecurityContext() {
+  public void testInjectNewRequestContext() {
     TestService service = createService();
 
-    assertFalse(SecurityContext.isSet());
+    assertFalse(RequestContext.isSet());
     assertEquals("Called!", service.method(new RequestHeader(), "Called!"));
-    assertFalse(SecurityContext.isSet());
+    assertFalse(RequestContext.isSet());
   }
 
   @Test
-  public void testAlreadyInjectedSecurityContext() throws Exception {
+  public void testAlreadyInjectedRequestContext() throws Exception {
     TestService service = createService();
 
-    try (SecurityContext ignored = SecurityContext.set(new SecurityContext())) {
-      assertTrue(SecurityContext.isSet());
+    try (RequestContext ignored = RequestContext.set(new RequestContext())) {
+      assertTrue(RequestContext.isSet());
       assertEquals("Called!", service.method(new RequestHeader(), "Called!"));
-      assertTrue(SecurityContext.isSet());
+      assertTrue(RequestContext.isSet());
     }
   }
 
   private TestService createService() {
-    return Guice.createInjector(new AuthenticationAspect()).getInstance(TestService.class);
+    return Guice.createInjector(new RequestContextAspect()).getInstance(TestService.class);
   }
 
   static class TestService implements Service {
     String method(RequestHeader rh, String something) {
-      assertTrue(SecurityContext.isSet());
+      assertTrue(RequestContext.isSet());
       return something;
     }
 
