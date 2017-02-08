@@ -8,6 +8,12 @@ import static org.junit.Assert.assertTrue;
 public class DefaultValidatorFactoryTest {
 
   @Test
+  public void testGetReturnsTrueValidator() {
+    DefaultValidatorFactory factory = new DefaultValidatorFactory();
+    assertTrue(factory.get("TrueValidator", null) instanceof TrueValidator);
+  }
+
+  @Test
   public void testGetReturnsRegexValidator() {
     DefaultValidatorFactory factory = new DefaultValidatorFactory();
     assertTrue(factory.get("RegexValidator", "pattern") instanceof RegexValidator);
