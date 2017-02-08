@@ -118,9 +118,15 @@ public class FactTypeEntity implements CassandraEntity {
     return relevantObjectBindingsStored;
   }
 
-  public FactTypeEntity setRelevantObjectBindingsStored(String relevantObjectBindingsStored) throws IOException {
+  public FactTypeEntity setRelevantObjectBindingsStored(String relevantObjectBindingsStored) {
     this.relevantObjectBindingsStored = relevantObjectBindingsStored;
-    this.relevantObjectBindings = reader.readValue(relevantObjectBindingsStored);
+
+    try {
+      this.relevantObjectBindings = reader.readValue(relevantObjectBindingsStored);
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Could not read 'relevantObjectBindings' for FactType with name = %s.", getName()));
+    }
+
     return this;
   }
 
@@ -128,9 +134,15 @@ public class FactTypeEntity implements CassandraEntity {
     return relevantObjectBindings;
   }
 
-  public FactTypeEntity setRelevantObjectBindings(List<FactObjectBindingDefinition> relevantObjectBindings) throws IOException {
+  public FactTypeEntity setRelevantObjectBindings(List<FactObjectBindingDefinition> relevantObjectBindings) {
     this.relevantObjectBindings = relevantObjectBindings;
-    this.relevantObjectBindingsStored = writer.writeValueAsString(relevantObjectBindings);
+
+    try {
+      this.relevantObjectBindingsStored = writer.writeValueAsString(relevantObjectBindings);
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Could not write 'relevantObjectBindings' for FactType with name = %s.", getName()));
+    }
+
     return this;
   }
 

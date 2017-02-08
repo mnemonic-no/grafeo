@@ -29,4 +29,9 @@ public class TiRequestContextTest {
     TiRequestContext.builder().build().getObjectTypeConverter();
   }
 
+  @Test(expected = RuntimeException.class)
+  public void testFactTypeConverterNotSetInContextThrowsException() {
+    TiRequestContext.builder().build().getFactTypeConverter();
+  }
+
 }
