@@ -12,6 +12,8 @@ import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
+import no.mnemonic.commons.component.Dependency;
+import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
@@ -22,31 +24,43 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class ObjectManager {
+public class ObjectManager implements LifecycleAspect {
+
+  @Dependency
+  private final ClusterManager clusterManager;
 
   private final EntityHandlerFactory entityHandlerFactory;
-  private final Mapper<ObjectTypeEntity> objectTypeMapper;
-  private final Mapper<ObjectEntity> objectMapper;
-  private final Mapper<ObjectByTypeValueEntity> objectByTypeValueMapper;
-  private final Mapper<ObjectFactBindingEntity> objectFactBindingMapper;
-  private final ObjectTypeAccessor objectTypeAccessor;
-  private final ObjectAccessor objectAccessor;
-
   private final LoadingCache<UUID, ObjectTypeEntity> objectTypeByIdCache;
   private final LoadingCache<String, ObjectTypeEntity> objectTypeByNameCache;
 
+  private Mapper<ObjectTypeEntity> objectTypeMapper;
+  private Mapper<ObjectEntity> objectMapper;
+  private Mapper<ObjectByTypeValueEntity> objectByTypeValueMapper;
+  private Mapper<ObjectFactBindingEntity> objectFactBindingMapper;
+  private ObjectTypeAccessor objectTypeAccessor;
+  private ObjectAccessor objectAccessor;
+
   @Inject
   public ObjectManager(ClusterManager clusterManager, EntityHandlerFactory factory) {
-    entityHandlerFactory = factory;
+    this.clusterManager = clusterManager;
+    this.entityHandlerFactory = factory;
+    this.objectTypeByIdCache = createObjectTypeByIdCache();
+    this.objectTypeByNameCache = createObjectTypeByNameCache();
+  }
+
+  @Override
+  public void startComponent() {
     objectTypeMapper = clusterManager.getMapper(ObjectTypeEntity.class);
     objectMapper = clusterManager.getMapper(ObjectEntity.class);
     objectByTypeValueMapper = clusterManager.getMapper(ObjectByTypeValueEntity.class);
     objectFactBindingMapper = clusterManager.getMapper(ObjectFactBindingEntity.class);
     objectTypeAccessor = clusterManager.getAccessor(ObjectTypeAccessor.class);
     objectAccessor = clusterManager.getAccessor(ObjectAccessor.class);
+  }
 
-    objectTypeByIdCache = createObjectTypeByIdCache();
-    objectTypeByNameCache = createObjectTypeByNameCache();
+  @Override
+  public void stopComponent() {
+    // NOOP
   }
 
   /* ObjectTypeEntity-related methods */
