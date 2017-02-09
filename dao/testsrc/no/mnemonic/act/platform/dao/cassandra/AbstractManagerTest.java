@@ -57,6 +57,9 @@ public abstract class AbstractManagerTest {
     factManager = new FactManager(clusterManager, factory);
     objectManager = new ObjectManager(clusterManager, factory);
 
+    factManager.startComponent();
+    objectManager.startComponent();
+
     when(factory.get(any(), any())).thenReturn(entityHandler);
     when(entityHandler.encode(any())).then(returnsFirstArg());
     when(entityHandler.decode(any())).then(returnsFirstArg());

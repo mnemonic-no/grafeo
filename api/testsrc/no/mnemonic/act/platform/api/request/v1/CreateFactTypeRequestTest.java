@@ -38,8 +38,10 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
   @Test
   public void testRequestValidationFailsOnNotNull() {
     Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest());
-    assertEquals(2, violations.size());
+    assertEquals(4, violations.size());
     assertPropertyInvalid(violations, "name");
+    assertPropertyInvalid(violations, "validator");
+    assertPropertyInvalid(violations, "entityHandler");
     assertPropertyInvalid(violations, "relevantObjectBindings");
   }
 
@@ -47,9 +49,13 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
   public void testRequestValidationFailsOnSize() {
     Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
             .setName("")
+            .setValidator("")
+            .setEntityHandler("")
             .setRelevantObjectBindings(new ArrayList<>()));
-    assertEquals(2, violations.size());
+    assertEquals(4, violations.size());
     assertPropertyInvalid(violations, "name");
+    assertPropertyInvalid(violations, "validator");
+    assertPropertyInvalid(violations, "entityHandler");
     assertPropertyInvalid(violations, "relevantObjectBindings");
   }
 
@@ -57,6 +63,8 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
   public void testRequestValidationFailsOnValid() {
     Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
             .setName("name")
+            .setValidator("validator")
+            .setEntityHandler("entityHandler")
             .addRelevantObjectBinding(new FactObjectBindingDefinition()));
     assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "objectType");
@@ -67,6 +75,8 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
   public void testRequestValidationSucceeds() {
     assertTrue(getValidator().validate(new CreateFactTypeRequest()
             .setName("name")
+            .setValidator("validator")
+            .setEntityHandler("entityHandler")
             .addRelevantObjectBinding(new FactObjectBindingDefinition()
                     .setObjectType(UUID.randomUUID())
                     .setDirection(Direction.BiDirectional)

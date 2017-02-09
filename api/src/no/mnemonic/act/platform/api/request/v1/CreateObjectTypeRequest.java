@@ -14,11 +14,15 @@ public class CreateObjectTypeRequest implements ValidatingRequest {
   @NotNull
   @Size(min = 1)
   private String name;
-  @ApiModelProperty(value = "Validator used to validate new Objects of this type", example = "RegexValidator")
+  @ApiModelProperty(value = "Validator used to validate new Objects of this type", example = "RegexValidator", required = true)
+  @NotNull
+  @Size(min = 1)
   private String validator;
   @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private String validatorParameter;
-  @ApiModelProperty(value = "EntityHandler used to store new Objects of this type", example = "IpEntityHandler")
+  @ApiModelProperty(value = "EntityHandler used to store new Objects of this type", example = "IpEntityHandler", required = true)
+  @NotNull
+  @Size(min = 1)
   private String entityHandler;
   @ApiModelProperty(value = "Parameters used to customize EntityHandler")
   private String entityHandlerParameter;

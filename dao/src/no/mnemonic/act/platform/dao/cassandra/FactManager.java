@@ -14,6 +14,8 @@ import no.mnemonic.act.platform.entity.cassandra.FactCommentEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
+import no.mnemonic.commons.component.Dependency;
+import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
@@ -26,26 +28,36 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class FactManager {
+public class FactManager implements LifecycleAspect {
+
+  @Dependency
+  private final ClusterManager clusterManager;
 
   private final EntityHandlerFactory entityHandlerFactory;
-  private final Mapper<FactTypeEntity> factTypeMapper;
-  private final Mapper<FactEntity> factMapper;
-  private final Mapper<FactAclEntity> factAclMapper;
-  private final Mapper<FactCommentEntity> factCommentMapper;
-  private final FactTypeAccessor factTypeAccessor;
-  private final FactAccessor factAccessor;
-  private final FactAclAccessor factAclAccessor;
-  private final FactCommentAccessor factCommentAccessor;
-
   private final LoadingCache<UUID, FactTypeEntity> factTypeByIdCache;
   private final LoadingCache<String, FactTypeEntity> factTypeByNameCache;
+
+  private Mapper<FactTypeEntity> factTypeMapper;
+  private Mapper<FactEntity> factMapper;
+  private Mapper<FactAclEntity> factAclMapper;
+  private Mapper<FactCommentEntity> factCommentMapper;
+  private FactTypeAccessor factTypeAccessor;
+  private FactAccessor factAccessor;
+  private FactAclAccessor factAclAccessor;
+  private FactCommentAccessor factCommentAccessor;
 
   private Clock clock = Clock.systemUTC();
 
   @Inject
   public FactManager(ClusterManager clusterManager, EntityHandlerFactory factory) {
-    entityHandlerFactory = factory;
+    this.clusterManager = clusterManager;
+    this.entityHandlerFactory = factory;
+    this.factTypeByIdCache = createFactTypeByIdCache();
+    this.factTypeByNameCache = createFactTypeByNameCache();
+  }
+
+  @Override
+  public void startComponent() {
     factTypeMapper = clusterManager.getMapper(FactTypeEntity.class);
     factMapper = clusterManager.getMapper(FactEntity.class);
     factAclMapper = clusterManager.getMapper(FactAclEntity.class);
@@ -54,9 +66,11 @@ public class FactManager {
     factAccessor = clusterManager.getAccessor(FactAccessor.class);
     factAclAccessor = clusterManager.getAccessor(FactAclAccessor.class);
     factCommentAccessor = clusterManager.getAccessor(FactCommentAccessor.class);
+  }
 
-    factTypeByIdCache = createFactTypeByIdCache();
-    factTypeByNameCache = createFactTypeByNameCache();
+  @Override
+  public void stopComponent() {
+    // NOOP
   }
 
   /* FactTypeEntity-related methods */

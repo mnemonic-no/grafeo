@@ -39,6 +39,9 @@ public class DefaultValidatorFactory implements ValidatorFactory {
     String validator = extractValidatorFromCacheKey(key);
     String parameter = extractParameterFromCacheKey(key);
 
+    if ("TrueValidator".equals(validator)) {
+      return new TrueValidator();
+    }
     if ("RegexValidator".equals(validator)) {
       return new RegexValidator(parameter);
     }
