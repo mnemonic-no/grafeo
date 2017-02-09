@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -54,6 +55,11 @@ public class AbstractEndpointTest {
   protected JsonNode getPayload(Response response) throws IOException {
     // Return the payload in the "data" field of the returned ResultStash.
     return mapper.readTree(response.readEntity(String.class)).get("data");
+  }
+
+  protected ArrayNode getMessages(Response response) throws IOException {
+    // Return the "messages" field of the returned ResultStash.
+    return (ArrayNode) mapper.readTree(response.readEntity(String.class)).get("messages");
   }
 
   private class TestRestModule extends AbstractModule {
