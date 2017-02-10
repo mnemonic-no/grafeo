@@ -13,6 +13,16 @@
   </parent>
 
   <build>
+    <testSourceDirectory>testsrc</testSourceDirectory>
+    <testResources>
+      <testResource>
+        <directory>testsrc/resources</directory>
+        <targetPath>resources</targetPath>
+        <includes>
+          <include>**/**</include>
+        </includes>
+      </testResource>
+    </testResources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -56,6 +66,13 @@
       <artifactId>container</artifactId>
       <version>${mnemonic.commons.version}</version>
       <scope>runtime</scope>
+    </dependency>
+    <!-- Needed for integration tests. -->
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>testtools</artifactId>
+      <version>${mnemonic.commons.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
