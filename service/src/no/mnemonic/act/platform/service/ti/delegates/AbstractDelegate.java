@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.entity.cassandra.Direction;
 import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
+import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -28,7 +29,8 @@ abstract class AbstractDelegate {
   FactTypeEntity fetchExistingFactType(UUID id) throws ObjectNotFoundException {
     FactTypeEntity entity = TiRequestContext.get().getFactManager().getFactType(id);
     if (entity == null) {
-      throw new ObjectNotFoundException(String.format("FactType with id = %s does not exist.", id));
+      throw new ObjectNotFoundException(String.format("FactType with id = %s does not exist.", id),
+              "fact.type.not.exist", "id", ObjectUtils.ifNotNull(id, Object::toString, "NULL"));
     }
     return entity;
   }
@@ -43,7 +45,8 @@ abstract class AbstractDelegate {
   ObjectTypeEntity fetchExistingObjectType(UUID id) throws ObjectNotFoundException {
     ObjectTypeEntity entity = TiRequestContext.get().getObjectManager().getObjectType(id);
     if (entity == null) {
-      throw new ObjectNotFoundException(String.format("ObjectType with id = %s does not exist.", id));
+      throw new ObjectNotFoundException(String.format("ObjectType with id = %s does not exist.", id),
+              "object.type.not.exist", "id", ObjectUtils.ifNotNull(id, Object::toString, "NULL"));
     }
     return entity;
   }

@@ -25,7 +25,7 @@ public class ResultStashTransformation implements SwaggerModelTransformation {
   @Override
   public void beforeHook(Swagger swagger) {
     // Read ResultStash and inject its model definition into swagger.
-    Map<String, Model> resultStashModels = ModelConverters.getInstance().read(Json.mapper().constructType(resultStashClass));
+    Map<String, Model> resultStashModels = ModelConverters.getInstance().readAll(Json.mapper().constructType(resultStashClass));
     swagger.setDefinitions(MapUtils.concatenate(swagger.getDefinitions(), resultStashModels));
   }
 
