@@ -5,7 +5,10 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
 public enum TiFunctionConstants implements SecurityContext.NamedFunction {
   addTypes,
   updateTypes,
-  viewTypes;
+  viewTypes,
+  addFactObjects,
+  updateFactObjects,
+  viewFactObjects;
 
   @Override
   public String getName() {

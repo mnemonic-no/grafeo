@@ -1,34 +1,61 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
+import no.mnemonic.act.platform.api.model.v1.Object;
+import no.mnemonic.act.platform.api.model.v1.ObjectType;
+import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
+import no.mnemonic.commons.utilities.ObjectUtils;
+
+import java.util.UUID;
 import java.util.function.Function;
 
-/**
- * Convert an object of type A to an object of type B.
- *
- * @param <A> Source type
- * @param <B> Target type
- */
-public interface ObjectConverter<A, B> extends Function<A, B> {
-  /**
-   * Get type of source object.
-   *
-   * @return Source type
-   */
-  Class<A> getSourceType();
+public class ObjectConverter implements Converter<ObjectEntity, Object> {
 
-  /**
-   * Get Type of target object.
-   *
-   * @return Target type
-   */
-  Class<B> getTargetType();
+  private final Function<UUID, ObjectType> objectTypeConverter;
 
-  /**
-   * Perform conversion from source object to target object.
-   *
-   * @param source Source object
-   * @return Target object
-   */
+  private ObjectConverter(Function<UUID, ObjectType> objectTypeConverter) {
+    this.objectTypeConverter = objectTypeConverter;
+  }
+
   @Override
-  B apply(A source);
+  public Class<ObjectEntity> getSourceType() {
+    return ObjectEntity.class;
+  }
+
+  @Override
+  public Class<Object> getTargetType() {
+    return Object.class;
+  }
+
+  @Override
+  public Object apply(ObjectEntity entity) {
+    if (entity == null) return null;
+    // Don't include statistics by default.
+    return Object.builder()
+            .setId(entity.getId())
+            .setType(objectTypeConverter.apply(entity.getTypeID()).toInfo())
+            .setValue(entity.getValue())
+            .build();
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+    private Function<UUID, ObjectType> objectTypeConverter;
+
+    private Builder() {
+    }
+
+    public ObjectConverter build() {
+      ObjectUtils.notNull(objectTypeConverter, "Cannot instantiate ObjectConverter without 'objectTypeConverter'.");
+      return new ObjectConverter(objectTypeConverter);
+    }
+
+    public Builder setObjectTypeConverter(Function<UUID, ObjectType> objectTypeConverter) {
+      this.objectTypeConverter = objectTypeConverter;
+      return this;
+    }
+  }
+
 }

@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import no.mnemonic.commons.utilities.StringUtils;
+import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -152,9 +154,15 @@ public class FactEntity implements CassandraEntity {
     return bindingsStored;
   }
 
-  public FactEntity setBindingsStored(String bindingsStored) throws IOException {
+  public FactEntity setBindingsStored(String bindingsStored) {
     this.bindingsStored = bindingsStored;
-    this.bindings = reader.readValue(bindingsStored);
+
+    try {
+      this.bindings = !StringUtils.isBlank(bindingsStored) ? reader.readValue(bindingsStored) : null;
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Could not read 'bindings' for Fact with id = %s.", getId()));
+    }
+
     return this;
   }
 
@@ -162,30 +170,32 @@ public class FactEntity implements CassandraEntity {
     return bindings;
   }
 
-  public FactEntity setBindings(List<FactObjectBinding> bindings) throws IOException {
+  public FactEntity setBindings(List<FactObjectBinding> bindings) {
     this.bindings = bindings;
-    this.bindingsStored = writer.writeValueAsString(bindings);
+
+    try {
+      this.bindingsStored = !CollectionUtils.isEmpty(bindings) ? writer.writeValueAsString(bindings) : null;
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Could not write 'bindings' for Fact with id = %s.", getId()));
+    }
+
     return this;
   }
 
   @Override
   public FactEntity clone() {
-    try {
-      return new FactEntity()
-              .setId(getId())
-              .setTypeID(getTypeID())
-              .setValue(getValue())
-              .setInReferenceToID(getInReferenceToID())
-              .setOrganizationID(getOrganizationID())
-              .setSourceID(getSourceID())
-              .setAccessMode(getAccessMode())
-              .setConfidenceLevel(getConfidenceLevel())
-              .setTimestamp(getTimestamp())
-              .setLastSeenTimestamp(getLastSeenTimestamp())
-              .setBindingsStored(getBindingsStored());
-    } catch (IOException e) {
-      throw new RuntimeException(String.format("Cannot clone FactEntity with id = %s.", getId()));
-    }
+    return new FactEntity()
+            .setId(getId())
+            .setTypeID(getTypeID())
+            .setValue(getValue())
+            .setInReferenceToID(getInReferenceToID())
+            .setOrganizationID(getOrganizationID())
+            .setSourceID(getSourceID())
+            .setAccessMode(getAccessMode())
+            .setConfidenceLevel(getConfidenceLevel())
+            .setTimestamp(getTimestamp())
+            .setLastSeenTimestamp(getLastSeenTimestamp())
+            .setBindingsStored(getBindingsStored());
   }
 
   public static class FactObjectBinding {

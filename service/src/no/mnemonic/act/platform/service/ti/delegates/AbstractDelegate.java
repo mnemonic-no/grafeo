@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.act.platform.entity.cassandra.Direction;
+import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
@@ -47,6 +48,22 @@ abstract class AbstractDelegate {
     if (entity == null) {
       throw new ObjectNotFoundException(String.format("ObjectType with id = %s does not exist.", id),
               "object.type.not.exist", "id", ObjectUtils.ifNotNull(id, Object::toString, "NULL"));
+    }
+    return entity;
+  }
+
+  /**
+   * Fetch an existing Fact by ID.
+   *
+   * @param id UUID of Fact
+   * @return Existing Fact
+   * @throws ObjectNotFoundException Thrown if Fact cannot be found
+   */
+  FactEntity fetchExistingFact(UUID id) throws ObjectNotFoundException {
+    FactEntity entity = TiRequestContext.get().getFactManager().getFact(id);
+    if (entity == null) {
+      throw new ObjectNotFoundException(String.format("Fact with id = %s does not exist.", id),
+              "fact.not.exist", "id", ObjectUtils.ifNotNull(id, Object::toString, "NULL"));
     }
     return entity;
   }

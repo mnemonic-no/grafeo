@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import no.mnemonic.commons.utilities.StringUtils;
+import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -122,7 +124,7 @@ public class FactTypeEntity implements CassandraEntity {
     this.relevantObjectBindingsStored = relevantObjectBindingsStored;
 
     try {
-      this.relevantObjectBindings = reader.readValue(relevantObjectBindingsStored);
+      this.relevantObjectBindings = !StringUtils.isBlank(relevantObjectBindingsStored) ? reader.readValue(relevantObjectBindingsStored) : null;
     } catch (IOException e) {
       throw new RuntimeException(String.format("Could not read 'relevantObjectBindings' for FactType with name = %s.", getName()));
     }
@@ -138,7 +140,7 @@ public class FactTypeEntity implements CassandraEntity {
     this.relevantObjectBindings = relevantObjectBindings;
 
     try {
-      this.relevantObjectBindingsStored = writer.writeValueAsString(relevantObjectBindings);
+      this.relevantObjectBindingsStored = !CollectionUtils.isEmpty(relevantObjectBindings) ? writer.writeValueAsString(relevantObjectBindings) : null;
     } catch (IOException e) {
       throw new RuntimeException(String.format("Could not write 'relevantObjectBindings' for FactType with name = %s.", getName()));
     }

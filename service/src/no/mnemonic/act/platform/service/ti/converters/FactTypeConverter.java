@@ -12,7 +12,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class FactTypeConverter implements ObjectConverter<FactTypeEntity, FactType> {
+public class FactTypeConverter implements Converter<FactTypeEntity, FactType> {
 
   private final Function<UUID, Namespace> namespaceConverter;
   private final Function<UUID, ObjectType> objectTypeConverter;
@@ -48,6 +48,7 @@ public class FactTypeConverter implements ObjectConverter<FactTypeEntity, FactTy
   }
 
   private List<FactType.FactObjectBindingDefinition> convertBindings(List<FactTypeEntity.FactObjectBindingDefinition> bindings) {
+    if (bindings == null) return null;
     return bindings.stream()
             .map(e -> new FactType.FactObjectBindingDefinition(
                     objectTypeConverter.apply(e.getObjectTypeID()).toInfo(),
