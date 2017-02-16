@@ -3,6 +3,8 @@ package no.mnemonic.act.platform.service.contexts;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 
+import java.util.UUID;
+
 /**
  * The SecurityContext provides methods to perform access control checks, e.g. if a user is allowed to perform
  * a specific operation or if a user has access to a specific object.
@@ -58,6 +60,28 @@ public class SecurityContext implements AutoCloseable {
    */
   public void checkPermission(NamedFunction function) throws AccessDeniedException, AuthenticationFailedException {
     // NOOP for now, delegate to access controller later.
+  }
+
+  /**
+   * Check if a user is allowed to perform a specific operation for data of a specified Organization.
+   *
+   * @param function       Operation the user wants to perform.
+   * @param organizationID Organization which data the user wants to access (identified by ID).
+   * @throws AccessDeniedException         If the user is not allowed to perform the operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   */
+  public void checkPermission(NamedFunction function, UUID organizationID) throws AccessDeniedException, AuthenticationFailedException {
+    // NOOP for now, delegate to access controller later.
+  }
+
+  /**
+   * Return the ID of the current user.
+   *
+   * @return ID of current user
+   */
+  protected UUID getCurrentUserID() {
+    // Return a static user ID for now.
+    return UUID.fromString("00000000-0000-0000-0000-000000000000");
   }
 
   /**

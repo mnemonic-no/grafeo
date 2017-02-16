@@ -8,7 +8,7 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class ObjectTypeConverter implements ObjectConverter<ObjectTypeEntity, ObjectType> {
+public class ObjectTypeConverter implements Converter<ObjectTypeEntity, ObjectType> {
 
   private final Function<UUID, Namespace> namespaceConverter;
 

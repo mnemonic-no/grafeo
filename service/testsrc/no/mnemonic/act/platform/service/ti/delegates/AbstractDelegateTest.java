@@ -6,20 +6,20 @@ import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.mockito.Mock;
-import org.mockito.Spy;
 
+import static org.mockito.Mockito.spy;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 abstract class AbstractDelegateTest {
 
-  @Spy // Needs to be a spy, otherwise the SecurityContext won't close correctly.
-  private SecurityContext securityContext;
   @Mock
   private ObjectManager objectManager;
   @Mock
@@ -32,11 +32,17 @@ abstract class AbstractDelegateTest {
   private ObjectTypeConverter objectTypeConverter;
   @Mock
   private FactTypeConverter factTypeConverter;
+  @Mock
+  private FactConverter factConverter;
 
   @Before
   public void initialize() {
     initMocks(this);
 
+    // Need to spy on context in order to be able to stub methods.
+    TiSecurityContext securityContext = spy(TiSecurityContext.builder()
+            .setAclResolver(id -> null)
+            .build());
     TiRequestContext requestContext = TiRequestContext.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
@@ -44,6 +50,7 @@ abstract class AbstractDelegateTest {
             .setValidatorFactory(validatorFactory)
             .setObjectTypeConverter(objectTypeConverter)
             .setFactTypeConverter(factTypeConverter)
+            .setFactConverter(factConverter)
             .build();
 
     SecurityContext.set(securityContext);
@@ -56,8 +63,8 @@ abstract class AbstractDelegateTest {
     RequestContext.get().close();
   }
 
-  SecurityContext getSecurityContext() {
-    return securityContext;
+  TiSecurityContext getSecurityContext() {
+    return TiSecurityContext.get();
   }
 
   ObjectManager getObjectManager() {
@@ -82,5 +89,9 @@ abstract class AbstractDelegateTest {
 
   FactTypeConverter getFactTypeConverter() {
     return factTypeConverter;
+  }
+
+  FactConverter getFactConverter() {
+    return factConverter;
   }
 }
