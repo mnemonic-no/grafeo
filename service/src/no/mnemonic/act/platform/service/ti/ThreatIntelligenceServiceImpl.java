@@ -22,6 +22,9 @@ import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
 import no.mnemonic.act.platform.service.ti.delegates.*;
+import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
+import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -141,6 +144,27 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   public Fact getFact(RequestHeader rh, GetFactByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return FactGetByIdDelegate.create().handle(request);
+  }
+
+  @Override
+  public Fact createFact(RequestHeader rh, CreateFactRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return FactCreateDelegate.builder()
+            .setFactTypeResolver(new FactTypeResolver(factManager))
+            .setObjectResolver(new ObjectResolver(objectManager, validatorFactory))
+            .setFactStorageHelper(new FactStorageHelper(factManager, () -> SecurityContext.get().getCurrentUserID()))
+            .build()
+            .handle(request);
+  }
+
+  @Override
+  public Fact retractFact(RequestHeader rh, RetractFactRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return FactRetractDelegate.builder()
+            .setFactTypeResolver(new FactTypeResolver(factManager))
+            .setFactStorageHelper(new FactStorageHelper(factManager, () -> SecurityContext.get().getCurrentUserID()))
+            .build()
+            .handle(request);
   }
 
   private Function<UUID, Namespace> createNamespaceConverter() {

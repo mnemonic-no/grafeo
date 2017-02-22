@@ -79,8 +79,18 @@ public class SecurityContext implements AutoCloseable {
    *
    * @return ID of current user
    */
-  protected UUID getCurrentUserID() {
+  public UUID getCurrentUserID() {
     // Return a static user ID for now.
+    return UUID.fromString("00000000-0000-0000-0000-000000000000");
+  }
+
+  /**
+   * Return the ID of the current user's organization.
+   *
+   * @return ID of current user's organization
+   */
+  public UUID getCurrentUserOrganizationID() {
+    // Return a static organization ID for now.
     return UUID.fromString("00000000-0000-0000-0000-000000000000");
   }
 

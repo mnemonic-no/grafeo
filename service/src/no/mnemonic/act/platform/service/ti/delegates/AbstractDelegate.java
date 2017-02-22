@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.entity.cassandra.Direction;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -164,6 +165,30 @@ abstract class AbstractDelegate {
                     .setObjectTypeID(r.getObjectType())
                     .setDirection(Direction.valueOf(r.getDirection().name())))
             .collect(Collectors.toList());
+  }
+
+  /**
+   * Resolve an Organization by its ID. Falls back to the current user's Organization if no 'organizationID' is provided.
+   *
+   * @param organizationID ID of Organization
+   * @return Resolved Organization (currently just its ID, but this might change)
+   */
+  UUID resolveOrganization(UUID organizationID) {
+    // TODO: Verify organization.
+    // If no organization is provided use the current user's organization by default.
+    return ObjectUtils.ifNull(organizationID, SecurityContext.get().getCurrentUserOrganizationID());
+  }
+
+  /**
+   * Resolve a Source by its ID. Falls back to the current user if no 'sourceID' is provided.
+   *
+   * @param sourceID ID of Source
+   * @return Resolved Source (currently just its ID, but this might change)
+   */
+  UUID resolveSource(UUID sourceID) {
+    // TODO: Verify source.
+    // If no source is provided use the current user as source by default.
+    return ObjectUtils.ifNull(sourceID, SecurityContext.get().getCurrentUserID());
   }
 
 }

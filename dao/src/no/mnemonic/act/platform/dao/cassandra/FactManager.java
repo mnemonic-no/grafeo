@@ -131,9 +131,15 @@ public class FactManager implements LifecycleAspect {
     return fact;
   }
 
-  public void refreshFact(UUID id) {
+  public List<FactEntity> fetchFactsByValue(String value) {
+    return factAccessor.fetchByValue(value).all();
+  }
+
+  public FactEntity refreshFact(UUID id) {
     if (getFact(id) == null) throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", id));
     factAccessor.refreshLastSeenTimestamp(id, Instant.now(clock).toEpochMilli());
+
+    return getFact(id);
   }
 
   /* FactAclEntity-related methods */
