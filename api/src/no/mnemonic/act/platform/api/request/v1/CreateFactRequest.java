@@ -181,6 +181,11 @@ public class CreateFactRequest implements ValidatingRequest {
       this.direction = direction;
       return this;
     }
+
+    @Override
+    public String toString() {
+      return String.format("objectID=%s;objectType=%s;objectValue=%s;direction=%s", objectID, objectType, objectValue, direction);
+    }
   }
 
 }

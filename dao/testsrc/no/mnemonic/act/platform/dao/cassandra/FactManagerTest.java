@@ -149,13 +149,26 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   @Test
+  public void testFetchFactsByValue() throws Exception {
+    FactTypeEntity type = createAndSaveFactType();
+    FactEntity expected = createAndSaveFact(type.getId(), "value");
+    createAndSaveFact(type.getId(), "ignored");
+
+    List<FactEntity> actual = getFactManager().fetchFactsByValue("value");
+    assertEquals(1, actual.size());
+    assertFact(expected, actual.get(0));
+  }
+
+  @Test
   public void testRefreshFact() throws Exception {
     long timestamp = 123456789;
     FactManager manager = getFactManagerWithMockedClock(timestamp);
     FactEntity fact = createAndSaveFact();
 
     assertEquals(fact.getLastSeenTimestamp(), manager.getFact(fact.getId()).getLastSeenTimestamp());
-    manager.refreshFact(fact.getId());
+    FactEntity refreshedFact = manager.refreshFact(fact.getId());
+    assertEquals(fact.getId(), refreshedFact.getId());
+    assertEquals(timestamp, refreshedFact.getLastSeenTimestamp());
     assertEquals(timestamp, manager.getFact(fact.getId()).getLastSeenTimestamp());
   }
 
@@ -260,10 +273,14 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   private FactEntity createFact(UUID typeID) throws IOException {
+    return createFact(typeID, "value");
+  }
+
+  private FactEntity createFact(UUID typeID, String value) throws IOException {
     return new FactEntity()
             .setId(UUID.randomUUID())
             .setTypeID(typeID)
-            .setValue("value")
+            .setValue(value)
             .setInReferenceToID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setSourceID(UUID.randomUUID())
@@ -314,11 +331,11 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   private FactEntity createAndSaveFact() throws Exception {
-    return createAndSaveFact(createAndSaveFactType().getId());
+    return createAndSaveFact(createAndSaveFactType().getId(), "value");
   }
 
-  private FactEntity createAndSaveFact(UUID typeID) throws Exception {
-    return getFactManager().saveFact(createFact(typeID));
+  private FactEntity createAndSaveFact(UUID typeID, String value) throws Exception {
+    return getFactManager().saveFact(createFact(typeID, value));
   }
 
   private FactAclEntity createAndSaveFactAclEntry(UUID factID) throws ImmutableViolationException {
