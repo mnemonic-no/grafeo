@@ -17,10 +17,7 @@ import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.Service;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.*;
 import no.mnemonic.act.platform.service.ti.delegates.*;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
@@ -44,6 +41,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   private final FactTypeConverter factTypeConverter;
   private final ObjectConverter objectConverter;
   private final FactConverter factConverter;
+  private final AclEntryConverter aclEntryConverter;
 
   @Inject
   public ThreatIntelligenceServiceImpl(FactManager factManager, ObjectManager objectManager,
@@ -69,6 +67,10 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setSourceConverter(createSourceConverter())
             .setObjectConverter(createObjectByIdConverter())
             .build();
+    this.aclEntryConverter = AclEntryConverter.builder()
+            .setSourceConverter(createSourceConverter())
+            .setSubjectConverter(createSubjectConverter())
+            .build();
   }
 
   @Override
@@ -89,6 +91,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setFactTypeConverter(factTypeConverter)
             .setObjectConverter(objectConverter)
             .setFactConverter(factConverter)
+            .setAclEntryConverter(aclEntryConverter)
             .build();
   }
 
@@ -167,11 +170,31 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .handle(request);
   }
 
+  @Override
+  public ResultSet<AclEntry> getFactAcl(RequestHeader rh, GetFactAclRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return FactGetAclDelegate.create().handle(request);
+  }
+
+  @Override
+  public AclEntry grantFactAccess(RequestHeader rh, GrantFactAccessRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return FactGrantAccessDelegate.create().handle(request);
+  }
+
   private Function<UUID, Namespace> createNamespaceConverter() {
     // For now everything will just be part of the global namespace.
     return id -> Namespace.builder()
             .setId(GLOBAL_NAMESPACE)
             .setName("Global")
+            .build();
+  }
+
+  private Function<UUID, Subject> createSubjectConverter() {
+    // For now just return a static Subject.
+    return id -> Subject.builder()
+            .setId(id)
+            .setName("Not implemented yet!")
             .build();
   }
 
