@@ -7,7 +7,7 @@ public enum TiFunctionConstants implements SecurityContext.NamedFunction {
   updateTypes,
   viewTypes,
   addFactObjects,
-  updateFactObjects,
+  grantFactAccess,
   viewFactObjects;
 
   @Override
