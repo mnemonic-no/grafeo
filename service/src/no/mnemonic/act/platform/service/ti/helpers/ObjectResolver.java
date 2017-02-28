@@ -2,7 +2,6 @@ package no.mnemonic.act.platform.service.ti.helpers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.validators.Validator;
@@ -70,14 +69,7 @@ public class ObjectResolver {
             .setTypeID(typeEntity.getId())
             .setValue(value);
 
-    try {
-      objectEntity = objectManager.saveObject(objectEntity);
-    } catch (ImmutableViolationException ex) {
-      // This should usually not happen as any existing Object should be fetched before attempting to create a new one.
-      throw new RuntimeException(ex);
-    }
-
-    return objectEntity;
+    return objectManager.saveObject(objectEntity);
   }
 
 }

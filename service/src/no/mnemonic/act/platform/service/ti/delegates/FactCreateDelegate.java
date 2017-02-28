@@ -5,7 +5,6 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
-import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
@@ -115,7 +114,7 @@ public class FactCreateDelegate extends AbstractDelegate {
       // Check requested binding against all definitions.
       boolean valid = type.getRelevantObjectBindings()
               .stream()
-              .anyMatch(b -> b.getObjectTypeID() == object.getTypeID() && Objects.equals(b.getDirection().name(), requested.getDirection().name()));
+              .anyMatch(b -> Objects.equals(b.getObjectTypeID(), object.getTypeID()) && Objects.equals(b.getDirection().name(), requested.getDirection().name()));
       if (!valid) {
         // Requested binding is invalid, add to exception and continue to validate other bindings.
         ex.addValidationError("Requested binding between Fact and Object is not allowed.", "invalid.fact.object.binding", "bindings." + i, requested.toString());
@@ -163,20 +162,14 @@ public class FactCreateDelegate extends AbstractDelegate {
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
 
-    try {
-      fact = TiRequestContext.get().getFactManager().saveFact(fact);
-      // Save all bindings between Objects and the created Facts.
-      for (FactEntity.FactObjectBinding binding : fact.getBindings()) {
-        ObjectFactBindingEntity entity = new ObjectFactBindingEntity()
-                .setObjectID(binding.getObjectID())
-                .setFactID(fact.getId())
-                .setDirection(binding.getDirection());
-        TiRequestContext.get().getObjectManager().saveObjectFactBinding(entity);
-      }
-    } catch (ImmutableViolationException ex) {
-      // This should never happen because a new entity with an own UUID was created.
-      // Update 'lastSeenTimestamp' is a separate operation.
-      throw new RuntimeException(ex);
+    fact = TiRequestContext.get().getFactManager().saveFact(fact);
+    // Save all bindings between Objects and the created Facts.
+    for (FactEntity.FactObjectBinding binding : fact.getBindings()) {
+      ObjectFactBindingEntity entity = new ObjectFactBindingEntity()
+              .setObjectID(binding.getObjectID())
+              .setFactID(fact.getId())
+              .setDirection(binding.getDirection());
+      TiRequestContext.get().getObjectManager().saveObjectFactBinding(entity);
     }
 
     return fact;

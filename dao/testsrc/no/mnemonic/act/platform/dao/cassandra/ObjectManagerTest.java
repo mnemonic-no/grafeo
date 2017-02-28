@@ -27,6 +27,7 @@ public class ObjectManagerTest extends AbstractManagerTest {
 
   @Test
   public void testGetObjectTypeWithUnknownIdReturnsNull() {
+    assertNull(getObjectManager().getObjectType((UUID) null));
     assertNull(getObjectManager().getObjectType(UUID.randomUUID()));
   }
 
@@ -56,6 +57,8 @@ public class ObjectManagerTest extends AbstractManagerTest {
 
   @Test
   public void testGetObjectTypeWithUnknownNameReturnsNull() {
+    assertNull(getObjectManager().getObjectType((String) null));
+    assertNull(getObjectManager().getObjectType(""));
     assertNull(getObjectManager().getObjectType("Unknown"));
   }
 
@@ -99,50 +102,58 @@ public class ObjectManagerTest extends AbstractManagerTest {
     List<ObjectTypeEntity> expected = createAndSaveObjectTypes(3);
     List<ObjectTypeEntity> actual = getObjectManager().fetchObjectTypes();
 
-    Comparator<ObjectTypeEntity> comparator = (e1, e2) -> e1.getId().compareTo(e2.getId());
-    expected.sort(comparator);
-    actual.sort(comparator);
+    expected.sort(Comparator.comparing(ObjectTypeEntity::getId));
+    actual.sort(Comparator.comparing(ObjectTypeEntity::getId));
 
     assertObjectTypes(expected, actual);
   }
 
   @Test
-  public void testSaveAndGetObject() throws ImmutableViolationException {
+  public void testSaveAndGetObject() {
     ObjectEntity object = createAndSaveObject(createAndSaveObjectType().getId());
     assertObject(object, getObjectManager().getObject(object.getId()));
   }
 
   @Test
-  public void testGetObjectWithNonExistingObject() throws ImmutableViolationException {
+  public void testGetObjectWithNonExistingObject() {
+    assertNull(getObjectManager().getObject(null));
     assertNull(getObjectManager().getObject(UUID.randomUUID()));
   }
 
   @Test
-  public void testSaveAndGetObjectByTypeValue() throws ImmutableViolationException {
+  public void testSaveAndGetObjectByTypeValue() {
     ObjectTypeEntity type = createAndSaveObjectType();
     ObjectEntity object = createAndSaveObject(type.getId());
     assertObject(object, getObjectManager().getObject(type.getName(), object.getValue()));
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testGetObjectByTypeValueWithNonExistingObjectType() throws ImmutableViolationException {
+  public void testGetObjectByTypeValueWithNonExistingObjectType() {
     ObjectEntity entity = createAndSaveObject(createAndSaveObjectType().getId());
     getObjectManager().getObject("nonExisting", entity.getValue());
   }
 
   @Test
-  public void testGetObjectByTypeValueWithNonExistingObjectValue() throws ImmutableViolationException {
+  public void testGetObjectByTypeValueWithNonExistingObjectValue() {
     ObjectTypeEntity entity = createAndSaveObjectType();
     assertNull(getObjectManager().getObject(entity.getName(), "nonExisting"));
   }
 
+  @Test
+  public void testGetObjectByTypeValueReturnsNullOnNullInput() {
+    assertNull(getObjectManager().getObject(null, "ignored"));
+    assertNull(getObjectManager().getObject("", "ignored"));
+    assertNull(getObjectManager().getObject("ignored", null));
+    assertNull(getObjectManager().getObject("ignored", ""));
+  }
+
   @Test(expected = IllegalArgumentException.class)
-  public void testSaveObjectWithNonExistingObjectType() throws ImmutableViolationException {
+  public void testSaveObjectWithNonExistingObjectType() {
     getObjectManager().saveObject(createObject());
   }
 
   @Test(expected = ImmutableViolationException.class)
-  public void testSaveSameObjectTwice() throws ImmutableViolationException {
+  public void testSaveSameObjectTwice() {
     ObjectTypeEntity type = createAndSaveObjectType();
     ObjectEntity object = createObject(type.getId());
     getObjectManager().saveObject(object);
@@ -150,18 +161,18 @@ public class ObjectManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testSaveObjectReturnsSameEntity() throws ImmutableViolationException {
+  public void testSaveObjectReturnsSameEntity() {
     ObjectEntity entity = createObject(createAndSaveObjectType().getId());
     assertSame(entity, getObjectManager().saveObject(entity));
   }
 
   @Test
-  public void testSaveObjectReturnsNullOnNullInput() throws ImmutableViolationException {
+  public void testSaveObjectReturnsNullOnNullInput() {
     assertNull(getObjectManager().saveObject(null));
   }
 
   @Test
-  public void testEncodeWhenSavingObject() throws ImmutableViolationException {
+  public void testEncodeWhenSavingObject() {
     createAndSaveObject(createAndSaveObjectType().getId());
 
     // Once for saving Object and once for checking for existing Object.
@@ -169,7 +180,7 @@ public class ObjectManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testDecodeWhenRetrievingObject() throws ImmutableViolationException {
+  public void testDecodeWhenRetrievingObject() {
     ObjectTypeEntity type = createAndSaveObjectType();
     ObjectEntity object = createAndSaveObject(type.getId());
 
@@ -181,7 +192,7 @@ public class ObjectManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testSaveAndFetchObjectFactBindings() throws ImmutableViolationException {
+  public void testSaveAndFetchObjectFactBindings() {
     ObjectEntity object = createAndSaveObject(createAndSaveObjectType().getId());
     ObjectFactBindingEntity binding = createAndSaveObjectFactBinding(object.getId());
 
@@ -192,27 +203,28 @@ public class ObjectManagerTest extends AbstractManagerTest {
 
   @Test
   public void testFetchObjectFactBindingsWithNonExistingObject() {
+    assertEquals(0, getObjectManager().fetchObjectFactBindings(null).size());
     assertEquals(0, getObjectManager().fetchObjectFactBindings(UUID.randomUUID()).size());
   }
 
   @Test
-  public void testSaveObjectFactBindingReturnsSameEntity() throws ImmutableViolationException {
+  public void testSaveObjectFactBindingReturnsSameEntity() {
     ObjectFactBindingEntity binding = createObjectFactBinding(createAndSaveObject().getId());
     assertSame(binding, getObjectManager().saveObjectFactBinding(binding));
   }
 
   @Test
-  public void testSaveObjectFactBindingReturnsNullOnNullInput() throws ImmutableViolationException {
+  public void testSaveObjectFactBindingReturnsNullOnNullInput() {
     assertNull(getObjectManager().saveObjectFactBinding(null));
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testSaveObjectFactBindingWithNonExistingObjectThrowsException() throws ImmutableViolationException {
+  public void testSaveObjectFactBindingWithNonExistingObjectThrowsException() {
     getObjectManager().saveObjectFactBinding(createObjectFactBinding(UUID.randomUUID()));
   }
 
   @Test(expected = ImmutableViolationException.class)
-  public void testSaveObjectFactBindingTwiceThrowsException() throws ImmutableViolationException {
+  public void testSaveObjectFactBindingTwiceThrowsException() {
     ObjectFactBindingEntity binding = createObjectFactBinding(createAndSaveObject().getId());
     getObjectManager().saveObjectFactBinding(binding);
     getObjectManager().saveObjectFactBinding(binding);
@@ -265,15 +277,15 @@ public class ObjectManagerTest extends AbstractManagerTest {
     return entities;
   }
 
-  private ObjectEntity createAndSaveObject() throws ImmutableViolationException {
+  private ObjectEntity createAndSaveObject() {
     return createAndSaveObject(createAndSaveObjectType().getId());
   }
 
-  private ObjectEntity createAndSaveObject(UUID typeID) throws ImmutableViolationException {
+  private ObjectEntity createAndSaveObject(UUID typeID) {
     return getObjectManager().saveObject(createObject(typeID));
   }
 
-  private ObjectFactBindingEntity createAndSaveObjectFactBinding(UUID objectID) throws ImmutableViolationException {
+  private ObjectFactBindingEntity createAndSaveObjectFactBinding(UUID objectID) {
     return getObjectManager().saveObjectFactBinding(createObjectFactBinding(objectID));
   }
 

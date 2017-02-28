@@ -4,7 +4,6 @@ import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationExcep
 import no.mnemonic.act.platform.entity.cassandra.*;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
@@ -23,6 +22,7 @@ public class FactManagerTest extends AbstractManagerTest {
 
   @Test
   public void testGetFactTypeWithUnknownIdReturnsNull() {
+    assertNull(getFactManager().getFactType((UUID) null));
     assertNull(getFactManager().getFactType(UUID.randomUUID()));
   }
 
@@ -52,6 +52,8 @@ public class FactManagerTest extends AbstractManagerTest {
 
   @Test
   public void testGetFactTypeWithUnknownNameReturnsNull() {
+    assertNull(getFactManager().getFactType((String) null));
+    assertNull(getFactManager().getFactType(""));
     assertNull(getFactManager().getFactType("Unknown"));
   }
 
@@ -95,61 +97,61 @@ public class FactManagerTest extends AbstractManagerTest {
     List<FactTypeEntity> expected = createAndSaveFactTypes(3);
     List<FactTypeEntity> actual = getFactManager().fetchFactTypes();
 
-    Comparator<FactTypeEntity> comparator = (e1, e2) -> e1.getId().compareTo(e2.getId());
-    expected.sort(comparator);
-    actual.sort(comparator);
+    expected.sort(Comparator.comparing(FactTypeEntity::getId));
+    actual.sort(Comparator.comparing(FactTypeEntity::getId));
 
     assertFactTypes(expected, actual);
   }
 
   @Test
-  public void testSaveAndGetFact() throws Exception {
+  public void testSaveAndGetFact() {
     FactEntity entity = createAndSaveFact();
     assertFact(entity, getFactManager().getFact(entity.getId()));
   }
 
   @Test
-  public void testGetFactWithNonExistingFact() throws ImmutableViolationException {
+  public void testGetFactWithNonExistingFact() {
+    assertNull(getFactManager().getFact(null));
     assertNull(getFactManager().getFact(UUID.randomUUID()));
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testSaveFactWithNonExistingFactType() throws Exception {
+  public void testSaveFactWithNonExistingFactType() {
     getFactManager().saveFact(createFact());
   }
 
   @Test(expected = ImmutableViolationException.class)
-  public void testSaveFactTwiceThrowsException() throws Exception {
+  public void testSaveFactTwiceThrowsException() {
     FactEntity entity = createFact(createAndSaveFactType().getId());
     getFactManager().saveFact(entity);
     getFactManager().saveFact(entity);
   }
 
   @Test
-  public void testSaveFactReturnsSameEntity() throws Exception {
+  public void testSaveFactReturnsSameEntity() {
     FactEntity entity = createFact(createAndSaveFactType().getId());
     assertSame(entity, getFactManager().saveFact(entity));
   }
 
   @Test
-  public void testSaveFactReturnsNullOnNullInput() throws ImmutableViolationException {
+  public void testSaveFactReturnsNullOnNullInput() {
     assertNull(getFactManager().saveFact(null));
   }
 
   @Test
-  public void testEncodeWhenSavingFact() throws Exception {
+  public void testEncodeWhenSavingFact() {
     createAndSaveFact();
     verify(getEntityHandler(), times(1)).encode(any());
   }
 
   @Test
-  public void testDecodeWhenRetrievingFact() throws Exception {
+  public void testDecodeWhenRetrievingFact() {
     getFactManager().getFact(createAndSaveFact().getId());
     verify(getEntityHandler(), times(1)).decode(any());
   }
 
   @Test
-  public void testFetchFactsByValue() throws Exception {
+  public void testFetchFactsByValue() {
     FactTypeEntity type = createAndSaveFactType();
     FactEntity expected = createAndSaveFact(type.getId(), "value");
     createAndSaveFact(type.getId(), "ignored");
@@ -160,7 +162,14 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testRefreshFact() throws Exception {
+  public void testFetchFactsByValueWithUnknownValue() {
+    assertEquals(0, getFactManager().fetchFactsByValue(null).size());
+    assertEquals(0, getFactManager().fetchFactsByValue("").size());
+    assertEquals(0, getFactManager().fetchFactsByValue("Unknown").size());
+  }
+
+  @Test
+  public void testRefreshFact() {
     long timestamp = 123456789;
     FactManager manager = getFactManagerWithMockedClock(timestamp);
     FactEntity fact = createAndSaveFact();
@@ -173,12 +182,12 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testRefreshFactWithNonExistingFact() throws Exception {
+  public void testRefreshFactWithNonExistingFact() {
     getFactManager().refreshFact(UUID.randomUUID());
   }
 
   @Test
-  public void testSaveAndFetchFactAcl() throws Exception {
+  public void testSaveAndFetchFactAcl() {
     FactEntity fact = createAndSaveFact();
     FactAclEntity entry = createAndSaveFactAclEntry(fact.getId());
     List<FactAclEntity> acl = getFactManager().fetchFactAcl(fact.getId());
@@ -189,34 +198,35 @@ public class FactManagerTest extends AbstractManagerTest {
 
   @Test
   public void testFetchFactAclWithNonExistingFact() {
+    assertEquals(0, getFactManager().fetchFactAcl(null).size());
     assertEquals(0, getFactManager().fetchFactAcl(UUID.randomUUID()).size());
   }
 
   @Test
-  public void testSaveFactAclEntryReturnsSameEntity() throws Exception {
+  public void testSaveFactAclEntryReturnsSameEntity() {
     FactAclEntity entity = createFactAclEntry(createAndSaveFact().getId());
     assertSame(entity, getFactManager().saveFactAclEntry(entity));
   }
 
   @Test
-  public void testSaveFactAclEntryReturnsNullOnNullInput() throws ImmutableViolationException {
+  public void testSaveFactAclEntryReturnsNullOnNullInput() {
     assertNull(getFactManager().saveFactAclEntry(null));
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testSaveFactAclEntryWithNonExistingFactThrowsException() throws Exception {
+  public void testSaveFactAclEntryWithNonExistingFactThrowsException() {
     getFactManager().saveFactAclEntry(createFactAclEntry(UUID.randomUUID()));
   }
 
   @Test(expected = ImmutableViolationException.class)
-  public void testSaveFactAclEntryTwiceThrowsException() throws Exception {
+  public void testSaveFactAclEntryTwiceThrowsException() {
     FactAclEntity entry = createFactAclEntry(createAndSaveFact().getId());
     getFactManager().saveFactAclEntry(entry);
     getFactManager().saveFactAclEntry(entry);
   }
 
   @Test
-  public void testSaveAndFetchFactComments() throws Exception {
+  public void testSaveAndFetchFactComments() {
     FactEntity fact = createAndSaveFact();
     FactCommentEntity comment = createAndSaveFactComment(fact.getId());
     List<FactCommentEntity> comments = getFactManager().fetchFactComments(fact.getId());
@@ -227,27 +237,28 @@ public class FactManagerTest extends AbstractManagerTest {
 
   @Test
   public void testFetchFactCommentsWithNonExistingFact() {
+    assertEquals(0, getFactManager().fetchFactComments(null).size());
     assertEquals(0, getFactManager().fetchFactComments(UUID.randomUUID()).size());
   }
 
   @Test
-  public void testSaveFactCommentReturnsSameEntity() throws Exception {
+  public void testSaveFactCommentReturnsSameEntity() {
     FactCommentEntity entity = createFactComment(createAndSaveFact().getId());
     assertSame(entity, getFactManager().saveFactComment(entity));
   }
 
   @Test
-  public void testSaveFactCommentReturnsNullOnNullInput() throws ImmutableViolationException {
+  public void testSaveFactCommentReturnsNullOnNullInput() {
     assertNull(getFactManager().saveFactComment(null));
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testSaveFactCommentWithNonExistingFactThrowsException() throws Exception {
+  public void testSaveFactCommentWithNonExistingFactThrowsException() {
     getFactManager().saveFactComment(createFactComment(UUID.randomUUID()));
   }
 
   @Test(expected = ImmutableViolationException.class)
-  public void testSaveFactCommentTwiceThrowsException() throws Exception {
+  public void testSaveFactCommentTwiceThrowsException() {
     FactCommentEntity comment = createFactComment(createAndSaveFact().getId());
     getFactManager().saveFactComment(comment);
     getFactManager().saveFactComment(comment);
@@ -268,15 +279,15 @@ public class FactManagerTest extends AbstractManagerTest {
             .setEntityHandlerParameter("entityHandlerParameter");
   }
 
-  private FactEntity createFact() throws IOException {
+  private FactEntity createFact() {
     return createFact(UUID.randomUUID());
   }
 
-  private FactEntity createFact(UUID typeID) throws IOException {
+  private FactEntity createFact(UUID typeID) {
     return createFact(typeID, "value");
   }
 
-  private FactEntity createFact(UUID typeID, String value) throws IOException {
+  private FactEntity createFact(UUID typeID, String value) {
     return new FactEntity()
             .setId(UUID.randomUUID())
             .setTypeID(typeID)
@@ -330,19 +341,19 @@ public class FactManagerTest extends AbstractManagerTest {
     return entities;
   }
 
-  private FactEntity createAndSaveFact() throws Exception {
+  private FactEntity createAndSaveFact() {
     return createAndSaveFact(createAndSaveFactType().getId(), "value");
   }
 
-  private FactEntity createAndSaveFact(UUID typeID, String value) throws Exception {
+  private FactEntity createAndSaveFact(UUID typeID, String value) {
     return getFactManager().saveFact(createFact(typeID, value));
   }
 
-  private FactAclEntity createAndSaveFactAclEntry(UUID factID) throws ImmutableViolationException {
+  private FactAclEntity createAndSaveFactAclEntry(UUID factID) {
     return getFactManager().saveFactAclEntry(createFactAclEntry(factID));
   }
 
-  private FactCommentEntity createAndSaveFactComment(UUID factID) throws ImmutableViolationException {
+  private FactCommentEntity createAndSaveFactComment(UUID factID) {
     return getFactManager().saveFactComment(createFactComment(factID));
   }
 

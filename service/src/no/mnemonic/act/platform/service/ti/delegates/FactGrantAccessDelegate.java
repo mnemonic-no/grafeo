@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.AclEntry;
 import no.mnemonic.act.platform.api.request.v1.GrantFactAccessRequest;
-import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.entity.cassandra.AccessMode;
 import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
@@ -58,14 +57,8 @@ public class FactGrantAccessDelegate extends AbstractDelegate {
             .setSourceID(TiSecurityContext.get().getCurrentUserID())
             .setSubjectID(subject)
             .setTimestamp(System.currentTimeMillis());
-    try {
-      entry = TiRequestContext.get().getFactManager().saveFactAclEntry(entry);
-    } catch (ImmutableViolationException ex) {
-      // This should never happen because a new entry with an own UUID was created.
-      throw new RuntimeException(ex);
-    }
 
-    return entry;
+    return TiRequestContext.get().getFactManager().saveFactAclEntry(entry);
   }
 
 }

@@ -1,7 +1,6 @@
 package no.mnemonic.act.platform.service.ti.helpers;
 
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.entity.cassandra.AccessMode;
 import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactCommentEntity;
@@ -97,12 +96,7 @@ public class FactStorageHelper {
             .setComment(comment)
             .setTimestamp(System.currentTimeMillis());
 
-    try {
-      factManager.saveFactComment(commentEntity);
-    } catch (ImmutableViolationException ex) {
-      // This should never happen because a new comment with an own UUID was created.
-      throw new RuntimeException(ex);
-    }
+    factManager.saveFactComment(commentEntity);
   }
 
   private void saveAclEntries(FactEntity fact, List<UUID> subjects) {
@@ -114,12 +108,8 @@ public class FactStorageHelper {
               .setSourceID(fact.getSourceID())
               .setSubjectID(subject)
               .setTimestamp(System.currentTimeMillis());
-      try {
-        factManager.saveFactAclEntry(entry);
-      } catch (ImmutableViolationException ex) {
-        // This should never happen because a new entry with an own UUID was created.
-        throw new RuntimeException(ex);
-      }
+
+      factManager.saveFactAclEntry(entry);
     }
   }
 

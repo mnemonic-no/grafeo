@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
-import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.entity.cassandra.AccessMode;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
@@ -84,14 +83,7 @@ public class FactRetractDelegate extends AbstractDelegate {
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
 
-    try {
-      fact = TiRequestContext.get().getFactManager().saveFact(fact);
-    } catch (ImmutableViolationException ex) {
-      // This should never happen because a new entity with an own UUID was created.
-      throw new RuntimeException(ex);
-    }
-
-    return fact;
+    return TiRequestContext.get().getFactManager().saveFact(fact);
   }
 
   private AccessMode resolveAccessMode(RetractFactRequest request, FactEntity factToRetract) {

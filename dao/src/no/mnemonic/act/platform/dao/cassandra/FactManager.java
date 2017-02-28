@@ -17,6 +17,8 @@ import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.StringUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -76,6 +78,8 @@ public class FactManager implements LifecycleAspect {
   /* FactTypeEntity-related methods */
 
   public FactTypeEntity getFactType(UUID id) {
+    if (id == null) return null;
+
     try {
       return factTypeByIdCache.get(id);
     } catch (ExecutionException ignored) {
@@ -85,6 +89,8 @@ public class FactManager implements LifecycleAspect {
   }
 
   public FactTypeEntity getFactType(String name) {
+    if (StringUtils.isBlank(name)) return null;
+
     try {
       return factTypeByNameCache.get(name);
     } catch (ExecutionException ignored) {
@@ -116,11 +122,12 @@ public class FactManager implements LifecycleAspect {
   /* FactEntity-related methods */
 
   public FactEntity getFact(UUID id) {
+    if (id == null) return null;
     // Decode value using EntityHandler because it's stored encoded.
     return ObjectUtils.ifNotNull(factMapper.get(id), f -> f.setValue(decodeFactValue(getFactTypeOrFail(f.getTypeID()), f.getValue())));
   }
 
-  public FactEntity saveFact(FactEntity fact) throws ImmutableViolationException {
+  public FactEntity saveFact(FactEntity fact) {
     if (fact == null) return null;
     if (getFact(fact.getId()) != null) throw new ImmutableViolationException("It is not allowed to update a fact");
 
@@ -132,6 +139,7 @@ public class FactManager implements LifecycleAspect {
   }
 
   public List<FactEntity> fetchFactsByValue(String value) {
+    if (StringUtils.isBlank(value)) return ListUtils.list();
     return factAccessor.fetchByValue(value).all();
   }
 
@@ -145,10 +153,11 @@ public class FactManager implements LifecycleAspect {
   /* FactAclEntity-related methods */
 
   public List<FactAclEntity> fetchFactAcl(UUID id) {
+    if (id == null) return ListUtils.list();
     return factAclAccessor.fetch(id).all();
   }
 
-  public FactAclEntity saveFactAclEntry(FactAclEntity entry) throws ImmutableViolationException {
+  public FactAclEntity saveFactAclEntry(FactAclEntity entry) {
     if (entry == null) return null;
     if (getFact(entry.getFactID()) == null)
       throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", entry.getFactID()));
@@ -163,10 +172,11 @@ public class FactManager implements LifecycleAspect {
   /* FactCommentEntity-related methods */
 
   public List<FactCommentEntity> fetchFactComments(UUID id) {
+    if (id == null) return ListUtils.list();
     return factCommentAccessor.fetch(id).all();
   }
 
-  public FactCommentEntity saveFactComment(FactCommentEntity comment) throws ImmutableViolationException {
+  public FactCommentEntity saveFactComment(FactCommentEntity comment) {
     if (comment == null) return null;
     if (getFact(comment.getFactID()) == null)
       throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", comment.getFactID()));
