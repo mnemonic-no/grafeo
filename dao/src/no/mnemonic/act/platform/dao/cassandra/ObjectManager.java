@@ -15,6 +15,8 @@ import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.StringUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -66,6 +68,8 @@ public class ObjectManager implements LifecycleAspect {
   /* ObjectTypeEntity-related methods */
 
   public ObjectTypeEntity getObjectType(UUID id) {
+    if (id == null) return null;
+
     try {
       return objectTypeByIdCache.get(id);
     } catch (ExecutionException ignored) {
@@ -75,6 +79,8 @@ public class ObjectManager implements LifecycleAspect {
   }
 
   public ObjectTypeEntity getObjectType(String name) {
+    if (StringUtils.isBlank(name)) return null;
+
     try {
       return objectTypeByNameCache.get(name);
     } catch (ExecutionException ignored) {
@@ -106,11 +112,13 @@ public class ObjectManager implements LifecycleAspect {
   /* ObjectEntity-related methods */
 
   public ObjectEntity getObject(UUID id) {
+    if (id == null) return null;
     // Decode value using EntityHandler because it's stored encoded.
     return ObjectUtils.ifNotNull(objectMapper.get(id), o -> o.setValue(decodeObjectValue(getObjectTypeOrFail(o.getTypeID()), o.getValue())));
   }
 
   public ObjectEntity getObject(String type, String value) {
+    if (StringUtils.isBlank(type) || StringUtils.isBlank(value)) return null;
     ObjectTypeEntity objectType = getObjectTypeOrFail(type);
 
     // Encode value using EntityHandler because the mapping value is also stored encoded.
@@ -118,7 +126,7 @@ public class ObjectManager implements LifecycleAspect {
     return ObjectUtils.ifNotNull(objectByTypeValue, o -> getObject(o.getObjectID()));
   }
 
-  public ObjectEntity saveObject(ObjectEntity object) throws ImmutableViolationException {
+  public ObjectEntity saveObject(ObjectEntity object) {
     if (object == null) return null;
 
     ObjectTypeEntity type = getObjectTypeOrFail(object.getTypeID());
@@ -148,10 +156,11 @@ public class ObjectManager implements LifecycleAspect {
   /* ObjectFactBindingEntity-related methods */
 
   public List<ObjectFactBindingEntity> fetchObjectFactBindings(UUID id) {
+    if (id == null) return ListUtils.list();
     return objectAccessor.fetchObjectFactBindings(id).all();
   }
 
-  public ObjectFactBindingEntity saveObjectFactBinding(ObjectFactBindingEntity binding) throws ImmutableViolationException {
+  public ObjectFactBindingEntity saveObjectFactBinding(ObjectFactBindingEntity binding) {
     if (binding == null) return null;
     if (getObject(binding.getObjectID()) == null)
       throw new IllegalArgumentException(String.format("Object with id = %s does not exist.", binding.getObjectID()));

@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.FactComment;
 import no.mnemonic.act.platform.api.request.v1.CreateFactCommentRequest;
-import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.entity.cassandra.FactCommentEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
@@ -56,14 +55,7 @@ public class FactCreateCommentDelegate extends AbstractDelegate {
             .setComment(request.getComment())
             .setTimestamp(System.currentTimeMillis());
 
-    try {
-      comment = TiRequestContext.get().getFactManager().saveFactComment(comment);
-    } catch (ImmutableViolationException ex) {
-      // This should never happen because a new comment with an own UUID was created.
-      throw new RuntimeException(ex);
-    }
-
-    return comment;
+    return TiRequestContext.get().getFactManager().saveFactComment(comment);
   }
 
 }

@@ -12,6 +12,7 @@ import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 
 import javax.inject.Inject;
@@ -68,8 +69,8 @@ public class FactEndpoint extends AbstractEndpoint {
                   "If the new Fact links to an Object which does not exist yet the missing Object will be created " +
                   "automatically with respect to the Object's ObjectType (need to pass the ObjectType's Validator and " +
                   "stored using the ObjectType's EntityHandler).\n\n" +
-                  "If a Fact with the same type, value, source, accessMode and confidenceLevel already exists, no " +
-                  "new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
+                  "If a Fact with the same type, value, organization, source, accessMode and confidenceLevel already exists, " +
+                  "no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
           response = Fact.class,
           code = 201
   )
@@ -159,6 +160,9 @@ public class FactEndpoint extends AbstractEndpoint {
           @PathParam("subject") @ApiParam(value = "UUID of Subject.") @NotNull @Valid UUID subject,
           @ApiParam(hidden = true) @NotNull @Valid GrantFactAccessRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    // Swagger won't send a request object because it's hidden from the API, thus, make sure that it's initialized.
+    request = ObjectUtils.ifNull(request, new GrantFactAccessRequest());
+
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
             .setData(service.grantFactAccess(getHeader(), request.setFact(fact).setSubject(subject)))
