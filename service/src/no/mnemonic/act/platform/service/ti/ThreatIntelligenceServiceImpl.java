@@ -42,6 +42,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   private final ObjectConverter objectConverter;
   private final FactConverter factConverter;
   private final AclEntryConverter aclEntryConverter;
+  private final FactCommentConverter factCommentConverter;
 
   @Inject
   public ThreatIntelligenceServiceImpl(FactManager factManager, ObjectManager objectManager,
@@ -71,6 +72,9 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setSourceConverter(createSourceConverter())
             .setSubjectConverter(createSubjectConverter())
             .build();
+    this.factCommentConverter = FactCommentConverter.builder()
+            .setSourceConverter(createSourceConverter())
+            .build();
   }
 
   @Override
@@ -92,6 +96,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setObjectConverter(objectConverter)
             .setFactConverter(factConverter)
             .setAclEntryConverter(aclEntryConverter)
+            .setFactCommentConverter(factCommentConverter)
             .build();
   }
 
@@ -168,6 +173,18 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setFactStorageHelper(new FactStorageHelper(factManager, () -> SecurityContext.get().getCurrentUserID()))
             .build()
             .handle(request);
+  }
+
+  @Override
+  public ResultSet<FactComment> getFactComments(RequestHeader rh, GetFactCommentsRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return FactGetCommentsDelegate.create().handle(request);
+  }
+
+  @Override
+  public FactComment createFactComment(RequestHeader rh, CreateFactCommentRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return FactCreateCommentDelegate.create().handle(request);
   }
 
   @Override

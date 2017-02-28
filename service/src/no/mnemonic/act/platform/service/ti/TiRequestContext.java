@@ -26,6 +26,7 @@ public class TiRequestContext extends RequestContext {
   private final Function<ObjectEntity, Object> objectConverter;
   private final Function<FactEntity, Fact> factConverter;
   private final Function<FactAclEntity, AclEntry> aclEntryConverter;
+  private final Function<FactCommentEntity, FactComment> factCommentConverter;
 
   private TiRequestContext(ObjectManager objectManager, FactManager factManager,
                            EntityHandlerFactory entityHandlerFactory, ValidatorFactory validatorFactory,
@@ -33,7 +34,8 @@ public class TiRequestContext extends RequestContext {
                            Function<FactTypeEntity, FactType> factTypeConverter,
                            Function<ObjectEntity, Object> objectConverter,
                            Function<FactEntity, Fact> factConverter,
-                           Function<FactAclEntity, AclEntry> aclEntryConverter) {
+                           Function<FactAclEntity, AclEntry> aclEntryConverter,
+                           Function<FactCommentEntity, FactComment> factCommentConverter) {
     this.objectManager = objectManager;
     this.factManager = factManager;
     this.entityHandlerFactory = entityHandlerFactory;
@@ -43,6 +45,7 @@ public class TiRequestContext extends RequestContext {
     this.objectConverter = objectConverter;
     this.factConverter = factConverter;
     this.aclEntryConverter = aclEntryConverter;
+    this.factCommentConverter = factCommentConverter;
   }
 
   public static TiRequestContext get() {
@@ -85,6 +88,10 @@ public class TiRequestContext extends RequestContext {
     return ObjectUtils.notNull(aclEntryConverter, "AclEntryConverter not set in RequestContext.");
   }
 
+  public Function<FactCommentEntity, FactComment> getFactCommentConverter() {
+    return ObjectUtils.notNull(factCommentConverter, "FactCommentConverter not set in RequestContext.");
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -99,13 +106,14 @@ public class TiRequestContext extends RequestContext {
     private Function<ObjectEntity, Object> objectConverter;
     private Function<FactEntity, Fact> factConverter;
     private Function<FactAclEntity, AclEntry> aclEntryConverter;
+    private Function<FactCommentEntity, FactComment> factCommentConverter;
 
     private Builder() {
     }
 
     public TiRequestContext build() {
       return new TiRequestContext(objectManager, factManager, entityHandlerFactory, validatorFactory,
-              objectTypeConverter, factTypeConverter, objectConverter, factConverter, aclEntryConverter);
+              objectTypeConverter, factTypeConverter, objectConverter, factConverter, aclEntryConverter, factCommentConverter);
     }
 
     public Builder setObjectManager(ObjectManager objectManager) {
@@ -150,6 +158,11 @@ public class TiRequestContext extends RequestContext {
 
     public Builder setAclEntryConverter(Function<FactAclEntity, AclEntry> aclEntryConverter) {
       this.aclEntryConverter = aclEntryConverter;
+      return this;
+    }
+
+    public Builder setFactCommentConverter(Function<FactCommentEntity, FactComment> factCommentConverter) {
+      this.factCommentConverter = factCommentConverter;
       return this;
     }
   }

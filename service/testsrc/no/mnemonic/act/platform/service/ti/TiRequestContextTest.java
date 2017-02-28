@@ -49,4 +49,9 @@ public class TiRequestContextTest {
     TiRequestContext.builder().build().getAclEntryConverter();
   }
 
+  @Test(expected = RuntimeException.class)
+  public void testFactCommentConverterNotSetInContextThrowsException() {
+    TiRequestContext.builder().build().getFactCommentConverter();
+  }
+
 }

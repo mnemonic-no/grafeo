@@ -7,10 +7,7 @@ import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.AclEntryConverter;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.*;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -37,6 +34,8 @@ abstract class AbstractDelegateTest {
   private FactConverter factConverter;
   @Mock
   private AclEntryConverter aclEntryConverter;
+  @Mock
+  private FactCommentConverter factCommentConverter;
 
   @Before
   public void initialize() {
@@ -55,6 +54,7 @@ abstract class AbstractDelegateTest {
             .setFactTypeConverter(factTypeConverter)
             .setFactConverter(factConverter)
             .setAclEntryConverter(aclEntryConverter)
+            .setFactCommentConverter(factCommentConverter)
             .build();
 
     SecurityContext.set(securityContext);
@@ -101,5 +101,9 @@ abstract class AbstractDelegateTest {
 
   AclEntryConverter getAclEntryConverter() {
     return aclEntryConverter;
+  }
+
+  FactCommentConverter getFactCommentConverter() {
+    return factCommentConverter;
   }
 }

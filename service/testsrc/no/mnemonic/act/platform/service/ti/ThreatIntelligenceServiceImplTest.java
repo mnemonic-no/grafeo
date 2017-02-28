@@ -45,6 +45,7 @@ public class ThreatIntelligenceServiceImplTest {
     assertNotNull(context.getObjectConverter());
     assertNotNull(context.getFactConverter());
     assertNotNull(context.getAclEntryConverter());
+    assertNotNull(context.getFactCommentConverter());
     assertSame(factManager, context.getFactManager());
     assertSame(objectManager, context.getObjectManager());
     assertSame(entityHandlerFactory, context.getEntityHandlerFactory());
