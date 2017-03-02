@@ -37,9 +37,12 @@
             <configuration>
               <createDependencyReducedPom>false</createDependencyReducedPom>
               <transformers>
+                <!-- Needed to provide the correct entry point to the application. -->
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>no.mnemonic.commons.container.BootStrap</mainClass>
                 </transformer>
+                <!-- Needed to correctly merge META-INF/services files. -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
               </transformers>
             </configuration>
           </execution>
