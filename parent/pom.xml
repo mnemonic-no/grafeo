@@ -53,7 +53,7 @@
   <distributionManagement>
     <site>
       <id>javadoc</id>
-      <url>scp://javadoc/var/www/javadoc/base</url>
+      <url>file:///var/www/site/act/parent</url>
     </site>
     <repository>
       <id>mnemonic</id>
@@ -145,6 +145,13 @@
         </configuration>
         <executions>
           <execution>
+            <id>aggregate</id>
+            <goals>
+              <goal>aggregate</goal>
+            </goals>
+            <phase>site</phase>
+          </execution>
+          <execution>
             <id>attach-javadocs</id>
             <goals>
               <goal>jar</goal>
@@ -174,13 +181,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <version>3.4</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.wagon</groupId>
-            <artifactId>wagon-ssh</artifactId>
-            <version>1.0</version>
-          </dependency>
-        </dependencies>
       </plugin>
     </plugins>
   </build>
