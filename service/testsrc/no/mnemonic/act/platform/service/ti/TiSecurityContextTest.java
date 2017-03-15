@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -116,6 +118,17 @@ public class TiSecurityContextTest {
 
     context.checkReadPermission(fact);
     verify(context).checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+  }
+
+  @Test
+  public void testHasReadPermissionReturnsTrueOnAccess() throws Exception {
+    assertTrue(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
+  }
+
+  @Test
+  public void testHasReadPermissionReturnsFalseOnNoAccess() throws Exception {
+    doThrow(AccessDeniedException.class).when(context).checkPermission(TiFunctionConstants.viewFactObjects);
+    assertFalse(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
   }
 
 }

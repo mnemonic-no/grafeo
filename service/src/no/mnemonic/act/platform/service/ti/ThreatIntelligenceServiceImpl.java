@@ -149,6 +149,18 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   }
 
   @Override
+  public Object getObject(RequestHeader rh, GetObjectByIdRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return ObjectGetDelegate.create().handle(request);
+  }
+
+  @Override
+  public Object getObject(RequestHeader rh, GetObjectByTypeValueRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return ObjectGetDelegate.create().handle(request);
+  }
+
+  @Override
   public Fact getFact(RequestHeader rh, GetFactByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return FactGetByIdDelegate.create().handle(request);
