@@ -64,6 +64,21 @@ public class TiSecurityContext extends SecurityContext {
     checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
   }
 
+  /**
+   * Check if a user is allowed to view a specific Fact based on the Fact's AccessMode.
+   *
+   * @param fact Fact to verify access to.
+   * @return True if user has access to the Fact.
+   */
+  public boolean hasReadPermission(FactEntity fact) {
+    try {
+      checkReadPermission(fact);
+      return true;
+    } catch (AccessDeniedException | AuthenticationFailedException ignored) {
+      return false;
+    }
+  }
+
   private boolean isInAcl(FactEntity fact) {
     List<FactAclEntity> acl = aclResolver.apply(fact.getId());
     return !CollectionUtils.isEmpty(acl) && acl.stream().anyMatch(entry -> getCurrentUserID().equals(entry.getSubjectID()));

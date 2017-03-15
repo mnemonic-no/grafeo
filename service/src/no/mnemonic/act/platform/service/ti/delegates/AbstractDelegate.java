@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.util.Collection;
@@ -92,6 +93,20 @@ abstract class AbstractDelegate {
     if (TiRequestContext.get().getObjectManager().getObjectType(name) != null) {
       throw new InvalidArgumentException()
               .addValidationError(String.format("ObjectType with name = %s already exists.", name), "object.type.exist", "name", name);
+    }
+  }
+
+  /**
+   * Assert that an ObjectType exists (by name).
+   *
+   * @param name     Name of ObjectType
+   * @param property Name of request property
+   * @throws InvalidArgumentException Thrown if ObjectType does not exist
+   */
+  void assertObjectTypeExists(String name, String property) throws InvalidArgumentException {
+    if (TiRequestContext.get().getObjectManager().getObjectType(name) == null) {
+      throw new InvalidArgumentException()
+              .addValidationError(String.format("ObjectType with name = %s does not exist.", name), "object.type.not.exist", property, name);
     }
   }
 
@@ -189,6 +204,21 @@ abstract class AbstractDelegate {
     // TODO: Verify source.
     // If no source is provided use the current user as source by default.
     return ObjectUtils.ifNull(sourceID, SecurityContext.get().getCurrentUserID());
+  }
+
+  /**
+   * Resolve Facts bound to one Object (identified by id). It will only return the Facts the current user has access to.
+   *
+   * @param objectID ID of Object
+   * @return Resolved Facts bound to one Object
+   */
+  List<FactEntity> resolveFactsForObject(UUID objectID) {
+    // Fetch Facts bound to Object, but only keep those the current user has access to.
+    return TiRequestContext.get().getObjectManager().fetchObjectFactBindings(objectID)
+            .stream()
+            .map(binding -> TiRequestContext.get().getFactManager().getFact(binding.getFactID()))
+            .filter(fact -> TiSecurityContext.get().hasReadPermission(fact))
+            .collect(Collectors.toList());
   }
 
 }
