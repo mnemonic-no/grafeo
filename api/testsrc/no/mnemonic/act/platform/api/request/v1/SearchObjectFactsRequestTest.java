@@ -3,6 +3,8 @@ package no.mnemonic.act.platform.api.request.v1;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
+import javax.validation.ConstraintViolation;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -37,6 +39,21 @@ public class SearchObjectFactsRequestTest extends AbstractRequestTest {
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
     assertEquals(25, request.getLimit().intValue());
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMin() {
+    Set<ConstraintViolation<SearchObjectFactsRequest>> violations = getValidator().validate(new SearchObjectFactsRequest()
+            .setLimit(-1)
+    );
+
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "limit");
+  }
+
+  @Test
+  public void testRequestValidationSucceeds() {
+    assertTrue(getValidator().validate(new SearchObjectFactsRequest()).isEmpty());
   }
 
 }
