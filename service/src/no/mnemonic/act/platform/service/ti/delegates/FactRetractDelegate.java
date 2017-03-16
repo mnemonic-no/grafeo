@@ -7,13 +7,16 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.entity.cassandra.AccessMode;
+import no.mnemonic.act.platform.entity.cassandra.Direction;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import java.util.UUID;
 
@@ -72,18 +75,29 @@ public class FactRetractDelegate extends AbstractDelegate {
   }
 
   private FactEntity saveRetractionFact(RetractFactRequest request, FactEntity factToRetract) {
-    FactEntity fact = new FactEntity()
-            .setId(UUID.randomUUID())  // Need to provide client-generated ID.
+    FactEntity retractionFact = new FactEntity()
+            .setId(UUID.randomUUID()) // Need to provide client-generated ID.
             .setTypeID(factTypeResolver.resolveRetractionFactType().getId())
             .setValue(String.format("Retracted Fact with id = %s.", factToRetract.getId()))
             .setInReferenceToID(factToRetract.getId())
             .setOrganizationID(resolveOrganization(request.getOrganization()))
             .setSourceID(resolveSource(request.getSource()))
             .setAccessMode(resolveAccessMode(request, factToRetract))
+            .setBindings(factToRetract.getBindings())
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
+    retractionFact = TiRequestContext.get().getFactManager().saveFact(retractionFact);
 
-    return TiRequestContext.get().getFactManager().saveFact(fact);
+    // Also bind retraction Fact to each Object the retracted Fact is bound to.
+    for (FactEntity.FactObjectBinding binding : ListUtils.list(factToRetract.getBindings())) {
+      ObjectFactBindingEntity retractionFactBinding = new ObjectFactBindingEntity()
+              .setFactID(retractionFact.getId())
+              .setObjectID(binding.getObjectID())
+              .setDirection(Direction.None);
+      TiRequestContext.get().getObjectManager().saveObjectFactBinding(retractionFactBinding);
+    }
+
+    return retractionFact;
   }
 
   private AccessMode resolveAccessMode(RetractFactRequest request, FactEntity factToRetract) {

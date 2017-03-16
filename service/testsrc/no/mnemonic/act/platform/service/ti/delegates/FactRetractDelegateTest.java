@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
+import no.mnemonic.act.platform.entity.cassandra.Direction;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
@@ -118,12 +119,27 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     verify(getFactConverter()).apply(match(e -> e.getAccessMode() == no.mnemonic.act.platform.entity.cassandra.AccessMode.Public));
   }
 
+  @Test
+  public void testRetractFactSaveObjectFactBinding() throws Exception {
+    RetractFactRequest request = mockRetractingFact();
+
+    delegate.handle(request);
+
+    verify(getObjectManager()).saveObjectFactBinding(match(binding -> {
+      assertNotNull(binding.getFactID());
+      assertNotNull(binding.getObjectID());
+      assertEquals(Direction.None, binding.getDirection());
+      return true;
+    }));
+  }
+
   private RetractFactRequest mockRetractingFact() throws Exception {
     RetractFactRequest request = crateRetractRequest();
 
     FactEntity factToRetract = new FactEntity()
             .setId(request.getFact())
-            .setAccessMode(no.mnemonic.act.platform.entity.cassandra.AccessMode.Public);
+            .setAccessMode(no.mnemonic.act.platform.entity.cassandra.AccessMode.Public)
+            .setBindings(ListUtils.list(new FactEntity.FactObjectBinding().setObjectID(UUID.randomUUID())));
 
     when(factTypeResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()));
     when(getFactManager().getFact(request.getFact())).thenReturn(factToRetract);
@@ -151,6 +167,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getOrganization(), entity.getOrganizationID());
       assertEquals(request.getSource(), entity.getSourceID());
       assertEquals(request.getAccessMode().name(), entity.getAccessMode().name());
+      assertTrue(entity.getBindings().size() > 0);
       assertTrue(entity.getTimestamp() > 0);
       assertTrue(entity.getLastSeenTimestamp() > 0);
       return true;
