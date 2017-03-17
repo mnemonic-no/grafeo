@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.api.json.TimestampDeserializer;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import javax.validation.constraints.Min;
 import java.util.Set;
 
 @ApiModel(description = "Search for Objects.")
@@ -35,6 +36,7 @@ public class SearchObjectRequest implements ValidatingRequest {
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
   @ApiModelProperty(value = "Limit the number of returned Objects (default 25, 0 means all)", example = "25")
+  @Min(0)
   private Integer limit;
   // TODO: Add minConfidence/maxConfidence once confidence level is defined.
 
