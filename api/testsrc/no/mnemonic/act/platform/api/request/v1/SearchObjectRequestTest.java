@@ -14,10 +14,8 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
   @Test
   public void testDecodeRequest() throws Exception {
     String json = "{" +
-            "type : ['type']," +
             "objectType : ['objectType']," +
             "factType : ['factType']," +
-            "value : ['value']," +
             "objectValue : ['objectValue']," +
             "factValue : ['factValue']," +
             "source : ['source']," +
@@ -27,10 +25,8 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
             "}";
 
     SearchObjectRequest request = getMapper().readValue(json, SearchObjectRequest.class);
-    assertEquals(SetUtils.set("type"), request.getType());
     assertEquals(SetUtils.set("objectType"), request.getObjectType());
     assertEquals(SetUtils.set("factType"), request.getFactType());
-    assertEquals(SetUtils.set("value"), request.getValue());
     assertEquals(SetUtils.set("objectValue"), request.getObjectValue());
     assertEquals(SetUtils.set("factValue"), request.getFactValue());
     assertEquals(SetUtils.set("source"), request.getSource());

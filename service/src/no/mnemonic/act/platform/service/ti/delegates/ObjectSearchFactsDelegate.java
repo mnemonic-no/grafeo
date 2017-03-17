@@ -8,7 +8,6 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
-import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
@@ -89,12 +88,12 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
 
   private List<FactEntity> filterFacts(List<FactEntity> facts, SearchObjectFactsRequest request) {
     return facts.stream()
-            .filter(factTypeFilter(request))
-            .filter(factValueFilter(request))
-            .filter(sourceFilter(request))
-            .filter(includeRetractedFilter(request, facts))
-            .filter(beforeFilter(request))
-            .filter(afterFilter(request))
+            .filter(factTypeFilter(request.getFactType()))
+            .filter(factValueFilter(request.getFactValue()))
+            .filter(sourceFilter(request.getSource()))
+            .filter(includeRetractedFilter(request.getIncludeRetracted(), facts))
+            .filter(beforeFilter(request.getBefore()))
+            .filter(afterFilter(request.getAfter()))
             .collect(Collectors.toList());
   }
 
@@ -103,44 +102,14 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
     return limit == 0 ? facts : facts.stream().limit(limit).collect(Collectors.toList());
   }
 
-  private Predicate<FactEntity> factTypeFilter(SearchObjectFactsRequest request) {
+  private Predicate<FactEntity> includeRetractedFilter(Boolean includeRetracted, List<FactEntity> allFacts) {
     return fact -> {
-      if (CollectionUtils.isEmpty(request.getFactType())) {
-        return true;
-      }
-
-      FactTypeEntity factType = TiRequestContext.get().getFactManager().getFactType(fact.getTypeID());
-      return request.getFactType().contains(factType.getName());
-    };
-  }
-
-  private Predicate<FactEntity> factValueFilter(SearchObjectFactsRequest request) {
-    return fact -> CollectionUtils.isEmpty(request.getFactValue()) || request.getFactValue().contains(fact.getValue());
-  }
-
-  private Predicate<FactEntity> sourceFilter(SearchObjectFactsRequest request) {
-    // TODO: For now match on UUID, but it should match on name once Source is properly implemented.
-    return fact -> CollectionUtils.isEmpty(request.getSource()) || request.getSource().contains(fact.getSourceID().toString());
-  }
-
-  private Predicate<FactEntity> includeRetractedFilter(SearchObjectFactsRequest request, List<FactEntity> allFacts) {
-    return fact -> {
-      boolean includeRetracted = ObjectUtils.ifNull(request.getIncludeRetracted(), false);
       // The retraction Fact is bound to the same Object than the Fact filtered here, thus, it will be in the list
       // of all (unfiltered) Facts. If not the user doesn't have access to it which means that from the user's
       // point of view the Fact isn't retracted.
       boolean isRetracted = allFacts.stream().anyMatch(f -> Objects.equals(f.getTypeID(), RETRACTION_FACT_TYPE_ID) && Objects.equals(f.getInReferenceToID(), fact.getId()));
-
-      return includeRetracted || !isRetracted;
+      return ObjectUtils.ifNull(includeRetracted, false) || !isRetracted;
     };
-  }
-
-  private Predicate<FactEntity> beforeFilter(SearchObjectFactsRequest request) {
-    return fact -> request.getBefore() == null || fact.getTimestamp() < request.getBefore();
-  }
-
-  private Predicate<FactEntity> afterFilter(SearchObjectFactsRequest request) {
-    return fact -> request.getAfter() == null || fact.getTimestamp() > request.getAfter();
   }
 
 }

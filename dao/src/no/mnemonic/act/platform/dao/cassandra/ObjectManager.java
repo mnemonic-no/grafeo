@@ -20,6 +20,7 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -124,6 +125,10 @@ public class ObjectManager implements LifecycleAspect {
     // Encode value using EntityHandler because the mapping value is also stored encoded.
     ObjectByTypeValueEntity objectByTypeValue = objectAccessor.getObjectByTypeValue(objectType.getId(), encodeObjectValue(objectType, value));
     return ObjectUtils.ifNotNull(objectByTypeValue, o -> getObject(o.getObjectID()));
+  }
+
+  public Iterator<ObjectEntity> fetchObjects() {
+    return objectAccessor.fetch().iterator();
   }
 
   public ObjectEntity saveObject(ObjectEntity object) {

@@ -13,14 +13,10 @@ import java.util.Set;
 @ApiModel(description = "Search for Objects.")
 public class SearchObjectRequest implements ValidatingRequest {
 
-  @ApiModelProperty(value = "Shortcut which combines both 'objectType' and 'factType'")
-  private Set<String> type;
   @ApiModelProperty(value = "Only return Objects with a specific ObjectType")
   private Set<String> objectType;
   @ApiModelProperty(value = "Only return Objects with Facts having a specific FactType")
   private Set<String> factType;
-  @ApiModelProperty(value = "Shortcut which combines both 'objectValue' and 'factValue'")
-  private Set<String> value;
   @ApiModelProperty(value = "Only return Objects matching a specific value")
   private Set<String> objectValue;
   @ApiModelProperty(value = "Only return Objects with Facts matching a specific value")
@@ -28,31 +24,17 @@ public class SearchObjectRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Only return Objects with Facts coming from a specific Source")
   private Set<String> source;
   @ApiModelProperty(value = "Only return Objects with Facts added before a specific timestamp",
-          example = "2016-09-28T21:26:22", dataType = "string")
+          example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long before;
   @ApiModelProperty(value = "Only return Objects with Facts added after a specific timestamp",
-          example = "2016-09-28T21:26:22", dataType = "string")
+          example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
   @ApiModelProperty(value = "Limit the number of returned Objects (default 25, 0 means all)", example = "25")
   @Min(0)
   private Integer limit;
   // TODO: Add minConfidence/maxConfidence once confidence level is defined.
-
-  public Set<String> getType() {
-    return type;
-  }
-
-  public SearchObjectRequest setType(Set<String> type) {
-    this.type = type;
-    return this;
-  }
-
-  public SearchObjectRequest addType(String type) {
-    this.type = SetUtils.addToSet(this.type, type);
-    return this;
-  }
 
   public Set<String> getObjectType() {
     return objectType;
@@ -79,20 +61,6 @@ public class SearchObjectRequest implements ValidatingRequest {
 
   public SearchObjectRequest addFactType(String factType) {
     this.factType = SetUtils.addToSet(this.factType, factType);
-    return this;
-  }
-
-  public Set<String> getValue() {
-    return value;
-  }
-
-  public SearchObjectRequest setValue(Set<String> value) {
-    this.value = value;
-    return this;
-  }
-
-  public SearchObjectRequest addValue(String value) {
-    this.value = SetUtils.addToSet(this.value, value);
     return this;
   }
 

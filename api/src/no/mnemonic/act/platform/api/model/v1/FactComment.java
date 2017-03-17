@@ -18,7 +18,7 @@ public class FactComment {
   private final Source.Info source;
   @ApiModelProperty(value = "Contains the content of the comment", example = "Hello World!", required = true)
   private final String comment;
-  @ApiModelProperty(value = "When the comment was made", example = "2016-09-28T21:26:22", dataType = "string", required = true)
+  @ApiModelProperty(value = "When the comment was made", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
 

@@ -30,10 +30,10 @@ public class Fact {
   private final Source.Info source;
   @ApiModelProperty(value = "Who has access to the Fact", required = true)
   private final AccessMode accessMode;
-  @ApiModelProperty(value = "When the Fact was created", example = "2016-09-28T21:26:22", dataType = "string", required = true)
+  @ApiModelProperty(value = "When the Fact was created", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
-  @ApiModelProperty(value = "When the Fact was last seen", example = "2016-09-28T21:26:22", dataType = "string", required = true)
+  @ApiModelProperty(value = "When the Fact was last seen", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long lastSeenTimestamp;
   @ApiModelProperty(value = "Links the Fact to Objects")

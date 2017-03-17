@@ -11,10 +11,13 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -219,6 +222,64 @@ abstract class AbstractDelegate {
             .map(binding -> TiRequestContext.get().getFactManager().getFact(binding.getFactID()))
             .filter(fact -> TiSecurityContext.get().hasReadPermission(fact))
             .collect(Collectors.toList());
+  }
+
+  /**
+   * Filter Facts by FactType.
+   *
+   * @param types FactType names to filter by.
+   * @return Predicate which returns true if a Fact matches a FactType.
+   */
+  Predicate<FactEntity> factTypeFilter(Set<String> types) {
+    return fact -> {
+      if (CollectionUtils.isEmpty(types)) {
+        return true;
+      }
+
+      FactTypeEntity factType = TiRequestContext.get().getFactManager().getFactType(fact.getTypeID());
+      return types.contains(factType.getName());
+    };
+  }
+
+  /**
+   * Filter Facts by Fact value.
+   *
+   * @param values Values to filter by.
+   * @return Predicate which returns true if a Fact matches a value.
+   */
+  Predicate<FactEntity> factValueFilter(Set<String> values) {
+    return fact -> CollectionUtils.isEmpty(values) || values.contains(fact.getValue());
+  }
+
+  /**
+   * Filter Facts by Source.
+   *
+   * @param sources Source UUIDs to filter by.
+   * @return Predicate which returns true if a Fact matches a Source.
+   */
+  Predicate<FactEntity> sourceFilter(Set<String> sources) {
+    // TODO: For now match on UUID, but it should match on name once Source is properly implemented.
+    return fact -> CollectionUtils.isEmpty(sources) || sources.contains(fact.getSourceID().toString());
+  }
+
+  /**
+   * Filter Facts which were created before a specific timestamp.
+   *
+   * @param before Timestamp
+   * @return Predicate which returns true if a Fact was created before the given timestamp.
+   */
+  Predicate<FactEntity> beforeFilter(Long before) {
+    return fact -> before == null || fact.getTimestamp() < before;
+  }
+
+  /**
+   * Filter Facts which were created after a specific timestamp.
+   *
+   * @param after Timestamp
+   * @return Predicate which returns true if a Fact was created after the given timestamp.
+   */
+  Predicate<FactEntity> afterFilter(Long after) {
+    return fact -> after == null || fact.getTimestamp() > after;
   }
 
 }

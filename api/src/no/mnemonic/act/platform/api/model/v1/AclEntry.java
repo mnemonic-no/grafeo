@@ -16,7 +16,7 @@ public class AclEntry {
   private final Subject.Info subject;
   @ApiModelProperty(value = "Who granted access", required = true)
   private final Source.Info source;
-  @ApiModelProperty(value = "When access was granted", example = "2016-09-28T21:26:22", dataType = "string", required = true)
+  @ApiModelProperty(value = "When access was granted", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
 
