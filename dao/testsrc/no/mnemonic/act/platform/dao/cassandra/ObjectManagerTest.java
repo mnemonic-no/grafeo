@@ -7,10 +7,7 @@ import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -145,6 +142,22 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertNull(getObjectManager().getObject("", "ignored"));
     assertNull(getObjectManager().getObject("ignored", null));
     assertNull(getObjectManager().getObject("ignored", ""));
+  }
+
+  @Test
+  public void testFetchObjects() {
+    List<ObjectEntity> expected = createAndSaveObjects();
+    List<ObjectEntity> actual = new ArrayList<>();
+
+    Iterator<ObjectEntity> objectIterator = getObjectManager().fetchObjects();
+    while (objectIterator.hasNext()) {
+      actual.add(objectIterator.next());
+    }
+
+    expected.sort(Comparator.comparing(ObjectEntity::getId));
+    actual.sort(Comparator.comparing(ObjectEntity::getId));
+
+    assertObjects(expected, actual);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -285,6 +298,21 @@ public class ObjectManagerTest extends AbstractManagerTest {
     return getObjectManager().saveObject(createObject(typeID));
   }
 
+  private List<ObjectEntity> createAndSaveObjects() {
+    ObjectTypeEntity type = createAndSaveObjectType();
+    List<ObjectEntity> entities = new ArrayList<>();
+
+    for (int i = 0; i < 3; i++) {
+      entities.add(getObjectManager().saveObject(new ObjectEntity()
+              .setId(UUID.randomUUID())
+              .setTypeID(type.getId())
+              .setValue("object-" + i)
+      ));
+    }
+
+    return entities;
+  }
+
   private ObjectFactBindingEntity createAndSaveObjectFactBinding(UUID objectID) {
     return getObjectManager().saveObjectFactBinding(createObjectFactBinding(objectID));
   }
@@ -310,6 +338,13 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getTypeID(), actual.getTypeID());
     assertEquals(expected.getValue(), actual.getValue());
+  }
+
+  private void assertObjects(List<ObjectEntity> expected, List<ObjectEntity> actual) {
+    assertEquals(expected.size(), actual.size());
+    for (int i = 0; i < expected.size(); i++) {
+      assertObject(expected.get(i), actual.get(i));
+    }
   }
 
   private void assertObjectFactBinding(ObjectFactBindingEntity expected, ObjectFactBindingEntity actual) {

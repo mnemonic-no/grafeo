@@ -29,6 +29,8 @@ abstract class AbstractDelegateTest {
   @Mock
   private ObjectTypeConverter objectTypeConverter;
   @Mock
+  private ObjectConverter objectConverter;
+  @Mock
   private FactTypeConverter factTypeConverter;
   @Mock
   private FactConverter factConverter;
@@ -51,6 +53,7 @@ abstract class AbstractDelegateTest {
             .setEntityHandlerFactory(entityHandlerFactory)
             .setValidatorFactory(validatorFactory)
             .setObjectTypeConverter(objectTypeConverter)
+            .setObjectConverter(objectConverter)
             .setFactTypeConverter(factTypeConverter)
             .setFactConverter(factConverter)
             .setAclEntryConverter(aclEntryConverter)
@@ -89,6 +92,10 @@ abstract class AbstractDelegateTest {
 
   ObjectTypeConverter getObjectTypeConverter() {
     return objectTypeConverter;
+  }
+
+  ObjectConverter getObjectConverter() {
+    return objectConverter;
   }
 
   FactTypeConverter getFactTypeConverter() {

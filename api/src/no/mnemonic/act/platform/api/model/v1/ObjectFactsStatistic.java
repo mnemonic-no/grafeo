@@ -13,11 +13,11 @@ public class ObjectFactsStatistic {
   @ApiModelProperty(value = "Number of Facts of a specific FactType bound to the Object", example = "127", required = true)
   private final int count;
   @ApiModelProperty(value = "Timestamp when a Fact of a specific FactType was last added to the Object",
-          example = "2016-09-28T21:26:22", dataType = "string")
+          example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long lastAddedTimestamp;
   @ApiModelProperty(value = "Timestamp when a Fact of a specific FactType was last seen",
-          example = "2016-09-28T21:26:22", dataType = "string")
+          example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long lastSeenTimestamp;
   // TODO: Add minConfidenceLevel/maxConfidenceLevel once confidence levels are defined.

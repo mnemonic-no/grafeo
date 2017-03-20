@@ -30,10 +30,10 @@ public class SearchObjectFactsRequest implements ValidatingRequest {
   private Set<String> source;
   @ApiModelProperty(value = "Include retracted Facts (default false)", example = "false")
   private Boolean includeRetracted;
-  @ApiModelProperty(value = "Only return Facts added before a specific timestamp", example = "2016-09-28T21:26:22", dataType = "string")
+  @ApiModelProperty(value = "Only return Facts added before a specific timestamp", example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long before;
-  @ApiModelProperty(value = "Only return Facts added after a specific timestamp", example = "2016-09-28T21:26:22", dataType = "string")
+  @ApiModelProperty(value = "Only return Facts added after a specific timestamp", example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
   @ApiModelProperty(value = "Limit the number of returned Facts (default 25, 0 means all)", example = "25")

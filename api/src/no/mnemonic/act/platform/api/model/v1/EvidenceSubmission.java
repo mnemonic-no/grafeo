@@ -21,10 +21,10 @@ public class EvidenceSubmission {
   private final String mediaType;
   @ApiModelProperty(value = "Length of the evidence data in bytes", example = "723298", required = true)
   private final long length;
-  @ApiModelProperty(value = "When the evidence was submitted", example = "2016-09-28T21:26:22", dataType = "string", required = true)
+  @ApiModelProperty(value = "When the evidence was submitted", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
-  @ApiModelProperty(value = "When the evidence was first observed", example = "2016-09-28T21:26:22", dataType = "string", required = true)
+  @ApiModelProperty(value = "When the evidence was first observed", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long observationTimestamp;
   @ApiModelProperty(value = "Who submitted the evidence", required = true)

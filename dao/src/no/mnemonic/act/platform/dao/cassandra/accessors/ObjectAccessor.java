@@ -5,6 +5,7 @@ import com.datastax.driver.mapping.annotations.Accessor;
 import com.datastax.driver.mapping.annotations.Param;
 import com.datastax.driver.mapping.annotations.Query;
 import no.mnemonic.act.platform.entity.cassandra.ObjectByTypeValueEntity;
+import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
 
 import java.util.UUID;
@@ -13,6 +14,9 @@ import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPAC
 
 @Accessor
 public interface ObjectAccessor {
+
+  @Query("SELECT * FROM " + KEY_SPACE + "." + ObjectEntity.TABLE)
+  Result<ObjectEntity> fetch();
 
   @Query("SELECT * FROM " + KEY_SPACE + "." + ObjectByTypeValueEntity.TABLE + " WHERE object_type_id = :type AND object_value = :value")
   ObjectByTypeValueEntity getObjectByTypeValue(@Param("type") UUID objectTypeID, @Param("value") String objectValue);

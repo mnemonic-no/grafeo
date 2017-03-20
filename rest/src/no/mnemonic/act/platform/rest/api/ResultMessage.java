@@ -22,7 +22,7 @@ public class ResultMessage {
   private final String field;
   @ApiModelProperty(value = "Contains the parameter which caused an error (usually the field's value in the request)", example = "Non-Valid-Name")
   private final String parameter;
-  @ApiModelProperty(value = "When the message was generated", example = "2016-09-28T21:26:22", dataType = "string", required = true)
+  @ApiModelProperty(value = "When the message was generated", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final long timestamp;
 
