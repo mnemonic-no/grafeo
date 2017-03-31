@@ -43,7 +43,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     UUID id = UUID.randomUUID();
     when(getTiService().createFact(any(), isA(CreateFactRequest.class))).then(i -> Fact.builder().setId(id).build());
 
-    Response response = target("/v1/fact").request().post(Entity.json(new CreateFactRequest()));
+    Response response = target("/v1/fact").request().post(Entity.json(createCreateFactRequest()));
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
@@ -135,7 +135,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
       return FactComment.builder().setId(comment).build();
     });
 
-    Response response = target(String.format("/v1/fact/uuid/%s/comments", fact)).request().post(Entity.json(new CreateFactCommentRequest()));
+    Response response = target(String.format("/v1/fact/uuid/%s/comments", fact)).request().post(Entity.json(createCreateFactCommentRequest()));
     assertEquals(201, response.getStatus());
     assertEquals(comment.toString(), getPayload(response).get("id").textValue());
 
@@ -156,6 +156,18 @@ public class FactEndpointTest extends AbstractEndpointTest {
       comments.add(FactComment.builder().setId(UUID.randomUUID()).build());
     }
     return comments;
+  }
+
+  private CreateFactRequest createCreateFactRequest() {
+    return new CreateFactRequest()
+            .setType("type")
+            .setValue("value")
+            .addBinding(new CreateFactRequest.FactObjectBinding().setObjectID(UUID.randomUUID()).setDirection(Direction.BiDirectional));
+  }
+
+  private CreateFactCommentRequest createCreateFactCommentRequest() {
+    return new CreateFactCommentRequest()
+            .setComment("Comment");
   }
 
 }

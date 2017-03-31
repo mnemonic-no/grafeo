@@ -15,6 +15,14 @@
   <build>
     <sourceDirectory>src</sourceDirectory>
     <testSourceDirectory>testsrc</testSourceDirectory>
+    <testResources>
+      <testResource>
+        <directory>testsrc</directory>
+        <includes>
+          <include>**/*.xml</include>
+        </includes>
+      </testResource>
+    </testResources>
   </build>
 
   <!-- configure dependencies -->

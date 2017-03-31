@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
+import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.act.platform.service.Service;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
@@ -45,6 +46,18 @@ public class ValidationAspectTest {
       fail("No InvalidArgumentException thrown.");
     } catch (InvalidArgumentException ex) {
       assertNotNullRequest(ex);
+    }
+  }
+
+  @Test
+  public void testValidateServiceRequest() {
+    TestService service = createService();
+
+    try {
+      service.method(new RequestHeader(), new ServiceTestRequest());
+      fail("No InvalidArgumentException thrown.");
+    } catch (InvalidArgumentException ex) {
+      assertServiceNotNullException(ex, "value");
     }
   }
 
@@ -94,6 +107,15 @@ public class ValidationAspectTest {
     assertEquals("NULL", error.getValue());
   }
 
+  private void assertServiceNotNullException(InvalidArgumentException ex, String property) {
+    assertEquals(1, ex.getValidationErrors().size());
+    InvalidArgumentException.ValidationError error = ex.getValidationErrors().iterator().next();
+    assertEquals("may not be null in service layer", error.getMessage());
+    assertEquals("{no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull.message}", error.getMessageTemplate());
+    assertEquals(property, error.getProperty());
+    assertEquals("NULL", error.getValue());
+  }
+
   private void assertNotNullRequest(InvalidArgumentException ex) {
     assertEquals(1, ex.getValidationErrors().size());
     InvalidArgumentException.ValidationError error = ex.getValidationErrors().iterator().next();
@@ -113,6 +135,11 @@ public class ValidationAspectTest {
     }
   }
 
+  private class ServiceTestRequest implements ValidatingRequest {
+    @ServiceNotNull
+    private Object value;
+  }
+
   private class NestedTestRequest implements ValidatingRequest {
     @NotNull
     @Valid
@@ -126,6 +153,10 @@ public class ValidationAspectTest {
 
   static class TestService implements Service {
     String method(RequestHeader rh, TestRequest request) throws InvalidArgumentException {
+      return "Called!";
+    }
+
+    String method(RequestHeader rh, ServiceTestRequest request) throws InvalidArgumentException {
       return "Called!";
     }
 

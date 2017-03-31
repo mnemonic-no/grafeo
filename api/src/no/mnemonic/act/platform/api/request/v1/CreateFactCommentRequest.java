@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.api.request.v1;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
+import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -12,7 +13,7 @@ import java.util.UUID;
 public class CreateFactCommentRequest implements ValidatingRequest {
 
   @ApiModelProperty(hidden = true)
-  @NotNull
+  @ServiceNotNull
   private UUID fact;
   @ApiModelProperty(value = "Content of comment", example = "Hello World!", required = true)
   @NotNull

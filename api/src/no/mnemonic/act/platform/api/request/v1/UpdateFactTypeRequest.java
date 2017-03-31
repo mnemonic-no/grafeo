@@ -3,10 +3,10 @@ package no.mnemonic.act.platform.api.request.v1;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
+import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
@@ -15,7 +15,7 @@ import java.util.UUID;
 public class UpdateFactTypeRequest implements ValidatingRequest {
 
   @ApiModelProperty(hidden = true)
-  @NotNull
+  @ServiceNotNull
   private UUID id;
   @ApiModelProperty(value = "If set updates the name of the FactType", example = "ThreatActorAlias")
   @Size(min = 1)

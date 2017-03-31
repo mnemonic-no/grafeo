@@ -57,7 +57,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
     UUID id = UUID.randomUUID();
     when(getTiService().createObjectType(any(), isA(CreateObjectTypeRequest.class))).then(i -> ObjectType.builder().setId(id).build());
 
-    Response response = target("/v1/objectType").request().post(Entity.json(new CreateObjectTypeRequest()));
+    Response response = target("/v1/objectType").request().post(Entity.json(createCreateObjectTypeRequest()));
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
@@ -85,6 +85,13 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
       types.add(ObjectType.builder().setId(UUID.randomUUID()).build());
     }
     return types;
+  }
+
+  private CreateObjectTypeRequest createCreateObjectTypeRequest() {
+    return new CreateObjectTypeRequest()
+            .setName("name")
+            .setEntityHandler("handler")
+            .setValidator("validator");
   }
 
 }

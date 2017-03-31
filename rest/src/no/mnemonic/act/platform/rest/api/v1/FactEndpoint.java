@@ -158,7 +158,7 @@ public class FactEndpoint extends AbstractEndpoint {
   public Response grantFactAccess(
           @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact,
           @PathParam("subject") @ApiParam(value = "UUID of Subject.") @NotNull @Valid UUID subject,
-          @ApiParam(hidden = true) @NotNull @Valid GrantFactAccessRequest request
+          @ApiParam(hidden = true) @Valid GrantFactAccessRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Swagger won't send a request object because it's hidden from the API, thus, make sure that it's initialized.
     request = ObjectUtils.ifNull(request, new GrantFactAccessRequest());

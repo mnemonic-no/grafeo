@@ -2,10 +2,7 @@ package no.mnemonic.act.platform.rest.api.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import no.mnemonic.act.platform.api.model.v1.FactType;
-import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
-import no.mnemonic.act.platform.api.request.v1.GetFactTypeByIdRequest;
-import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
-import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
+import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import org.junit.Test;
@@ -57,7 +54,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
     UUID id = UUID.randomUUID();
     when(getTiService().createFactType(any(), isA(CreateFactTypeRequest.class))).then(i -> FactType.builder().setId(id).build());
 
-    Response response = target("/v1/factType").request().post(Entity.json(new CreateFactTypeRequest()));
+    Response response = target("/v1/factType").request().post(Entity.json(createCreateFactTypeRequest()));
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
@@ -85,6 +82,14 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
       types.add(FactType.builder().setId(UUID.randomUUID()).build());
     }
     return types;
+  }
+
+  private CreateFactTypeRequest createCreateFactTypeRequest() {
+    return new CreateFactTypeRequest()
+            .setName("name")
+            .setEntityHandler("handler")
+            .setValidator("validator")
+            .addRelevantObjectBinding(new FactObjectBindingDefinition().setObjectType(UUID.randomUUID()).setDirection(Direction.BiDirectional));
   }
 
 }

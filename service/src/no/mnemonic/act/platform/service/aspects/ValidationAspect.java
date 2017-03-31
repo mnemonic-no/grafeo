@@ -19,7 +19,12 @@ import java.util.Set;
  */
 public class ValidationAspect extends AbstractAspect {
 
-  private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+  private static final String VALIDATION_MAPPINGS = "ValidationMappings.xml";
+  private static final Validator validator = Validation.byDefaultProvider()
+          .configure()
+          .addMapping(ValidationAspect.class.getClassLoader().getResourceAsStream(VALIDATION_MAPPINGS))
+          .buildValidatorFactory()
+          .getValidator();
 
   @Override
   protected void configure() {
