@@ -3,9 +3,9 @@ package no.mnemonic.act.platform.api.request.v1;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
+import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,7 +13,7 @@ import java.util.UUID;
 public class RetractFactRequest implements ValidatingRequest {
 
   @ApiModelProperty(hidden = true)
-  @NotNull
+  @ServiceNotNull
   private UUID fact;
   @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)")
   private UUID organization;

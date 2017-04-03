@@ -1,16 +1,22 @@
 package no.mnemonic.act.platform.rest.mappings;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
+import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
+import no.mnemonic.act.platform.api.request.v1.Direction;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import no.mnemonic.act.platform.rest.api.ResultMessage;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 import static no.mnemonic.act.platform.rest.api.ResultMessage.Type.ActionError;
 import static no.mnemonic.act.platform.rest.api.ResultMessage.Type.FieldError;
@@ -59,13 +65,95 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
     assertMessages(getMessages(response), ActionError);
   }
 
+  @Test
+  public void testFailedRequestValidationReturns412() throws Exception {
+    CreateFactRequest request = new CreateFactRequest()
+            .setType("type")
+            .addBinding(new CreateFactRequest.FactObjectBinding().setDirection(Direction.None));
+    Response response = target("/v1/fact").request().post(Entity.json(request));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "may not be null", "{javax.validation.constraints.NotNull.message}", "value", "NULL");
+  }
+
+  @Test
+  public void testFailedRequestValidationNestedReturns412() throws Exception {
+    CreateFactRequest request = new CreateFactRequest()
+            .setType("type")
+            .setValue("value")
+            .addBinding(new CreateFactRequest.FactObjectBinding());
+    Response response = target("/v1/fact").request().post(Entity.json(request));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "may not be null", "{javax.validation.constraints.NotNull.message}", "bindings[0].direction", "NULL");
+  }
+
+  @Test
+  public void testFailedRequestValidationWithNullRequestReturns412() throws Exception {
+    Response response = target("/v1/fact").request().post(Entity.json(null));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "may not be null", "{javax.validation.constraints.NotNull.message}", "request", "NULL");
+  }
+
+  @Test
+  public void testInvalidJsonRequestReturns400() throws Exception {
+    List<String> requests = ListUtils.list(
+            "{\"value",
+            "{\"value : \"something\"}",
+            "{\"value\" : \"something"
+    );
+
+    for (String request : requests) {
+      Response response = target("/v1/fact").request().post(Entity.json(request));
+      assertEquals(400, response.getStatus());
+      assertMessages(getMessages(response), "Invalid JSON request received.", "invalid.json.request");
+    }
+  }
+
+  @Test
+  public void testUnknownFieldMappingReturns412() throws Exception {
+    Response response = target("/v1/fact").request().post(Entity.json("{\"unknown\" : \"something\"}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "Unknown JSON field detected.", "unknown.json.field", "unknown", "");
+  }
+
+  @Test
+  public void testUnknownFieldMappingNestedReturns412() throws Exception {
+    Response response = target("/v1/fact").request().post(Entity.json("{\"bindings\" : [{\"unknown\" : \"something\"}]}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "Unknown JSON field detected.", "unknown.json.field", "bindings[0].unknown", "");
+  }
+
+  @Test
+  public void testFieldParsingErrorReturns412() throws Exception {
+    Response response = target("/v1/fact").request().post(Entity.json("{\"source\" : \"something\"}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "Invalid JSON field detected.", "invalid.json.field", "source", "something");
+  }
+
+  @Test
+  public void testFieldParsingErrorWithWrongEnumReturns412() throws Exception {
+    Response response = target("/v1/fact").request().post(Entity.json("{\"bindings\" : [{\"direction\" : \"something\"}]}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "Invalid JSON field detected.", "invalid.json.field", "bindings[0].direction", "something");
+  }
+
+  @Test
+  public void testUrlNotFoundReturns404() throws Exception {
+    Response response = target("/not/existing").request().get();
+    assertEquals(404, response.getStatus());
+    assertMessages(getMessages(response), "Requested URL does not exist.", "url.not.exist");
+  }
+
+  @Test
+  public void testInvalidUrlParameterReturns412() throws Exception {
+    Response response = target("/v1/fact/uuid/invalid").request().get();
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "Invalid URL parameter detected.", "invalid.url.parameter");
+  }
+
   private void assertMessages(ArrayNode messages, ResultMessage.Type type) {
     assertEquals(1, messages.size());
     assertEquals(type.name(), messages.get(0).get("type").asText());
-    assertEquals("message", messages.get(0).get("message").asText());
-    assertEquals("template", messages.get(0).get("messageTemplate").asText());
-    assertEquals("property", messages.get(0).get("field").asText());
-    assertEquals("value", messages.get(0).get("parameter").asText());
+    assertMessage(messages.get(0), "message", "template", "property", "value");
   }
 
   private void assertMessages(ArrayNode messages, String message, String template) {
@@ -73,6 +161,20 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
     assertEquals(ActionError.name(), messages.get(0).get("type").asText());
     assertEquals(message, messages.get(0).get("message").asText());
     assertEquals(template, messages.get(0).get("messageTemplate").asText());
+  }
+
+  private void assertMessages(ArrayNode messages, String message, String template, String property, String value) {
+    assertEquals(1, messages.size());
+    assertEquals(FieldError.name(), messages.get(0).get("type").asText());
+    assertMessage(messages.get(0), message, template, property, value);
+  }
+
+
+  private void assertMessage(JsonNode jsonMessage, String message, String template, String property, String value) {
+    assertEquals(message, jsonMessage.get("message").asText());
+    assertEquals(template, jsonMessage.get("messageTemplate").asText());
+    assertEquals(property, jsonMessage.get("field").asText());
+    assertEquals(value, jsonMessage.get("parameter").asText());
   }
 
   private Response executeRequest(Throwable ex) throws Exception {

@@ -1,15 +1,15 @@
 package no.mnemonic.act.platform.api.request.v1;
 
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
+import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 
-import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 public class GrantFactAccessRequest implements ValidatingRequest {
 
-  @NotNull
+  @ServiceNotNull
   private UUID fact;
-  @NotNull
+  @ServiceNotNull
   private UUID subject;
 
   public UUID getFact() {

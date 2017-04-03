@@ -11,6 +11,8 @@ import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractRequestTest {
 
+  private static final String VALIDATION_MAPPINGS = "ValidationMappings.xml";
+
   private static ObjectMapper mapper;
   private static Validator validator;
 
@@ -21,8 +23,12 @@ public abstract class AbstractRequestTest {
     // With this configuration we save a lot of quotes and escaping when creating JSON strings.
     mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-    // Initialize validator for testing.
-    validator = Validation.buildDefaultValidatorFactory().getValidator();
+    // Initialize validator for testing including custom mappings.
+    validator = Validation.byDefaultProvider()
+            .configure()
+            .addMapping(AbstractRequestTest.class.getClassLoader().getResourceAsStream(VALIDATION_MAPPINGS))
+            .buildValidatorFactory()
+            .getValidator();
   }
 
   protected ObjectMapper getMapper() {
