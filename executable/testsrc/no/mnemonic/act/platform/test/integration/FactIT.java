@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.test.integration;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.request.v1.Direction;
@@ -8,11 +9,11 @@ import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class FactIT extends AbstractIT {
 
@@ -33,20 +34,53 @@ public class FactIT extends AbstractIT {
     FactTypeEntity factType = createFactType(objectType.getId());
 
     // Create a Fact via the REST API ...
-    CreateFactRequest request = new CreateFactRequest()
-            .setType(factType.getName())
-            .setValue("factValue")
-            .addBinding(new CreateFactRequest.FactObjectBinding()
-                    .setObjectType(objectType.getName())
-                    .setObjectValue("objectValue")
-                    .setDirection(Direction.BiDirectional)
-            );
+    CreateFactRequest request = createCreateFactRequest(objectType, factType);
     Response response = target("/v1/fact").request().post(Entity.json(request));
     assertEquals(201, response.getStatus());
 
     // ... and check that both Fact and Object end up in the database.
     assertNotNull(getFactManager().getFact(getIdFromModel(getPayload(response))));
     assertNotNull(getObjectManager().getObject(objectType.getName(), request.getBindings().get(0).getObjectValue()));
+  }
+
+  @Test
+  public void testCreateFactTwice() throws Exception {
+    ObjectTypeEntity objectType = createObjectType();
+    FactTypeEntity factType = createFactType(objectType.getId());
+
+    // Create the same Fact twice ...
+    CreateFactRequest request = createCreateFactRequest(objectType, factType);
+    Response response1 = target("/v1/fact").request().post(Entity.json(request));
+    assertEquals(201, response1.getStatus());
+    Response response2 = target("/v1/fact").request().post(Entity.json(request));
+    assertEquals(201, response2.getStatus());
+
+    // ... and check that the Fact was only refreshed.
+    JsonNode payload1 = getPayload(response1);
+    JsonNode payload2 = getPayload(response2);
+    assertEquals(getIdFromModel(payload1), getIdFromModel(payload2));
+    assertEquals(payload1.get("timestamp").textValue(), payload2.get("timestamp").textValue());
+    assertTrue(Instant.parse(payload1.get("lastSeenTimestamp").textValue()).isBefore(Instant.parse(payload2.get("lastSeenTimestamp").textValue())));
+  }
+
+  @Test
+  public void testCreateFactWithAclAndComment() throws Exception {
+    ObjectTypeEntity objectType = createObjectType();
+    FactTypeEntity factType = createFactType(objectType.getId());
+
+    // Create a Fact with ACL and a comment via the REST API ...
+    CreateFactRequest request = createCreateFactRequest(objectType, factType)
+            .addAcl(UUID.randomUUID())
+            .addAcl(UUID.randomUUID())
+            .addAcl(UUID.randomUUID())
+            .setComment("Hello World!");
+    Response response = target("/v1/fact").request().post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+
+    // ... and check that both ACL and the comment end up in the database.
+    UUID id = getIdFromModel(getPayload(response));
+    assertEquals(request.getAcl().size(), getFactManager().fetchFactAcl(id).size());
+    assertEquals(1, getFactManager().fetchFactComments(id).size());
   }
 
   @Test
@@ -145,6 +179,17 @@ public class FactIT extends AbstractIT {
             .setTimestamp(123456789);
 
     return getFactManager().saveFactComment(comment);
+  }
+
+  private CreateFactRequest createCreateFactRequest(ObjectTypeEntity objectType, FactTypeEntity factType) {
+    return new CreateFactRequest()
+            .setType(factType.getName())
+            .setValue("factValue")
+            .addBinding(new CreateFactRequest.FactObjectBinding()
+                    .setObjectType(objectType.getName())
+                    .setObjectValue("objectValue")
+                    .setDirection(Direction.BiDirectional)
+            );
   }
 
 }

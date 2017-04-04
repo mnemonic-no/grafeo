@@ -149,8 +149,10 @@ public abstract class AbstractIT {
   }
 
   FactEntity createFact(ObjectEntity object) {
-    FactTypeEntity factType = createFactType(object.getTypeID());
+    return createFact(object, createFactType(object.getTypeID()), f -> f);
+  }
 
+  FactEntity createFact(ObjectEntity object, FactTypeEntity factType, ObjectPreparation<FactEntity> preparation) {
     FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
             .setObjectID(object.getId())
             .setDirection(factType.getRelevantObjectBindings().get(0).getDirection());
@@ -171,16 +173,28 @@ public abstract class AbstractIT {
             .setFactID(fact.getId())
             .setDirection(factType.getRelevantObjectBindings().get(0).getDirection()));
 
-    return getFactManager().saveFact(fact);
+    return getFactManager().saveFact(preparation.prepare(fact));
+  }
+
+  ObjectEntity createObject() {
+    return createObject(createObjectType().getId());
   }
 
   ObjectEntity createObject(UUID objectTypeID) {
+    return createObject(objectTypeID, o -> o);
+  }
+
+  ObjectEntity createObject(UUID objectTypeID, ObjectPreparation<ObjectEntity> preparation) {
     ObjectEntity object = new ObjectEntity()
             .setId(UUID.randomUUID())
             .setTypeID(objectTypeID)
             .setValue("objectValue");
 
-    return getObjectManager().saveObject(object);
+    return getObjectManager().saveObject(preparation.prepare(object));
+  }
+
+  interface ObjectPreparation<T> {
+    T prepare(T e);
   }
 
   private static class ModuleIT extends AbstractModule {
