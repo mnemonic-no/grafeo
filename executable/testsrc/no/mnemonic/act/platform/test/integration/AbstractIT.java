@@ -16,8 +16,9 @@ import no.mnemonic.act.platform.service.ServiceModule;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.commons.testtools.cassandra.CassandraTestResource;
 import no.mnemonic.commons.testtools.cassandra.CassandraTruncateRule;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import no.mnemonic.commons.utilities.collections.ListUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -25,6 +26,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.UUID;
 
 import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
 
@@ -62,8 +64,8 @@ public abstract class AbstractIT {
           .addTable(FactCommentEntity.TABLE)
           .build();
 
-  @BeforeClass
-  public static void setup() {
+  @Before
+  public void setup() {
     Injector injector = Guice.createInjector(new ModuleIT());
     clusterManager = injector.getInstance(ClusterManager.class);
     objectManager = injector.getInstance(ObjectManager.class);
@@ -77,14 +79,16 @@ public abstract class AbstractIT {
     apiServer.startComponent();
   }
 
-  @AfterClass
-  public static void teardown() {
+  @After
+  public void teardown() {
     // Stop everything in correct order.
     apiServer.stopComponent();
     factManager.stopComponent();
     objectManager.stopComponent();
     clusterManager.stopComponent();
   }
+
+  /* Getters */
 
   ObjectManager getObjectManager() {
     return objectManager;
@@ -94,6 +98,8 @@ public abstract class AbstractIT {
     return factManager;
   }
 
+  /* Helpers for REST */
+
   WebTarget target(String url) {
     return ClientBuilder.newClient().target("http://localhost:" + API_SERVER_PORT + url);
   }
@@ -101,6 +107,94 @@ public abstract class AbstractIT {
   JsonNode getPayload(Response response) throws IOException {
     // Return the payload in the "data" field of the returned ResultStash.
     return mapper.readTree(response.readEntity(String.class)).get("data");
+  }
+
+  UUID getIdFromModel(JsonNode node) {
+    return UUID.fromString(node.get("id").textValue());
+  }
+
+  /* Helpers for Cassandra */
+
+  ObjectTypeEntity createObjectType() {
+    ObjectTypeEntity entity = new ObjectTypeEntity()
+            .setId(UUID.randomUUID())
+            .setName("ObjectType")
+            .setEntityHandler("IdentityHandler")
+            .setValidator("TrueValidator");
+
+    return getObjectManager().saveObjectType(entity);
+  }
+
+  FactTypeEntity createFactType() {
+    return createFactType(createObjectType().getId());
+  }
+
+  FactTypeEntity createFactType(UUID objectTypeID) {
+    FactTypeEntity.FactObjectBindingDefinition binding = new FactTypeEntity.FactObjectBindingDefinition()
+            .setObjectTypeID(objectTypeID)
+            .setDirection(Direction.BiDirectional);
+
+    FactTypeEntity entity = new FactTypeEntity()
+            .setId(UUID.randomUUID())
+            .setName("FactType")
+            .setEntityHandler("IdentityHandler")
+            .setValidator("TrueValidator")
+            .setRelevantObjectBindings(ListUtils.list(binding));
+
+    return getFactManager().saveFactType(entity);
+  }
+
+  FactEntity createFact() {
+    return createFact(createObject(createObjectType().getId()));
+  }
+
+  FactEntity createFact(ObjectEntity object) {
+    return createFact(object, createFactType(object.getTypeID()), f -> f);
+  }
+
+  FactEntity createFact(ObjectEntity object, FactTypeEntity factType, ObjectPreparation<FactEntity> preparation) {
+    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
+            .setObjectID(object.getId())
+            .setDirection(factType.getRelevantObjectBindings().get(0).getDirection());
+
+    FactEntity fact = new FactEntity()
+            .setId(UUID.randomUUID())
+            .setTypeID(factType.getId())
+            .setValue("factValue")
+            .setOrganizationID(UUID.randomUUID())
+            .setSourceID(UUID.randomUUID())
+            .setAccessMode(AccessMode.RoleBased)
+            .setTimestamp(123456789)
+            .setLastSeenTimestamp(987654321)
+            .setBindings(ListUtils.list(binding));
+
+    getObjectManager().saveObjectFactBinding(new ObjectFactBindingEntity()
+            .setObjectID(object.getId())
+            .setFactID(fact.getId())
+            .setDirection(factType.getRelevantObjectBindings().get(0).getDirection()));
+
+    return getFactManager().saveFact(preparation.prepare(fact));
+  }
+
+  ObjectEntity createObject() {
+    return createObject(createObjectType().getId());
+  }
+
+  ObjectEntity createObject(UUID objectTypeID) {
+    return createObject(objectTypeID, o -> o);
+  }
+
+  ObjectEntity createObject(UUID objectTypeID, ObjectPreparation<ObjectEntity> preparation) {
+    ObjectEntity object = new ObjectEntity()
+            .setId(UUID.randomUUID())
+            .setTypeID(objectTypeID)
+            .setValue("objectValue");
+
+    return getObjectManager().saveObject(preparation.prepare(object));
+  }
+
+  interface ObjectPreparation<T> {
+    T prepare(T e);
   }
 
   private static class ModuleIT extends AbstractModule {
