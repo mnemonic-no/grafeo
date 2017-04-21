@@ -7,33 +7,43 @@
   <name>parent</name>
   <url>http://www.mnemonic.no</url>
 
+  <prerequisites>
+    <maven>3.0</maven>
+  </prerequisites>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.0.13</mnemonic.commons.version>
+    <mnemonic.commons.version>0.0.19</mnemonic.commons.version>
 
     <!-- external dependencies -->
-    <cassandra.version>3.1.1</cassandra.version>
+    <cassandra.version>3.2.0</cassandra.version>
     <guava.version>19.0</guava.version>
     <guice.version>4.1.0</guice.version>
     <hibernate.validator.version>5.4.1.Final</hibernate.validator.version>
-    <jackson.version>2.8.6</jackson.version>
-    <javax.el.version>2.2.5</javax.el.version>
+    <jackson.version>2.8.8</jackson.version>
+    <javax.el.version>2.2.6</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>1.1.0.Final</javax.validation.version>
     <javax.ws.rx.version>2.0.1</javax.ws.rx.version>
-    <jetty.version>9.4.0.v20161208</jetty.version>
+    <jetty.version>9.4.4.v20170414</jetty.version>
     <junit.version>4.12</junit.version>
-    <mockito.version>2.2.15</mockito.version>
-    <reflections.version>0.9.10</reflections.version>
+    <mockito.version>2.7.22</mockito.version>
     <resteasy.version>3.1.2.Final</resteasy.version>
-    <swagger.version>1.5.12</swagger.version>
+    <swagger.version>1.5.13</swagger.version>
 
     <!-- build dependencies -->
+    <maven.clean.version>3.0.0</maven.clean.version>
     <maven.compile.version>3.6.1</maven.compile.version>
-    <maven.shade.version>2.4.3</maven.shade.version>
-    <maven.surefire.version>2.19.1</maven.surefire.version>
+    <maven.install.version>2.5.2</maven.install.version>
+    <maven.jar.version>3.0.2</maven.jar.version>
+    <maven.javadoc.version>2.10.4</maven.javadoc.version>
+    <maven.release.version>2.5.3</maven.release.version>
+    <maven.resources.version>3.0.2</maven.resources.version>
+    <maven.shade.version>3.0.0</maven.shade.version>
+    <maven.source.version>3.0.1</maven.source.version>
+    <maven.surefire.version>2.20</maven.surefire.version>
   </properties>
 
   <modules>
@@ -51,10 +61,6 @@
   </scm>
 
   <distributionManagement>
-    <site>
-      <id>javadoc</id>
-      <url>file:///var/www/site/act/parent</url>
-    </site>
     <repository>
       <id>mnemonic</id>
       <url>http://artifactory.mnemonic.no/artifactory/mnemonic</url>
@@ -67,7 +73,6 @@
 
   <build>
     <plugins>
-      <!-- configure compiler -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -82,7 +87,6 @@
           </compilerArgs>
         </configuration>
       </plugin>
-      <!-- run tests -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -96,11 +100,10 @@
           </includes>
         </configuration>
       </plugin>
-      <!-- configure the jar manifest -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>${maven.jar.version}</version>
         <configuration>
           <archive>
             <manifest>
@@ -109,48 +112,39 @@
           </archive>
         </configuration>
       </plugin>
-      <!-- prepare release -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.1</version>
+        <version>${maven.release.version}</version>
         <configuration>
           <pushChanges>false</pushChanges>
         </configuration>
       </plugin>
-      <!-- prepare release -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>2.4.1</version>
+        <version>${maven.clean.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
-        <version>2.3.1</version>
+        <version>${maven.install.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>2.4.3</version>
+        <version>${maven.resources.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.9.1</version>
+        <version>${maven.javadoc.version}</version>
         <configuration>
           <show>protected</show>
           <aggregate>true</aggregate>
           <failOnError>false</failOnError>
         </configuration>
         <executions>
-          <execution>
-            <id>aggregate</id>
-            <goals>
-              <goal>aggregate</goal>
-            </goals>
-            <phase>site</phase>
-          </execution>
           <execution>
             <id>attach-javadocs</id>
             <goals>
@@ -162,7 +156,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>2.3</version>
+        <version>${maven.source.version}</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -171,16 +165,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>2.7</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>3.4</version>
       </plugin>
     </plugins>
   </build>
@@ -208,38 +192,6 @@
                 <exclude>no.mnemonic.act.platform.dao.cassandra.*</exclude>
               </excludes>
             </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>test-coverage</id>
-      <build>
-        <plugins>
-          <!-- configure the code coverage plugin -->
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.7.6.201602180812</version>
-            <configuration>
-              <destFile>../parent/target/jacoco.exec</destFile>
-              <append>true</append>
-            </configuration>
-            <executions>
-              <execution>
-                <id>jacoco-initialize</id>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>report</id>
-                <phase>prepare-package</phase>
-                <goals>
-                  <goal>report</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
