@@ -16,6 +16,7 @@
 
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.0.19</mnemonic.commons.version>
+    <mnemonic.services.common.version>0.0.3</mnemonic.services.common.version>
 
     <!-- external dependencies -->
     <cassandra.version>3.2.0</cassandra.version>
@@ -48,6 +49,7 @@
 
   <modules>
     <module>../api</module>
+    <module>../auth</module>
     <module>../dao</module>
     <module>../entity</module>
     <module>../executable</module>
