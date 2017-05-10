@@ -1,27 +1,27 @@
 package no.mnemonic.act.platform.auth.properties;
 
+import no.mnemonic.act.platform.api.service.v1.OrganizationResolver;
+import no.mnemonic.act.platform.api.service.v1.SubjectResolver;
 import no.mnemonic.act.platform.auth.properties.internal.*;
 import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.SubjectCredentials;
 import no.mnemonic.act.platform.auth.properties.model.SubjectIdentifier;
 import no.mnemonic.commons.component.LifecycleAspect;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 import no.mnemonic.services.common.auth.model.*;
 
-import java.util.Collection;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
  * AccessController implementation which is based on a configuration read from a properties file.
  */
-public class PropertiesBasedAccessController implements AccessController, LifecycleAspect {
+public class PropertiesBasedAccessController implements AccessController, OrganizationResolver, SubjectResolver, LifecycleAspect {
 
   private static final long DEFAULT_READING_INTERVAL = 60_000; // milliseconds
 
@@ -114,6 +114,26 @@ public class PropertiesBasedAccessController implements AccessController, Lifecy
             .stream()
             .map(id -> OrganizationIdentifier.builder().setInternalID(id).build())
             .collect(Collectors.toSet());
+  }
+
+  @Override
+  public no.mnemonic.act.platform.api.model.v1.Organization resolveOrganization(UUID id) {
+    Organization organization = state.get().getOrganization(IdMapper.toInternalID(id));
+    return ObjectUtils.ifNotNull(organization, o -> no.mnemonic.act.platform.api.model.v1.Organization.builder()
+            .setId(id)
+            .setName(o.getName())
+            .build()
+    );
+  }
+
+  @Override
+  public no.mnemonic.act.platform.api.model.v1.Subject resolveSubject(UUID id) {
+    Subject subject = state.get().getSubject(IdMapper.toInternalID(id));
+    return ObjectUtils.ifNotNull(subject, s -> no.mnemonic.act.platform.api.model.v1.Subject.builder()
+            .setId(id)
+            .setName(s.getName())
+            .build()
+    );
   }
 
   @Override

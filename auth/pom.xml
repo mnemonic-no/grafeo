@@ -21,6 +21,11 @@
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>
+      <groupId>no.mnemonic.act.platform</groupId>
+      <artifactId>api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>no.mnemonic.commons</groupId>
       <artifactId>component</artifactId>
       <version>${mnemonic.commons.version}</version>

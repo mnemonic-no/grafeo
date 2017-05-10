@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.auth.properties;
 
+import no.mnemonic.act.platform.api.model.v1.Organization;
+import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.SubjectCredentials;
@@ -823,6 +825,42 @@ public class PropertiesBasedAccessControllerTest {
     assertEquals(2, organizations.size());
     assertOrganizationID(organizations, 1);
     assertOrganizationID(organizations, 2);
+  }
+
+  /* resolveOrganization(id) */
+
+  @Test
+  public void testResolveOrganizationNotExistingOrganization() throws Exception {
+    setup("organization.1.name = organization");
+    assertNull(accessController.resolveOrganization(UUID.fromString("00000000-0000-0000-0000-000000000002")));
+  }
+
+  @Test
+  public void testResolveOrganizationExistingOrganization() throws Exception {
+    setup("organization.1.name = organization");
+
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    Organization organization = accessController.resolveOrganization(id);
+    assertEquals(id, organization.getId());
+    assertEquals("organization", organization.getName());
+  }
+
+  /* resolveSubject(id) */
+
+  @Test
+  public void testResolveSubjectNotExistingSubject() throws Exception {
+    setup("subject.1.name = subject");
+    assertNull(accessController.resolveSubject(UUID.fromString("00000000-0000-0000-0000-000000000002")));
+  }
+
+  @Test
+  public void testResolveSubjectExistingSubject() throws Exception {
+    setup("subject.1.name = subject");
+
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    Subject subject = accessController.resolveSubject(id);
+    assertEquals(id, subject.getId());
+    assertEquals("subject", subject.getName());
   }
 
   private void setup(String content) throws Exception {
