@@ -16,7 +16,7 @@ public class AuthenticationAspectTest {
     TestService service = createService();
 
     assertFalse(SecurityContext.isSet());
-    assertEquals("Called!", service.method(new RequestHeader(), "Called!"));
+    assertEquals("Called!", service.method(RequestHeader.builder().build(), "Called!"));
     assertFalse(SecurityContext.isSet());
   }
 
@@ -26,7 +26,7 @@ public class AuthenticationAspectTest {
 
     try (SecurityContext ignored = SecurityContext.set(new SecurityContext())) {
       assertTrue(SecurityContext.isSet());
-      assertEquals("Called!", service.method(new RequestHeader(), "Called!"));
+      assertEquals("Called!", service.method(RequestHeader.builder().build(), "Called!"));
       assertTrue(SecurityContext.isSet());
     }
   }

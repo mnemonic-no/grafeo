@@ -16,7 +16,7 @@ public class RequestContextAspectTest {
     TestService service = createService();
 
     assertFalse(RequestContext.isSet());
-    assertEquals("Called!", service.method(new RequestHeader(), "Called!"));
+    assertEquals("Called!", service.method(RequestHeader.builder().build(), "Called!"));
     assertFalse(RequestContext.isSet());
   }
 
@@ -26,7 +26,7 @@ public class RequestContextAspectTest {
 
     try (RequestContext ignored = RequestContext.set(new RequestContext())) {
       assertTrue(RequestContext.isSet());
-      assertEquals("Called!", service.method(new RequestHeader(), "Called!"));
+      assertEquals("Called!", service.method(RequestHeader.builder().build(), "Called!"));
       assertTrue(RequestContext.isSet());
     }
   }
