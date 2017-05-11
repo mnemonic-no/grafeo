@@ -22,7 +22,7 @@ public class ValidationAspectTest {
   @Test
   public void testValidRequestExecutesMethod() throws InvalidArgumentException {
     TestService service = createService();
-    assertEquals("Called!", service.method(new RequestHeader(), new TestRequest().setValue(3)));
+    assertEquals("Called!", service.method(RequestHeader.builder().build(), new TestRequest().setValue(3)));
   }
 
   @Test
@@ -30,7 +30,7 @@ public class ValidationAspectTest {
     TestService service = createService();
 
     try {
-      service.method(new RequestHeader(), new TestRequest());
+      service.method(RequestHeader.builder().build(), new TestRequest());
       fail("No InvalidArgumentException thrown.");
     } catch (InvalidArgumentException ex) {
       assertMinException(ex, "value");
@@ -42,7 +42,7 @@ public class ValidationAspectTest {
     TestService service = createService();
 
     try {
-      service.method(new RequestHeader(), (TestRequest) null);
+      service.method(RequestHeader.builder().build(), (TestRequest) null);
       fail("No InvalidArgumentException thrown.");
     } catch (InvalidArgumentException ex) {
       assertNotNullRequest(ex);
@@ -54,7 +54,7 @@ public class ValidationAspectTest {
     TestService service = createService();
 
     try {
-      service.method(new RequestHeader(), new ServiceTestRequest());
+      service.method(RequestHeader.builder().build(), new ServiceTestRequest());
       fail("No InvalidArgumentException thrown.");
     } catch (InvalidArgumentException ex) {
       assertServiceNotNullException(ex, "value");
@@ -66,7 +66,7 @@ public class ValidationAspectTest {
     TestService service = createService();
 
     try {
-      service.method(new RequestHeader(), new NestedTestRequest().setInner(new TestRequest()));
+      service.method(RequestHeader.builder().build(), new NestedTestRequest().setInner(new TestRequest()));
       fail("No InvalidArgumentException thrown.");
     } catch (InvalidArgumentException ex) {
       assertMinException(ex, "inner.value");
@@ -78,7 +78,7 @@ public class ValidationAspectTest {
     TestService service = createService();
 
     try {
-      service.method(new RequestHeader(), new NestedTestRequest());
+      service.method(RequestHeader.builder().build(), new NestedTestRequest());
       fail("No InvalidArgumentException thrown.");
     } catch (InvalidArgumentException ex) {
       assertNotNullException(ex, "inner");
