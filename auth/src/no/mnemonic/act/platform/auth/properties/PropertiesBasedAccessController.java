@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.auth.properties;
 
-import no.mnemonic.act.platform.api.service.v1.OrganizationResolver;
-import no.mnemonic.act.platform.api.service.v1.SubjectResolver;
+import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.auth.properties.internal.*;
 import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
  */
 public class PropertiesBasedAccessController implements AccessController, OrganizationResolver, SubjectResolver, LifecycleAspect {
 
+  private static final String NOT_AVAILABLE_NAME = "N/A";
   private static final long DEFAULT_READING_INTERVAL = 60_000; // milliseconds
 
   private final Timer readingTimer = new Timer(PropertiesBasedAccessController.class.getSimpleName() + " - readingTimer");
@@ -119,21 +120,25 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   @Override
   public no.mnemonic.act.platform.api.model.v1.Organization resolveOrganization(UUID id) {
     Organization organization = state.get().getOrganization(IdMapper.toInternalID(id));
-    return ObjectUtils.ifNotNull(organization, o -> no.mnemonic.act.platform.api.model.v1.Organization.builder()
-            .setId(id)
-            .setName(o.getName())
-            .build()
-    );
+    return ObjectUtils.ifNotNull(organization, o -> createOrganization(id, o.getName()), createOrganization(id, NOT_AVAILABLE_NAME));
+  }
+
+  @Override
+  public no.mnemonic.act.platform.api.model.v1.Organization resolveCurrentUserAffiliation(Credentials credentials) throws InvalidCredentialsException {
+    validate(credentials);
+    return resolveOrganization(IdMapper.toGlobalID(getSubject(credentials).getAffiliation()));
   }
 
   @Override
   public no.mnemonic.act.platform.api.model.v1.Subject resolveSubject(UUID id) {
     Subject subject = state.get().getSubject(IdMapper.toInternalID(id));
-    return ObjectUtils.ifNotNull(subject, s -> no.mnemonic.act.platform.api.model.v1.Subject.builder()
-            .setId(id)
-            .setName(s.getName())
-            .build()
-    );
+    return ObjectUtils.ifNotNull(subject, s -> createSubject(id, s.getName()), createSubject(id, NOT_AVAILABLE_NAME));
+  }
+
+  @Override
+  public no.mnemonic.act.platform.api.model.v1.Subject resolveCurrentUser(Credentials credentials) throws InvalidCredentialsException {
+    validate(credentials);
+    return resolveSubject(IdMapper.toGlobalID(getSubject(credentials).getInternalID()));
   }
 
   @Override
@@ -301,6 +306,20 @@ public class PropertiesBasedAccessController implements AccessController, Organi
     }
 
     return SetUtils.union(directAccessibleOrganizations, childOrganizations, parentSubjectsOrganizations);
+  }
+
+  private no.mnemonic.act.platform.api.model.v1.Organization createOrganization(UUID id, String name) {
+    return no.mnemonic.act.platform.api.model.v1.Organization.builder()
+            .setId(id)
+            .setName(name)
+            .build();
+  }
+
+  private no.mnemonic.act.platform.api.model.v1.Subject createSubject(UUID id, String name) {
+    return no.mnemonic.act.platform.api.model.v1.Subject.builder()
+            .setId(id)
+            .setName(name)
+            .build();
   }
 
   public static class Builder {

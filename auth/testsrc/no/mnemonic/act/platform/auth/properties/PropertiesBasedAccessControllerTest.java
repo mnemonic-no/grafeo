@@ -832,7 +832,11 @@ public class PropertiesBasedAccessControllerTest {
   @Test
   public void testResolveOrganizationNotExistingOrganization() throws Exception {
     setup("organization.1.name = organization");
-    assertNull(accessController.resolveOrganization(UUID.fromString("00000000-0000-0000-0000-000000000002")));
+
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    Organization organization = accessController.resolveOrganization(id);
+    assertEquals(id, organization.getId());
+    assertEquals("N/A", organization.getName());
   }
 
   @Test
@@ -845,12 +849,51 @@ public class PropertiesBasedAccessControllerTest {
     assertEquals("organization", organization.getName());
   }
 
+  /* resolveCurrentUserAffiliation(credentials) */
+
+  @Test(expected = InvalidCredentialsException.class)
+  public void testResolveCurrentUserAffiliationWithInvalidCredentials() throws Exception {
+    setup("subject.1.name = subject");
+    accessController.resolveCurrentUserAffiliation(createCredentials(42));
+  }
+
+  @Test
+  public void testResolveCurrentUserAffiliation() throws Exception {
+    String content = "" +
+            "subject.1.name = subject\n" +
+            "subject.1.affiliation = 1\n" +
+            "organization.1.name = organization\n" +
+            "";
+    setup(content);
+
+    Organization organization = accessController.resolveCurrentUserAffiliation(createCredentials(1));
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), organization.getId());
+    assertEquals("organization", organization.getName());
+  }
+
+  @Test
+  public void testResolveCurrentUserAffiliationSubjectWithoutAffiliation() throws Exception {
+    String content = "" +
+            "subject.1.name = subject\n" +
+            "organization.1.name = organization\n" +
+            "";
+    setup(content);
+
+    Organization organization = accessController.resolveCurrentUserAffiliation(createCredentials(1));
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000000"), organization.getId());
+    assertEquals("N/A", organization.getName());
+  }
+
   /* resolveSubject(id) */
 
   @Test
   public void testResolveSubjectNotExistingSubject() throws Exception {
     setup("subject.1.name = subject");
-    assertNull(accessController.resolveSubject(UUID.fromString("00000000-0000-0000-0000-000000000002")));
+
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    Subject subject = accessController.resolveSubject(id);
+    assertEquals(id, subject.getId());
+    assertEquals("N/A", subject.getName());
   }
 
   @Test
@@ -860,6 +903,23 @@ public class PropertiesBasedAccessControllerTest {
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
     Subject subject = accessController.resolveSubject(id);
     assertEquals(id, subject.getId());
+    assertEquals("subject", subject.getName());
+  }
+
+  /* resolveCurrentUser(credentials) */
+
+  @Test(expected = InvalidCredentialsException.class)
+  public void testResolveCurrentUserWithInvalidCredentials() throws Exception {
+    setup("subject.1.name = subject");
+    accessController.resolveCurrentUser(createCredentials(42));
+  }
+
+  @Test
+  public void testResolveCurrentUser() throws Exception {
+    setup("subject.1.name = subject");
+
+    Subject subject = accessController.resolveCurrentUser(createCredentials(1));
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), subject.getId());
     assertEquals("subject", subject.getName());
   }
 
