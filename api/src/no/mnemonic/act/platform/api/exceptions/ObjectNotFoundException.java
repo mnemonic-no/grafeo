@@ -5,6 +5,8 @@ package no.mnemonic.act.platform.api.exceptions;
  */
 public class ObjectNotFoundException extends Exception {
 
+  private static final long serialVersionUID = 3085058667889665467L;
+
   private final String messageTemplate;
   private final String property;
   private final String value;

@@ -2,10 +2,7 @@ package no.mnemonic.act.platform.rest.mappings;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
-import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
-import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
-import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
+import no.mnemonic.act.platform.api.exceptions.*;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.api.request.v1.Direction;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
@@ -40,6 +37,13 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   @Test
   public void testAuthenticationFailedMapperReturns401() throws Exception {
     Response response = executeRequest(new AuthenticationFailedException("message"));
+    assertEquals(401, response.getStatus());
+    assertMessages(getMessages(response), "message", "user.not.authenticated");
+  }
+
+  @Test
+  public void testUnexpectedAuthenticationFailedMapperReturns401() throws Exception {
+    Response response = executeRequest(new UnexpectedAuthenticationFailedException("message"));
     assertEquals(401, response.getStatus());
     assertMessages(getMessages(response), "message", "user.not.authenticated");
   }
