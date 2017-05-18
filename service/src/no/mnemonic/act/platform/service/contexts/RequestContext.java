@@ -41,6 +41,19 @@ public class RequestContext implements AutoCloseable {
     return currentContext.get() != null;
   }
 
+  /**
+   * Remove the current RequestContext.
+   * <p>
+   * Use with caution as many parts of the code rely on a set RequestContext. This method is mainly useful for testing.
+   *
+   * @return Current RequestContext, or NULL if it was not set.
+   */
+  public static RequestContext clear() {
+    RequestContext oldCtx = currentContext.get();
+    currentContext.remove();
+    return oldCtx;
+  }
+
   @Override
   public void close() throws Exception {
     currentContext.remove();

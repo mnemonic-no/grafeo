@@ -3,8 +3,10 @@ package no.mnemonic.act.platform.service.aspects;
 import com.google.inject.Guice;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.service.Service;
+import no.mnemonic.act.platform.service.TestSecurityContext;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -42,8 +44,8 @@ public class RequestContextAspectTest {
     }
 
     @Override
-    public SecurityContext createSecurityContext() {
-      return new SecurityContext();
+    public SecurityContext createSecurityContext(Credentials credentials) {
+      return new TestSecurityContext();
     }
 
     @Override

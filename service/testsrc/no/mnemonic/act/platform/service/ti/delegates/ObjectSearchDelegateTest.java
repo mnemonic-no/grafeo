@@ -66,6 +66,7 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
 
   @Before
   public void setup() {
+    when(getSecurityContext().hasReadPermission(any())).thenReturn(true);
     mockFetchObjects();
     mockFetchFacts();
     mockFetchBindings();
@@ -165,6 +166,7 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
     verify(getObjectManager(), times(objects.size())).fetchObjectFactBindings(any());
     verify(getObjectConverter(), times(objects.size())).apply(any());
     verify(getFactManager(), times(facts.size())).getFact(any());
+    verify(getSecurityContext(), times(facts.size())).hasReadPermission(any());
   }
 
   private void assertResult(ObjectEntity object, ResultSet<Object> result) {

@@ -191,7 +191,7 @@
                 <!-- Exclude all integration tests. -->
                 <exclude>**/*IT.java</exclude>
                 <!-- Exclude all Cassandra tests. -->
-                <exclude>no.mnemonic.act.platform.dao.cassandra.*</exclude>
+                <exclude>no/mnemonic/act/platform/dao/cassandra/*</exclude>
               </excludes>
             </configuration>
           </plugin>

@@ -187,9 +187,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
 
   private void testFetchObjectWithoutAccessToFacts(TestMethod method) throws Exception {
     ObjectEntity object = mockFetchObject();
-    List<FactEntity> facts = mockFetchFacts().stream()
-            .map(fact -> fact.setAccessMode(AccessMode.Explicit))
-            .collect(Collectors.toList());
+    List<FactEntity> facts = mockFetchFacts();
     mockBindings(object.getId(), facts);
 
     try {
@@ -198,10 +196,13 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
     } catch (AccessDeniedException ignored) {
       verify(getObjectManager()).fetchObjectFactBindings(object.getId());
       verify(getFactManager(), times(facts.size())).getFact(any());
+      verify(getSecurityContext(), times(facts.size())).hasReadPermission(any());
     }
   }
 
   private void testFetchObjectIncludeStatistics(TestMethod method) throws Exception {
+    when(getSecurityContext().hasReadPermission(any())).thenReturn(true);
+
     ObjectEntity object = mockFetchObject();
     mockBindings(object.getId(), mockFetchFacts());
 

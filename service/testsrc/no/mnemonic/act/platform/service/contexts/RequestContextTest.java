@@ -30,4 +30,19 @@ public class RequestContextTest {
     assertFalse(RequestContext.isSet());
   }
 
+  @Test
+  public void testClearExistingContext() {
+    RequestContext ctx = RequestContext.set(new RequestContext());
+    assertTrue(RequestContext.isSet());
+    RequestContext oldCtx = RequestContext.clear();
+    assertFalse(RequestContext.isSet());
+    assertSame(ctx, oldCtx);
+  }
+
+  @Test
+  public void testClearNonExistingContext() {
+    assertNull(RequestContext.clear());
+    assertFalse(RequestContext.isSet());
+  }
+
 }

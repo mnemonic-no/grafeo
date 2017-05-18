@@ -1,10 +1,17 @@
 package no.mnemonic.act.platform.service.ti;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
+import no.mnemonic.act.platform.api.model.v1.Subject;
+import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.entity.cassandra.AccessMode;
 import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.services.common.auth.AccessController;
+import no.mnemonic.services.common.auth.model.Credentials;
+import no.mnemonic.services.common.auth.model.OrganizationIdentity;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -13,13 +20,27 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
+import static no.mnemonic.act.platform.service.ti.TiFunctionConstants.viewFactObjects;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+@SuppressWarnings("unchecked")
 public class TiSecurityContextTest {
 
+  @Mock
+  private AccessController accessController;
+  @Mock
+  private IdentityResolver identityResolver;
+  @Mock
+  private OrganizationResolver organizationResolver;
+  @Mock
+  private SubjectResolver subjectResolver;
+  @Mock
+  private Credentials credentials;
+  @Mock
+  private OrganizationIdentity organization;
   @Mock
   private Function<UUID, List<FactAclEntity>> aclResolver;
 
@@ -29,24 +50,37 @@ public class TiSecurityContextTest {
   public void initialize() {
     initMocks(this);
 
-    // Need to spy on context in order to be able to stub methods of base SecurityContext.
-    context = spy(TiSecurityContext.builder().setAclResolver(aclResolver).build());
+    context = TiSecurityContext.builder()
+            .setAccessController(accessController)
+            .setIdentityResolver(identityResolver)
+            .setOrganizationResolver(organizationResolver)
+            .setSubjectResolver(subjectResolver)
+            .setCredentials(credentials)
+            .setAclResolver(aclResolver)
+            .build();
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateContextWithoutAclResolverThrowsException() {
-    TiSecurityContext.builder().build();
+    TiSecurityContext.builder()
+            .setAccessController(accessController)
+            .setIdentityResolver(identityResolver)
+            .setOrganizationResolver(organizationResolver)
+            .setSubjectResolver(subjectResolver)
+            .setCredentials(credentials)
+            .build();
   }
 
   @Test
   public void testCheckReadPermissionWithAccessModePublic() throws Exception {
+    mockHasPermission(true);
     context.checkReadPermission(new FactEntity().setAccessMode(AccessMode.Public));
-    verify(context).checkPermission(TiFunctionConstants.viewFactObjects);
+    verify(accessController).hasPermission(credentials, viewFactObjects);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionWithAccessModePublicNoAccess() throws Exception {
-    doThrow(AccessDeniedException.class).when(context).checkPermission(TiFunctionConstants.viewFactObjects);
+    mockHasPermission(false);
     context.checkReadPermission(new FactEntity().setAccessMode(AccessMode.Public));
   }
 
@@ -56,8 +90,9 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
 
+    mockHasPermission(fact.getOrganizationID(), true);
     context.checkReadPermission(fact);
-    verify(context).checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
   }
 
   @Test
@@ -66,13 +101,13 @@ public class TiSecurityContextTest {
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
-    FactAclEntity acl = new FactAclEntity()
-            .setSubjectID(UUID.fromString("00000000-0000-0000-0000-000000000000"));
-    when(aclResolver.apply(any())).thenReturn(ListUtils.list(acl));
+    UUID currentUserID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    when(subjectResolver.resolveCurrentUser(any())).thenReturn(Subject.builder().setId(currentUserID).build());
+    when(aclResolver.apply(any())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(currentUserID)));
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(context, never()).checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -81,7 +116,7 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
 
-    doThrow(AccessDeniedException.class).when(context).checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+    mockHasPermission(fact.getOrganizationID(), false);
     context.checkReadPermission(fact);
   }
 
@@ -90,13 +125,13 @@ public class TiSecurityContextTest {
     FactEntity fact = new FactEntity()
             .setId(UUID.randomUUID())
             .setAccessMode(AccessMode.Explicit);
-    FactAclEntity acl = new FactAclEntity()
-            .setSubjectID(UUID.fromString("00000000-0000-0000-0000-000000000000"));
-    when(aclResolver.apply(any())).thenReturn(ListUtils.list(acl));
+    UUID currentUserID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    when(subjectResolver.resolveCurrentUser(any())).thenReturn(Subject.builder().setId(currentUserID).build());
+    when(aclResolver.apply(any())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(currentUserID)));
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(context, never()).checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -107,7 +142,7 @@ public class TiSecurityContextTest {
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(context, never()).checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
   }
 
   @Test
@@ -116,19 +151,30 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(null);
 
+    mockHasPermission(fact.getOrganizationID(), true);
     context.checkReadPermission(fact);
-    verify(context).checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
   }
 
   @Test
   public void testHasReadPermissionReturnsTrueOnAccess() throws Exception {
+    mockHasPermission(true);
     assertTrue(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
   }
 
   @Test
   public void testHasReadPermissionReturnsFalseOnNoAccess() throws Exception {
-    doThrow(AccessDeniedException.class).when(context).checkPermission(TiFunctionConstants.viewFactObjects);
+    mockHasPermission(false);
     assertFalse(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
+  }
+
+  private void mockHasPermission(boolean result) throws Exception {
+    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(result);
+  }
+
+  private void mockHasPermission(UUID organizationID, boolean result) throws Exception {
+    when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
+    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(result);
   }
 
 }

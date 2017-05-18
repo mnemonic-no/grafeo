@@ -1,8 +1,8 @@
 package no.mnemonic.act.platform.service.ti;
 
-import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.services.common.auth.model.NamedFunction;
 
-public enum TiFunctionConstants implements SecurityContext.NamedFunction {
+public enum TiFunctionConstants implements NamedFunction {
   addTypes,
   updateTypes,
   viewTypes,

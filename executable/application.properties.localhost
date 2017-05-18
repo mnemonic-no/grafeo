@@ -3,3 +3,6 @@ cassandra.port=9042
 cassandra.contact.points=localhost
 
 api.server.port=8888
+
+access.controller.properties.file=./acl.properties.localhost
+access.controller.read.interval=60000

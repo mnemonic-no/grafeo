@@ -126,11 +126,9 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
   @Test
   public void testSearchObjectFactsWithoutAccessToFacts() throws Exception {
-    fact1.setAccessMode(AccessMode.Explicit);
-    fact2.setAccessMode(AccessMode.Explicit);
-    fact3.setAccessMode(AccessMode.Explicit);
-
-    mockEverything();
+    mockFetchObject();
+    mockFetchFacts();
+    mockFetchBindings();
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(object.getId());
 
     try {
@@ -139,6 +137,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     } catch (AccessDeniedException ignored) {
       verify(getObjectManager()).fetchObjectFactBindings(object.getId());
       verify(getFactManager(), times(facts.size())).getFact(any());
+      verify(getSecurityContext(), times(facts.size())).hasReadPermission(any());
     }
   }
 
@@ -323,6 +322,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   }
 
   private void mockEverything() {
+    when(getSecurityContext().hasReadPermission(any())).thenReturn(true);
     mockFetchObject();
     mockFetchFacts();
     mockFetchBindings();

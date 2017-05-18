@@ -2,12 +2,17 @@ package no.mnemonic.act.platform.service.ti;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
+import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.entity.cassandra.AccessMode;
 import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.services.common.auth.AccessController;
+import no.mnemonic.services.common.auth.model.Credentials;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +25,10 @@ public class TiSecurityContext extends SecurityContext {
 
   private final Function<UUID, List<FactAclEntity>> aclResolver;
 
-  private TiSecurityContext(Function<UUID, List<FactAclEntity>> aclResolver) {
+  private TiSecurityContext(AccessController accessController, IdentityResolver identityResolver,
+                            OrganizationResolver organizationResolver, SubjectResolver subjectResolver,
+                            Credentials credentials, Function<UUID, List<FactAclEntity>> aclResolver) {
+    super(accessController, identityResolver, organizationResolver, subjectResolver, credentials);
     this.aclResolver = aclResolver;
   }
 
@@ -85,6 +93,11 @@ public class TiSecurityContext extends SecurityContext {
   }
 
   public static class Builder {
+    private AccessController accessController;
+    private IdentityResolver identityResolver;
+    private OrganizationResolver organizationResolver;
+    private SubjectResolver subjectResolver;
+    private Credentials credentials;
     private Function<UUID, List<FactAclEntity>> aclResolver;
 
     private Builder() {
@@ -92,7 +105,32 @@ public class TiSecurityContext extends SecurityContext {
 
     public TiSecurityContext build() {
       ObjectUtils.notNull(aclResolver, "'aclResolver' not set in SecurityContext.");
-      return new TiSecurityContext(aclResolver);
+      return new TiSecurityContext(accessController, identityResolver, organizationResolver, subjectResolver, credentials, aclResolver);
+    }
+
+    public Builder setAccessController(AccessController accessController) {
+      this.accessController = accessController;
+      return this;
+    }
+
+    public Builder setIdentityResolver(IdentityResolver identityResolver) {
+      this.identityResolver = identityResolver;
+      return this;
+    }
+
+    public Builder setOrganizationResolver(OrganizationResolver organizationResolver) {
+      this.organizationResolver = organizationResolver;
+      return this;
+    }
+
+    public Builder setSubjectResolver(SubjectResolver subjectResolver) {
+      this.subjectResolver = subjectResolver;
+      return this;
+    }
+
+    public Builder setCredentials(Credentials credentials) {
+      this.credentials = credentials;
+      return this;
     }
 
     public Builder setAclResolver(Function<UUID, List<FactAclEntity>> aclResolver) {
