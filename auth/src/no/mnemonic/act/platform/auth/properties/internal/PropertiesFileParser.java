@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.auth.properties.internal;
 
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 
 import java.io.FileInputStream;
@@ -26,6 +27,7 @@ public class PropertiesFileParser {
   private static final String ORGANIZATION_MEMBERS_KEY = "organization.{id}.members";
   private static final String SUBJECT_TYPE_KEY = "subject.{id}.type";
   private static final String SUBJECT_MEMBERS_KEY = "subject.{id}.members";
+  private static final String SUBJECT_AFFILIATION_KEY = "subject.{id}.affiliation";
   private static final String SUBJECT_PERMISSION_KEY = "subject.{id}.permission.(\\d+)";
 
   private Set<Function> functions = new HashSet<>();
@@ -133,6 +135,7 @@ public class PropertiesFileParser {
     // Extract internalID from key and name from value.
     long internalID = Long.parseUnsignedLong(matcher.group(1));
     String name = properties.getProperty(key, "").trim();
+    Long affiliation = parseNumericId(getPropertyForID(properties, internalID, SUBJECT_AFFILIATION_KEY));
     boolean isGroup = isGroup(properties, internalID, SUBJECT_TYPE_KEY);
 
     Subject.Builder builder = isGroup ? SubjectGroup.builder() : Subject.builder();
@@ -143,6 +146,7 @@ public class PropertiesFileParser {
     subjects.add(builder
             .setInternalID(internalID)
             .setName(name)
+            .setAffiliation(ObjectUtils.ifNull(affiliation, 0L))
             .setPermissions(parseSubjectPermissions(properties, internalID))
             .build()
     );
@@ -150,7 +154,7 @@ public class PropertiesFileParser {
   }
 
   private boolean isGroup(Properties properties, long id, String typeKey) {
-    String type = properties.getProperty(typeKey.replace("{id}", String.valueOf(id)));
+    String type = getPropertyForID(properties, id, typeKey);
     return !StringUtils.isBlank(type) && "group".equals(type.trim());
   }
 
@@ -158,12 +162,12 @@ public class PropertiesFileParser {
     Set<Long> members = new HashSet<>();
 
     // Members are comma-separated internalIDs.
-    for (String member : properties.getProperty(membersKey.replace("{id}", String.valueOf(id)), "").split(",")) {
+    for (String member : getPropertyForID(properties, id, membersKey).split(",")) {
       if (StringUtils.isBlank(member)) continue;
-      try {
-        members.add(Long.parseUnsignedLong(member.trim()));
-      } catch (NumberFormatException ignored) {
+      Long memberID = parseNumericId(member);
+      if (memberID != null) {
         // Ignore entries which aren't a valid ID.
+        members.add(memberID);
       }
     }
 
@@ -194,6 +198,18 @@ public class PropertiesFileParser {
     }
 
     return permissions;
+  }
+
+  private String getPropertyForID(Properties properties, long id, String key) {
+    return properties.getProperty(key.replace("{id}", String.valueOf(id)), "");
+  }
+
+  private Long parseNumericId(String id) {
+    try {
+      return Long.parseUnsignedLong(id.trim());
+    } catch (NumberFormatException ignored) {
+      return null;
+    }
   }
 
 }

@@ -15,12 +15,15 @@ public class Subject {
 
   private final long internalID;
   private final String name;
+  // Holds internalID of an organization.
+  private final long affiliation;
   // Key is internalID of organization and value is a set of function/function group names.
   private final Map<Long, Set<String>> permissions;
 
-  Subject(long internalID, String name, Map<Long, Set<String>> permissions) {
+  Subject(long internalID, String name, long affiliation, Map<Long, Set<String>> permissions) {
     this.internalID = internalID;
     this.name = name;
+    this.affiliation = affiliation;
     this.permissions = ObjectUtils.ifNotNull(permissions, Collections::unmodifiableMap, Collections.emptyMap());
   }
 
@@ -30,6 +33,10 @@ public class Subject {
 
   public String getName() {
     return name;
+  }
+
+  public long getAffiliation() {
+    return affiliation;
   }
 
   public Map<Long, Set<String>> getPermissions() {
@@ -61,10 +68,11 @@ public class Subject {
   public static class Builder<T extends Builder> {
     long internalID;
     String name;
+    long affiliation;
     Map<Long, Set<String>> permissions;
 
     public Subject build() {
-      return new Subject(internalID, name, permissions);
+      return new Subject(internalID, name, affiliation, permissions);
     }
 
     public T setInternalID(long internalID) {
@@ -74,6 +82,11 @@ public class Subject {
 
     public T setName(String name) {
       this.name = name;
+      return (T) this;
+    }
+
+    public T setAffiliation(long affiliation) {
+      this.affiliation = affiliation;
       return (T) this;
     }
 

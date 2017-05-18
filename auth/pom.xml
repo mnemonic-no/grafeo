@@ -40,6 +40,16 @@
       <artifactId>auth</artifactId>
       <version>${mnemonic.services.common.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>${guice.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>${javax.inject.version}</version>
+    </dependency>
     <!-- test jars -->
     <dependency>
       <groupId>junit</groupId>

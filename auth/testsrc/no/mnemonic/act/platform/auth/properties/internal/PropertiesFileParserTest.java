@@ -146,6 +146,41 @@ public class PropertiesFileParserTest {
   }
 
   @Test
+  public void testParsingSubjectWithAffiliation() throws Exception {
+    String content = "subject.123.name = test\n" +
+            "subject.123.affiliation = 1";
+    assertSubjectWithAffiliation(parseSubjects(content), 1);
+  }
+
+  @Test
+  public void testParsingSubjectWithAffiliationTrimId() throws Exception {
+    String content = "subject.123.name = test\n" +
+            "subject.123.affiliation =    1   ";
+    assertSubjectWithAffiliation(parseSubjects(content), 1);
+  }
+
+  @Test
+  public void testParsingSubjectWithAffiliationSkipEmptyId() throws Exception {
+    String content = "subject.123.name = test\n" +
+            "subject.123.affiliation = ";
+    assertSubjectWithAffiliation(parseSubjects(content), 0);
+  }
+
+  @Test
+  public void testParsingSubjectWithAffiliationSkipNegativeId() throws Exception {
+    String content = "subject.123.name = test\n" +
+            "subject.123.affiliation = -1";
+    assertSubjectWithAffiliation(parseSubjects(content), 0);
+  }
+
+  @Test
+  public void testParsingSubjectWithAffiliationSkipUnparseableId() throws Exception {
+    String content = "subject.123.name = test\n" +
+            "subject.123.affiliation = wrong";
+    assertSubjectWithAffiliation(parseSubjects(content), 0);
+  }
+
+  @Test
   public void testParsingSubjectGroup() throws Exception {
     String content = "subject.123.name = test\n" +
             "subject.123.type = group\n" +
@@ -296,6 +331,11 @@ public class PropertiesFileParserTest {
     if (subject.isGroup()) {
       assertEquals(SetUtils.set(1L, 2L, 3L), SubjectGroup.class.cast(subject).getMembers());
     }
+  }
+
+  private void assertSubjectWithAffiliation(Set<Subject> subjects, int affiliation) throws Exception {
+    assertSubject(subjects);
+    assertEquals(affiliation, subjects.iterator().next().getAffiliation());
   }
 
   private void assertEmptySubjectGroup(Set<Subject> subjects) {

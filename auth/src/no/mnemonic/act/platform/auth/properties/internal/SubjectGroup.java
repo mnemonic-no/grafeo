@@ -15,8 +15,8 @@ public class SubjectGroup extends Subject {
   // Refer to members by internalID.
   private final Set<Long> members;
 
-  private SubjectGroup(long internalID, String name, Set<Long> members, Map<Long, Set<String>> permissions) {
-    super(internalID, name, permissions);
+  private SubjectGroup(long internalID, String name, long affiliation, Set<Long> members, Map<Long, Set<String>> permissions) {
+    super(internalID, name, affiliation, permissions);
     this.members = ObjectUtils.ifNotNull(members, Collections::unmodifiableSet, Collections.emptySet());
   }
 
@@ -38,7 +38,7 @@ public class SubjectGroup extends Subject {
 
     @Override
     public SubjectGroup build() {
-      return new SubjectGroup(internalID, name, members, permissions);
+      return new SubjectGroup(internalID, name, affiliation, members, permissions);
     }
 
     public Builder setMembers(Set<Long> members) {
