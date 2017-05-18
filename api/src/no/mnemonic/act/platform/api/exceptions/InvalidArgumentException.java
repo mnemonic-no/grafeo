@@ -8,6 +8,8 @@ import java.util.Set;
  */
 public class InvalidArgumentException extends Exception {
 
+  private static final long serialVersionUID = -3581522095807531459L;
+
   /**
    * Used to provide consistent error messages throughout the whole application.
    * <p>
