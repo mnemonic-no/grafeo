@@ -2,6 +2,15 @@ package no.mnemonic.act.platform.service.contexts;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
+import no.mnemonic.act.platform.api.exceptions.UnexpectedAuthenticationFailedException;
+import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.services.common.auth.AccessController;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
+import no.mnemonic.services.common.auth.model.Credentials;
+import no.mnemonic.services.common.auth.model.NamedFunction;
 
 import java.util.UUID;
 
@@ -9,9 +18,24 @@ import java.util.UUID;
  * The SecurityContext provides methods to perform access control checks, e.g. if a user is allowed to perform
  * a specific operation or if a user has access to a specific object.
  */
-public class SecurityContext implements AutoCloseable {
+public abstract class SecurityContext implements AutoCloseable {
 
   private static final ThreadLocal<SecurityContext> currentContext = new ThreadLocal<>();
+  private final AccessController accessController;
+  private final IdentityResolver identityResolver;
+  private final OrganizationResolver organizationResolver;
+  private final SubjectResolver subjectResolver;
+  private final Credentials credentials;
+
+  protected SecurityContext(AccessController accessController, IdentityResolver identityResolver,
+                            OrganizationResolver organizationResolver, SubjectResolver subjectResolver,
+                            Credentials credentials) {
+    this.accessController = ObjectUtils.notNull(accessController, "'accessController' not set in SecurityContext.");
+    this.identityResolver = ObjectUtils.notNull(identityResolver, "'identityResolver' not set in SecurityContext.");
+    this.organizationResolver = ObjectUtils.notNull(organizationResolver, "'organizationResolver' not set in SecurityContext.");
+    this.subjectResolver = ObjectUtils.notNull(subjectResolver, "'subjectResolver' not set in SecurityContext.");
+    this.credentials = ObjectUtils.notNull(credentials, "'credentials' not set in SecurityContext.");
+  }
 
   /**
    * Retrieve the current SecurityContext.
@@ -46,6 +70,19 @@ public class SecurityContext implements AutoCloseable {
     return currentContext.get() != null;
   }
 
+  /**
+   * Remove the current SecurityContext.
+   * <p>
+   * Use with caution as many parts of the code rely on a set SecurityContext. This method is mainly useful for testing.
+   *
+   * @return Current SecurityContext, or NULL if it was not set.
+   */
+  public static SecurityContext clear() {
+    SecurityContext oldCtx = currentContext.get();
+    currentContext.remove();
+    return oldCtx;
+  }
+
   @Override
   public void close() throws Exception {
     currentContext.remove();
@@ -59,7 +96,14 @@ public class SecurityContext implements AutoCloseable {
    * @throws AuthenticationFailedException If the user could not be authenticated.
    */
   public void checkPermission(NamedFunction function) throws AccessDeniedException, AuthenticationFailedException {
-    // NOOP for now, delegate to access controller later.
+    try {
+      //noinspection unchecked
+      if (!accessController.hasPermission(credentials, function)) {
+        throw new AccessDeniedException(String.format("User is not allowed to perform operation '%s'.", function.getName()));
+      }
+    } catch (InvalidCredentialsException ex) {
+      throw new AuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
   }
 
   /**
@@ -71,7 +115,14 @@ public class SecurityContext implements AutoCloseable {
    * @throws AuthenticationFailedException If the user could not be authenticated.
    */
   public void checkPermission(NamedFunction function, UUID organizationID) throws AccessDeniedException, AuthenticationFailedException {
-    // NOOP for now, delegate to access controller later.
+    try {
+      //noinspection unchecked
+      if (!accessController.hasPermission(credentials, function, identityResolver.resolveOrganizationIdentity(organizationID))) {
+        throw new AccessDeniedException(String.format("User is not allowed to perform operation '%s' for organization '%s'.", function.getName(), organizationID));
+      }
+    } catch (InvalidCredentialsException ex) {
+      throw new AuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
   }
 
   /**
@@ -80,8 +131,12 @@ public class SecurityContext implements AutoCloseable {
    * @return ID of current user
    */
   public UUID getCurrentUserID() {
-    // Return a static user ID for now.
-    return UUID.fromString("00000000-0000-0000-0000-000000000000");
+    try {
+      return subjectResolver.resolveCurrentUser(credentials).getId();
+    } catch (InvalidCredentialsException ex) {
+      // getCurrentUserID() should only be called in a context with an already authenticated user.
+      throw new UnexpectedAuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
   }
 
   /**
@@ -90,15 +145,12 @@ public class SecurityContext implements AutoCloseable {
    * @return ID of current user's organization
    */
   public UUID getCurrentUserOrganizationID() {
-    // Return a static organization ID for now.
-    return UUID.fromString("00000000-0000-0000-0000-000000000000");
-  }
-
-  /**
-   * For now define this interface here. Needs to be refactored when we implement real access control.
-   */
-  public interface NamedFunction {
-    String getName();
+    try {
+      return organizationResolver.resolveCurrentUserAffiliation(credentials).getId();
+    } catch (InvalidCredentialsException ex) {
+      // getCurrentUserOrganizationID() should only be called in a context with an already authenticated user.
+      throw new UnexpectedAuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
   }
 
 }

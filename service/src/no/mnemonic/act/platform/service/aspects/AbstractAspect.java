@@ -29,6 +29,25 @@ abstract class AbstractAspect extends AbstractModule implements MethodIntercepto
   }
 
   /**
+   * Retrieve the RequestHeader set in the invoked method.
+   *
+   * @param invocation Invoked method
+   * @return RequestHeader
+   */
+  RequestHeader getRequestHeader(MethodInvocation invocation) {
+    Method method = invocation.getMethod();
+    if (!isServiceMethod(method)) {
+      throw new IllegalArgumentException("Invoked method is not a service method: " + method.getName());
+    }
+
+    if (invocation.getArguments()[0] == null) {
+      throw new IllegalStateException("RequestHeader is not set in method: " + method.getName());
+    }
+
+    return (RequestHeader) invocation.getArguments()[0];
+  }
+
+  /**
    * Create a Matcher which matches against a service method.
    *
    * @return Matcher matching a service method
@@ -37,10 +56,14 @@ abstract class AbstractAspect extends AbstractModule implements MethodIntercepto
     return new AbstractMatcher<Method>() {
       @Override
       public boolean matches(Method method) {
-        // Assume that for every service method the first parameter is a RequestHeader.
-        return method.getParameterTypes().length >= 1 && method.getParameterTypes()[0].equals(RequestHeader.class);
+        return isServiceMethod(method);
       }
     };
+  }
+
+  private boolean isServiceMethod(Method method) {
+    // Assume that for every service method the first parameter is a RequestHeader.
+    return method.getParameterTypes().length >= 1 && method.getParameterTypes()[0].equals(RequestHeader.class);
   }
 
 }

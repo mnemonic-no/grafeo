@@ -6,6 +6,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
+import no.mnemonic.act.platform.auth.properties.PropertiesBasedAccessController;
 import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
@@ -17,13 +18,14 @@ import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.commons.testtools.cassandra.CassandraTestResource;
 import no.mnemonic.commons.testtools.cassandra.CassandraTruncateRule;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.services.common.auth.AccessController;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.UUID;
@@ -34,10 +36,12 @@ public abstract class AbstractIT {
 
   private static final String CASSANDRA_CLUSTER_NAME = "ActIntegrationTest";
   private static final String CASSANDRA_CONTACT_POINTS = "localhost";
+  private static final String ACL_FILE = ClassLoader.getSystemResource("resources/acl.properties").getPath();
   private static final int API_SERVER_PORT = AvailablePortFinder.getAvailablePort(8000);
 
   private final static ObjectMapper mapper = new ObjectMapper();
 
+  private static PropertiesBasedAccessController accessController;
   private static ClusterManager clusterManager;
   private static ObjectManager objectManager;
   private static FactManager factManager;
@@ -67,12 +71,14 @@ public abstract class AbstractIT {
   @Before
   public void setup() {
     Injector injector = Guice.createInjector(new ModuleIT());
+    accessController = (PropertiesBasedAccessController) injector.getInstance(AccessController.class);
     clusterManager = injector.getInstance(ClusterManager.class);
     objectManager = injector.getInstance(ObjectManager.class);
     factManager = injector.getInstance(FactManager.class);
     apiServer = injector.getInstance(ApiServer.class);
 
     // Start up everything in correct order.
+    accessController.startComponent();
     clusterManager.startComponent();
     objectManager.startComponent();
     factManager.startComponent();
@@ -86,6 +92,7 @@ public abstract class AbstractIT {
     factManager.stopComponent();
     objectManager.stopComponent();
     clusterManager.stopComponent();
+    accessController.stopComponent();
   }
 
   /* Getters */
@@ -100,8 +107,15 @@ public abstract class AbstractIT {
 
   /* Helpers for REST */
 
-  WebTarget target(String url) {
-    return ClientBuilder.newClient().target("http://localhost:" + API_SERVER_PORT + url);
+  Invocation.Builder request(String url) {
+    return request(url, 1);
+  }
+
+  Invocation.Builder request(String url, long actUserID) {
+    return ClientBuilder.newClient()
+            .target("http://localhost:" + API_SERVER_PORT + url)
+            .request()
+            .header("ACT-User-ID", actUserID);
   }
 
   JsonNode getPayload(Response response) throws IOException {
@@ -161,7 +175,7 @@ public abstract class AbstractIT {
             .setId(UUID.randomUUID())
             .setTypeID(factType.getId())
             .setValue("factValue")
-            .setOrganizationID(UUID.randomUUID())
+            .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setSourceID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased)
             .setTimestamp(123456789)
@@ -203,6 +217,8 @@ public abstract class AbstractIT {
       install(new ServiceModule());
       install(new RestModule());
       // Configuration
+      bind(String.class).annotatedWith(Names.named("access.controller.properties.file")).toInstance(ACL_FILE);
+      bind(String.class).annotatedWith(Names.named("access.controller.read.interval")).toInstance("60000");
       bind(String.class).annotatedWith(Names.named("cassandra.cluster.name")).toInstance(CASSANDRA_CLUSTER_NAME);
       bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance(CASSANDRA_CONTACT_POINTS);
       bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getPort()));

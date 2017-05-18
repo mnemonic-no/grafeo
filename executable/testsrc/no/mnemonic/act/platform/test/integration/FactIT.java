@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.test.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.request.v1.Direction;
 import no.mnemonic.act.platform.entity.cassandra.*;
@@ -23,7 +24,7 @@ public class FactIT extends AbstractIT {
     FactEntity entity = createFact();
 
     // ... and check that it can be received via the REST API.
-    Response response = target("/v1/fact/uuid/" + entity.getId()).request().get();
+    Response response = request("/v1/fact/uuid/" + entity.getId()).get();
     assertEquals(200, response.getStatus());
     assertEquals(entity.getId(), getIdFromModel(getPayload(response)));
   }
@@ -35,7 +36,7 @@ public class FactIT extends AbstractIT {
 
     // Create a Fact via the REST API ...
     CreateFactRequest request = createCreateFactRequest(objectType, factType);
-    Response response = target("/v1/fact").request().post(Entity.json(request));
+    Response response = request("/v1/fact").post(Entity.json(request));
     assertEquals(201, response.getStatus());
 
     // ... and check that both Fact and Object end up in the database.
@@ -50,9 +51,9 @@ public class FactIT extends AbstractIT {
 
     // Create the same Fact twice ...
     CreateFactRequest request = createCreateFactRequest(objectType, factType);
-    Response response1 = target("/v1/fact").request().post(Entity.json(request));
+    Response response1 = request("/v1/fact").post(Entity.json(request));
     assertEquals(201, response1.getStatus());
-    Response response2 = target("/v1/fact").request().post(Entity.json(request));
+    Response response2 = request("/v1/fact").post(Entity.json(request));
     assertEquals(201, response2.getStatus());
 
     // ... and check that the Fact was only refreshed.
@@ -74,7 +75,7 @@ public class FactIT extends AbstractIT {
             .addAcl(UUID.randomUUID())
             .addAcl(UUID.randomUUID())
             .setComment("Hello World!");
-    Response response = target("/v1/fact").request().post(Entity.json(request));
+    Response response = request("/v1/fact").post(Entity.json(request));
     assertEquals(201, response.getStatus());
 
     // ... and check that both ACL and the comment end up in the database.
@@ -89,7 +90,7 @@ public class FactIT extends AbstractIT {
     FactEntity factToRetract = createFact();
 
     // ... retract it via the REST API ...
-    Response response = target("/v1/fact/uuid/" + factToRetract.getId() + "/retract").request().post(Entity.json(new RetractFactRequest()));
+    Response response = request("/v1/fact/uuid/" + factToRetract.getId() + "/retract").post(Entity.json(new RetractFactRequest()));
     assertEquals(201, response.getStatus());
 
     // ... and check that retraction Fact was created correctly.
@@ -105,7 +106,7 @@ public class FactIT extends AbstractIT {
     FactAclEntity entry = createAclEntry(fact);
 
     // ... and check that the ACL can be received via the REST API.
-    Response response = target("/v1/fact/uuid/" + fact.getId() + "/access").request().get();
+    Response response = request("/v1/fact/uuid/" + fact.getId() + "/access").get();
     assertEquals(200, response.getStatus());
     ArrayNode data = (ArrayNode) getPayload(response);
     assertEquals(1, data.size());
@@ -118,8 +119,8 @@ public class FactIT extends AbstractIT {
     FactEntity fact = createFact();
 
     // ... grant access to it via the REST API ...
-    UUID subject = UUID.randomUUID();
-    Response response = target("/v1/fact/uuid/" + fact.getId() + "/access/" + subject).request().post(Entity.json(new GrantFactAccessRequest()));
+    UUID subject = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    Response response = request("/v1/fact/uuid/" + fact.getId() + "/access/" + subject).post(Entity.json(new GrantFactAccessRequest()));
     assertEquals(201, response.getStatus());
 
     // ... and check that the ACL entry ends up in the database.
@@ -135,7 +136,7 @@ public class FactIT extends AbstractIT {
     FactCommentEntity comment = createComment(fact);
 
     // ... and check that the comment can be received via the REST API.
-    Response response = target("/v1/fact/uuid/" + fact.getId() + "/comments").request().get();
+    Response response = request("/v1/fact/uuid/" + fact.getId() + "/comments").get();
     assertEquals(200, response.getStatus());
     ArrayNode data = (ArrayNode) getPayload(response);
     assertEquals(1, data.size());
@@ -149,7 +150,7 @@ public class FactIT extends AbstractIT {
 
     // ... create a comment via the REST API ...
     CreateFactCommentRequest request = new CreateFactCommentRequest().setComment("Hello World!");
-    Response response = target("/v1/fact/uuid/" + fact.getId() + "/comments").request().post(Entity.json(request));
+    Response response = request("/v1/fact/uuid/" + fact.getId() + "/comments").post(Entity.json(request));
     assertEquals(201, response.getStatus());
 
     // ... and check that the comment ends up in the database.
@@ -158,11 +159,57 @@ public class FactIT extends AbstractIT {
     assertEquals(request.getComment(), comments.get(0).getComment());
   }
 
+  @Test
+  public void testFactAccessWithPublicAccess() throws Exception {
+    // Create a Fact via the REST API ...
+    CreateFactRequest request = createCreateFactRequest()
+            .setAccessMode(AccessMode.Public);
+    Response response = request("/v1/fact", 1).post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+    UUID factID = getIdFromModel(getPayload(response));
+
+    // ... and check who has access to the created Fact. All subjects have access to public Facts.
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 1).get().getStatus());
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 2).get().getStatus());
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 3).get().getStatus());
+  }
+
+  @Test
+  public void testFactAccessWithRoleBasedAccess() throws Exception {
+    // Create a Fact via the REST API ...
+    CreateFactRequest request = createCreateFactRequest()
+            .setAccessMode(AccessMode.RoleBased);
+    Response response = request("/v1/fact", 1).post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+    UUID factID = getIdFromModel(getPayload(response));
+
+    // ... and check who has access to the created Fact.
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 1).get().getStatus()); // Creator of the Fact.
+    assertEquals(403, request("/v1/fact/uuid/" + factID, 2).get().getStatus()); // No access to Organization.
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 3).get().getStatus()); // Access via parent Organization.
+  }
+
+  @Test
+  public void testFactAccessWithExplicitAccess() throws Exception {
+    // Create a Fact via the REST API ...
+    CreateFactRequest request = createCreateFactRequest()
+            .setAccessMode(AccessMode.Explicit)
+            .addAcl(UUID.fromString("00000000-0000-0000-0000-000000000002"));
+    Response response = request("/v1/fact", 1).post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+    UUID factID = getIdFromModel(getPayload(response));
+
+    // ... and check who has access to the created Fact.
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 1).get().getStatus()); // Creator of the Fact.
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 2).get().getStatus()); // Explicitly granted access.
+    assertEquals(403, request("/v1/fact/uuid/" + factID, 3).get().getStatus()); // Not in ACL.
+  }
+
   private FactAclEntity createAclEntry(FactEntity fact) {
     FactAclEntity entry = new FactAclEntity()
             .setId(UUID.randomUUID())
             .setFactID(fact.getId())
-            .setSubjectID(UUID.randomUUID())
+            .setSubjectID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setSourceID(UUID.randomUUID())
             .setTimestamp(123456789);
 
@@ -179,6 +226,12 @@ public class FactIT extends AbstractIT {
             .setTimestamp(123456789);
 
     return getFactManager().saveFactComment(comment);
+  }
+
+  private CreateFactRequest createCreateFactRequest() {
+    ObjectTypeEntity objectType = createObjectType();
+    FactTypeEntity factType = createFactType(objectType.getId());
+    return createCreateFactRequest(objectType, factType);
   }
 
   private CreateFactRequest createCreateFactRequest(ObjectTypeEntity objectType, FactTypeEntity factType) {

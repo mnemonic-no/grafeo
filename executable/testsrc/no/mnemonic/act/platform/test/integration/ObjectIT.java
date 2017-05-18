@@ -39,7 +39,7 @@ public class ObjectIT extends AbstractIT {
     FactEntity fact = createFact(object);
 
     // ... and check that the returned Object contains the correct statistics.
-    Response response = target("/v1/object/uuid/" + object.getId()).request().get();
+    Response response = request("/v1/object/uuid/" + object.getId()).get();
     assertEquals(200, response.getStatus());
 
     JsonNode data = getPayload(response);
@@ -100,13 +100,13 @@ public class ObjectIT extends AbstractIT {
   }
 
   private void fetchAndAssertSingle(String url, UUID id) throws Exception {
-    Response response = target(url).request().get();
+    Response response = request(url).get();
     assertEquals(200, response.getStatus());
     assertEquals(id, getIdFromModel(getPayload(response)));
   }
 
   private void fetchAndAssertList(String url, ValidatingRequest request, UUID id) throws Exception {
-    Response response = target(url).request().post(Entity.json(request));
+    Response response = request(url).post(Entity.json(request));
     assertEquals(200, response.getStatus());
     ArrayNode data = (ArrayNode) getPayload(response);
     assertEquals(1, data.size());

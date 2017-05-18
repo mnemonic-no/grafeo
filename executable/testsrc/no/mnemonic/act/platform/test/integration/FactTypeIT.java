@@ -22,7 +22,7 @@ public class FactTypeIT extends AbstractIT {
     FactTypeEntity entity = createFactType();
 
     // ... and check that it can be received via the REST API.
-    Response response = target("/v1/factType/uuid/" + entity.getId()).request().get();
+    Response response = request("/v1/factType/uuid/" + entity.getId()).get();
     assertEquals(200, response.getStatus());
     assertEquals(entity.getId(), getIdFromModel(getPayload(response)));
   }
@@ -33,7 +33,7 @@ public class FactTypeIT extends AbstractIT {
     FactTypeEntity entity = createFactType();
 
     // ... and check that it can be found via the REST API.
-    Response response = target("/v1/factType").request().get();
+    Response response = request("/v1/factType").get();
     assertEquals(200, response.getStatus());
     ArrayNode data = (ArrayNode) getPayload(response);
     assertEquals(1, data.size());
@@ -51,7 +51,7 @@ public class FactTypeIT extends AbstractIT {
                     .setObjectType(createObjectType().getId())
                     .setDirection(Direction.BiDirectional)
             );
-    Response response = target("/v1/factType").request().post(Entity.json(request));
+    Response response = request("/v1/factType").post(Entity.json(request));
     assertEquals(201, response.getStatus());
 
     // ... and check that it ends up in the database.
@@ -65,7 +65,7 @@ public class FactTypeIT extends AbstractIT {
 
     // ... update it via the REST API ...
     UpdateFactTypeRequest request = new UpdateFactTypeRequest().setName("FactTypeUpdated");
-    Response response = target("/v1/factType/uuid/" + entity.getId()).request().put(Entity.json(request));
+    Response response = request("/v1/factType/uuid/" + entity.getId()).put(Entity.json(request));
     assertEquals(200, response.getStatus());
 
     // ... and check that the update ends up in the database.

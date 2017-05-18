@@ -13,11 +13,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.mockito.Mock;
 
-import static org.mockito.Mockito.spy;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 abstract class AbstractDelegateTest {
 
+  @Mock
+  private TiSecurityContext securityContext;
   @Mock
   private ObjectManager objectManager;
   @Mock
@@ -43,10 +44,6 @@ abstract class AbstractDelegateTest {
   public void initialize() {
     initMocks(this);
 
-    // Need to spy on context in order to be able to stub methods.
-    TiSecurityContext securityContext = spy(TiSecurityContext.builder()
-            .setAclResolver(id -> null)
-            .build());
     TiRequestContext requestContext = TiRequestContext.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
@@ -66,8 +63,8 @@ abstract class AbstractDelegateTest {
 
   @After
   public void cleanup() throws Exception {
-    SecurityContext.get().close();
-    RequestContext.get().close();
+    SecurityContext.clear();
+    RequestContext.clear();
   }
 
   TiSecurityContext getSecurityContext() {

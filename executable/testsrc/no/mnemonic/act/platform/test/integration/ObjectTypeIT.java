@@ -20,7 +20,7 @@ public class ObjectTypeIT extends AbstractIT {
     ObjectTypeEntity entity = createObjectType();
 
     // ... and check that it can be received via the REST API.
-    Response response = target("/v1/objectType/uuid/" + entity.getId()).request().get();
+    Response response = request("/v1/objectType/uuid/" + entity.getId()).get();
     assertEquals(200, response.getStatus());
     assertEquals(entity.getId(), getIdFromModel(getPayload(response)));
   }
@@ -31,7 +31,7 @@ public class ObjectTypeIT extends AbstractIT {
     ObjectTypeEntity entity = createObjectType();
 
     // ... and check that it can be found via the REST API.
-    Response response = target("/v1/objectType").request().get();
+    Response response = request("/v1/objectType").get();
     assertEquals(200, response.getStatus());
     ArrayNode data = (ArrayNode) getPayload(response);
     assertEquals(1, data.size());
@@ -45,7 +45,7 @@ public class ObjectTypeIT extends AbstractIT {
             .setName("ObjectType")
             .setEntityHandler("IdentityHandler")
             .setValidator("TrueValidator");
-    Response response = target("/v1/objectType").request().post(Entity.json(request));
+    Response response = request("/v1/objectType").post(Entity.json(request));
     assertEquals(201, response.getStatus());
 
     // ... and check that it ends up in the database.
@@ -59,7 +59,7 @@ public class ObjectTypeIT extends AbstractIT {
 
     // ... update it via the REST API ...
     UpdateObjectTypeRequest request = new UpdateObjectTypeRequest().setName("ObjectTypeUpdated");
-    Response response = target("/v1/objectType/uuid/" + entity.getId()).request().put(Entity.json(request));
+    Response response = request("/v1/objectType/uuid/" + entity.getId()).put(Entity.json(request));
     assertEquals(200, response.getStatus());
 
     // ... and check that the update ends up in the database.

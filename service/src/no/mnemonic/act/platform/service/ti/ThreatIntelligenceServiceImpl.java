@@ -10,6 +10,9 @@ import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
@@ -24,6 +27,8 @@ import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.services.common.auth.AccessController;
+import no.mnemonic.services.common.auth.model.Credentials;
 
 import javax.inject.Inject;
 import java.util.UUID;
@@ -33,6 +38,10 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
 
   public static final UUID GLOBAL_NAMESPACE = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
+  private final AccessController accessController;
+  private final IdentityResolver identityResolver;
+  private final OrganizationResolver organizationResolver;
+  private final SubjectResolver subjectResolver;
   private final FactManager factManager;
   private final ObjectManager objectManager;
   private final EntityHandlerFactory entityHandlerFactory;
@@ -45,8 +54,14 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   private final FactCommentConverter factCommentConverter;
 
   @Inject
-  public ThreatIntelligenceServiceImpl(FactManager factManager, ObjectManager objectManager,
+  public ThreatIntelligenceServiceImpl(AccessController accessController, IdentityResolver identityResolver,
+                                       OrganizationResolver organizationResolver, SubjectResolver subjectResolver,
+                                       FactManager factManager, ObjectManager objectManager,
                                        EntityHandlerFactory entityHandlerFactory, ValidatorFactory validatorFactory) {
+    this.accessController = accessController;
+    this.identityResolver = identityResolver;
+    this.organizationResolver = organizationResolver;
+    this.subjectResolver = subjectResolver;
     this.factManager = factManager;
     this.objectManager = objectManager;
     this.entityHandlerFactory = entityHandlerFactory;
@@ -64,13 +79,13 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     this.factConverter = FactConverter.builder()
             .setFactTypeConverter(createFactTypeByIdConverter())
             .setInReferenceToConverter(createInReferenceToConverter())
-            .setOrganizationConverter(createOrganizationConverter())
+            .setOrganizationConverter(organizationResolver::resolveOrganization)
             .setSourceConverter(createSourceConverter())
             .setObjectConverter(createObjectByIdConverter())
             .build();
     this.aclEntryConverter = AclEntryConverter.builder()
             .setSourceConverter(createSourceConverter())
-            .setSubjectConverter(createSubjectConverter())
+            .setSubjectConverter(subjectResolver::resolveSubject)
             .build();
     this.factCommentConverter = FactCommentConverter.builder()
             .setSourceConverter(createSourceConverter())
@@ -78,8 +93,13 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   }
 
   @Override
-  public SecurityContext createSecurityContext() {
+  public SecurityContext createSecurityContext(Credentials credentials) {
     return TiSecurityContext.builder()
+            .setAccessController(accessController)
+            .setIdentityResolver(identityResolver)
+            .setOrganizationResolver(organizationResolver)
+            .setSubjectResolver(subjectResolver)
+            .setCredentials(credentials)
             .setAclResolver(factManager::fetchFactAcl)
             .build();
   }
@@ -228,22 +248,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return id -> Namespace.builder()
             .setId(GLOBAL_NAMESPACE)
             .setName("Global")
-            .build();
-  }
-
-  private Function<UUID, Subject> createSubjectConverter() {
-    // For now just return a static Subject.
-    return id -> Subject.builder()
-            .setId(id)
-            .setName("Not implemented yet!")
-            .build();
-  }
-
-  private Function<UUID, Organization> createOrganizationConverter() {
-    // For now just return a static Organization.
-    return id -> Organization.builder()
-            .setId(id)
-            .setName("Not implemented yet!")
             .build();
   }
 

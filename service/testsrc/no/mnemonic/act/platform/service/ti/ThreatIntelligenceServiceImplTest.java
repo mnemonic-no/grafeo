@@ -1,9 +1,14 @@
 package no.mnemonic.act.platform.service.ti;
 
+import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
+import no.mnemonic.services.common.auth.AccessController;
+import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -14,6 +19,16 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class ThreatIntelligenceServiceImplTest {
 
+  @Mock
+  private Credentials credentials;
+  @Mock
+  private AccessController accessController;
+  @Mock
+  private IdentityResolver identityResolver;
+  @Mock
+  private OrganizationResolver organizationResolver;
+  @Mock
+  private SubjectResolver subjectResolver;
   @Mock
   private FactManager factManager;
   @Mock
@@ -28,12 +43,12 @@ public class ThreatIntelligenceServiceImplTest {
   @Before
   public void initialize() {
     initMocks(this);
-    service = new ThreatIntelligenceServiceImpl(factManager, objectManager, entityHandlerFactory, validatorFactory);
+    service = new ThreatIntelligenceServiceImpl(accessController, identityResolver, organizationResolver, subjectResolver, factManager, objectManager, entityHandlerFactory, validatorFactory);
   }
 
   @Test
   public void testCreateSecurityContext() {
-    assertNotNull(service.createSecurityContext());
+    assertNotNull(service.createSecurityContext(credentials));
   }
 
   @Test
