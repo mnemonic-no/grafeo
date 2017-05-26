@@ -2,8 +2,9 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>act-platform</artifactId>
   <packaging>jar</packaging>
-  <name>act-platform</name>
-  <url>http://www.mnemonic.no</url>
+
+  <name>ACT platform - executable</name>
+  <description>Creation of executable JAR bundles</description>
 
   <parent>
     <groupId>no.mnemonic.act.platform</groupId>
@@ -78,5 +79,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
 </project>

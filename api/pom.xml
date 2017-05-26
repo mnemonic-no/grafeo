@@ -2,8 +2,9 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>api</artifactId>
   <packaging>jar</packaging>
-  <name>api</name>
-  <url>http://www.mnemonic.no</url>
+
+  <name>ACT platform - api</name>
+  <description>Definition of the Service and REST APIs</description>
 
   <parent>
     <groupId>no.mnemonic.act.platform</groupId>
@@ -15,6 +16,14 @@
   <build>
     <sourceDirectory>src</sourceDirectory>
     <testSourceDirectory>testsrc</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>../</directory>
+        <includes>
+          <include>LICENSE</include>
+        </includes>
+      </resource>
+    </resources>
     <testResources>
       <testResource>
         <directory>testsrc</directory>
@@ -25,7 +34,6 @@
     </testResources>
   </build>
 
-  <!-- configure dependencies -->
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>
