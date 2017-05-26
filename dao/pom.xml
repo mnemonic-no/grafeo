@@ -2,8 +2,9 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>dao</artifactId>
   <packaging>jar</packaging>
-  <name>dao</name>
-  <url>http://www.mnemonic.no</url>
+
+  <name>ACT platform - dao</name>
+  <description>Implementation of database access</description>
 
   <parent>
     <groupId>no.mnemonic.act.platform</groupId>
@@ -15,6 +16,14 @@
   <build>
     <sourceDirectory>src</sourceDirectory>
     <testSourceDirectory>testsrc</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>../</directory>
+        <includes>
+          <include>LICENSE</include>
+        </includes>
+      </resource>
+    </resources>
     <testResources>
       <testResource>
         <directory>testsrc/resources</directory>
@@ -26,7 +35,6 @@
     </testResources>
   </build>
 
-  <!-- configure dependencies -->
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>

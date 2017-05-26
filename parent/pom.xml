@@ -4,8 +4,35 @@
   <artifactId>parent</artifactId>
   <packaging>pom</packaging>
   <version>0.0.1-SNAPSHOT</version>
-  <name>parent</name>
-  <url>http://www.mnemonic.no</url>
+
+  <name>ACT platform</name>
+  <description>Open platform for collection and exchange of threat intelligence information</description>
+  <url>https://github.com/mnemonic-no</url>
+  <inceptionYear>2017</inceptionYear>
+
+  <licenses>
+    <license>
+      <name>ISC</name>
+      <url>https://opensource.org/licenses/ISC</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>mnemonic as</name>
+    <url>https://www.mnemonic.no</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <name>mnemonic development team</name>
+      <email>opensource@mnemonic.no</email>
+      <url>https://github.com/mnemonic-no</url>
+      <organization>mnemonic as</organization>
+      <organizationUrl>https://www.mnemonic.no</organizationUrl>
+      <timezone>Europe/Oslo</timezone>
+    </developer>
+  </developers>
 
   <prerequisites>
     <maven>3.0</maven>
@@ -15,8 +42,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.0.19</mnemonic.commons.version>
-    <mnemonic.services.common.version>0.0.3</mnemonic.services.common.version>
+    <mnemonic.commons.version>0.0.22</mnemonic.commons.version>
+    <mnemonic.services.common.version>0.0.4</mnemonic.services.common.version>
 
     <!-- external dependencies -->
     <cassandra.version>3.2.0</cassandra.version>
