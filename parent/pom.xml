@@ -67,6 +67,7 @@
     <maven.install.version>2.5.2</maven.install.version>
     <maven.jar.version>3.0.2</maven.jar.version>
     <maven.javadoc.version>2.10.4</maven.javadoc.version>
+    <maven.license.version>1.12</maven.license.version>
     <maven.release.version>2.5.3</maven.release.version>
     <maven.resources.version>3.0.2</maven.resources.version>
     <maven.shade.version>3.0.0</maven.shade.version>
@@ -194,6 +195,36 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${maven.license.version}</version>
+        <!-- Execute license check during the build process to detect violations as early as possible. -->
+        <executions>
+          <execution>
+            <id>check-licenses</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>add-third-party</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <!-- Trust that the developers of dependencies have done their homework. -->
+          <includeTransitiveDependencies>false</includeTransitiveDependencies>
+          <!-- Fail the build if a detected license is not in the white list. -->
+          <failIfWarning>true</failIfWarning>
+          <!-- Only allow licenses which are in this list. -->
+          <includedLicenses>Apache 2|CDDL|Eclipse|ISC|MIT</includedLicenses>
+          <!-- Consolidate license names. -->
+          <licenseMerges>
+            <licenseMerge>Apache 2|Apache License 2.0|Apache Software License - Version 2.0|Apache License, Version 2.0|The Apache Software License, Version 2.0</licenseMerge>
+            <licenseMerge>CDDL|CDDL 1.1|CDDL + GPLv2 with classpath exception</licenseMerge>
+            <licenseMerge>Eclipse|Eclipse Public License 1.0|Eclipse Public License - Version 1.0</licenseMerge>
+            <licenseMerge>MIT|The MIT License</licenseMerge>
+          </licenseMerges>
+        </configuration>
       </plugin>
     </plugins>
   </build>
