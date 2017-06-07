@@ -55,7 +55,7 @@ java -Dapplication.properties.file=$PROPERTIES -jar $EXECUTABLE guice module=no.
 
 ## Known issues
 
-See [Issues](FIXME: URL).
+See [Issues](https://github.com/mnemonic-no/act-platform/issues).
 
 ## Contributing
 

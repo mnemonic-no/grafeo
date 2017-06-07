@@ -7,7 +7,7 @@
 
   <name>ACT platform</name>
   <description>Open platform for collection and exchange of threat intelligence information</description>
-  <url>https://github.com/mnemonic-no</url>
+  <url>https://github.com/mnemonic-no/act-platform</url>
   <inceptionYear>2017</inceptionYear>
 
   <licenses>
@@ -86,7 +86,9 @@
   </modules>
 
   <scm>
-    <developerConnection>scm:git:ssh://stash.mnemonic.no:8022/joss/act-platform.git</developerConnection>
+    <connection>scm:git:git://github.com/mnemonic-no/act-platform.git</connection>
+    <developerConnection>scm:git:ssh://github.com:mnemonic-no/act-platform.git</developerConnection>
+    <url>https://github.com/mnemonic-no/act-platform</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -148,6 +150,7 @@
         <version>${maven.release.version}</version>
         <configuration>
           <pushChanges>false</pushChanges>
+          <localCheckout>true</localCheckout>
         </configuration>
       </plugin>
       <plugin>
