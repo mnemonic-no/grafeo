@@ -23,7 +23,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://bia.mn
 ##### Compilation
 
 At this early stage of the project no compiled bundles are published, thus, you have to compile the platform yourself.
-Just execute `mvn clean install -f parent/pom.xml` from the repository's root folder.
+Just execute `mvn clean install` from the repository's root folder.
 Add `-DskipTests` to the build command in order to not run the unit tests during build.
 This will create an executable JAR bundle under `executable/target` containing all dependencies.
 
