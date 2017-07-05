@@ -43,7 +43,11 @@ public class FactEndpoint extends AbstractEndpoint {
           value = "Retrieve a Fact by its UUID.",
           notes = "This operation returns a Fact identified by its UUID. The result includes the Objects directly " +
                   "linked to the requested Fact. The request will be rejected with a 403 if a user does not have " +
-                  "access to the requested Fact.",
+                  "access to the requested Fact.\n\n" +
+                  "If the accessMode is 'Public' the Fact will be available to everyone. If the accessMode is " +
+                  "'Explicit' only users in the Fact's ACL will have access to the Fact. If the accessMode is " +
+                  "'RoleBased' (the default mode) a user must be either in the Fact's ACL or have general role-based " +
+                  "access to the Organization owning the Fact. A user who created a Fact will always have access to it.",
           response = Fact.class
   )
   @ApiResponses({

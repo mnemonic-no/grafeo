@@ -11,7 +11,7 @@ In this repository the code of the ACT platform is published under an Open Sourc
 
 ## Usage
 
-The ACT platform exposes a set of REST APIs. See this [guideline](https://bia.mnemonic.no/x/PYEp) on how to work with the API.
+The ACT platform exposes a set of REST APIs. See this [guideline](https://github.com/mnemonic-no/act-platform/wiki/REST-API-Usage-Guideline) on how to work with the API.
 
 ## Installation
 
@@ -32,7 +32,7 @@ This will create an executable JAR bundle under `executable/target` containing a
 * The application is configured with a properties file. See `executable/application.properties.localhost` as an example.
 This configuration needs to point to your Cassandra installation.
 * Access control including users and organizations is defined in another properties file.
-See `executable/acl.properties.localhost` as an example and the [specification](https://bia.mnemonic.no/x/SIEp) for more details.
+See `executable/acl.properties.localhost` as an example and the [specification](https://github.com/mnemonic-no/act-platform/wiki/Role-Based-Access-Control) for more details.
 Make sure that your application configuration points to this properties file as well.
 
 ##### Execution
