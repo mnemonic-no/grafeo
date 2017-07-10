@@ -10,7 +10,7 @@ public class IdMapper {
   /**
    * Maps a numeric internal ID to a global UUID.
    *
-   * @param id Internal ID, must be >= 0.
+   * @param id Internal ID, must be &gt;= 0.
    * @return Mapped global UUID
    */
   public static UUID toGlobalID(long id) {

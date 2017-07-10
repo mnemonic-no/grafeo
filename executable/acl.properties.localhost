@@ -1,11 +1,17 @@
+# Define a function group named 'all' containing all specified functions.
 function.all.members = addTypes,updateTypes,viewTypes,addFactObjects,grantFactAccess,viewFactObjects
 
+# Define some organizations and one organization group containing all other organizations.
 organization.1.name = Test Organization 1
 organization.2.name = Test Organization 2
 organization.3.name = All Organizations
 organization.3.type = group
 organization.3.members = 1,2
 
+# Define some subjects and their permissions.
+# John Doe has access to Test Organization 1.
+# Kari Nordmann has access to Test Organization 2.
+# Max Mustermann has access to all organizations (via the group).
 subject.1.name = John Doe
 subject.1.affiliation = 1
 subject.1.permission.1 = all
