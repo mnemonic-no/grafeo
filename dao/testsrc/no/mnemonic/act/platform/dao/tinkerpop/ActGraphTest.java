@@ -20,12 +20,26 @@ public class ActGraphTest extends AbstractGraphTest {
 
   @Test(expected = RuntimeException.class)
   public void testCreateGraphWithoutObjectManager() {
-    ActGraph.builder().setFactManager(getFactManager()).build();
+    ActGraph.builder()
+            .setFactManager(getFactManager())
+            .setHasFactAccess(b -> true)
+            .build();
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateGraphWithoutFactManager() {
-    ActGraph.builder().setObjectManager(getObjectManager()).build();
+    ActGraph.builder()
+            .setObjectManager(getObjectManager())
+            .setHasFactAccess(b -> true)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateGraphWithoutHasFactAccess() {
+    ActGraph.builder()
+            .setObjectManager(getObjectManager())
+            .setFactManager(getFactManager())
+            .build();
   }
 
   @Test(expected = GraphOperationException.class)

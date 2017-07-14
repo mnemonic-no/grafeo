@@ -32,6 +32,7 @@ abstract class AbstractGraphTest {
     actGraph = ActGraph.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
+            .setHasFactAccess(f -> true)
             .build();
   }
 

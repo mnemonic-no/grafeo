@@ -24,31 +24,23 @@ public class ElementFactoryTest {
   @Mock
   private FactManager factManager;
 
-  private ActGraph actGraph;
   private ElementFactory elementFactory;
 
   @Before
   public void setup() {
     initMocks(this);
 
-    actGraph = ActGraph.builder()
+    ActGraph actGraph = ActGraph.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
+            .setHasFactAccess(f -> true)
             .build();
-    elementFactory = ElementFactory.builder()
-            .setFactManager(factManager)
-            .setOwner(actGraph)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateElementFactoryWithoutFactManager() {
-    ElementFactory.builder().setOwner(actGraph).build();
+    elementFactory = ElementFactory.builder().setOwner(actGraph).build();
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateElementFactoryWithoutOwner() {
-    ElementFactory.builder().setFactManager(factManager).build();
+    ElementFactory.builder().build();
   }
 
   @Test(expected = RuntimeException.class)
@@ -60,6 +52,24 @@ public class ElementFactoryTest {
   public void testCreateEdgesWithoutFact() {
     ObjectFactBindingEntity binding = createInBinding(Direction.None);
     assertTrue(elementFactory.createEdges(binding).isEmpty());
+  }
+
+  @Test
+  public void testCreateEdgesWithoutFactAccess() {
+    ActGraph graph = ActGraph.builder()
+            .setObjectManager(objectManager)
+            .setFactManager(factManager)
+            .setHasFactAccess(f -> false)
+            .build();
+    ElementFactory factory = ElementFactory.builder().setOwner(graph).build();
+
+    ObjectFactBindingEntity inBinding = createInBinding(Direction.None);
+    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.None);
+    mockObject(inBinding);
+    mockObject(outBinding.getObjectID());
+    mockFact(inBinding.getFactID(), outBinding);
+
+    assertTrue(factory.createEdges(inBinding).isEmpty());
   }
 
   @Test

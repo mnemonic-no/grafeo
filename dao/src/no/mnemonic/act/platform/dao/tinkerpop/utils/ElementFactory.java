@@ -1,7 +1,6 @@
 package no.mnemonic.act.platform.dao.tinkerpop.utils;
 
 import com.google.common.cache.*;
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
 import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
@@ -26,8 +25,6 @@ public class ElementFactory {
   private static final int CACHE_MAXIMUM_SIZE = 10000;
 
   private final ActGraph owner;
-  private final FactManager factManager;
-
   // Maps the triplet (factID, inVertex, outVertex) to UUID returned by Edge.id().
   // Needed in order to identify entry in 'edgeCache'.
   private final Map<EdgeID, UUID> edgeIdMap;
@@ -36,9 +33,8 @@ public class ElementFactory {
   // Cache for created vertices. This cache is automatically populated.
   private final LoadingCache<UUID, Vertex> vertexCache;
 
-  private ElementFactory(ActGraph owner, FactManager factManager) {
+  private ElementFactory(ActGraph owner) {
     this.owner = ObjectUtils.notNull(owner, "'owner is null!'");
-    this.factManager = ObjectUtils.notNull(factManager, "'factManager' is null!");
     this.edgeIdMap = new ConcurrentHashMap<>();
     this.edgeCache = createEdgeCache();
     this.vertexCache = createVertexCache();
@@ -59,8 +55,9 @@ public class ElementFactory {
   public Set<Edge> createEdges(ObjectFactBindingEntity inBinding) {
     ObjectUtils.notNull(inBinding, "'inBinding' is null!");
 
-    FactEntity fact = factManager.getFact(inBinding.getFactID());
-    if (fact == null) {
+    FactEntity fact = owner.getFactManager().getFact(inBinding.getFactID());
+    // Only create edges if user has access to Fact.
+    if (fact == null || !owner.hasFactAccess(fact)) {
       return new HashSet<>();
     }
 
@@ -167,18 +164,12 @@ public class ElementFactory {
 
   public static class Builder {
     private ActGraph owner;
-    private FactManager factManager;
 
     private Builder() {
     }
 
     public ElementFactory build() {
-      return new ElementFactory(owner, factManager);
-    }
-
-    public Builder setFactManager(FactManager factManager) {
-      this.factManager = factManager;
-      return this;
+      return new ElementFactory(owner);
     }
 
     public Builder setOwner(ActGraph owner) {

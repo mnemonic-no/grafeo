@@ -21,8 +21,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ActGraphIT {
 
@@ -134,10 +133,22 @@ public class ActGraphIT {
     assertTrue(vertices.stream().anyMatch(v -> Objects.equals(v.id(), domain.getId())));
   }
 
+  @Test
+  public void testFollowEdgeWithoutFactAccess() {
+    GraphTraversalSource g = ActGraph.builder()
+            .setObjectManager(objectManager)
+            .setFactManager(factManager)
+            .setHasFactAccess(f -> false)
+            .build()
+            .traversal();
+    assertFalse(g.V(ip.getId()).out("resolve").hasNext());
+  }
+
   private GraphTraversalSource createGraph() {
     return ActGraph.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
+            .setHasFactAccess(f -> true)
             .build()
             .traversal();
   }
