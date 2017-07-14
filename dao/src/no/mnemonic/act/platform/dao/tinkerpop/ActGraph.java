@@ -2,6 +2,8 @@ package no.mnemonic.act.platform.dao.tinkerpop;
 
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.tinkerpop.exceptions.GraphOperationException;
+import no.mnemonic.act.platform.dao.tinkerpop.utils.ElementFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.commons.configuration.Configuration;
@@ -14,17 +16,26 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import java.util.Iterator;
 import java.util.UUID;
 
-import static org.apache.tinkerpop.gremlin.structure.Graph.Exceptions.transactionsNotSupported;
-import static org.apache.tinkerpop.gremlin.structure.Graph.Exceptions.vertexAdditionsNotSupported;
+import static org.apache.tinkerpop.gremlin.structure.Graph.Exceptions.*;
 
+/**
+ * The ActGraph is a {@link Graph} implementation of the Object-Fact-Model on top of the Cassandra storage layer. It is
+ * a read-only graph, i.e. the graph can only be traversed and no edges or vertices added. For the mapping of Objects
+ * and Facts to vertices and edges see {@link ObjectVertex} and {@link FactEdge}, respectively.
+ */
 public class ActGraph implements Graph {
 
   private final ObjectManager objectManager;
   private final FactManager factManager;
+  private final ElementFactory elementFactory;
 
   private ActGraph(ObjectManager objectManager, FactManager factManager) {
     this.objectManager = ObjectUtils.notNull(objectManager, "'objectManager' is null!");
     this.factManager = ObjectUtils.notNull(factManager, "'factManager' is null!");
+    this.elementFactory = ElementFactory.builder()
+            .setFactManager(factManager)
+            .setOwner(this)
+            .build();
   }
 
   @Override
@@ -34,22 +45,24 @@ public class ActGraph implements Graph {
 
   @Override
   public <C extends GraphComputer> C compute(Class<C> graphComputerClass) throws IllegalArgumentException {
-    throw new UnsupportedOperationException("GraphComputer not supported");
+    throw graphComputerNotSupported();
   }
 
   @Override
   public GraphComputer compute() throws IllegalArgumentException {
-    throw new UnsupportedOperationException("GraphComputer not supported");
+    throw graphComputerNotSupported();
   }
 
   @Override
   public Iterator<Vertex> vertices(Object... vertexIds) {
-    return SetUtils.set(id -> id instanceof Vertex ? (Vertex) id : new ObjectVertex(this, (UUID) id), vertexIds).iterator();
+    if (SetUtils.set(vertexIds).isEmpty()) throw new GraphOperationException("V() is not supported!");
+    return SetUtils.set(id -> id instanceof Vertex ? (Vertex) id : elementFactory.getVertex((UUID) id), vertexIds).iterator();
   }
 
   @Override
   public Iterator<Edge> edges(Object... edgeIds) {
-    return SetUtils.set(id -> id instanceof Edge ? (Edge) id : new FactEdge(this, (UUID) id), edgeIds).iterator();
+    if (SetUtils.set(edgeIds).isEmpty()) throw new GraphOperationException("E() is not supported!");
+    return SetUtils.set(id -> id instanceof Edge ? (Edge) id : elementFactory.getEdge((UUID) id), edgeIds).iterator();
   }
 
   @Override
@@ -59,12 +72,12 @@ public class ActGraph implements Graph {
 
   @Override
   public void close() throws Exception {
-
+    // NOOP, managers are handled outside this graph implementation.
   }
 
   @Override
   public Variables variables() {
-    return null;
+    throw variablesNotSupported();
   }
 
   @Override
@@ -78,6 +91,10 @@ public class ActGraph implements Graph {
 
   FactManager getFactManager() {
     return factManager;
+  }
+
+  ElementFactory getElementFactory() {
+    return elementFactory;
   }
 
   public static Builder builder() {

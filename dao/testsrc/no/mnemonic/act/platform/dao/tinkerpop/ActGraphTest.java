@@ -1,138 +1,85 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.entity.cassandra.*;
-import no.mnemonic.act.platform.entity.handlers.DefaultEntityHandlerFactory;
-import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
-import no.mnemonic.commons.testtools.cassandra.CassandraTestResource;
-import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import no.mnemonic.act.platform.dao.tinkerpop.exceptions.GraphOperationException;
+import no.mnemonic.act.platform.entity.cassandra.Direction;
+import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
+import no.mnemonic.commons.utilities.collections.SetUtils;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Test;
 
+import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
-public class ActGraphTest {
+public class ActGraphTest extends AbstractGraphTest {
 
-  private static ClusterManager clusterManager;
-  private static FactManager factManager;
-  private static ObjectManager objectManager;
-  private static ObjectEntity ip;
-  private static ObjectEntity domain;
-
-  @ClassRule
-  public static CassandraTestResource cassandra = CassandraTestResource.builder()
-          .setClusterName("ACT Cluster")
-          .setKeyspaceName(KEY_SPACE)
-          .setStartupScript("resources/setup.cql")
-          .build();
-
-  @BeforeClass
-  public static void initialize() throws Exception {
-    EntityHandlerFactory factory = new DefaultEntityHandlerFactory();
-
-    // Create managers and start them up.
-    clusterManager = ClusterManager.builder()
-            .setClusterName(cassandra.getClusterName())
-            .setPort(cassandra.getPort())
-            .addContactPoint("127.0.0.1")
-            .build();
-    objectManager = new ObjectManager(clusterManager, factory);
-    factManager = new FactManager(clusterManager, factory);
-    clusterManager.startComponent();
-    objectManager.startComponent();
-    factManager.startComponent();
-
-    // Create Objects and Facts in order to create Graph to traverse.
-    ObjectTypeEntity ipType = createObjectType("ip");
-    ObjectTypeEntity domainType = createObjectType("domain");
-    ip = createObject(ipType.getId(), "1.1.1.1");
-    domain = createObject(domainType.getId(), "example.org");
-
-    FactTypeEntity resolveType = createFactType("resolve");
-    FactEntity resolve = createFact(resolveType.getId(), "to")
-            .setBindings(ListUtils.list(
-                    createFactObjectBinding(ip.getId(), Direction.FactIsDestination),
-                    createFactObjectBinding(domain.getId(), Direction.FactIsSource)
-            ));
-
-    // Save everything to Cassandra.
-    objectManager.saveObjectType(ipType);
-    objectManager.saveObjectType(domainType);
-    objectManager.saveObject(ip);
-    objectManager.saveObject(domain);
-    objectManager.saveObjectFactBinding(createObjectFactBinding(ip.getId(), resolve.getId(), Direction.FactIsDestination));
-    objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), resolve.getId(), Direction.FactIsSource));
-    factManager.saveFactType(resolveType);
-    factManager.saveFact(resolve);
+  @Test(expected = RuntimeException.class)
+  public void testCreateGraphWithoutObjectManager() {
+    ActGraph.builder().setFactManager(getFactManager()).build();
   }
 
-  @AfterClass
-  public static void teardown() {
-    ObjectUtils.ifNotNullDo(factManager, FactManager::stopComponent);
-    ObjectUtils.ifNotNullDo(objectManager, ObjectManager::stopComponent);
-    ObjectUtils.ifNotNullDo(clusterManager, ClusterManager::stopComponent);
+  @Test(expected = RuntimeException.class)
+  public void testCreateGraphWithoutFactManager() {
+    ActGraph.builder().setObjectManager(getObjectManager()).build();
+  }
+
+  @Test(expected = GraphOperationException.class)
+  public void testFetchingAllVerticesNotAllowed() {
+    getActGraph().vertices();
   }
 
   @Test
-  public void testResolveDomain() {
-    GraphTraversalSource g = ActGraph.builder()
-            .setObjectManager(objectManager)
-            .setFactManager(factManager)
-            .build()
-            .traversal();
-    assertEquals(domain.getValue(), g.V(ip.getId()).out("resolve").values("value").next());
+  public void testFetchingVerticesWithId() {
+    UUID objectID = mockObject();
+    Iterator<Vertex> result = getActGraph().vertices(objectID);
+    assertEquals(objectID, result.next().id());
   }
 
-  private static ObjectTypeEntity createObjectType(String name) {
-    return new ObjectTypeEntity()
-            .setId(UUID.randomUUID())
-            .setNamespaceID(UUID.randomUUID())
-            .setName(name)
-            .setEntityHandler("IdentityHandler");
+  @Test
+  public void testFetchingVerticesWithVertex() {
+    UUID objectID = mockObject();
+    Vertex objectVertex = new ObjectVertex(getActGraph(), objectID);
+    Iterator<Vertex> result = getActGraph().vertices(objectVertex);
+    assertSame(objectVertex, result.next());
   }
 
-  private static FactTypeEntity createFactType(String name) {
-    return new FactTypeEntity()
-            .setId(UUID.randomUUID())
-            .setNamespaceID(UUID.randomUUID())
-            .setName(name)
-            .setEntityHandler("IdentityHandler");
+  @Test(expected = GraphOperationException.class)
+  public void testFetchingAllEdgesNotAllowed() {
+    getActGraph().edges();
   }
 
-  private static ObjectEntity createObject(UUID typeID, String value) {
-    return new ObjectEntity()
-            .setId(UUID.randomUUID())
-            .setTypeID(typeID)
-            .setValue(value);
+  @Test
+  public void testFetchingEdgesWithId() {
+    ObjectFactBindingEntity inBinding = mockFactWithObject();
+    Set<Edge> expected = getActGraph().getElementFactory().createEdges(inBinding);
+    Set<Edge> actual = SetUtils.set(getActGraph().edges(expected.iterator().next().id()));
+    assertEquals(expected, actual);
   }
 
-  private static FactEntity createFact(UUID typeID, String value) {
-    return new FactEntity()
-            .setId(UUID.randomUUID())
-            .setTypeID(typeID)
-            .setValue(value);
+  @Test
+  public void testFetchingEdgesWithEdge() {
+    ObjectFactBindingEntity binding = mockFactWithObject();
+    Set<Edge> expected = getActGraph().getElementFactory().createEdges(binding);
+    Set<Edge> actual = SetUtils.set(getActGraph().edges(expected.iterator().next()));
+    assertEquals(expected, actual);
   }
 
-  private static FactEntity.FactObjectBinding createFactObjectBinding(UUID objectID, Direction direction) {
-    return new FactEntity.FactObjectBinding()
+  private ObjectFactBindingEntity mockFactWithObject() {
+    UUID objectID = mockObject();
+    UUID factID = mockFact(new FactEntity.FactObjectBinding()
+            .setDirection(Direction.BiDirectional)
             .setObjectID(objectID)
-            .setDirection(direction);
-  }
+    );
 
-  private static ObjectFactBindingEntity createObjectFactBinding(UUID objectID, UUID factID, Direction direction) {
     return new ObjectFactBindingEntity()
-            .setObjectID(objectID)
             .setFactID(factID)
-            .setDirection(direction);
+            .setObjectID(objectID)
+            .setDirection(Direction.BiDirectional);
   }
 
 }

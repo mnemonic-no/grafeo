@@ -2,24 +2,31 @@ package no.mnemonic.act.platform.dao.tinkerpop.properties;
 
 import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
 import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
+import static org.apache.tinkerpop.gremlin.structure.Property.Exceptions.propertyRemovalNotSupported;
 import static org.apache.tinkerpop.gremlin.structure.VertexProperty.Exceptions.metaPropertiesNotSupported;
-import static org.apache.tinkerpop.gremlin.structure.VertexProperty.Exceptions.userSuppliedIdsNotSupported;
 
+/**
+ * VertexProperty class holding an Object's value.
+ */
 public class ObjectValueProperty implements VertexProperty<String> {
 
   private final ObjectEntity object;
   private final ObjectVertex owner;
+  private final UUID id;
 
   public ObjectValueProperty(ObjectEntity object, ObjectVertex owner) {
-    this.object = object;
-    this.owner = owner;
+    this.object = ObjectUtils.notNull(object, "'object' is null!");
+    this.owner = ObjectUtils.notNull(owner, "'owner' is null!");
+    this.id = UUID.randomUUID(); // Generate a random ID for each new instance.
   }
 
   @Override
@@ -44,12 +51,12 @@ public class ObjectValueProperty implements VertexProperty<String> {
 
   @Override
   public void remove() {
-    throw new UnsupportedOperationException("Removing properties not supported");
+    throw propertyRemovalNotSupported();
   }
 
   @Override
   public Object id() {
-    throw userSuppliedIdsNotSupported();
+    return id;
   }
 
   @Override

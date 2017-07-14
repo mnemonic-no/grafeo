@@ -1,37 +1,40 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.tinkerpop.properties.ObjectValueProperty;
 import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
-import org.apache.tinkerpop.gremlin.util.iterator.EmptyIterator;
-import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
+import static no.mnemonic.act.platform.entity.cassandra.Direction.*;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.edgeAdditionsNotSupported;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRemovalNotSupported;
 
+/**
+ * A vertex in the graph represents an Object in the Object-Fact-Model. It's a one-to-one relationship, i.e. one Object
+ * is represented by one vertex. Because of that, {@link Vertex#id()} will return the Object's UUID.
+ * <p>
+ * Adjacent edges represent Facts where the edge direction (IN, OUT) is mapped onto the binding's direction between
+ * Object and Fact. If a Fact is only bound to one Object the edge will be a loop, and if the Fact is bound to more
+ * than two Objects an edge to each Object is created.
+ */
 public class ObjectVertex implements Vertex {
 
-  private final Graph graph;
+  private final ActGraph graph;
   private final ObjectEntity object;
   private final ObjectTypeEntity type;
-  private final ObjectManager objectManager;
+  private final List<ObjectFactBindingEntity> bindings;
 
-  ObjectVertex(Graph graph, UUID objectID) {
-    if (!(graph instanceof ActGraph)) throw new IllegalArgumentException("Provided Graph instance is not an ActGraph!");
-    this.graph = graph;
-    this.objectManager = ActGraph.class.cast(graph).getObjectManager();
-    this.object = objectManager.getObject(objectID);
-    this.type = objectManager.getObjectType(object.getTypeID());
+  public ObjectVertex(ActGraph graph, UUID objectID) {
+    this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
+    this.object = ObjectUtils.notNull(graph.getObjectManager().getObject(objectID), String.format("Object with id = %s does not exist.", objectID));
+    this.type = ObjectUtils.notNull(graph.getObjectManager().getObjectType(object.getTypeID()), String.format("ObjectType with id = %s does not exist.", object.getTypeID()));
+    this.bindings = Collections.unmodifiableList(ListUtils.list(graph.getObjectManager().fetchObjectFactBindings(objectID)));
   }
 
   @Override
@@ -43,31 +46,29 @@ public class ObjectVertex implements Vertex {
   public Iterator<Edge> edges(Direction direction, String... edgeLabels) {
     Set<Edge> facts = new HashSet<>();
 
-    for (ObjectFactBindingEntity binding : objectManager.fetchObjectFactBindings(object.getId())) {
-      if (binding.getDirection() == no.mnemonic.act.platform.entity.cassandra.Direction.BiDirectional) {
-        facts.add(new FactEdge(graph, binding.getFactID()));
+    for (ObjectFactBindingEntity binding : bindings) {
+      if (binding.getDirection() == BiDirectional || binding.getDirection() == None) {
+        facts.addAll(graph.getElementFactory().createEdges(binding));
       }
 
-      if (binding.getDirection() == no.mnemonic.act.platform.entity.cassandra.Direction.FactIsDestination
-              && (direction == Direction.BOTH || direction == Direction.OUT)) {
-        facts.add(new FactEdge(graph, binding.getFactID()));
+      if (binding.getDirection() == FactIsDestination && (direction == Direction.BOTH || direction == Direction.OUT)) {
+        facts.addAll(graph.getElementFactory().createEdges(binding));
       }
 
-      if (binding.getDirection() == no.mnemonic.act.platform.entity.cassandra.Direction.FactIsSource
-              && (direction == Direction.BOTH || direction == Direction.IN)) {
-        facts.add(new FactEdge(graph, binding.getFactID()));
+      if (binding.getDirection() == FactIsSource && (direction == Direction.BOTH || direction == Direction.IN)) {
+        facts.addAll(graph.getElementFactory().createEdges(binding));
       }
     }
 
     return facts
             .stream()
-            .filter(edge -> CollectionUtils.isEmpty(SetUtils.set(edgeLabels)) || SetUtils.in(edge.label(), edgeLabels))
+            .filter(edge -> SetUtils.set(edgeLabels).isEmpty() || SetUtils.in(edge.label(), edgeLabels))
             .iterator();
   }
 
   @Override
   public Iterator<Vertex> vertices(Direction direction, String... edgeLabels) {
-    return SetUtils.set(edges(direction, edgeLabels), e -> IteratorUtils.set(e.vertices(direction)))
+    return SetUtils.set(edges(direction, edgeLabels), e -> SetUtils.set(e.vertices(direction)))
             .stream()
             .reduce(new HashSet<>(), (result, next) -> SetUtils.union(result, next))
             .iterator();
@@ -75,12 +76,15 @@ public class ObjectVertex implements Vertex {
 
   @Override
   public <V> Iterator<VertexProperty<V>> properties(String... propertyKeys) {
-    Set<String> keys = SetUtils.set(propertyKeys);
-    if (!keys.contains("value")) {
-      return EmptyIterator.instance();
-    }
+    Set<VertexProperty<V>> properties = SetUtils.set(
+            // TODO: Implement and add more properties.
+            (VertexProperty<V>) new ObjectValueProperty(object, this)
+    );
 
-    return IteratorUtils.of((VertexProperty<V>) new ObjectValueProperty(object, this));
+    return properties
+            .stream()
+            .filter(property -> SetUtils.set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
+            .iterator();
   }
 
   @Override
@@ -106,6 +110,19 @@ public class ObjectVertex implements Vertex {
   @Override
   public void remove() {
     throw vertexRemovalNotSupported();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ObjectVertex that = (ObjectVertex) o;
+    return Objects.equals(id(), that.id());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id());
   }
 
 }
