@@ -8,6 +8,7 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
+import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.*;
 
@@ -110,6 +111,11 @@ public class ObjectVertex implements Vertex {
   @Override
   public void remove() {
     throw vertexRemovalNotSupported();
+  }
+
+  @Override
+  public String toString() {
+    return StringFactory.vertexString(this);
   }
 
   @Override

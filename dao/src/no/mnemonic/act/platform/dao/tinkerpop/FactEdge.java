@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
+import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
 import java.util.Iterator;
@@ -88,6 +89,11 @@ public class FactEdge implements Edge {
   @Override
   public void remove() {
     throw edgeRemovalNotSupported();
+  }
+
+  @Override
+  public String toString() {
+    return StringFactory.edgeString(this);
   }
 
   @Override

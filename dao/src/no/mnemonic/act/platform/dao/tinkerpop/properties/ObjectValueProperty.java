@@ -6,6 +6,7 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -69,4 +70,8 @@ public class ObjectValueProperty implements VertexProperty<String> {
     throw metaPropertiesNotSupported();
   }
 
+  @Override
+  public String toString() {
+    return StringFactory.propertyString(this);
+  }
 }

@@ -11,6 +11,7 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -77,9 +78,9 @@ public class ActGraphIT {
             ));
     FactEntity used = createFact(usedType.getId(), "by")
             .setBindings(ListUtils.list(
-                    createFactObjectBinding(ip.getId(), Direction.BiDirectional),
-                    createFactObjectBinding(domain.getId(), Direction.BiDirectional),
-                    createFactObjectBinding(attack.getId(), Direction.BiDirectional)
+                    createFactObjectBinding(ip.getId(), Direction.FactIsSource),
+                    createFactObjectBinding(domain.getId(), Direction.FactIsSource),
+                    createFactObjectBinding(attack.getId(), Direction.FactIsDestination)
             ));
 
     // Save everything to Cassandra.
@@ -90,11 +91,11 @@ public class ActGraphIT {
     objectManager.saveObject(domain);
     objectManager.saveObject(attack);
     objectManager.saveObjectFactBinding(createObjectFactBinding(ip.getId(), resolve.getId(), Direction.FactIsDestination));
-    objectManager.saveObjectFactBinding(createObjectFactBinding(ip.getId(), used.getId(), Direction.BiDirectional));
+    objectManager.saveObjectFactBinding(createObjectFactBinding(ip.getId(), used.getId(), Direction.FactIsSource));
     objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), resolve.getId(), Direction.FactIsSource));
     objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), seen.getId(), Direction.None));
-    objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), used.getId(), Direction.BiDirectional));
-    objectManager.saveObjectFactBinding(createObjectFactBinding(attack.getId(), used.getId(), Direction.BiDirectional));
+    objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), used.getId(), Direction.FactIsSource));
+    objectManager.saveObjectFactBinding(createObjectFactBinding(attack.getId(), used.getId(), Direction.FactIsDestination));
     factManager.saveFactType(resolveType);
     factManager.saveFactType(seenType);
     factManager.saveFactType(usedType);
@@ -142,6 +143,34 @@ public class ActGraphIT {
             .build()
             .traversal();
     assertFalse(g.V(ip.getId()).out("resolve").hasNext());
+  }
+
+  @Test
+  public void testCountOutgoingEdges() {
+    assertEquals(1, IteratorUtils.count(createGraph().V(ip.getId()).out()));
+    assertEquals(1, IteratorUtils.count(createGraph().V(domain.getId()).out()));
+    assertEquals(2, IteratorUtils.count(createGraph().V(attack.getId()).out()));
+  }
+
+  @Test
+  public void testCountIncomingEdges() {
+    assertEquals(1, IteratorUtils.count(createGraph().V(ip.getId()).in()));
+    assertEquals(3, IteratorUtils.count(createGraph().V(domain.getId()).in()));
+    assertEquals(0, IteratorUtils.count(createGraph().V(attack.getId()).in()));
+  }
+
+  @Test
+  public void testCountEdgesFilterWithLabel() {
+    assertEquals(1, IteratorUtils.count(createGraph().V(domain.getId()).both("seen")));
+    assertEquals(1, IteratorUtils.count(createGraph().V(domain.getId()).in("seen")));
+    assertEquals(1, IteratorUtils.count(createGraph().V(domain.getId()).out("seen")));
+  }
+
+  @Test
+  public void testCountEdgesFilterWithMultiLabel() {
+    assertEquals(2, IteratorUtils.count(createGraph().V(domain.getId()).both("seen", "resolve")));
+    assertEquals(2, IteratorUtils.count(createGraph().V(domain.getId()).in("seen", "resolve")));
+    assertEquals(1, IteratorUtils.count(createGraph().V(domain.getId()).out("seen", "resolve")));
   }
 
   private GraphTraversalSource createGraph() {

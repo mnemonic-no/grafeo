@@ -157,6 +157,11 @@ public class ElementFactoryTest {
   }
 
   @Test
+  public void testGetVertexNotExists() {
+    assertNull(elementFactory.getVertex(UUID.randomUUID()));
+  }
+
+  @Test
   public void testGetVertexNotCached() {
     UUID objectID = mockObject(UUID.randomUUID());
     assertEquals(objectID, elementFactory.getVertex(objectID).id());

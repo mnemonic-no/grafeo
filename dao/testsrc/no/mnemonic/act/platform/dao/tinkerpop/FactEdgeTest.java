@@ -1,15 +1,21 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.commons.utilities.collections.MapUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.junit.Test;
 
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
@@ -95,15 +101,99 @@ public class FactEdgeTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testPropertiesWithValueProperty() {
+  public void testPropertiesWithMatchingProperty() {
     Edge edge = createEdge();
-    Iterator<Property<Object>> result = edge.properties("value");
-    assertTrue(result.hasNext());
-    Property<Object> valueProperty = result.next();
-    assertEquals("value", valueProperty.key());
-    assertEquals("value", valueProperty.value());
-    assertTrue(valueProperty.isPresent());
-    assertSame(edge, valueProperty.element());
+    assertTrue(edge.properties("value").hasNext());
+  }
+
+  /* The following tests are adapted from gremlin-test EdgeTest. */
+
+  @Test
+  public void testValidateEquality() {
+    Edge edge1 = createEdge();
+    Edge edge2 = createEdge();
+
+    assertEquals(edge1, edge1);
+    assertEquals(edge2, edge2);
+    assertNotEquals(edge1, edge2);
+  }
+
+  @Test
+  public void testValidateIdEquality() {
+    Edge edge1 = createEdge();
+    Edge edge2 = createEdge();
+
+    assertEquals(edge1.id(), edge1.id());
+    assertEquals(edge2.id(), edge2.id());
+    assertNotEquals(edge1.id(), edge2.id());
+  }
+
+  @Test
+  public void testStandardStringRepresentation() {
+    Edge edge = createEdge();
+    assertEquals(StringFactory.edgeString(edge), edge.toString());
+  }
+
+  @Test
+  public void testAutotypeStringProperties() {
+    Edge edge = createEdge();
+    String value = edge.value("value");
+    assertEquals("value", value);
+  }
+
+  @Test
+  public void testGetPropertyKeysOnEdge() {
+    Edge edge = createEdge();
+    // Test that the following properties exists on the edge.
+    Map<String, String> expected = MapUtils.map(
+            T("value", "value")
+    );
+
+    Set<String> keys = edge.keys();
+    Set<Property<Object>> properties = SetUtils.set(edge.properties());
+
+    assertEquals(expected.size(), keys.size());
+    assertEquals(expected.size(), properties.size());
+
+    for (Map.Entry<String, String> entry : expected.entrySet()) {
+      assertTrue(keys.contains(entry.getKey()));
+
+      Property<Object> property = edge.property(entry.getKey());
+      assertEquals(entry.getValue(), property.value());
+      assertEquals(StringFactory.propertyString(property), property.toString());
+      assertSame(edge, property.element());
+    }
+  }
+
+  @Test
+  public void testReturnEmptyPropertyIfKeyNonExistent() {
+    Edge edge = createEdge();
+    Property property = edge.property("something");
+    assertEquals(Property.empty(), property);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testGetValueThatIsNotPresentOnEdge() {
+    Edge edge = createEdge();
+    edge.value("something");
+  }
+
+  @Test
+  public void testReturnOutThenInOnVertexIterator() {
+    UUID factID = mockFact(null);
+    UUID inVertexObjectID = mockObject();
+    UUID outVertexObjectID = mockObject();
+    Edge edge = new FactEdge(getActGraph(), factID, inVertexObjectID, outVertexObjectID);
+
+    assertEquals(outVertexObjectID, edge.outVertex().id());
+    assertEquals(inVertexObjectID, edge.inVertex().id());
+
+    Iterator<Vertex> vertices = edge.vertices(Direction.BOTH);
+    assertTrue(vertices.hasNext());
+    assertEquals(outVertexObjectID, vertices.next().id());
+    assertTrue(vertices.hasNext());
+    assertEquals(inVertexObjectID, vertices.next().id());
+    assertFalse(vertices.hasNext());
   }
 
   private Edge createEdge() {

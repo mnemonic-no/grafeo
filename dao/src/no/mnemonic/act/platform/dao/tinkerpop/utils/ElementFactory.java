@@ -109,8 +109,12 @@ public class ElementFactory {
    * @return Cached vertex.
    */
   public Vertex getVertex(UUID id) {
-    // Use getUnchecked() because CacheLoader.load() of 'vertexCache' does not throw a checked exception.
-    return vertexCache.getUnchecked(id);
+    try {
+      return vertexCache.get(id);
+    } catch (Exception ignored) {
+      // If vertex cannot be fetched, e.g. because 'id' references a non-existing Object, just return null.
+      return null;
+    }
   }
 
   public static Builder builder() {
@@ -135,7 +139,7 @@ public class ElementFactory {
   private Cache<UUID, Edge> createEdgeCache() {
     return CacheBuilder.newBuilder()
             .maximumSize(CACHE_MAXIMUM_SIZE)
-            .removalListener(createCleanUpListener())
+            .removalListener(this::cleanUpEdgeCache)
             .build();
   }
 
@@ -150,16 +154,14 @@ public class ElementFactory {
             });
   }
 
-  private RemovalListener<Object, Object> createCleanUpListener() {
-    return notification -> {
-      // Need to clean up 'edgeIdMap' when an entry gets evicted.
-      if (notification.wasEvicted()) {
-        SetUtils.set(edgeIdMap.entrySet())
-                .stream()
-                .filter(entry -> Objects.equals(entry.getValue(), notification.getKey()))
-                .forEach(entry -> edgeIdMap.remove(entry.getKey()));
-      }
-    };
+  private void cleanUpEdgeCache(RemovalNotification notification) {
+    // Need to clean up 'edgeIdMap' when an entry gets evicted.
+    if (notification.wasEvicted()) {
+      SetUtils.set(edgeIdMap.entrySet())
+              .stream()
+              .filter(entry -> Objects.equals(entry.getValue(), notification.getKey()))
+              .forEach(entry -> edgeIdMap.remove(entry.getKey()));
+    }
   }
 
   public static class Builder {

@@ -4,14 +4,19 @@ import no.mnemonic.act.platform.entity.cassandra.Direction;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
+import no.mnemonic.commons.utilities.collections.MapUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.junit.Test;
 
-import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 import static org.apache.tinkerpop.gremlin.structure.Direction.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
@@ -149,31 +154,98 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testPropertiesWithAllProperties() {
-    UUID objectID = mockObject();
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = createVertex();
     assertTrue(vertex.properties().hasNext());
   }
 
   @Test
   public void testPropertiesWithoutMatchingProperty() {
-    UUID objectID = mockObject();
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = createVertex();
     assertFalse(vertex.properties("something").hasNext());
   }
 
   @Test
-  public void testPropertiesWithValueProperty() {
-    UUID objectID = mockObject();
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+  public void testPropertiesWithMatchingProperty() {
+    Vertex vertex = createVertex();
+    assertTrue(vertex.properties("value").hasNext());
+  }
 
-    Iterator<VertexProperty<Object>> result = vertex.properties("value");
-    assertTrue(result.hasNext());
-    VertexProperty<Object> valueProperty = result.next();
-    assertEquals("value", valueProperty.key());
-    assertEquals("value", valueProperty.value());
-    assertTrue(valueProperty.isPresent());
-    assertSame(vertex, valueProperty.element());
-    assertNotNull(valueProperty.id());
+  /* The following tests are adapted from gremlin-test VertexTest. */
+
+  @Test
+  public void testValidateEquality() {
+    Vertex vertex1 = createVertex();
+    Vertex vertex2 = createVertex();
+
+    assertEquals(vertex1, vertex1);
+    assertEquals(vertex2, vertex2);
+    assertNotEquals(vertex1, vertex2);
+  }
+
+  @Test
+  public void testValidateIdEquality() {
+    Vertex vertex1 = createVertex();
+    Vertex vertex2 = createVertex();
+
+    assertEquals(vertex1.id(), vertex1.id());
+    assertEquals(vertex2.id(), vertex2.id());
+    assertNotEquals(vertex1.id(), vertex2.id());
+  }
+
+  @Test
+  public void testStandardStringRepresentation() {
+    Vertex vertex = createVertex();
+    assertEquals(StringFactory.vertexString(vertex), vertex.toString());
+  }
+
+  @Test
+  public void testAutotypeStringProperties() {
+    Vertex vertex = createVertex();
+    String value = vertex.value("value");
+    assertEquals("value", value);
+  }
+
+  @Test
+  public void testGetPropertyKeysOnVertex() {
+    Vertex vertex = createVertex();
+    // Test that the following properties exists on the vertex.
+    Map<String, String> expected = MapUtils.map(
+            T("value", "value")
+    );
+
+    Set<String> keys = vertex.keys();
+    Set<VertexProperty<Object>> properties = SetUtils.set(vertex.properties());
+
+    assertEquals(expected.size(), keys.size());
+    assertEquals(expected.size(), properties.size());
+
+    for (Map.Entry<String, String> entry : expected.entrySet()) {
+      assertTrue(keys.contains(entry.getKey()));
+
+      VertexProperty<Object> property = vertex.property(entry.getKey());
+      assertNotNull(property.id());
+      assertEquals(entry.getValue(), property.value());
+      assertEquals(property.key(), property.label());
+      assertEquals(StringFactory.propertyString(property), property.toString());
+      assertSame(vertex, property.element());
+    }
+  }
+
+  @Test
+  public void testReturnEmptyPropertyIfKeyNonExistent() {
+    Vertex vertex = createVertex();
+    VertexProperty property = vertex.property("something");
+    assertEquals(VertexProperty.empty(), property);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testGetValueThatIsNotPresentOnVertex() {
+    Vertex vertex = createVertex();
+    vertex.value("something");
+  }
+
+  private Vertex createVertex() {
+    return new ObjectVertex(getActGraph(), mockObject());
   }
 
   private UUID mockObjectWithFact(Direction inDirection) {

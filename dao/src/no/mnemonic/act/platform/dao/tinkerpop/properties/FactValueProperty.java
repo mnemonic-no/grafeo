@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
+import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.NoSuchElementException;
 
@@ -48,4 +49,8 @@ public class FactValueProperty implements Property<String> {
     throw propertyRemovalNotSupported();
   }
 
+  @Override
+  public String toString() {
+    return StringFactory.propertyString(this);
+  }
 }
