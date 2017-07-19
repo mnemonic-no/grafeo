@@ -390,7 +390,16 @@ public class ActGraph implements Graph {
   }
 
   private static class ActGraphPropertyFeatures extends ActGraphDataTypeFeatures implements Features.PropertyFeatures {
-    // Inherits everything from ActGraphDataTypeFeatures except supportsStringValues().
+    @Override
+    public boolean supportsLongValues() {
+      return true;
+    }
+
+    @Override
+    public boolean supportsSerializableValues() {
+      return true;
+    }
+
     @Override
     public boolean supportsStringValues() {
       return true;

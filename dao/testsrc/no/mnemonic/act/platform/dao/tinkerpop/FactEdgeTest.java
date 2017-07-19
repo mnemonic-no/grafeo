@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
+import no.mnemonic.act.platform.entity.cassandra.AccessMode;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -142,11 +143,41 @@ public class FactEdgeTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testGetPropertyKeysOnEdge() {
+  public void testAutotypeLongProperties() {
     Edge edge = createEdge();
+    long timestamp = edge.value("timestamp");
+    assertEquals(123456789L, timestamp);
+  }
+
+  @Test
+  public void testAutotypeEnumProperties() {
+    Edge edge = createEdge();
+    AccessMode accessMode = edge.value("accessMode");
+    assertEquals(AccessMode.Public, accessMode);
+  }
+
+  @Test
+  public void testAutotypeUuidProperties() {
+    Edge edge = createEdge();
+    UUID sourceID = edge.value("sourceID");
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000003"), sourceID);
+  }
+
+  @Test
+  public void testGetPropertyKeysOnEdge() {
+    UUID factID = mockFact(null);
+    Edge edge = new FactEdge(getActGraph(), factID, mockObject(), mockObject());
+
     // Test that the following properties exists on the edge.
-    Map<String, String> expected = MapUtils.map(
-            T("value", "value")
+    Map<String, Object> expected = MapUtils.map(
+            T("factID", factID),
+            T("value", "value"),
+            T("inReferenceToID", UUID.fromString("00000000-0000-0000-0000-000000000001")),
+            T("organizationID", UUID.fromString("00000000-0000-0000-0000-000000000002")),
+            T("sourceID", UUID.fromString("00000000-0000-0000-0000-000000000003")),
+            T("accessMode", AccessMode.Public),
+            T("timestamp", 123456789L),
+            T("lastSeenTimestamp", 987654321L)
     );
 
     Set<String> keys = edge.keys();
@@ -155,7 +186,7 @@ public class FactEdgeTest extends AbstractGraphTest {
     assertEquals(expected.size(), keys.size());
     assertEquals(expected.size(), properties.size());
 
-    for (Map.Entry<String, String> entry : expected.entrySet()) {
+    for (Map.Entry<String, Object> entry : expected.entrySet()) {
       assertTrue(keys.contains(entry.getKey()));
 
       Property<Object> property = edge.property(entry.getKey());

@@ -2,10 +2,7 @@ package no.mnemonic.act.platform.dao.tinkerpop;
 
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
-import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;
@@ -74,6 +71,12 @@ abstract class AbstractGraphTest {
             .setId(factID)
             .setTypeID(typeID)
             .setValue("value")
+            .setInReferenceToID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+            .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+            .setSourceID(UUID.fromString("00000000-0000-0000-0000-000000000003"))
+            .setAccessMode(AccessMode.Public)
+            .setTimestamp(123456789)
+            .setLastSeenTimestamp(987654321)
             .setBindings(ObjectUtils.ifNotNull(binding, ListUtils::list, ListUtils.list()))
     );
 

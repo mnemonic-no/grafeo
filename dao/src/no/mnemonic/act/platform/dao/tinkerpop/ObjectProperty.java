@@ -1,6 +1,5 @@
-package no.mnemonic.act.platform.dao.tinkerpop.properties;
+package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
 import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Property;
@@ -16,28 +15,20 @@ import static org.apache.tinkerpop.gremlin.structure.Property.Exceptions.propert
 import static org.apache.tinkerpop.gremlin.structure.VertexProperty.Exceptions.metaPropertiesNotSupported;
 
 /**
- * VertexProperty class holding an Object's value.
+ * Base class for all exposed properties from an Object. Every subclass holds one property related to an Object.
+ *
+ * @param <V> Type of property value
  */
-public class ObjectValueProperty implements VertexProperty<String> {
+abstract class ObjectProperty<V> implements VertexProperty<V> {
 
   private final ObjectEntity object;
   private final ObjectVertex owner;
   private final UUID id;
 
-  public ObjectValueProperty(ObjectEntity object, ObjectVertex owner) {
+  private ObjectProperty(ObjectEntity object, ObjectVertex owner) {
     this.object = ObjectUtils.notNull(object, "'object' is null!");
     this.owner = ObjectUtils.notNull(owner, "'owner' is null!");
     this.id = UUID.randomUUID(); // Generate a random ID for each new instance.
-  }
-
-  @Override
-  public String key() {
-    return "value";
-  }
-
-  @Override
-  public String value() throws NoSuchElementException {
-    return object.getValue();
   }
 
   @Override
@@ -61,17 +52,38 @@ public class ObjectValueProperty implements VertexProperty<String> {
   }
 
   @Override
-  public <V> Property<V> property(String s, V v) {
+  public <U> Property<U> property(String key, U values) {
     throw metaPropertiesNotSupported();
   }
 
   @Override
-  public <U> Iterator<Property<U>> properties(String... strings) {
+  public <U> Iterator<Property<U>> properties(String... propertyKeys) {
     throw metaPropertiesNotSupported();
   }
 
   @Override
   public String toString() {
     return StringFactory.propertyString(this);
+  }
+
+  protected ObjectEntity getObject() {
+    // Need to expose 'object' to inner static classes.
+    return object;
+  }
+
+  static class Value extends ObjectProperty<String> {
+    Value(ObjectEntity object, ObjectVertex owner) {
+      super(object, owner);
+    }
+
+    @Override
+    public String key() {
+      return "value";
+    }
+
+    @Override
+    public String value() throws NoSuchElementException {
+      return getObject().getValue();
+    }
   }
 }

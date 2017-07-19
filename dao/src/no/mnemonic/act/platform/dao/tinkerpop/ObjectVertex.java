@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.dao.tinkerpop.properties.ObjectValueProperty;
 import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
@@ -12,6 +11,7 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.*;
 
+import static no.mnemonic.act.platform.dao.tinkerpop.ObjectProperty.Value;
 import static no.mnemonic.act.platform.entity.cassandra.Direction.*;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.edgeAdditionsNotSupported;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRemovalNotSupported;
@@ -30,12 +30,14 @@ public class ObjectVertex implements Vertex {
   private final ObjectEntity object;
   private final ObjectTypeEntity type;
   private final List<ObjectFactBindingEntity> bindings;
+  private final Set<VertexProperty> allProperties;
 
   public ObjectVertex(ActGraph graph, UUID objectID) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
     this.object = ObjectUtils.notNull(graph.getObjectManager().getObject(objectID), String.format("Object with id = %s does not exist.", objectID));
     this.type = ObjectUtils.notNull(graph.getObjectManager().getObjectType(object.getTypeID()), String.format("ObjectType with id = %s does not exist.", object.getTypeID()));
     this.bindings = Collections.unmodifiableList(ListUtils.list(graph.getObjectManager().fetchObjectFactBindings(objectID)));
+    this.allProperties = Collections.unmodifiableSet(getAllProperties()); // Generate properties set only once.
   }
 
   @Override
@@ -77,14 +79,10 @@ public class ObjectVertex implements Vertex {
 
   @Override
   public <V> Iterator<VertexProperty<V>> properties(String... propertyKeys) {
-    Set<VertexProperty<V>> properties = SetUtils.set(
-            // TODO: Implement and add more properties.
-            (VertexProperty<V>) new ObjectValueProperty(object, this)
-    );
-
-    return properties
-            .stream()
+    //noinspection unchecked
+    return allProperties.stream()
             .filter(property -> SetUtils.set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
+            .map(property -> (VertexProperty<V>) property)
             .iterator();
   }
 
@@ -129,6 +127,14 @@ public class ObjectVertex implements Vertex {
   @Override
   public int hashCode() {
     return Objects.hash(id());
+  }
+
+  private Set<VertexProperty> getAllProperties() {
+    // Currently, only one property is exposed. Object statistics would be interesting as well, but this requires an
+    // external index in order to allow efficient graph traversals.
+    return SetUtils.set(
+            new Value(object, this)
+    );
   }
 
 }

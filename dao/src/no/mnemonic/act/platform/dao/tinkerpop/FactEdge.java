@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.dao.tinkerpop.properties.FactValueProperty;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -9,11 +8,9 @@ import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
+import static no.mnemonic.act.platform.dao.tinkerpop.FactProperty.*;
 import static org.apache.tinkerpop.gremlin.structure.Edge.Exceptions.edgeRemovalNotSupported;
 
 /**
@@ -29,6 +26,7 @@ public class FactEdge implements Edge {
   private final Vertex inVertex;
   private final Vertex outVertex;
   private final UUID edgeID;
+  private final Set<Property> allProperties;
 
   public FactEdge(ActGraph graph, UUID factID, UUID inVertexObjectID, UUID outVertexObjectID) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
@@ -37,6 +35,7 @@ public class FactEdge implements Edge {
     this.inVertex = graph.getElementFactory().getVertex(inVertexObjectID);
     this.outVertex = graph.getElementFactory().getVertex(outVertexObjectID);
     this.edgeID = UUID.randomUUID(); // Generate a random ID for each new edge.
+    this.allProperties = Collections.unmodifiableSet(getAllProperties()); // Generate properties set only once.
   }
 
   @Override
@@ -70,14 +69,10 @@ public class FactEdge implements Edge {
 
   @Override
   public <V> Iterator<Property<V>> properties(String... propertyKeys) {
-    Set<Property<V>> properties = SetUtils.set(
-            // TODO: Implement and add more properties.
-            (Property<V>) new FactValueProperty(fact, this)
-    );
-
-    return properties
-            .stream()
+    //noinspection unchecked
+    return allProperties.stream()
             .filter(property -> SetUtils.set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
+            .map(property -> (Property<V>) property)
             .iterator();
   }
 
@@ -107,6 +102,23 @@ public class FactEdge implements Edge {
   @Override
   public int hashCode() {
     return Objects.hash(id());
+  }
+
+  private Set<Property> getAllProperties() {
+    // Currently, those properties only expose information directly from a Fact. Some additional interesting properties
+    // would be e.g. confidenceLevel, organizationName, sourceName, sourceTrustLevel, but those are not stored yet and
+    // therefore not easily available. Maybe it would be good to expose complex OrganizationProperty and SourceProperty
+    // properties instead of one simple property per field?
+    return SetUtils.set(
+            new FactID(fact, this),
+            new Value(fact, this),
+            new InReferenceToID(fact, this),
+            new OrganizationID(fact, this),
+            new SourceID(fact, this),
+            new AccessMode(fact, this),
+            new Timestamp(fact, this),
+            new LastSeenTimestamp(fact, this)
+    );
   }
 
 }
