@@ -97,6 +97,7 @@ public class ElementFactory {
    * @return Cached edge or NULL.
    */
   public Edge getEdge(UUID id) {
+    if (id == null) return null;
     return edgeCache.getIfPresent(id);
   }
 
@@ -109,6 +110,7 @@ public class ElementFactory {
    * @return Cached vertex.
    */
   public Vertex getVertex(UUID id) {
+    if (id == null) return null;
     try {
       return vertexCache.get(id);
     } catch (Exception ignored) {

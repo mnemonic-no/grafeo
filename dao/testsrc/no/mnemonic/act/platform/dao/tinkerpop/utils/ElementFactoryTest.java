@@ -141,6 +141,11 @@ public class ElementFactoryTest {
   }
 
   @Test
+  public void testGetEdgeWithNullId() {
+    assertNull(elementFactory.getEdge(null));
+  }
+
+  @Test
   public void testGetEdgeNotCached() {
     assertNull(elementFactory.getEdge(UUID.randomUUID()));
   }
@@ -154,6 +159,11 @@ public class ElementFactoryTest {
     Edge second = elementFactory.getEdge((UUID) first.id());
 
     assertSame(first, second);
+  }
+
+  @Test
+  public void testGetVertexWithNullId() {
+    assertNull(elementFactory.getVertex(null));
   }
 
   @Test
