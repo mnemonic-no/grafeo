@@ -3,7 +3,6 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
-import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
@@ -14,7 +13,6 @@ import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,11 +30,11 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
   }
 
   public ResultSet<Fact> handle(SearchObjectFactsRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactObjects);
     assertRequest(request);
 
-    List<FactEntity> resolvedFacts = resolveFacts(resolveObject(request)); // All accessible Facts.
+    List<FactEntity> resolvedFacts = checkObjectAccess(resolveObject(request)); // All accessible Facts.
     List<FactEntity> filteredFacts = filterFacts(resolvedFacts, request); // Filtered Facts based on request.
     List<FactEntity> limitedFacts = limitFacts(filteredFacts, request); // Final result after applying limit.
 
@@ -69,21 +67,6 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
     }
 
     return object;
-  }
-
-  private List<FactEntity> resolveFacts(ObjectEntity object) throws AccessDeniedException {
-    if (object == null) {
-      // User should not get a different response if an Object is not in the system or if user does not have access to it.
-      throw new AccessDeniedException("No access to Object.");
-    }
-
-    List<FactEntity> facts = resolveFactsForObject(object.getId());
-    if (CollectionUtils.isEmpty(facts)) {
-      // User does not have access to any Facts bound to this Object.
-      throw new AccessDeniedException("No access to Object.");
-    }
-
-    return facts;
   }
 
   private List<FactEntity> filterFacts(List<FactEntity> facts, SearchObjectFactsRequest request) {

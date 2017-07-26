@@ -2,6 +2,10 @@ package no.mnemonic.act.platform.api.service.v1;
 
 import no.mnemonic.services.common.auth.model.Credentials;
 
+/**
+ * The RequestHeader is used to transport information from the client to the service layer, e.g. credentials identifying
+ * the user calling a method. In general, the RequestHeader must be set by a REST endpoint when calling a service method.
+ */
 public class RequestHeader {
 
   private final Credentials credentials;

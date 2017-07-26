@@ -84,10 +84,9 @@ public interface ThreatIntelligenceService {
    * @throws AccessDeniedException         If the user is not allowed to perform this operation.
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
-   * @throws ObjectNotFoundException       If the requested Object could not be found.
    */
   default Object getObject(RequestHeader rh, GetObjectByIdRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     throw new UnsupportedOperationException();
   }
 
@@ -100,10 +99,9 @@ public interface ThreatIntelligenceService {
    * @throws AccessDeniedException         If the user is not allowed to perform this operation.
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
-   * @throws ObjectNotFoundException       If the requested Object could not be found.
    */
   default Object getObject(RequestHeader rh, GetObjectByTypeValueRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     throw new UnsupportedOperationException();
   }
 
@@ -131,10 +129,9 @@ public interface ThreatIntelligenceService {
    * @throws AccessDeniedException         If the user is not allowed to perform this operation.
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
-   * @throws ObjectNotFoundException       If the Object to fetch Facts for could not be found.
    */
   default ResultSet<Fact> searchObjectFacts(RequestHeader rh, SearchObjectFactsRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     throw new UnsupportedOperationException();
   }
 
@@ -308,6 +305,51 @@ public interface ThreatIntelligenceService {
    */
   default FactComment createFactComment(RequestHeader rh, CreateFactCommentRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Traverse the graph of Objects and Facts starting at an Object identified by its ID.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request containing graph traversal query.
+   * @return Result of the graph traversal.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   */
+  default TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Traverse the graph of Objects and Facts starting at an Object identified by its type and value.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request containing graph traversal query.
+   * @return Result of the graph traversal.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   */
+  default TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Traverse the graph of Objects and Facts starting at the Objects returned from an Object search.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request containing graph traversal query and Object search parameters.
+   * @return Result of the graph traversal.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   */
+  default TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     throw new UnsupportedOperationException();
   }
 

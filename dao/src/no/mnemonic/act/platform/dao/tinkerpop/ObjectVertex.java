@@ -129,6 +129,10 @@ public class ObjectVertex implements Vertex {
     return Objects.hash(id());
   }
 
+  public ObjectEntity getObject() {
+    return object;
+  }
+
   private Set<VertexProperty> getAllProperties() {
     // Currently, only one property is exposed. Object statistics would be interesting as well, but this requires an
     // external index in order to allow efficient graph traversals.

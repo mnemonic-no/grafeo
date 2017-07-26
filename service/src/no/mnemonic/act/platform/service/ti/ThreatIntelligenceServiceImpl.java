@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.act.platform.api.service.v1.TraversalResult;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
@@ -170,19 +171,19 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
 
   @Override
   public Object getObject(RequestHeader rh, GetObjectByIdRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ObjectGetDelegate.create().handle(request);
   }
 
   @Override
   public Object getObject(RequestHeader rh, GetObjectByTypeValueRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ObjectGetDelegate.create().handle(request);
   }
 
   @Override
   public ResultSet<Fact> searchObjectFacts(RequestHeader rh, SearchObjectFactsRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ObjectSearchFactsDelegate.create().handle(request);
   }
 
@@ -241,6 +242,33 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   public AclEntry grantFactAccess(RequestHeader rh, GrantFactAccessRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return FactGrantAccessDelegate.create().handle(request);
+  }
+
+  @Override
+  public TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return TraverseGraphDelegate.builder()
+            .setObjectSearch(ObjectSearchDelegate.create())
+            .build()
+            .handle(request);
+  }
+
+  @Override
+  public TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return TraverseGraphDelegate.builder()
+            .setObjectSearch(ObjectSearchDelegate.create())
+            .build()
+            .handle(request);
+  }
+
+  @Override
+  public TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return TraverseGraphDelegate.builder()
+            .setObjectSearch(ObjectSearchDelegate.create())
+            .build()
+            .handle(request);
   }
 
   private Function<UUID, Namespace> createNamespaceConverter() {

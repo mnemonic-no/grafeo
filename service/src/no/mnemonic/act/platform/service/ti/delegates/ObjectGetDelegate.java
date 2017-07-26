@@ -3,7 +3,6 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
-import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectFactsStatistic;
@@ -17,7 +16,6 @@ import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import java.util.*;
 
@@ -28,14 +26,14 @@ public class ObjectGetDelegate extends AbstractDelegate {
   }
 
   public Object handle(GetObjectByIdRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactObjects);
 
     return handle(TiRequestContext.get().getObjectManager().getObject(request.getId()));
   }
 
   public Object handle(GetObjectByTypeValueRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactObjects);
     assertObjectTypeExists(request.getType(), "type");
 
@@ -43,17 +41,7 @@ public class ObjectGetDelegate extends AbstractDelegate {
   }
 
   private Object handle(ObjectEntity object) throws AccessDeniedException {
-    if (object == null) {
-      // User should not get a different response if an Object is not in the system or if user does not have access to it.
-      throw new AccessDeniedException("No access to Object.");
-    }
-
-    List<FactEntity> facts = resolveFactsForObject(object.getId());
-    if (CollectionUtils.isEmpty(facts)) {
-      // User does not have access to any Facts bound to this Object.
-      throw new AccessDeniedException("No access to Object.");
-    }
-
+    List<FactEntity> facts = checkObjectAccess(object);
     return convertObject(object, calculateStatistics(facts));
   }
 

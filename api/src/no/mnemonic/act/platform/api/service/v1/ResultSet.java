@@ -5,6 +5,12 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import java.util.Collection;
 import java.util.Collections;
 
+/**
+ * The ResultSet is a general container holding the values returned from a service method. When a service method
+ * produces multiple results, these results are transported to the REST layer wrapped inside a ResultSet.
+ *
+ * @param <T> Type of result values
+ */
 public class ResultSet<T> {
 
   private final int limit;
