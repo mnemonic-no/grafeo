@@ -1,12 +1,10 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
+import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
-import no.mnemonic.act.platform.entity.cassandra.Direction;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
-import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
@@ -222,6 +220,28 @@ abstract class AbstractDelegate {
             .map(binding -> TiRequestContext.get().getFactManager().getFact(binding.getFactID()))
             .filter(fact -> TiSecurityContext.get().hasReadPermission(fact))
             .collect(Collectors.toList());
+  }
+
+  /**
+   * Verify that the current user has access to an Object. The user must have access to at least one Fact bound to the Object.
+   *
+   * @param object Object to verify access.
+   * @return Facts bound to the Object which are accessible to the current user.
+   * @throws AccessDeniedException Thrown if the current user does not have access to the Object.
+   */
+  List<FactEntity> checkObjectAccess(ObjectEntity object) throws AccessDeniedException {
+    if (object == null) {
+      // User should not get a different response if an Object is not in the system or if user does not have access to it.
+      throw new AccessDeniedException("No access to Object.");
+    }
+
+    List<FactEntity> facts = resolveFactsForObject(object.getId());
+    if (CollectionUtils.isEmpty(facts)) {
+      // User does not have access to any Facts bound to this Object.
+      throw new AccessDeniedException("No access to Object.");
+    }
+
+    return facts;
   }
 
   /**

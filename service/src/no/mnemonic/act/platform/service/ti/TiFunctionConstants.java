@@ -8,6 +8,7 @@ public enum TiFunctionConstants implements NamedFunction {
   viewTypes,
   addFactObjects,
   grantFactAccess,
+  traverseFactObjects,
   viewFactObjects;
 
   @Override

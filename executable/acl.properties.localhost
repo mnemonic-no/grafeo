@@ -1,5 +1,5 @@
 # Define a function group named 'all' containing all specified functions.
-function.all.members = addTypes,updateTypes,viewTypes,addFactObjects,grantFactAccess,viewFactObjects
+function.all.members = addTypes,updateTypes,viewTypes,addFactObjects,grantFactAccess,traverseFactObjects,viewFactObjects
 
 # Define some organizations and one organization group containing all other organizations.
 organization.1.name = Test Organization 1

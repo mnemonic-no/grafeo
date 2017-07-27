@@ -104,6 +104,10 @@ public class FactEdge implements Edge {
     return Objects.hash(id());
   }
 
+  public FactEntity getFact() {
+    return fact;
+  }
+
   private Set<Property> getAllProperties() {
     // Currently, those properties only expose information directly from a Fact. Some additional interesting properties
     // would be e.g. confidenceLevel, organizationName, sourceName, sourceTrustLevel, but those are not stored yet and

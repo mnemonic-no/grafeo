@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.exceptions.*;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.api.request.v1.Direction;
-import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
+import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import no.mnemonic.act.platform.rest.api.ResultMessage;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -14,6 +14,7 @@ import org.junit.Test;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.UUID;
 
 import static no.mnemonic.act.platform.rest.api.ResultMessage.Type.ActionError;
 import static no.mnemonic.act.platform.rest.api.ResultMessage.Type.FieldError;
@@ -182,8 +183,8 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   }
 
   private Response executeRequest(Throwable ex) throws Exception {
-    when(getTiService().getObject(any(), isA(GetObjectByTypeValueRequest.class))).thenThrow(ex);
-    return target("/v1/object/ip/1.1.1.1").request().get();
+    when(getTiService().getFact(any(), isA(GetFactByIdRequest.class))).thenThrow(ex);
+    return target("/v1/fact/uuid/" + UUID.randomUUID()).request().get();
   }
 
 }

@@ -1,0 +1,363 @@
+package no.mnemonic.act.platform.service.ti.delegates;
+
+import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
+import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.model.v1.Fact;
+import no.mnemonic.act.platform.api.model.v1.Object;
+import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
+import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
+import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
+import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.TraversalResult;
+import no.mnemonic.act.platform.entity.cassandra.*;
+import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.commons.utilities.collections.ListUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+public class TraverseGraphDelegateTest extends AbstractDelegateTest {
+
+  @Mock
+  private ObjectSearchDelegate objectSearch;
+
+  private TraverseGraphDelegate delegate;
+
+  private final TestMethod byIdHandle = (object, query) -> {
+    TraverseByObjectIdRequest request = new TraverseByObjectIdRequest()
+            .setId(object.getId())
+            .setQuery(query);
+    return delegate.handle(request);
+  };
+
+  private final TestMethod byTypeValueHandle = (object, query) -> {
+    TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest()
+            .setType("objectType")
+            .setValue(object.getValue())
+            .setQuery(query);
+    return delegate.handle(request);
+  };
+
+  private final TestMethod byObjectSearchHandle = (object, query) -> {
+    TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest().setQuery(query);
+    Set<Object> searchResult = Collections.singleton(Object.builder().setId(object.getId()).build());
+    when(objectSearch.handle(request)).thenReturn(ResultSet.builder().setValues(searchResult).build());
+
+    return delegate.handle(request);
+  };
+
+  @Before
+  public void setup() {
+    // initMocks() will be called by base class.
+    delegate = TraverseGraphDelegate.builder()
+            .setObjectSearch(objectSearch)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateDelegateWithoutObjectSearch() {
+    TraverseGraphDelegate.builder().build();
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testTraverseGraphByObjectIdWithoutPermission() throws Exception {
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.traverseFactObjects);
+    delegate.handle(new TraverseByObjectIdRequest());
+  }
+
+  @Test
+  public void testTraverseGraphByObjectIdWithoutObject() throws Exception {
+    TraverseByObjectIdRequest request = new TraverseByObjectIdRequest().setId(UUID.randomUUID());
+
+    try {
+      delegate.handle(request);
+      fail();
+    } catch (AccessDeniedException ignored) {
+      verify(getObjectManager()).getObject(request.getId());
+      verifyNoMoreInteractions(getObjectManager());
+    }
+  }
+
+  @Test
+  public void testTraverseGraphByObjectIdWithoutFacts() throws Exception {
+    testTraverseGraphWithoutFacts(byIdHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectIdWithoutAccessToFacts() throws Exception {
+    testTraverseGraphWithoutAccessToFacts(byIdHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectIdReturnEdges() throws Exception {
+    testTraverseGraphReturnEdges(byIdHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectIdReturnVertices() throws Exception {
+    testTraverseGraphReturnVertices(byIdHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectIdReturnValue() throws Exception {
+    testTraverseGraphReturnValue(byIdHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectIdReturnError() throws Exception {
+    testTraverseGraphReturnError(byIdHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectIdSandboxed() throws Exception {
+    testTraverseGraphSandboxed(byIdHandle);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testTraverseGraphByObjectTypeValueWithoutPermission() throws Exception {
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.traverseFactObjects);
+    delegate.handle(new TraverseByObjectTypeValueRequest());
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueWithoutObjectType() throws Exception {
+    TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest().setType("type").setValue("value");
+
+    try {
+      delegate.handle(request);
+      fail();
+    } catch (InvalidArgumentException ignored) {
+      verify(getObjectManager()).getObjectType(request.getType());
+      verifyNoMoreInteractions(getObjectManager());
+    }
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueWithoutObject() throws Exception {
+    TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest().setType("type").setValue("value");
+    when(getObjectManager().getObjectType(request.getType())).thenReturn(new ObjectTypeEntity());
+
+    try {
+      delegate.handle(request);
+      fail();
+    } catch (AccessDeniedException ignored) {
+      verify(getObjectManager()).getObjectType(request.getType());
+      verify(getObjectManager()).getObject(request.getType(), request.getValue());
+      verifyNoMoreInteractions(getObjectManager());
+    }
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueWithoutFacts() throws Exception {
+    testTraverseGraphWithoutFacts(byTypeValueHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueWithoutAccessToFacts() throws Exception {
+    testTraverseGraphWithoutAccessToFacts(byTypeValueHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueReturnEdges() throws Exception {
+    testTraverseGraphReturnEdges(byTypeValueHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueReturnVertices() throws Exception {
+    testTraverseGraphReturnVertices(byTypeValueHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueReturnValue() throws Exception {
+    testTraverseGraphReturnValue(byTypeValueHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueReturnError() throws Exception {
+    testTraverseGraphReturnError(byTypeValueHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectTypeValueSandboxed() throws Exception {
+    testTraverseGraphSandboxed(byTypeValueHandle);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testTraverseGraphByObjectSearchWithoutPermission() throws Exception {
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.traverseFactObjects);
+    delegate.handle(new TraverseByObjectSearchRequest());
+  }
+
+  @Test
+  public void testTraverseGraphByObjectSearchWithoutSearchResult() throws Exception {
+    TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest();
+    when(objectSearch.handle(request)).thenReturn(ResultSet.builder().build());
+
+    TraversalResult result = delegate.handle(request);
+    assertTrue(result.getValues().isEmpty());
+    assertTrue(result.getMessages().isEmpty());
+  }
+
+  @Test
+  public void testTraverseGraphByObjectSearchReturnEdges() throws Exception {
+    testTraverseGraphReturnEdges(byObjectSearchHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectSearchReturnVertices() throws Exception {
+    testTraverseGraphReturnVertices(byObjectSearchHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectSearchReturnValue() throws Exception {
+    testTraverseGraphReturnValue(byObjectSearchHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectSearchReturnError() throws Exception {
+    testTraverseGraphReturnError(byObjectSearchHandle);
+  }
+
+  @Test
+  public void testTraverseGraphByObjectSearchSandboxed() throws Exception {
+    testTraverseGraphSandboxed(byObjectSearchHandle);
+  }
+
+  private void testTraverseGraphWithoutFacts(TestMethod method) throws Exception {
+    ObjectEntity object = mockFetchObject();
+
+    try {
+      method.execute(object, "g.out()");
+      fail();
+    } catch (AccessDeniedException ignored) {
+      verify(getObjectManager()).fetchObjectFactBindings(object.getId());
+      verify(getFactManager(), never()).getFact(any());
+    }
+  }
+
+  private void testTraverseGraphWithoutAccessToFacts(TestMethod method) throws Exception {
+    FactEntity fact = mockFetchFact();
+    ObjectEntity object = mockFetchObject(fact);
+
+    try {
+      method.execute(object, "g.out()");
+      fail();
+    } catch (AccessDeniedException ignored) {
+      verify(getObjectManager()).fetchObjectFactBindings(object.getId());
+      verify(getFactManager()).getFact(fact.getId());
+      verify(getSecurityContext()).hasReadPermission(fact);
+    }
+  }
+
+  private void testTraverseGraphReturnEdges(TestMethod method) throws Exception {
+    ObjectEntity startObject = mockFullTraversal();
+    TraversalResult result = method.execute(startObject, "g.outE()");
+    assertEquals(1, result.getValues().size());
+    assertTrue(result.getValues().iterator().next() instanceof Fact);
+  }
+
+  private void testTraverseGraphReturnVertices(TestMethod method) throws Exception {
+    ObjectEntity startObject = mockFullTraversal();
+    TraversalResult result = method.execute(startObject, "g.out()");
+    assertEquals(1, result.getValues().size());
+    assertTrue(result.getValues().iterator().next() instanceof Object);
+  }
+
+  private void testTraverseGraphReturnValue(TestMethod method) throws Exception {
+    ObjectEntity startObject = mockFullTraversal();
+    TraversalResult result = method.execute(startObject, "g.values('value')");
+    assertEquals(1, result.getValues().size());
+    assertEquals(startObject.getValue(), result.getValues().iterator().next());
+  }
+
+  private void testTraverseGraphReturnError(TestMethod method) throws Exception {
+    ObjectEntity startObject = mockFullTraversal();
+    TraversalResult result = method.execute(startObject, "g.addE('notAllowed')");
+    assertEquals(1, result.getMessages().size());
+    assertEquals("graph.traversal.error", result.getMessages().iterator().next().getTemplate());
+  }
+
+  private void testTraverseGraphSandboxed(TestMethod method) throws Exception {
+    ObjectEntity startObject = mockFullTraversal();
+    TraversalResult result = method.execute(startObject, "System.exit(0)");
+    assertEquals(1, result.getMessages().size());
+    assertEquals("graph.traversal.error", result.getMessages().iterator().next().getTemplate());
+  }
+
+  private ObjectEntity mockFullTraversal() {
+    when(getSecurityContext().hasReadPermission(any())).thenReturn(true);
+
+    ObjectEntity otherObject = mockFetchObject();
+    FactEntity fact = mockFetchFact(otherObject);
+
+    return mockFetchObject(fact);
+  }
+
+  private ObjectEntity mockFetchObject() {
+    ObjectTypeEntity objectType = new ObjectTypeEntity()
+            .setId(UUID.randomUUID())
+            .setName("objectType");
+    when(getObjectManager().getObjectType(objectType.getId())).thenReturn(objectType);
+    when(getObjectManager().getObjectType(objectType.getName())).thenReturn(objectType);
+
+    ObjectEntity object = new ObjectEntity()
+            .setId(UUID.randomUUID())
+            .setTypeID(objectType.getId())
+            .setValue("objectValue");
+    when(getObjectManager().getObject(object.getId())).thenReturn(object);
+    when(getObjectManager().getObject(objectType.getName(), object.getValue())).thenReturn(object);
+    when(getObjectConverter().apply(object)).thenReturn(Object.builder().setId(object.getId()).build());
+
+    return object;
+  }
+
+  private ObjectEntity mockFetchObject(FactEntity fact) {
+    ObjectEntity object = mockFetchObject();
+
+    when(getObjectManager().fetchObjectFactBindings(object.getId())).thenReturn(ListUtils.list(
+            new ObjectFactBindingEntity()
+                    .setObjectID(object.getId())
+                    .setFactID(fact.getId())
+                    .setDirection(Direction.None)
+    ));
+
+    return object;
+  }
+
+  private FactEntity mockFetchFact() {
+    FactTypeEntity factType = new FactTypeEntity()
+            .setId(UUID.randomUUID())
+            .setName("factType");
+    when(getFactManager().getFactType(factType.getId())).thenReturn(factType);
+
+    FactEntity fact = new FactEntity()
+            .setId(UUID.randomUUID())
+            .setTypeID(factType.getId())
+            .setValue("factValue");
+    when(getFactManager().getFact(fact.getId())).thenReturn(fact);
+    when(getFactConverter().apply(any())).thenReturn(Fact.builder().setId(fact.getId()).build());
+
+    return fact;
+  }
+
+  private FactEntity mockFetchFact(ObjectEntity object) {
+    return mockFetchFact().setBindings(
+            ListUtils.list(new FactEntity.FactObjectBinding()
+                    .setObjectID(object.getId())
+                    .setDirection(Direction.None))
+    );
+  }
+
+  private interface TestMethod {
+    TraversalResult execute(ObjectEntity object, String query) throws Exception;
+  }
+
+}
