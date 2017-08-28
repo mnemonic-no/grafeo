@@ -7,9 +7,9 @@ import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import no.mnemonic.act.platform.rest.api.ResultStash;
 import no.mnemonic.act.platform.rest.container.ApiServer;
-import no.mnemonic.act.platform.rest.swagger.ResultStashTransformation;
 import no.mnemonic.act.platform.rest.swagger.SwaggerApiListingResource;
-import no.mnemonic.act.platform.rest.swagger.SwaggerModelTransformer;
+import no.mnemonic.services.common.documentation.swagger.ResultContainerTransformation;
+import no.mnemonic.services.common.documentation.swagger.SwaggerModelTransformer;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
@@ -49,7 +49,7 @@ public class RestModule extends AbstractModule {
     beanConfig.setScan(true);
 
     SwaggerModelTransformer transformer = SwaggerModelTransformer.builder()
-            .addTransformation(new ResultStashTransformation(ResultStash.class, "data"))
+            .addTransformation(new ResultContainerTransformation(ResultStash.class, "data"))
             .build();
 
     bind(SwaggerApiListingResource.class).in(Scopes.SINGLETON);
