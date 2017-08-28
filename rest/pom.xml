@@ -54,6 +54,11 @@
       <version>${mnemonic.commons.version}</version>
     </dependency>
     <dependency>
+      <groupId>no.mnemonic.services.common</groupId>
+      <artifactId>documentation</artifactId>
+      <version>${mnemonic.services.common.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
