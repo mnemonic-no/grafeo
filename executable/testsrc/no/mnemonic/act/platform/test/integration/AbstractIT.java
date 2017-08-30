@@ -36,7 +36,7 @@ public abstract class AbstractIT {
 
   private static final String CASSANDRA_CLUSTER_NAME = "ActIntegrationTest";
   private static final String CASSANDRA_CONTACT_POINTS = "localhost";
-  private static final String ACL_FILE = ClassLoader.getSystemResource("resources/acl.properties").getPath();
+  private static final String ACL_FILE = ClassLoader.getSystemResource("acl.properties").getPath();
   private static final int API_SERVER_PORT = AvailablePortFinder.getAvailablePort(8000);
 
   private final static ObjectMapper mapper = new ObjectMapper();
@@ -51,7 +51,7 @@ public abstract class AbstractIT {
   public static CassandraTestResource cassandra = CassandraTestResource.builder()
           .setClusterName(CASSANDRA_CLUSTER_NAME)
           .setKeyspaceName(KEY_SPACE)
-          .setStartupScript("resources/setup.cql")
+          .setStartupScript("setup.cql")
           .build();
 
   @Rule

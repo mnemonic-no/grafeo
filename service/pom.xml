@@ -103,6 +103,13 @@
       <groupId>no.mnemonic.commons</groupId>
       <artifactId>testtools</artifactId>
       <version>${mnemonic.commons.version}</version>
+      <exclusions>
+        <!-- Safe to exclude because Cassandra test utilities are not used. Reduces console output during tests. -->
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
   </dependencies>
