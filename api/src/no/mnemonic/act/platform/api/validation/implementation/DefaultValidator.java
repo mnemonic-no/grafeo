@@ -7,11 +7,6 @@ import java.lang.annotation.Annotation;
 public class DefaultValidator implements ConstraintValidator<Annotation, Object> {
 
   @Override
-  public void initialize(Annotation constraintAnnotation) {
-    // NOOP
-  }
-
-  @Override
   public boolean isValid(Object value, ConstraintValidatorContext context) {
     return true;
   }

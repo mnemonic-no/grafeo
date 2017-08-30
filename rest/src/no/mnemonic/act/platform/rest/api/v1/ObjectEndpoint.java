@@ -15,8 +15,8 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -72,8 +72,8 @@ public class ObjectEndpoint extends AbstractEndpoint {
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
   public Response getObjectByTypeValue(
-          @PathParam("type") @ApiParam(value = "Type name of the requested Object.") @NotNull @Size(min = 1) String type,
-          @PathParam("value") @ApiParam(value = "Value of the requested Object.") @NotNull @Size(min = 1) String value
+          @PathParam("type") @ApiParam(value = "Type name of the requested Object.") @NotBlank String type,
+          @PathParam("value") @ApiParam(value = "Value of the requested Object.") @NotBlank String value
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildResponse(service.getObject(getHeader(), new GetObjectByTypeValueRequest().setType(type).setValue(value)));
   }
@@ -122,8 +122,8 @@ public class ObjectEndpoint extends AbstractEndpoint {
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
   public Response searchObjectFactsByTypeValue(
-          @PathParam("type") @ApiParam(value = "Type name of Object.") @NotNull @Size(min = 1) String type,
-          @PathParam("value") @ApiParam(value = "Value of Object.") @NotNull @Size(min = 1) String value,
+          @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
+          @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
           @ApiParam(value = "Request to limit the returned Facts.") @NotNull @Valid SearchObjectFactsRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildResponse(service.searchObjectFacts(getHeader(), request.setObjectType(type).setObjectValue(value)));
@@ -189,8 +189,8 @@ public class ObjectEndpoint extends AbstractEndpoint {
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
   public Response traverseObjectByTypeValue(
-          @PathParam("type") @ApiParam(value = "Type name of Object.") @NotNull @Size(min = 1) String type,
-          @PathParam("value") @ApiParam(value = "Value of Object.") @NotNull @Size(min = 1) String value,
+          @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
+          @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectTypeValueRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildTraversalResponse(service.traverseGraph(getHeader(), request.setType(type).setValue(value)));

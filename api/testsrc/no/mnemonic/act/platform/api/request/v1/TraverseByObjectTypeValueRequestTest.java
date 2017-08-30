@@ -21,7 +21,7 @@ public class TraverseByObjectTypeValueRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnNotNull() {
+  public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<TraverseByObjectTypeValueRequest>> violations = getValidator().validate(new TraverseByObjectTypeValueRequest());
     assertEquals(3, violations.size());
     assertPropertyInvalid(violations, "type");
@@ -30,11 +30,22 @@ public class TraverseByObjectTypeValueRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnSize() {
+  public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<TraverseByObjectTypeValueRequest>> violations = getValidator().validate(new TraverseByObjectTypeValueRequest()
             .setType("type")
             .setValue("value")
             .setQuery("")
+    );
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "query");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBlank() {
+    Set<ConstraintViolation<TraverseByObjectTypeValueRequest>> violations = getValidator().validate(new TraverseByObjectTypeValueRequest()
+            .setType("type")
+            .setValue("value")
+            .setQuery(" ")
     );
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "query");

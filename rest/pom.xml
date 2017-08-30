@@ -22,12 +22,6 @@
           <include>LICENSE</include>
         </includes>
       </resource>
-      <resource>
-        <directory>resources</directory>
-        <includes>
-          <include>**/**</include>
-        </includes>
-      </resource>
     </resources>
   </build>
 
@@ -102,16 +96,23 @@
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-validator-provider-11</artifactId>
       <version>${resteasy.version}</version>
+      <exclusions>
+        <!-- Force usage of Hibernate Validator 6 as included below. -->
+        <exclusion>
+          <groupId>org.hibernate</groupId>
+          <artifactId>hibernate-validator</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- Need a javax.validation and javax.el implementation for request validation. -->
     <dependency>
-      <groupId>org.hibernate</groupId>
+      <groupId>org.hibernate.validator</groupId>
       <artifactId>hibernate-validator</artifactId>
       <version>${hibernate.validator.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.glassfish.web</groupId>
+      <groupId>org.glassfish</groupId>
       <artifactId>javax.el</artifactId>
       <version>${javax.el.version}</version>
       <scope>runtime</scope>

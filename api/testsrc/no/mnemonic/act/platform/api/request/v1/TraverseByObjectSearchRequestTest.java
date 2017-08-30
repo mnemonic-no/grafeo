@@ -38,16 +38,25 @@ public class TraverseByObjectSearchRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnNotNull() {
+  public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<TraverseByObjectSearchRequest>> violations = getValidator().validate(new TraverseByObjectSearchRequest());
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "query");
   }
 
   @Test
-  public void testRequestValidationFailsOnSize() {
+  public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<TraverseByObjectSearchRequest>> violations = getValidator().validate(new TraverseByObjectSearchRequest()
             .setQuery("")
+    );
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "query");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBlank() {
+    Set<ConstraintViolation<TraverseByObjectSearchRequest>> violations = getValidator().validate(new TraverseByObjectSearchRequest()
+            .setQuery(" ")
     );
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "query");

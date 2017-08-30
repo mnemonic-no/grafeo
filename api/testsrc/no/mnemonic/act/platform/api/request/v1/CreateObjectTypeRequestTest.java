@@ -29,7 +29,7 @@ public class CreateObjectTypeRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnNotNull() {
+  public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<CreateObjectTypeRequest>> violations = getValidator().validate(new CreateObjectTypeRequest());
     assertEquals(3, violations.size());
     assertPropertyInvalid(violations, "name");
@@ -38,11 +38,23 @@ public class CreateObjectTypeRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnSize() {
+  public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<CreateObjectTypeRequest>> violations = getValidator().validate(new CreateObjectTypeRequest()
             .setName("")
             .setValidator("")
             .setEntityHandler(""));
+    assertEquals(3, violations.size());
+    assertPropertyInvalid(violations, "name");
+    assertPropertyInvalid(violations, "validator");
+    assertPropertyInvalid(violations, "entityHandler");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBlank() {
+    Set<ConstraintViolation<CreateObjectTypeRequest>> violations = getValidator().validate(new CreateObjectTypeRequest()
+            .setName(" ")
+            .setValidator(" ")
+            .setEntityHandler(" "));
     assertEquals(3, violations.size());
     assertPropertyInvalid(violations, "name");
     assertPropertyInvalid(violations, "validator");

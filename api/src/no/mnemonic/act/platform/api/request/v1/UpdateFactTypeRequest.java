@@ -21,8 +21,7 @@ public class UpdateFactTypeRequest implements ValidatingRequest {
   @Size(min = 1)
   private String name;
   @ApiModelProperty(value = "If set adds additional possible links between Facts and Objects")
-  @Valid
-  private List<FactObjectBindingDefinition> addObjectBindings;
+  private List<@Valid FactObjectBindingDefinition> addObjectBindings;
 
   public UUID getId() {
     return id;
