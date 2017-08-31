@@ -37,7 +37,7 @@ public class ActGraphIT {
   public static CassandraTestResource cassandra = CassandraTestResource.builder()
           .setClusterName("ACT Cluster")
           .setKeyspaceName(KEY_SPACE)
-          .setStartupScript("resources/setup.cql")
+          .setStartupScript("setup.cql")
           .build();
 
   @BeforeClass

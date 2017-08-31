@@ -20,7 +20,7 @@ public class GetObjectByTypeValueRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnNotNull() {
+  public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<GetObjectByTypeValueRequest>> violations = getValidator().validate(new GetObjectByTypeValueRequest());
     assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "type");
@@ -28,10 +28,21 @@ public class GetObjectByTypeValueRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnSize() {
+  public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<GetObjectByTypeValueRequest>> violations = getValidator().validate(new GetObjectByTypeValueRequest()
             .setType("")
             .setValue("")
+    );
+    assertEquals(2, violations.size());
+    assertPropertyInvalid(violations, "type");
+    assertPropertyInvalid(violations, "value");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBlank() {
+    Set<ConstraintViolation<GetObjectByTypeValueRequest>> violations = getValidator().validate(new GetObjectByTypeValueRequest()
+            .setType(" ")
+            .setValue(" ")
     );
     assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "type");

@@ -26,7 +26,6 @@
     <testResources>
       <testResource>
         <directory>testsrc/resources</directory>
-        <targetPath>resources</targetPath>
         <includes>
           <include>**/**</include>
         </includes>

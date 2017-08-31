@@ -103,7 +103,7 @@ public class ValidationAspectTest {
   private void assertNotNullException(InvalidArgumentException ex, String property) {
     assertEquals(1, ex.getValidationErrors().size());
     InvalidArgumentException.ValidationError error = ex.getValidationErrors().iterator().next();
-    assertEquals("may not be null", error.getMessage());
+    assertEquals("must not be null", error.getMessage());
     assertEquals("{javax.validation.constraints.NotNull.message}", error.getMessageTemplate());
     assertEquals(property, error.getProperty());
     assertEquals("NULL", error.getValue());
@@ -112,7 +112,7 @@ public class ValidationAspectTest {
   private void assertServiceNotNullException(InvalidArgumentException ex, String property) {
     assertEquals(1, ex.getValidationErrors().size());
     InvalidArgumentException.ValidationError error = ex.getValidationErrors().iterator().next();
-    assertEquals("may not be null in service layer", error.getMessage());
+    assertEquals("must not be null in service layer", error.getMessage());
     assertEquals("{no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull.message}", error.getMessageTemplate());
     assertEquals(property, error.getProperty());
     assertEquals("NULL", error.getValue());

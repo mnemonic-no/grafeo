@@ -36,7 +36,7 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnNotNull() {
+  public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest());
     assertEquals(4, violations.size());
     assertPropertyInvalid(violations, "name");
@@ -46,7 +46,7 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnSize() {
+  public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
             .setName("")
             .setValidator("")
@@ -57,6 +57,22 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
     assertPropertyInvalid(violations, "validator");
     assertPropertyInvalid(violations, "entityHandler");
     assertPropertyInvalid(violations, "relevantObjectBindings");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBlank() {
+    Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
+            .setName(" ")
+            .setValidator(" ")
+            .setEntityHandler(" ")
+            .addRelevantObjectBinding(new FactObjectBindingDefinition()
+                    .setObjectType(UUID.randomUUID())
+                    .setDirection(Direction.BiDirectional)
+            ));
+    assertEquals(3, violations.size());
+    assertPropertyInvalid(violations, "name");
+    assertPropertyInvalid(violations, "validator");
+    assertPropertyInvalid(violations, "entityHandler");
   }
 
   @Test

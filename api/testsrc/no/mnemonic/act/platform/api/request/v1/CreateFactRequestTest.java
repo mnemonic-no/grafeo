@@ -48,7 +48,7 @@ public class CreateFactRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnNotNull() {
+  public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<CreateFactRequest>> violations = getValidator().validate(new CreateFactRequest());
     assertEquals(3, violations.size());
     assertPropertyInvalid(violations, "type");
@@ -57,7 +57,7 @@ public class CreateFactRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnSize() {
+  public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<CreateFactRequest>> violations = getValidator().validate(new CreateFactRequest()
             .setType("")
             .setValue("")
@@ -67,6 +67,18 @@ public class CreateFactRequestTest extends AbstractRequestTest {
     assertPropertyInvalid(violations, "type");
     assertPropertyInvalid(violations, "value");
     assertPropertyInvalid(violations, "bindings");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBlank() {
+    Set<ConstraintViolation<CreateFactRequest>> violations = getValidator().validate(new CreateFactRequest()
+            .setType(" ")
+            .setValue(" ")
+            .setBindings(ListUtils.list(new CreateFactRequest.FactObjectBinding().setDirection(Direction.BiDirectional)))
+    );
+    assertEquals(2, violations.size());
+    assertPropertyInvalid(violations, "type");
+    assertPropertyInvalid(violations, "value");
   }
 
   @Test

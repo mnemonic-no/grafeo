@@ -6,8 +6,9 @@ import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,12 +17,10 @@ public class CreateFactRequest implements ValidatingRequest {
 
   @ApiModelProperty(value = "Type of new Fact. Can either be the UUID or name of an existing FactType",
           example = "ThreatActorAlias", required = true)
-  @NotNull
-  @Size(min = 1)
+  @NotBlank
   private String type;
   @ApiModelProperty(value = "Value of new Fact", example = "APT1", required = true)
-  @NotNull
-  @Size(min = 1)
+  @NotBlank
   private String value;
   @ApiModelProperty(value = "Set if new Fact should reference an existing Fact (takes Fact UUID)")
   private UUID inReferenceTo;
@@ -36,10 +35,8 @@ public class CreateFactRequest implements ValidatingRequest {
   @ApiModelProperty(value = "If set defines explicitly who has access to new Fact (takes Subject UUIDs)")
   private List<UUID> acl;
   @ApiModelProperty(value = "Define to which Objects the new Fact links", required = true)
-  @Valid
-  @NotNull
-  @Size(min = 1)
-  private List<FactObjectBinding> bindings;
+  @NotEmpty
+  private List<@Valid FactObjectBinding> bindings;
   // TODO: Add confidenceLevel once defined.
 
   public String getType() {

@@ -77,7 +77,7 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
             .addBinding(new CreateFactRequest.FactObjectBinding().setDirection(Direction.None));
     Response response = target("/v1/fact").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "may not be null", "{javax.validation.constraints.NotNull.message}", "value", "NULL");
+    assertMessages(getMessages(response), "must not be blank", "{javax.validation.constraints.NotBlank.message}", "value", "NULL");
   }
 
   @Test
@@ -88,14 +88,14 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
             .addBinding(new CreateFactRequest.FactObjectBinding());
     Response response = target("/v1/fact").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "may not be null", "{javax.validation.constraints.NotNull.message}", "bindings[0].direction", "NULL");
+    assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "bindings[0].direction", "NULL");
   }
 
   @Test
   public void testFailedRequestValidationWithNullRequestReturns412() throws Exception {
     Response response = target("/v1/fact").request().post(Entity.json(null));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "may not be null", "{javax.validation.constraints.NotNull.message}", "request", "NULL");
+    assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "request", "NULL");
   }
 
   @Test

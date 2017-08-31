@@ -5,8 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.NotBlank;
 import java.util.UUID;
 
 @ApiModel(description = "Add a comment to a Fact.")
@@ -16,8 +15,7 @@ public class CreateFactCommentRequest implements ValidatingRequest {
   @ServiceNotNull
   private UUID fact;
   @ApiModelProperty(value = "Content of comment", example = "Hello World!", required = true)
-  @NotNull
-  @Size(min = 1)
+  @NotBlank
   private String comment;
   @ApiModelProperty(value = "Set if new comment is a reply to an existing comment (takes comment UUID)")
   private UUID replyTo;

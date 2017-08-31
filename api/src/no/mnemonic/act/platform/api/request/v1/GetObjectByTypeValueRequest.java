@@ -2,16 +2,13 @@ package no.mnemonic.act.platform.api.request.v1;
 
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.NotBlank;
 
 public class GetObjectByTypeValueRequest implements ValidatingRequest {
 
-  @NotNull
-  @Size(min = 1)
+  @NotBlank
   private String type;
-  @NotNull
-  @Size(min = 1)
+  @NotBlank
   private String value;
 
   public String getType() {

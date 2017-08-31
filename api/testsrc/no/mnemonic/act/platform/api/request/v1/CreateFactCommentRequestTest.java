@@ -24,7 +24,7 @@ public class CreateFactCommentRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnNotNull() {
+  public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<CreateFactCommentRequest>> violations = getValidator().validate(new CreateFactCommentRequest());
     assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "fact");
@@ -32,10 +32,19 @@ public class CreateFactCommentRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnSize() {
+  public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<CreateFactCommentRequest>> violations = getValidator().validate(new CreateFactCommentRequest()
             .setFact(UUID.randomUUID())
             .setComment(""));
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "comment");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBlank() {
+    Set<ConstraintViolation<CreateFactCommentRequest>> violations = getValidator().validate(new CreateFactCommentRequest()
+            .setFact(UUID.randomUUID())
+            .setComment(" "));
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "comment");
   }

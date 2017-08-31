@@ -22,7 +22,7 @@ public class TraverseByObjectIdRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnNotNull() {
+  public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<TraverseByObjectIdRequest>> violations = getValidator().validate(new TraverseByObjectIdRequest());
     assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "id");
@@ -30,10 +30,20 @@ public class TraverseByObjectIdRequestTest extends AbstractRequestTest {
   }
 
   @Test
-  public void testRequestValidationFailsOnSize() {
+  public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<TraverseByObjectIdRequest>> violations = getValidator().validate(new TraverseByObjectIdRequest()
             .setId(UUID.randomUUID())
             .setQuery("")
+    );
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "query");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBlank() {
+    Set<ConstraintViolation<TraverseByObjectIdRequest>> violations = getValidator().validate(new TraverseByObjectIdRequest()
+            .setId(UUID.randomUUID())
+            .setQuery(" ")
     );
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "query");

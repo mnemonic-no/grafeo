@@ -24,7 +24,7 @@ public abstract class AbstractManagerTest {
   public static CassandraTestResource cassandra = CassandraTestResource.builder()
           .setClusterName("ACT Cluster")
           .setKeyspaceName(KEY_SPACE)
-          .setStartupScript("resources/setup.cql")
+          .setStartupScript("setup.cql")
           .build();
   @Rule
   public CassandraTruncateRule truncateRule = CassandraTruncateRule.builder()
