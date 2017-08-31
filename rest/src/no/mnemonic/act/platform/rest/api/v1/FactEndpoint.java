@@ -73,8 +73,8 @@ public class FactEndpoint extends AbstractEndpoint {
                   "If the new Fact links to an Object which does not exist yet the missing Object will be created " +
                   "automatically with respect to the Object's ObjectType (need to pass the ObjectType's Validator and " +
                   "stored using the ObjectType's EntityHandler).\n\n" +
-                  "If a Fact with the same type, value, organization, source, accessMode and confidenceLevel already exists, " +
-                  "no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
+                  "If a Fact with the same type, value, organization, source, accessMode, confidenceLevel and bound Objects " +
+                  "already exists, no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
           response = Fact.class,
           code = 201
   )

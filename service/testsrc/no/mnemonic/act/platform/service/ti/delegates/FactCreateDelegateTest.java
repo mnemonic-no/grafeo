@@ -184,7 +184,11 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
             .setSourceID(request.getSource())
             .setOrganizationID(request.getOrganization())
             .setAccessMode(no.mnemonic.act.platform.entity.cassandra.AccessMode.valueOf(request.getAccessMode().name()))
-            .setLastSeenTimestamp(123);
+            .setLastSeenTimestamp(123)
+            .setBindings(ListUtils.list(new FactEntity.FactObjectBinding()
+                    .setObjectID(binding.getObjectID())
+                    .setDirection(no.mnemonic.act.platform.entity.cassandra.Direction.valueOf(binding.getDirection().name()))
+            ));
 
     when(getFactManager().fetchFactsByValue(request.getValue())).thenReturn(ListUtils.list(existingFact));
     when(getFactManager().refreshFact(existingFact.getId())).thenReturn(existingFact);

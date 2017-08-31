@@ -134,6 +134,15 @@ public class FactCreateDelegate extends AbstractDelegate {
             .filter(f -> f.getSourceID().equals(resolveSource(request.getSource())))
             .filter(f -> f.getOrganizationID().equals(resolveOrganization(request.getOrganization())))
             .filter(f -> f.getAccessMode().name().equals(request.getAccessMode().name()))
+            .filter(f -> {
+              try {
+                return f.getBindings().equals(resolveFactObjectBindings(request.getBindings()));
+              } catch (InvalidArgumentException ignored) {
+                // Should not happen because objectResolver.resolveObject() which could cause an InvalidArgumentException
+                // in resolveFactObjectBindings() was already called during input validation and would have failed then.
+                return false;
+              }
+            })
             .findFirst()
             .orElse(null);
 
