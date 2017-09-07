@@ -29,6 +29,8 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static com.datastax.driver.mapping.Mapper.Option.saveNullFields;
+
 @Singleton
 public class FactManager implements LifecycleAspect {
 
@@ -68,6 +70,12 @@ public class FactManager implements LifecycleAspect {
     factAccessor = clusterManager.getAccessor(FactAccessor.class);
     factAclAccessor = clusterManager.getAccessor(FactAclAccessor.class);
     factCommentAccessor = clusterManager.getAccessor(FactCommentAccessor.class);
+
+    // Avoid creating tombstones for null values.
+    factTypeMapper.setDefaultSaveOptions(saveNullFields(false));
+    factMapper.setDefaultSaveOptions(saveNullFields(false));
+    factAclMapper.setDefaultSaveOptions(saveNullFields(false));
+    factCommentMapper.setDefaultSaveOptions(saveNullFields(false));
   }
 
   @Override
