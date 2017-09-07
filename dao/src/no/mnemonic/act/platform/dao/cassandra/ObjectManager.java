@@ -26,6 +26,8 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static com.datastax.driver.mapping.Mapper.Option.saveNullFields;
+
 @Singleton
 public class ObjectManager implements LifecycleAspect {
 
@@ -59,6 +61,12 @@ public class ObjectManager implements LifecycleAspect {
     objectFactBindingMapper = clusterManager.getMapper(ObjectFactBindingEntity.class);
     objectTypeAccessor = clusterManager.getAccessor(ObjectTypeAccessor.class);
     objectAccessor = clusterManager.getAccessor(ObjectAccessor.class);
+
+    // Avoid creating tombstones for null values.
+    objectTypeMapper.setDefaultSaveOptions(saveNullFields(false));
+    objectMapper.setDefaultSaveOptions(saveNullFields(false));
+    objectByTypeValueMapper.setDefaultSaveOptions(saveNullFields(false));
+    objectFactBindingMapper.setDefaultSaveOptions(saveNullFields(false));
   }
 
   @Override
