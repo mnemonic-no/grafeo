@@ -35,7 +35,7 @@ import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 public class TraverseGraphDelegate extends AbstractDelegate {
 
   private static final String SCRIPT_ENGINE = "gremlin-groovy";
-  private static final long SCRIPT_EXECUTION_TIMEOUT = 15_000;
+  private static final long SCRIPT_EXECUTION_TIMEOUT = 120_000;
 
   private final ObjectSearchDelegate objectSearch;
   private final TraversalResult.Builder traversalResultBuilder;
