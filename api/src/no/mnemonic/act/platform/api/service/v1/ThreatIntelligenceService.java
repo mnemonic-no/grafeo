@@ -1,9 +1,6 @@
 package no.mnemonic.act.platform.api.service.v1;
 
-import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
-import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
-import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
-import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
+import no.mnemonic.act.platform.api.exceptions.*;
 import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.*;
@@ -317,9 +314,10 @@ public interface ThreatIntelligenceService {
    * @throws AccessDeniedException         If the user is not allowed to perform this operation.
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws OperationTimeoutException     If the graph traversal timed out.
    */
-  default TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+  default ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     throw new UnsupportedOperationException();
   }
 
@@ -332,9 +330,10 @@ public interface ThreatIntelligenceService {
    * @throws AccessDeniedException         If the user is not allowed to perform this operation.
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws OperationTimeoutException     If the graph traversal timed out.
    */
-  default TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+  default ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     throw new UnsupportedOperationException();
   }
 
@@ -347,9 +346,10 @@ public interface ThreatIntelligenceService {
    * @throws AccessDeniedException         If the user is not allowed to perform this operation.
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws OperationTimeoutException     If the graph traversal timed out.
    */
-  default TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+  default ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     throw new UnsupportedOperationException();
   }
 

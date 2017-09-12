@@ -5,8 +5,8 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.api.service.v1.TraversalResult;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -99,7 +99,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     UUID id = UUID.randomUUID();
     when(getTiService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class))).then(i -> {
       assertEquals(id, i.<TraverseByObjectIdRequest>getArgument(1).getId());
-      return TraversalResult.builder().addValue("something").build();
+      return ResultSet.builder().setValues(ListUtils.list("something")).build();
     });
 
     TraverseByObjectIdRequest request = new TraverseByObjectIdRequest()
@@ -110,27 +110,6 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
-
-    verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectIdRequest.class));
-  }
-
-  @Test
-  public void testTraverseObjectByIdWithMessage() throws Exception {
-    UUID id = UUID.randomUUID();
-    when(getTiService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class))).then(i -> {
-      assertEquals(id, i.<TraverseByObjectIdRequest>getArgument(1).getId());
-      return TraversalResult.builder().addMessage("message", "template").build();
-    });
-
-    TraverseByObjectIdRequest request = new TraverseByObjectIdRequest()
-            .setQuery("g.addE('notAllowed')");
-    Response response = target(String.format("/v1/object/uuid/%s/traverse", id)).request().post(Entity.json(request));
-    JsonNode messages = getMessages(response);
-    assertEquals(200, response.getStatus());
-    assertTrue(messages.isArray());
-    assertEquals(1, messages.size());
-    assertEquals("message", messages.get(0).get("message").asText());
-    assertEquals("template", messages.get(0).get("messageTemplate").asText());
 
     verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectIdRequest.class));
   }
@@ -143,7 +122,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
       TraverseByObjectTypeValueRequest request = i.getArgument(1);
       assertEquals(type, request.getType());
       assertEquals(value, request.getValue());
-      return TraversalResult.builder().addValue("something").build();
+      return ResultSet.builder().setValues(ListUtils.list("something")).build();
     });
 
     TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest()
@@ -154,30 +133,6 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
-
-    verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectTypeValueRequest.class));
-  }
-
-  @Test
-  public void testTraverseObjectByTypeValueWithMessage() throws Exception {
-    String type = "ip";
-    String value = "27.13.4.125";
-    when(getTiService().traverseGraph(any(), isA(TraverseByObjectTypeValueRequest.class))).then(i -> {
-      TraverseByObjectTypeValueRequest request = i.getArgument(1);
-      assertEquals(type, request.getType());
-      assertEquals(value, request.getValue());
-      return TraversalResult.builder().addMessage("message", "template").build();
-    });
-
-    TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest()
-            .setQuery("g.addE('notAllowed')");
-    Response response = target(String.format("/v1/object/%s/%s/traverse", type, value)).request().post(Entity.json(request));
-    JsonNode messages = getMessages(response);
-    assertEquals(200, response.getStatus());
-    assertTrue(messages.isArray());
-    assertEquals(1, messages.size());
-    assertEquals("message", messages.get(0).get("message").asText());
-    assertEquals("template", messages.get(0).get("messageTemplate").asText());
 
     verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectTypeValueRequest.class));
   }
@@ -198,7 +153,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
   @Test
   public void testTraverseByObjectSearch() throws Exception {
     when(getTiService().traverseGraph(any(), isA(TraverseByObjectSearchRequest.class)))
-            .then(i -> TraversalResult.builder().addValue("something").build());
+            .then(i -> ResultSet.builder().setValues(ListUtils.list("something")).build());
 
     TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest()
             .setQuery("g.values('value')");
@@ -208,24 +163,6 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
-
-    verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectSearchRequest.class));
-  }
-
-  @Test
-  public void testTraverseByObjectSearchWithMessage() throws Exception {
-    when(getTiService().traverseGraph(any(), isA(TraverseByObjectSearchRequest.class)))
-            .then(i -> TraversalResult.builder().addMessage("message", "template").build());
-
-    TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest()
-            .setQuery("g.addE('notAllowed')");
-    Response response = target("/v1/object/traverse").request().post(Entity.json(request));
-    JsonNode messages = getMessages(response);
-    assertEquals(200, response.getStatus());
-    assertTrue(messages.isArray());
-    assertEquals(1, messages.size());
-    assertEquals("message", messages.get(0).get("message").asText());
-    assertEquals("template", messages.get(0).get("messageTemplate").asText());
 
     verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectSearchRequest.class));
   }

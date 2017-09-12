@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.exceptions.*;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.api.request.v1.Direction;
 import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
+import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import no.mnemonic.act.platform.rest.api.ResultMessage;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -68,6 +69,18 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
     Response response = executeRequest(new ObjectNotFoundException("message", "template", "property", "value"));
     assertEquals(404, response.getStatus());
     assertMessages(getMessages(response), ActionError);
+  }
+
+  @Test
+  public void testOperationTimeoutMapperReturns408() throws Exception {
+    TraverseByObjectIdRequest request = new TraverseByObjectIdRequest()
+            .setQuery("while (true) {}");
+    when(getTiService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class)))
+            .thenThrow(new OperationTimeoutException("message", "template"));
+
+    Response response = target(String.format("/v1/object/uuid/%s/traverse", UUID.randomUUID())).request().post(Entity.json(request));
+    assertEquals(408, response.getStatus());
+    assertMessages(getMessages(response), "message", "template");
   }
 
   @Test

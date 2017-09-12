@@ -2,13 +2,13 @@ package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.exceptions.OperationTimeoutException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.api.service.v1.TraversalResult;
 import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -59,6 +59,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     // initMocks() will be called by base class.
     delegate = TraverseGraphDelegate.builder()
             .setObjectSearch(objectSearch)
+            .setScriptExecutionTimeout(2000)
             .build();
   }
 
@@ -111,14 +112,19 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     testTraverseGraphReturnValue(byIdHandle);
   }
 
-  @Test
+  @Test(expected = InvalidArgumentException.class)
   public void testTraverseGraphByObjectIdReturnError() throws Exception {
     testTraverseGraphReturnError(byIdHandle);
   }
 
-  @Test
+  @Test(expected = InvalidArgumentException.class)
   public void testTraverseGraphByObjectIdSandboxed() throws Exception {
     testTraverseGraphSandboxed(byIdHandle);
+  }
+
+  @Test(expected = OperationTimeoutException.class)
+  public void testTraverseGraphByObjectIdTimeout() throws Exception {
+    testTraverseGraphTimeout(byIdHandle);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -180,14 +186,19 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     testTraverseGraphReturnValue(byTypeValueHandle);
   }
 
-  @Test
+  @Test(expected = InvalidArgumentException.class)
   public void testTraverseGraphByObjectTypeValueReturnError() throws Exception {
     testTraverseGraphReturnError(byTypeValueHandle);
   }
 
-  @Test
+  @Test(expected = InvalidArgumentException.class)
   public void testTraverseGraphByObjectTypeValueSandboxed() throws Exception {
     testTraverseGraphSandboxed(byTypeValueHandle);
+  }
+
+  @Test(expected = OperationTimeoutException.class)
+  public void testTraverseGraphByObjectTypeValueTimeout() throws Exception {
+    testTraverseGraphTimeout(byTypeValueHandle);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -201,9 +212,8 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest();
     when(objectSearch.handle(request)).thenReturn(ResultSet.builder().build());
 
-    TraversalResult result = delegate.handle(request);
+    ResultSet<?> result = delegate.handle(request);
     assertTrue(result.getValues().isEmpty());
-    assertTrue(result.getMessages().isEmpty());
   }
 
   @Test
@@ -221,14 +231,19 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     testTraverseGraphReturnValue(byObjectSearchHandle);
   }
 
-  @Test
+  @Test(expected = InvalidArgumentException.class)
   public void testTraverseGraphByObjectSearchReturnError() throws Exception {
     testTraverseGraphReturnError(byObjectSearchHandle);
   }
 
-  @Test
+  @Test(expected = InvalidArgumentException.class)
   public void testTraverseGraphByObjectSearchSandboxed() throws Exception {
     testTraverseGraphSandboxed(byObjectSearchHandle);
+  }
+
+  @Test(expected = OperationTimeoutException.class)
+  public void testTraverseGraphByObjectSearchTimeout() throws Exception {
+    testTraverseGraphTimeout(byObjectSearchHandle);
   }
 
   private void testTraverseGraphWithoutFacts(TestMethod method) throws Exception {
@@ -259,37 +274,38 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
 
   private void testTraverseGraphReturnEdges(TestMethod method) throws Exception {
     ObjectEntity startObject = mockFullTraversal();
-    TraversalResult result = method.execute(startObject, "g.outE()");
+    ResultSet<?> result = method.execute(startObject, "g.outE()");
     assertEquals(1, result.getValues().size());
     assertTrue(result.getValues().iterator().next() instanceof Fact);
   }
 
   private void testTraverseGraphReturnVertices(TestMethod method) throws Exception {
     ObjectEntity startObject = mockFullTraversal();
-    TraversalResult result = method.execute(startObject, "g.out()");
+    ResultSet<?> result = method.execute(startObject, "g.out()");
     assertEquals(1, result.getValues().size());
     assertTrue(result.getValues().iterator().next() instanceof Object);
   }
 
   private void testTraverseGraphReturnValue(TestMethod method) throws Exception {
     ObjectEntity startObject = mockFullTraversal();
-    TraversalResult result = method.execute(startObject, "g.values('value')");
+    ResultSet<?> result = method.execute(startObject, "g.values('value')");
     assertEquals(1, result.getValues().size());
     assertEquals(startObject.getValue(), result.getValues().iterator().next());
   }
 
   private void testTraverseGraphReturnError(TestMethod method) throws Exception {
     ObjectEntity startObject = mockFullTraversal();
-    TraversalResult result = method.execute(startObject, "g.addE('notAllowed')");
-    assertEquals(1, result.getMessages().size());
-    assertEquals("graph.traversal.error", result.getMessages().iterator().next().getTemplate());
+    method.execute(startObject, "g.addE('notAllowed')");
   }
 
   private void testTraverseGraphSandboxed(TestMethod method) throws Exception {
     ObjectEntity startObject = mockFullTraversal();
-    TraversalResult result = method.execute(startObject, "System.exit(0)");
-    assertEquals(1, result.getMessages().size());
-    assertEquals("graph.traversal.error", result.getMessages().iterator().next().getTemplate());
+    method.execute(startObject, "System.exit(0)");
+  }
+
+  private void testTraverseGraphTimeout(TestMethod method) throws Exception {
+    ObjectEntity startObject = mockFullTraversal();
+    method.execute(startObject, "while (true) {}");
   }
 
   private ObjectEntity mockFullTraversal() {
@@ -357,7 +373,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   }
 
   private interface TestMethod {
-    TraversalResult execute(ObjectEntity object, String query) throws Exception;
+    ResultSet<?> execute(ObjectEntity object, String query) throws Exception;
   }
 
 }
