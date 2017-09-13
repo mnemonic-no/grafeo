@@ -20,7 +20,7 @@ public class ResultSet<T> {
   private ResultSet(int limit, int count, Collection<T> values) {
     this.limit = limit;
     this.count = count;
-    this.values = ObjectUtils.ifNotNull(values, Collections::unmodifiableCollection);
+    this.values = ObjectUtils.ifNotNull(values, Collections::unmodifiableCollection, Collections.emptySet());
   }
 
   public int getLimit() {

@@ -1,16 +1,12 @@
 package no.mnemonic.act.platform.service.ti;
 
-import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
-import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
-import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
-import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
+import no.mnemonic.act.platform.api.exceptions.*;
 import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.api.service.v1.TraversalResult;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
@@ -245,8 +241,8 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   }
 
   @Override
-  public TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+  public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
             .build()
@@ -254,8 +250,8 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   }
 
   @Override
-  public TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+  public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
             .build()
@@ -263,8 +259,8 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   }
 
   @Override
-  public TraversalResult traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+  public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
             .build()

@@ -4,14 +4,13 @@ import io.swagger.annotations.*;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.exceptions.OperationTimeoutException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.api.service.v1.TraversalResult;
 import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
-import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -20,7 +19,6 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collection;
 import java.util.UUID;
 
 @Path("/v1/object")
@@ -153,13 +151,14 @@ public class ObjectEndpoint extends AbstractEndpoint {
   @ApiResponses({
           @ApiResponse(code = 401, message = "User could not be authenticated."),
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
   public Response traverseObjectById(
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectIdRequest request
-  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildTraversalResponse(service.traverseGraph(getHeader(), request.setId(id)));
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
+    return buildResponse(service.traverseGraph(getHeader(), request.setId(id)));
   }
 
   @POST
@@ -186,14 +185,15 @@ public class ObjectEndpoint extends AbstractEndpoint {
   @ApiResponses({
           @ApiResponse(code = 401, message = "User could not be authenticated."),
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
   public Response traverseObjectByTypeValue(
           @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
           @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectTypeValueRequest request
-  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildTraversalResponse(service.traverseGraph(getHeader(), request.setType(type).setValue(value)));
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
+    return buildResponse(service.traverseGraph(getHeader(), request.setType(type).setValue(value)));
   }
 
   @POST
@@ -239,23 +239,13 @@ public class ObjectEndpoint extends AbstractEndpoint {
   @ApiResponses({
           @ApiResponse(code = 401, message = "User could not be authenticated."),
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
   public Response traverseObjects(
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectSearchRequest request
-  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildTraversalResponse(service.traverseGraph(getHeader(), request));
-  }
-
-  private Response buildTraversalResponse(TraversalResult result) {
-    // Add values returned from traversal to response.
-    ResultStash.Builder resultStashBuilder = ResultStash.builder()
-            .setSize(ObjectUtils.ifNotNull(result.getValues(), Collection::size, 0))
-            .setData(result.getValues());
-    // Also add any messages returned from traversal.
-    result.getMessages().forEach(m -> resultStashBuilder.addActionError(m.getMessage(), m.getTemplate()));
-
-    return resultStashBuilder.buildResponse();
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
+    return buildResponse(service.traverseGraph(getHeader(), request));
   }
 
 }
