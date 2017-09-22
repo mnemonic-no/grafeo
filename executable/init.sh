@@ -3,6 +3,7 @@
 EXECUTABLE="<path to jar file>"
 PROPERTIES="<path to application.properties file>"
 ARGS="<application arguments>"
+JAVA_OPTS="-XX:-OmitStackTraceInFastThrow"
 
 LOGDIR="<path to log directory>"
 STDOUT_FILE="$LOGDIR/stdout.log"
@@ -51,7 +52,7 @@ start() {
   fi
 
   # Start application and pipe output into log files.
-  java -Dapplication.properties.file="$PROPERTIES" -jar "$EXECUTABLE" $ARGS 1>> "$STDOUT_FILE" 2>> "$STDERR_FILE" &
+  java $JAVA_OPTS -Dapplication.properties.file="$PROPERTIES" -jar "$EXECUTABLE" $ARGS 1>> "$STDOUT_FILE" 2>> "$STDERR_FILE" &
   # Create PID file.
   echo $! > "$PIDFILE"
 
