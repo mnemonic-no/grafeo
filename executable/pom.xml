@@ -72,8 +72,21 @@
     <!-- Needed for integration tests. -->
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
+      <artifactId>junit-docker</artifactId>
+      <version>${mnemonic.commons.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
       <artifactId>testtools</artifactId>
       <version>${mnemonic.commons.version}</version>
+      <exclusions>
+        <!-- Safe to exclude because Cassandra test utilities are not used. -->
+        <exclusion>
+          <groupId>info.archinnov</groupId>
+          <artifactId>achilles-embedded</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
   </dependencies>

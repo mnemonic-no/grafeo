@@ -88,7 +88,7 @@
     <!-- test jars -->
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
-      <artifactId>testtools</artifactId>
+      <artifactId>junit-docker</artifactId>
       <version>${mnemonic.commons.version}</version>
       <scope>test</scope>
     </dependency>

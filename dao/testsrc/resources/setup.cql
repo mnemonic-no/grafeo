@@ -1,3 +1,5 @@
+CREATE KEYSPACE IF NOT EXISTS act WITH replication = { 'class':'SimpleStrategy', 'replication_factor':1 } AND durable_writes=true;
+
 DROP TABLE IF EXISTS act.namespace;
 DROP TABLE IF EXISTS act.source;
 DROP INDEX IF EXISTS act.object_type_name_index;
@@ -15,8 +17,6 @@ DROP TABLE IF EXISTS act.evidence_submission;
 DROP TABLE IF EXISTS act.evidence_submission_acl;
 DROP TABLE IF EXISTS act.evidence;
 DROP TABLE IF EXISTS act.fact_evidence_binding;
-
-CREATE KEYSPACE IF NOT EXISTS act WITH replication = { 'class':'SimpleStrategy', 'replication_factor':1 } AND durable_writes=true;
 
 CREATE TABLE IF NOT EXISTS act.namespace (
   id UUID,
