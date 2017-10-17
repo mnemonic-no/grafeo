@@ -12,7 +12,6 @@ import org.junit.Test;
 import java.util.List;
 import java.util.UUID;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -73,7 +72,7 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
   }
 
   private FactCommentEntity matchFactCommentEntity(CreateFactCommentRequest request, UUID source) {
-    return match(comment -> {
+    return argThat(comment -> {
       assertNotNull(comment.getId());
       assertEquals(request.getFact(), comment.getFactID());
       assertEquals(request.getReplyTo(), comment.getReplyToID());

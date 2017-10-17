@@ -12,7 +12,6 @@ import java.util.UUID;
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
 import static no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver.RETRACTION_FACT_TYPE_ID;
 import static no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver.RETRACTION_FACT_TYPE_NAME;
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -81,7 +80,7 @@ public class FactTypeResolverTest {
 
     assertRetractionFactType(resolver.resolveRetractionFactType());
 
-    verify(factManager).saveFactType(match(e -> {
+    verify(factManager).saveFactType(argThat(e -> {
       assertRetractionFactType(e);
       return true;
     }));
@@ -94,7 +93,7 @@ public class FactTypeResolverTest {
 
     assertRetractionFactType(resolver.resolveRetractionFactType());
 
-    verify(factManager).saveFactType(match(e -> {
+    verify(factManager).saveFactType(argThat(e -> {
       assertRetractionFactType(e);
       return true;
     }));

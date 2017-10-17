@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -129,7 +128,7 @@ public class FactStorageHelperTest {
   }
 
   private FactAclEntity matchFactAclEntity(FactEntity fact, UUID subjectID) {
-    return match(entry -> {
+    return argThat(entry -> {
       assertNotNull(entry.getId());
       assertEquals(fact.getId(), entry.getFactID());
       assertEquals(fact.getSourceID(), entry.getSourceID());
@@ -140,7 +139,7 @@ public class FactStorageHelperTest {
   }
 
   private FactCommentEntity matchFactCommentEntity(FactEntity fact, String comment) {
-    return match(entry -> {
+    return argThat(entry -> {
       assertNotNull(entry.getId());
       assertEquals(fact.getId(), entry.getFactID());
       assertEquals(fact.getSourceID(), entry.getSourceID());

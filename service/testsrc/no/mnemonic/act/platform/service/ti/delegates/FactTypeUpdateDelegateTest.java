@@ -13,7 +13,6 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -53,7 +52,7 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
     FactTypeEntity entity = new FactTypeEntity();
     when(getFactManager().getFactType(request.getId())).thenReturn(entity);
     when(getObjectManager().getObjectType(isA(UUID.class))).thenReturn(new ObjectTypeEntity());
-    when(getFactManager().saveFactType(match(e -> {
+    when(getFactManager().saveFactType(argThat(e -> {
       assertSame(entity, e);
       assertEquals(request.getName(), e.getName());
 

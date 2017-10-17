@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.mockito.Mockito.*;
 
 public class FactGetByIdDelegateTest extends AbstractDelegateTest {
@@ -56,7 +55,7 @@ public class FactGetByIdDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(fact.getId())).thenReturn(fact);
     when(getFactManager().getFact(inReferenceTo.getId())).thenReturn(inReferenceTo);
     FactGetByIdDelegate.create().handle(new GetFactByIdRequest().setId(fact.getId()));
-    verify(getFactConverter()).apply(match(entity -> entity == fact && entity.getInReferenceToID().equals(inReferenceTo.getId())));
+    verify(getFactConverter()).apply(argThat(entity -> entity == fact && entity.getInReferenceToID().equals(inReferenceTo.getId())));
   }
 
   @Test
@@ -68,7 +67,7 @@ public class FactGetByIdDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(inReferenceTo.getId())).thenReturn(inReferenceTo);
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(inReferenceTo);
     FactGetByIdDelegate.create().handle(new GetFactByIdRequest().setId(fact.getId()));
-    verify(getFactConverter()).apply(match(entity -> entity.getId().equals(fact.getId()) && entity.getInReferenceToID() == null));
+    verify(getFactConverter()).apply(argThat(entity -> entity.getId().equals(fact.getId()) && entity.getInReferenceToID() == null));
   }
 
 }

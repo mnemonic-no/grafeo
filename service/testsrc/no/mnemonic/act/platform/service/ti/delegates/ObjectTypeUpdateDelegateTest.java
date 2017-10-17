@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.*;
@@ -43,7 +42,7 @@ public class ObjectTypeUpdateDelegateTest extends AbstractDelegateTest {
     UpdateObjectTypeRequest request = createRequest();
     ObjectTypeEntity entity = new ObjectTypeEntity();
     when(getObjectManager().getObjectType(request.getId())).thenReturn(entity);
-    when(getObjectManager().saveObjectType(match(e -> {
+    when(getObjectManager().saveObjectType(argThat(e -> {
       assertSame(entity, e);
       assertEquals(request.getName(), e.getName());
       return true;
