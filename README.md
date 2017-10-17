@@ -23,8 +23,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 ##### Compilation
 
 At this early stage of the project no compiled bundles are published, thus, you have to compile the platform yourself.
-Just execute `mvn clean install` from the repository's root folder.
-Add `-DskipTests` to the build command in order to not run the unit tests during build.
+Just execute `mvn clean install -DskipTests` from the repository's root folder.
 This will create an executable JAR bundle under `executable/target` containing all dependencies.
 
 ##### Configuration
@@ -47,10 +46,18 @@ java -Dapplication.properties.file=$PROPERTIES -jar $EXECUTABLE guice module=no.
 * Alternatively, you can adapt `executable/init.sh` for your needs instead of executing the JAR bundle manually.
 * If everything is configured correctly running the command above will start up the whole application stack and the API server will start listening for requests on the port specified in the configuration file.
 
+##### Testing
+
+* For running the integration tests install [Docker](https://www.docker.com/) and a Cassandra image by `docker pull cassandra`.
+* By default the integration tests will try to connect to Docker on localhost and port 2375. You can set the $DOCKER_HOST environment variable to override this behaviour.
+* Execute `mvn clean install` for running all tests including integration tests.
+* Execute `mvn clean install -DskipSlowTests` for skipping the integration tests.
+
 ## Requirements
 
 * Java 8 for running the application.
 * Maven for managing dependencies, building the code, running the unit tests, etc.
+* An installation of [Docker](https://www.docker.com/) for running the integration tests.
 * An installation of [Apache Cassandra](https://cassandra.apache.org/) for storage.
 
 ## Known issues
