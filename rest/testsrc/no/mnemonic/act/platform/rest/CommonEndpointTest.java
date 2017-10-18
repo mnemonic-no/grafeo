@@ -5,8 +5,8 @@ import no.mnemonic.act.platform.auth.properties.model.SubjectCredentials;
 import no.mnemonic.act.platform.auth.properties.model.SubjectIdentifier;
 import org.junit.Test;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
 
@@ -19,7 +19,7 @@ public class CommonEndpointTest extends AbstractEndpointTest {
   public void testActUserIdIsSetInRequestHeader() throws Exception {
     target("/v1/object/ip/1.1.1.1").request().header("ACT-User-ID", 1).get();
 
-    verify(getTiService()).getObject(match(rh -> {
+    verify(getTiService()).getObject(argThat(rh -> {
       assertNotNull(rh.getCredentials());
       assertTrue(rh.getCredentials() instanceof SubjectCredentials);
       SubjectCredentials credentials = SubjectCredentials.class.cast(rh.getCredentials());
@@ -33,7 +33,7 @@ public class CommonEndpointTest extends AbstractEndpointTest {
   public void testActUserIdOmittedHeader() throws Exception {
     target("/v1/object/ip/1.1.1.1").request().get();
 
-    verify(getTiService()).getObject(match(rh -> {
+    verify(getTiService()).getObject(argThat(rh -> {
       assertNull(rh.getCredentials());
       return true;
     }), isA(GetObjectByTypeValueRequest.class));
@@ -43,7 +43,7 @@ public class CommonEndpointTest extends AbstractEndpointTest {
   public void testActUserIdOmitsNegativeId() throws Exception {
     target("/v1/object/ip/1.1.1.1").request().header("ACT-User-ID", -1).get();
 
-    verify(getTiService()).getObject(match(rh -> {
+    verify(getTiService()).getObject(argThat(rh -> {
       assertNull(rh.getCredentials());
       return true;
     }), isA(GetObjectByTypeValueRequest.class));

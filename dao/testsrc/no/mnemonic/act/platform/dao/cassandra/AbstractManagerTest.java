@@ -1,13 +1,10 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
-import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.entity.handlers.EntityHandler;
 import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
-import no.mnemonic.commons.testtools.cassandra.CassandraTestResource;
-import no.mnemonic.commons.testtools.cassandra.CassandraTruncateRule;
+import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import org.junit.*;
 
-import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -21,30 +18,18 @@ public abstract class AbstractManagerTest {
   private EntityHandler entityHandler;
 
   @ClassRule
-  public static CassandraTestResource cassandra = CassandraTestResource.builder()
-          .setClusterName("ACT Cluster")
-          .setKeyspaceName(KEY_SPACE)
-          .setStartupScript("setup.cql")
-          .build();
-  @Rule
-  public CassandraTruncateRule truncateRule = CassandraTruncateRule.builder()
-          .setKeyspace(KEY_SPACE)
-          .setSession(cassandra.getServer().getNativeSession())
-          .addTable(ObjectEntity.TABLE)
-          .addTable(ObjectTypeEntity.TABLE)
-          .addTable(ObjectByTypeValueEntity.TABLE)
-          .addTable(ObjectFactBindingEntity.TABLE)
-          .addTable(FactEntity.TABLE)
-          .addTable(FactTypeEntity.TABLE)
-          .addTable(FactAclEntity.TABLE)
-          .addTable(FactCommentEntity.TABLE)
+  public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
+          .setImageName("cassandra")
+          .addApplicationPort(9042)
+          .setSetupScript("setup.cql")
+          .setTruncateScript("truncate.cql")
           .build();
 
   @BeforeClass
   public static void setup() {
     clusterManager = ClusterManager.builder()
-            .setClusterName(cassandra.getClusterName())
-            .setPort(cassandra.getPort())
+            .setClusterName("ACT Cluster")
+            .setPort(cassandra.getExposedHostPort(9042))
             .addContactPoint("127.0.0.1")
             .build();
     clusterManager.startComponent();
@@ -63,6 +48,12 @@ public abstract class AbstractManagerTest {
     when(factory.get(any(), any())).thenReturn(entityHandler);
     when(entityHandler.encode(any())).then(returnsFirstArg());
     when(entityHandler.decode(any())).then(returnsFirstArg());
+  }
+
+  @After
+  public void cleanup() {
+    // Truncate database.
+    cassandra.truncate();
   }
 
   @AfterClass

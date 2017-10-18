@@ -6,7 +6,7 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.entity.handlers.DefaultEntityHandlerFactory;
 import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
-import no.mnemonic.commons.testtools.cassandra.CassandraTestResource;
+import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
 import static org.junit.Assert.*;
 
 public class ActGraphIT {
@@ -34,10 +33,10 @@ public class ActGraphIT {
   private static ObjectEntity attack;
 
   @ClassRule
-  public static CassandraTestResource cassandra = CassandraTestResource.builder()
-          .setClusterName("ACT Cluster")
-          .setKeyspaceName(KEY_SPACE)
-          .setStartupScript("setup.cql")
+  public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
+          .setImageName("cassandra")
+          .addApplicationPort(9042)
+          .setSetupScript("setup.cql")
           .build();
 
   @BeforeClass
@@ -46,8 +45,8 @@ public class ActGraphIT {
 
     // Create managers and start them up.
     clusterManager = ClusterManager.builder()
-            .setClusterName(cassandra.getClusterName())
-            .setPort(cassandra.getPort())
+            .setClusterName("ACT Cluster")
+            .setPort(cassandra.getExposedHostPort(9042))
             .addContactPoint("127.0.0.1")
             .build();
     objectManager = new ObjectManager(clusterManager, factory);

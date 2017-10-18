@@ -7,7 +7,6 @@ import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import org.junit.Test;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.*;
@@ -49,7 +48,7 @@ public class ObjectTypeCreateDelegateTest extends AbstractDelegateTest {
 
     ObjectTypeCreateDelegate.create().handle(request);
     verify(getObjectTypeConverter()).apply(newEntity);
-    verify(getObjectManager()).saveObjectType(match(entity -> {
+    verify(getObjectManager()).saveObjectType(argThat(entity -> {
       assertNotNull(entity.getId());
       assertNotNull(entity.getNamespaceID());
       assertEquals(request.getName(), entity.getName());

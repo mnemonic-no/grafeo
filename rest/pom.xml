@@ -128,10 +128,10 @@
       <artifactId>testtools</artifactId>
       <version>${mnemonic.commons.version}</version>
       <exclusions>
-        <!-- Safe to exclude because Cassandra test utilities are not used. Reduces console output during tests. -->
+        <!-- Safe to exclude because Cassandra test utilities are not used. -->
         <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
+          <groupId>info.archinnov</groupId>
+          <artifactId>achilles-embedded</artifactId>
         </exclusion>
       </exclusions>
       <scope>test</scope>

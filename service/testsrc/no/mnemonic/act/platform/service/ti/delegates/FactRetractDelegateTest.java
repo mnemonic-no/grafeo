@@ -17,7 +17,6 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -92,8 +91,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(match(e -> organizationID.equals(e.getOrganizationID())));
-    verify(getFactConverter()).apply(match(e -> organizationID.equals(e.getOrganizationID())));
+    verify(getFactManager()).saveFact(argThat(e -> organizationID.equals(e.getOrganizationID())));
+    verify(getFactConverter()).apply(argThat(e -> organizationID.equals(e.getOrganizationID())));
   }
 
   @Test
@@ -105,8 +104,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(match(e -> sourceID.equals(e.getSourceID())));
-    verify(getFactConverter()).apply(match(e -> sourceID.equals(e.getSourceID())));
+    verify(getFactManager()).saveFact(argThat(e -> sourceID.equals(e.getSourceID())));
+    verify(getFactConverter()).apply(argThat(e -> sourceID.equals(e.getSourceID())));
   }
 
   @Test
@@ -115,8 +114,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(match(e -> e.getAccessMode() == no.mnemonic.act.platform.entity.cassandra.AccessMode.Public));
-    verify(getFactConverter()).apply(match(e -> e.getAccessMode() == no.mnemonic.act.platform.entity.cassandra.AccessMode.Public));
+    verify(getFactManager()).saveFact(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.entity.cassandra.AccessMode.Public));
+    verify(getFactConverter()).apply(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.entity.cassandra.AccessMode.Public));
   }
 
   @Test
@@ -125,7 +124,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getObjectManager()).saveObjectFactBinding(match(binding -> {
+    verify(getObjectManager()).saveObjectFactBinding(argThat(binding -> {
       assertNotNull(binding.getFactID());
       assertNotNull(binding.getObjectID());
       assertEquals(Direction.None, binding.getDirection());
@@ -159,7 +158,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   }
 
   private FactEntity matchFactEntity(RetractFactRequest request) {
-    return match(entity -> {
+    return argThat(entity -> {
       assertNotNull(entity.getId());
       assertNotNull(entity.getTypeID());
       assertNotNull(entity.getValue());

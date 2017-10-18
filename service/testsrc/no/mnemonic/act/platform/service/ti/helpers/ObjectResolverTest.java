@@ -12,7 +12,6 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -72,7 +71,7 @@ public class ObjectResolverTest {
     ObjectEntity resolvedObject = resolver.resolveObject(null, type.getName(), value);
     assertObjectEntity(resolvedObject, type.getId(), value);
 
-    verify(objectManager).saveObject(match(e -> {
+    verify(objectManager).saveObject(argThat(e -> {
       assertObjectEntity(e, type.getId(), value);
       return true;
     }));

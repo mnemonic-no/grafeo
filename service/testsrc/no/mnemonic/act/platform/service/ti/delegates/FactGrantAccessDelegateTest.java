@@ -13,7 +13,6 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -101,7 +100,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
   }
 
   private FactAclEntity matchFactAclEntity(GrantFactAccessRequest request, UUID source) {
-    return match(entry -> {
+    return argThat(entry -> {
       assertNotNull(entry.getId());
       assertEquals(request.getFact(), entry.getFactID());
       assertEquals(request.getSubject(), entry.getSubjectID());

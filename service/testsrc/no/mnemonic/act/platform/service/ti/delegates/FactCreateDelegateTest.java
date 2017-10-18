@@ -21,7 +21,6 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static no.mnemonic.commons.testtools.MockitoTools.match;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -149,8 +148,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(match(e -> organizationID.equals(e.getOrganizationID())));
-    verify(getFactConverter()).apply(match(e -> organizationID.equals(e.getOrganizationID())));
+    verify(getFactManager()).saveFact(argThat(e -> organizationID.equals(e.getOrganizationID())));
+    verify(getFactConverter()).apply(argThat(e -> organizationID.equals(e.getOrganizationID())));
   }
 
   @Test
@@ -162,8 +161,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(match(e -> sourceID.equals(e.getSourceID())));
-    verify(getFactConverter()).apply(match(e -> sourceID.equals(e.getSourceID())));
+    verify(getFactManager()).saveFact(argThat(e -> sourceID.equals(e.getSourceID())));
+    verify(getFactConverter()).apply(argThat(e -> sourceID.equals(e.getSourceID())));
   }
 
   @Test
@@ -277,7 +276,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   }
 
   private FactEntity matchFactEntity(CreateFactRequest request) {
-    return match(entity -> {
+    return argThat(entity -> {
       assertNotNull(entity.getId());
       assertNotNull(entity.getTypeID());
       assertEquals(request.getValue(), entity.getValue());
@@ -295,7 +294,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   }
 
   private ObjectFactBindingEntity matchObjectFactBindingEntity(CreateFactRequest.FactObjectBinding requestedBinding) {
-    return match(entity -> {
+    return argThat(entity -> {
       assertNotNull(entity.getFactID());
       assertEquals(requestedBinding.getObjectID(), entity.getObjectID());
       assertEquals(requestedBinding.getDirection().name(), entity.getDirection().name());

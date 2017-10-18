@@ -14,15 +14,13 @@ import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.rest.RestModule;
 import no.mnemonic.act.platform.rest.container.ApiServer;
 import no.mnemonic.act.platform.service.ServiceModule;
+import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
-import no.mnemonic.commons.testtools.cassandra.CassandraTestResource;
-import no.mnemonic.commons.testtools.cassandra.CassandraTruncateRule;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
@@ -30,12 +28,8 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
-
 public abstract class AbstractIT {
 
-  private static final String CASSANDRA_CLUSTER_NAME = "ActIntegrationTest";
-  private static final String CASSANDRA_CONTACT_POINTS = "localhost";
   private static final String ACL_FILE = ClassLoader.getSystemResource("acl.properties").getPath();
   private static final int API_SERVER_PORT = AvailablePortFinder.getAvailablePort(8000);
 
@@ -48,24 +42,11 @@ public abstract class AbstractIT {
   private static ApiServer apiServer;
 
   @ClassRule
-  public static CassandraTestResource cassandra = CassandraTestResource.builder()
-          .setClusterName(CASSANDRA_CLUSTER_NAME)
-          .setKeyspaceName(KEY_SPACE)
-          .setStartupScript("setup.cql")
-          .build();
-
-  @Rule
-  public CassandraTruncateRule truncateRule = CassandraTruncateRule.builder()
-          .setKeyspace(KEY_SPACE)
-          .setSession(cassandra.getServer().getNativeSession())
-          .addTable(ObjectEntity.TABLE)
-          .addTable(ObjectTypeEntity.TABLE)
-          .addTable(ObjectByTypeValueEntity.TABLE)
-          .addTable(ObjectFactBindingEntity.TABLE)
-          .addTable(FactEntity.TABLE)
-          .addTable(FactTypeEntity.TABLE)
-          .addTable(FactAclEntity.TABLE)
-          .addTable(FactCommentEntity.TABLE)
+  public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
+          .setImageName("cassandra")
+          .addApplicationPort(9042)
+          .setSetupScript("setup.cql")
+          .setTruncateScript("truncate.cql")
           .build();
 
   @Before
@@ -93,6 +74,8 @@ public abstract class AbstractIT {
     objectManager.stopComponent();
     clusterManager.stopComponent();
     accessController.stopComponent();
+    // Truncate database.
+    cassandra.truncate();
   }
 
   /* Getters */
@@ -219,9 +202,9 @@ public abstract class AbstractIT {
       // Configuration
       bind(String.class).annotatedWith(Names.named("access.controller.properties.file")).toInstance(ACL_FILE);
       bind(String.class).annotatedWith(Names.named("access.controller.read.interval")).toInstance("60000");
-      bind(String.class).annotatedWith(Names.named("cassandra.cluster.name")).toInstance(CASSANDRA_CLUSTER_NAME);
-      bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance(CASSANDRA_CONTACT_POINTS);
-      bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getPort()));
+      bind(String.class).annotatedWith(Names.named("cassandra.cluster.name")).toInstance("ActIntegrationTest");
+      bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance("localhost");
+      bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
       bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
     }
   }
