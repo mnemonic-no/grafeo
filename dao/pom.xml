@@ -22,6 +22,12 @@
           <include>LICENSE</include>
         </includes>
       </resource>
+      <resource>
+        <directory>resources</directory>
+        <includes>
+          <include>**/**</include>
+        </includes>
+      </resource>
     </resources>
     <testResources>
       <testResource>
@@ -43,6 +49,11 @@
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
       <artifactId>component</artifactId>
+      <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>logging</artifactId>
       <version>${mnemonic.commons.version}</version>
     </dependency>
     <dependency>
@@ -84,6 +95,11 @@
       <groupId>org.apache.tinkerpop</groupId>
       <artifactId>gremlin-core</artifactId>
       <version>${tinkerpop.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-high-level-client</artifactId>
+      <version>${elastic.search.version}</version>
     </dependency>
     <!-- test jars -->
     <dependency>
