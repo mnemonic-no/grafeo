@@ -38,11 +38,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.1</mnemonic.commons.version>
+    <mnemonic.commons.version>0.2.4</mnemonic.commons.version>
     <mnemonic.services.common.version>0.2.1</mnemonic.services.common.version>
 
     <!-- external dependencies -->
     <cassandra.version>3.3.0</cassandra.version>
+    <elastic.search.version>5.6.4</elastic.search.version>
     <guava.version>23.0</guava.version>
     <guice.version>4.1.0</guice.version>
     <hibernate.validator.version>6.0.2.Final</hibernate.validator.version>
@@ -241,6 +242,8 @@
                 <exclude>**/*IT.java</exclude>
                 <!-- Exclude all Cassandra tests. -->
                 <exclude>no/mnemonic/act/platform/dao/cassandra/*</exclude>
+                <!-- Exclude all ElasticSearch tests. -->
+                <exclude>no/mnemonic/act/platform/dao/elastic/*</exclude>
               </excludes>
             </configuration>
           </plugin>

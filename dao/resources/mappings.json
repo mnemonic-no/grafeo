@@ -1,0 +1,99 @@
+{
+  "settings": {
+    "index.mapper.dynamic": false,
+    "index.mapping.single_type": true
+  },
+  "mappings": {
+    "fact": {
+      "properties": {
+        "retracted": {
+          "type": "boolean"
+        },
+        "typeID": {
+          "type": "keyword"
+        },
+        "typeName": {
+          "type": "keyword"
+        },
+        "value": {
+          "type": "keyword",
+          "fields": {
+            "text": {
+              "type": "text"
+            },
+            "ip": {
+              "type": "ip",
+              "ignore_malformed": true
+            }
+          }
+        },
+        "inReferenceTo": {
+          "type": "keyword"
+        },
+        "organizationID": {
+          "type": "keyword"
+        },
+        "organizationName": {
+          "type": "keyword",
+          "fields": {
+            "text": {
+              "type": "text"
+            }
+          }
+        },
+        "sourceID": {
+          "type": "keyword"
+        },
+        "sourceName": {
+          "type": "keyword",
+          "fields": {
+            "text": {
+              "type": "text"
+            }
+          }
+        },
+        "accessMode": {
+          "type": "keyword"
+        },
+        "timestamp": {
+          "type": "date"
+        },
+        "lastSeenTimestamp": {
+          "type": "date"
+        },
+        "acl": {
+          "type": "keyword"
+        },
+        "objects": {
+          "type": "nested",
+          "properties": {
+            "id": {
+              "type": "keyword"
+            },
+            "typeID": {
+              "type": "keyword"
+            },
+            "typeName": {
+              "type": "keyword"
+            },
+            "value": {
+              "type": "keyword",
+              "fields": {
+                "text": {
+                  "type": "text"
+                },
+                "ip": {
+                  "type": "ip",
+                  "ignore_malformed": true
+                }
+              }
+            },
+            "direction": {
+              "type": "keyword"
+            }
+          }
+        }
+      }
+    }
+  }
+}
