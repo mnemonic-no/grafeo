@@ -4,9 +4,8 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
-import no.mnemonic.act.platform.entity.cassandra.Direction;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
-import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
@@ -15,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -132,15 +132,33 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     }));
   }
 
+  @Test
+  public void testRetractFactIndexesIntoElasticSearch() throws Exception {
+    RetractFactRequest request = mockRetractingFact();
+
+    delegate.handle(request);
+
+    verify(getFactSearchManager(), times(2)).indexFact(matchFactDocument(request));
+  }
+
   private RetractFactRequest mockRetractingFact() throws Exception {
     RetractFactRequest request = crateRetractRequest();
 
+    ObjectEntity object = new ObjectEntity()
+            .setId(UUID.randomUUID())
+            .setTypeID(UUID.randomUUID());
     FactEntity factToRetract = new FactEntity()
             .setId(request.getFact())
             .setAccessMode(no.mnemonic.act.platform.entity.cassandra.AccessMode.Public)
-            .setBindings(ListUtils.list(new FactEntity.FactObjectBinding().setObjectID(UUID.randomUUID())));
+            .setBindings(ListUtils.list(new FactEntity.FactObjectBinding().setObjectID(object.getId()).setDirection(Direction.None)));
 
-    when(factTypeResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()));
+    // Needed for indexing into ElasticSearch.
+    when(getFactSearchManager().getFact(request.getFact())).thenReturn(new FactDocument().setId(request.getFact()));
+    when(getObjectManager().getObject(object.getId())).thenReturn(object);
+    when(getObjectManager().getObjectType(object.getTypeID())).thenReturn(new ObjectTypeEntity().setId(object.getTypeID()).setName("objectType"));
+
+    when(factTypeResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()).setName("retractionFact"));
+    when(factStorageHelper.saveInitialAclForNewFact(any(), any())).thenAnswer(i -> i.getArgument(1));
     when(getFactManager().getFact(request.getFact())).thenReturn(factToRetract);
     when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -169,6 +187,32 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertTrue(entity.getBindings().size() > 0);
       assertTrue(entity.getTimestamp() > 0);
       assertTrue(entity.getLastSeenTimestamp() > 0);
+      return true;
+    });
+  }
+
+  private FactDocument matchFactDocument(RetractFactRequest request) {
+    return argThat(document -> {
+      // Verify that the retracted Fact is updated correctly.
+      if (Objects.equals(request.getFact(), document.getId())) {
+        assertTrue(document.isRetracted());
+        return true;
+      }
+
+      // Verify that retraction Fact is index correctly.
+      assertNotNull(document.getId());
+      assertFalse(document.isRetracted());
+      assertNotNull(document.getTypeID());
+      assertEquals("retractionFact", document.getTypeName());
+      assertNotNull(document.getValue());
+      assertEquals(request.getFact(), document.getInReferenceTo());
+      assertEquals(request.getOrganization(), document.getOrganizationID());
+      assertEquals(request.getSource(), document.getSourceID());
+      assertEquals(request.getAccessMode().name(), document.getAccessMode().name());
+      assertTrue(document.getTimestamp() > 0);
+      assertTrue(document.getLastSeenTimestamp() > 0);
+      assertTrue(document.getAcl().size() > 0);
+      assertTrue(document.getObjects().size() > 0);
       return true;
     });
   }

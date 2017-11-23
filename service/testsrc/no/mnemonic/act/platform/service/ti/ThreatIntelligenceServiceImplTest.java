@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.common.auth.AccessController;
@@ -34,6 +35,8 @@ public class ThreatIntelligenceServiceImplTest {
   @Mock
   private ObjectManager objectManager;
   @Mock
+  private FactSearchManager factSearchManager;
+  @Mock
   private EntityHandlerFactory entityHandlerFactory;
   @Mock
   private ValidatorFactory validatorFactory;
@@ -43,7 +46,7 @@ public class ThreatIntelligenceServiceImplTest {
   @Before
   public void initialize() {
     initMocks(this);
-    service = new ThreatIntelligenceServiceImpl(accessController, identityResolver, organizationResolver, subjectResolver, factManager, objectManager, entityHandlerFactory, validatorFactory);
+    service = new ThreatIntelligenceServiceImpl(accessController, identityResolver, organizationResolver, subjectResolver, factManager, objectManager, factSearchManager, entityHandlerFactory, validatorFactory);
   }
 
   @Test
@@ -63,6 +66,7 @@ public class ThreatIntelligenceServiceImplTest {
     assertNotNull(context.getFactCommentConverter());
     assertSame(factManager, context.getFactManager());
     assertSame(objectManager, context.getObjectManager());
+    assertSame(factSearchManager, context.getFactSearchManager());
     assertSame(entityHandlerFactory, context.getEntityHandlerFactory());
     assertSame(validatorFactory, context.getValidatorFactory());
   }

@@ -32,11 +32,12 @@ public class FactStorageHelper {
    *
    * @param fact Fact the ACL belongs to
    * @param acl  List of Subject IDs
+   * @return IDs of Subjects actually added to ACL
    */
-  public void saveInitialAclForNewFact(FactEntity fact, List<UUID> acl) {
+  public List<UUID> saveInitialAclForNewFact(FactEntity fact, List<UUID> acl) {
     if (fact == null || fact.getAccessMode() == AccessMode.Public) {
       // It doesn't make sense to have an ACL when Fact is public.
-      return;
+      return ListUtils.list();
     }
 
     List<UUID> copiedAcl = ListUtils.list(acl); // Don't change provided ACL.
@@ -47,7 +48,7 @@ public class FactStorageHelper {
       copiedAcl.add(currentUser);
     }
 
-    saveAclEntries(fact, copiedAcl);
+    return saveAclEntries(fact, copiedAcl);
   }
 
   /**
@@ -56,11 +57,12 @@ public class FactStorageHelper {
    *
    * @param fact Fact the ACL belongs to
    * @param acl  List of Subject IDs
+   * @return IDs of Subjects actually added to ACL
    */
-  public void saveAdditionalAclForFact(FactEntity fact, List<UUID> acl) {
+  public List<UUID> saveAdditionalAclForFact(FactEntity fact, List<UUID> acl) {
     if (fact == null || CollectionUtils.isEmpty(acl) || fact.getAccessMode() == AccessMode.Public) {
       // It doesn't make sense to have an ACL when Fact is public.
-      return;
+      return ListUtils.list();
     }
 
     // Fetch any existing entries ...
@@ -74,7 +76,7 @@ public class FactStorageHelper {
             .filter(entry -> !existingAcl.contains(entry))
             .collect(Collectors.toList());
 
-    saveAclEntries(fact, subjectsToAdd);
+    return saveAclEntries(fact, subjectsToAdd);
   }
 
   /**
@@ -99,7 +101,7 @@ public class FactStorageHelper {
     factManager.saveFactComment(commentEntity);
   }
 
-  private void saveAclEntries(FactEntity fact, List<UUID> subjects) {
+  private List<UUID> saveAclEntries(FactEntity fact, List<UUID> subjects) {
     // TODO: Verify that subjects exist.
     for (UUID subject : subjects) {
       FactAclEntity entry = new FactAclEntity()
@@ -111,6 +113,8 @@ public class FactStorageHelper {
 
       factManager.saveFactAclEntry(entry);
     }
+
+    return subjects;
   }
 
 }

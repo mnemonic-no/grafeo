@@ -5,20 +5,20 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.api.request.v1.Direction;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
-import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -123,6 +123,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     verify(getObjectManager()).saveObjectFactBinding(matchObjectFactBindingEntity(request.getBindings().get(0)));
     verify(factStorageHelper).saveInitialAclForNewFact(matchFactEntity(request), eq(request.getAcl()));
     verify(factStorageHelper).saveCommentForFact(matchFactEntity(request), eq(request.getComment()));
+    verify(getFactSearchManager()).indexFact(matchFactDocument(request));
     verify(getFactConverter()).apply(matchFactEntity(request));
   }
 
@@ -191,12 +192,16 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     when(getFactManager().fetchFactsByValue(request.getValue())).thenReturn(ListUtils.list(existingFact));
     when(getFactManager().refreshFact(existingFact.getId())).thenReturn(existingFact);
+    when(getFactSearchManager().getFact(existingFact.getId())).thenReturn(new FactDocument());
+    when(factStorageHelper.saveAdditionalAclForFact(existingFact, request.getAcl())).thenReturn(request.getAcl());
 
     delegate.handle(request);
 
     verify(getFactManager()).refreshFact(existingFact.getId());
     verify(factStorageHelper).saveAdditionalAclForFact(same(existingFact), eq(request.getAcl()));
     verify(factStorageHelper).saveCommentForFact(same(existingFact), eq(request.getComment()));
+    verify(getFactSearchManager()).indexFact(argThat(document -> document.getLastSeenTimestamp() > 0 &&
+            Objects.equals(document.getAcl(), SetUtils.set(request.getAcl()))));
     verify(getFactManager(), never()).saveFact(any());
     verify(getFactConverter()).apply(same(existingFact));
   }
@@ -215,6 +220,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     // Mock stuff needed for saving Fact.
     when(getFactManager().getFact(request.getInReferenceTo())).thenReturn(new FactEntity());
     when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
+    when(factStorageHelper.saveInitialAclForNewFact(any(), any())).thenAnswer(i -> i.getArgument(1));
 
     return request;
   }
@@ -243,6 +249,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
             .setTypeID(objectTypeID)
             .setValue("objectValue");
 
+    when(getObjectManager().getObject(id)).thenReturn(object);
+    when(getObjectManager().getObjectType(objectTypeID)).thenReturn(new ObjectTypeEntity().setId(objectTypeID).setName("objectType"));
     when(objectResolver.resolveObject(any(), any(), any())).thenReturn(object);
   }
 
@@ -289,6 +297,30 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getBindings().size(), entity.getBindings().size());
       assertEquals(request.getBindings().get(0).getObjectID(), entity.getBindings().get(0).getObjectID());
       assertEquals(request.getBindings().get(0).getDirection().name(), entity.getBindings().get(0).getDirection().name());
+      return true;
+    });
+  }
+
+  private FactDocument matchFactDocument(CreateFactRequest request) {
+    return argThat(document -> {
+      assertNotNull(document.getId());
+      assertFalse(document.isRetracted());
+      assertNotNull(document.getTypeID());
+      assertEquals("factType", document.getTypeName());
+      assertEquals(request.getValue(), document.getValue());
+      assertEquals(request.getInReferenceTo(), document.getInReferenceTo());
+      assertEquals(request.getOrganization(), document.getOrganizationID());
+      assertEquals(request.getSource(), document.getSourceID());
+      assertEquals(request.getAccessMode().name(), document.getAccessMode().name());
+      assertTrue(document.getTimestamp() > 0);
+      assertTrue(document.getLastSeenTimestamp() > 0);
+      assertTrue(document.getAcl().size() > 0);
+      assertEquals(request.getBindings().size(), document.getObjects().size());
+      assertEquals(request.getBindings().get(0).getObjectID(), document.getObjects().iterator().next().getId());
+      assertNotNull(document.getObjects().iterator().next().getTypeID());
+      assertEquals("objectType", document.getObjects().iterator().next().getTypeName());
+      assertEquals("objectValue", document.getObjects().iterator().next().getValue());
+      assertEquals(request.getBindings().get(0).getDirection().name(), document.getObjects().iterator().next().getDirection().name());
       return true;
     });
   }

@@ -15,6 +15,11 @@ public class TiRequestContextTest {
   }
 
   @Test(expected = RuntimeException.class)
+  public void testFactSearchManagerNotSetInContextThrowsException() {
+    TiRequestContext.builder().build().getFactSearchManager();
+  }
+
+  @Test(expected = RuntimeException.class)
   public void testEntityHandlerFactoryNotSetInContextThrowsException() {
     TiRequestContext.builder().build().getEntityHandlerFactory();
   }

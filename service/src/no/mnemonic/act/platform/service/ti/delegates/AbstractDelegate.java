@@ -4,17 +4,21 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -242,6 +246,57 @@ abstract class AbstractDelegate {
     }
 
     return facts;
+  }
+
+  /**
+   * Index a newly created Fact into ElasticSearch. Only call this method after a Fact and its related data were
+   * persisted to Cassandra.
+   *
+   * @param fact     Fact to index
+   * @param factType FactType of Fact to index
+   * @param acl      Full access control list of Fact to index (list of Subject IDs)
+   */
+  void indexCreatedFact(FactEntity fact, FactTypeEntity factType, List<UUID> acl) {
+    // TODO: Resolve and index organizationName and sourceName.
+    FactDocument document = new FactDocument()
+            .setId(fact.getId())
+            .setRetracted(false) // A newly created Fact isn't retracted by definition.
+            .setTypeID(factType.getId())
+            .setTypeName(factType.getName())
+            .setValue(fact.getValue())
+            .setInReferenceTo(fact.getInReferenceToID())
+            .setOrganizationID(fact.getOrganizationID())
+            .setSourceID(fact.getSourceID())
+            .setAccessMode(FactDocument.AccessMode.valueOf(fact.getAccessMode().name()))
+            .setTimestamp(fact.getTimestamp())
+            .setLastSeenTimestamp(fact.getLastSeenTimestamp())
+            .setAcl(SetUtils.set(acl));
+
+    for (FactEntity.FactObjectBinding objectBinding : fact.getBindings()) {
+      ObjectEntity object = TiRequestContext.get().getObjectManager().getObject(objectBinding.getObjectID());
+      ObjectTypeEntity objectType = TiRequestContext.get().getObjectManager().getObjectType(object.getTypeID());
+      document.addObject(new ObjectDocument()
+              .setId(object.getId())
+              .setTypeID(objectType.getId())
+              .setTypeName(objectType.getName())
+              .setValue(object.getValue())
+              .setDirection(ObjectDocument.Direction.valueOf(objectBinding.getDirection().name()))
+      );
+    }
+
+    TiRequestContext.get().getFactSearchManager().indexFact(document);
+  }
+
+  /**
+   * Re-index an already existing Fact in ElasticSearch. If Fact is not found in ElasticSearch the Fact won't be indexed.
+   *
+   * @param factID          UUID of Fact to re-index
+   * @param documentUpdater Callback for updating the indexed document before re-indexing
+   */
+  void reindexExistingFact(UUID factID, Function<FactDocument, FactDocument> documentUpdater) {
+    FactDocument document = TiRequestContext.get().getFactSearchManager().getFact(factID);
+    // 'document' should usually not be NULL. In this case skip updating Fact because it isn't indexed.
+    ObjectUtils.ifNotNullDo(document, d -> TiRequestContext.get().getFactSearchManager().indexFact(documentUpdater.apply(d)));
   }
 
   /**

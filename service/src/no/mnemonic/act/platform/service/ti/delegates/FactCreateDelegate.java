@@ -15,6 +15,7 @@ import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,11 +48,15 @@ public class FactCreateDelegate extends AbstractDelegate {
     if (fact != null) {
       // Refresh an existing Fact.
       fact = TiRequestContext.get().getFactManager().refreshFact(fact.getId());
-      factStorageHelper.saveAdditionalAclForFact(fact, request.getAcl());
+      List<UUID> subjectsAddedToAcl = factStorageHelper.saveAdditionalAclForFact(fact, request.getAcl());
+      // Reindex existing Fact in ElasticSearch.
+      reindexExistingFact(fact, subjectsAddedToAcl);
     } else {
       // Or create a new Fact.
       fact = saveFact(request, type);
-      factStorageHelper.saveInitialAclForNewFact(fact, request.getAcl());
+      List<UUID> subjectsAddedToAcl = factStorageHelper.saveInitialAclForNewFact(fact, request.getAcl());
+      // Index new Fact into ElasticSearch.
+      indexCreatedFact(fact, type, subjectsAddedToAcl);
     }
 
     // Always add provided comment.
@@ -213,6 +218,15 @@ public class FactCreateDelegate extends AbstractDelegate {
     }
 
     return entityBindings;
+  }
+
+  private void reindexExistingFact(FactEntity fact, List<UUID> acl) {
+    reindexExistingFact(fact.getId(), document -> {
+      // Only 'lastSeenTimestamp' and potentially the ACL have been changed when refreshing a Fact.
+      document.setLastSeenTimestamp(fact.getLastSeenTimestamp());
+      document.setAcl(SetUtils.union(document.getAcl(), SetUtils.set(acl)));
+      return document;
+    });
   }
 
 }

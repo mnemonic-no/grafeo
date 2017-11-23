@@ -12,6 +12,7 @@ import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
 import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.Service;
@@ -41,6 +42,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   private final SubjectResolver subjectResolver;
   private final FactManager factManager;
   private final ObjectManager objectManager;
+  private final FactSearchManager factSearchManager;
   private final EntityHandlerFactory entityHandlerFactory;
   private final ValidatorFactory validatorFactory;
   private final ObjectTypeConverter objectTypeConverter;
@@ -53,7 +55,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   @Inject
   public ThreatIntelligenceServiceImpl(AccessController accessController, IdentityResolver identityResolver,
                                        OrganizationResolver organizationResolver, SubjectResolver subjectResolver,
-                                       FactManager factManager, ObjectManager objectManager,
+                                       FactManager factManager, ObjectManager objectManager, FactSearchManager factSearchManager,
                                        EntityHandlerFactory entityHandlerFactory, ValidatorFactory validatorFactory) {
     this.accessController = accessController;
     this.identityResolver = identityResolver;
@@ -61,6 +63,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     this.subjectResolver = subjectResolver;
     this.factManager = factManager;
     this.objectManager = objectManager;
+    this.factSearchManager = factSearchManager;
     this.entityHandlerFactory = entityHandlerFactory;
     this.validatorFactory = validatorFactory;
     this.objectTypeConverter = ObjectTypeConverter.builder()
@@ -106,6 +109,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return TiRequestContext.builder()
             .setFactManager(factManager)
             .setObjectManager(objectManager)
+            .setFactSearchManager(factSearchManager)
             .setEntityHandlerFactory(entityHandlerFactory)
             .setValidatorFactory(validatorFactory)
             .setObjectTypeConverter(objectTypeConverter)
