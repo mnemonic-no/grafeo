@@ -18,6 +18,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 ##### Prerequisites
 
 * A running installation of [Apache Cassandra](https://cassandra.apache.org/).
+* A running installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch).
 * Import the Cassandra database schema from `executable/testsrc/resources/setup.cql`.
 
 ##### Compilation
@@ -29,7 +30,7 @@ This will create an executable JAR bundle under `executable/target` containing a
 ##### Configuration
 
 * The application is configured with a properties file. See `executable/application.properties.localhost` as an example.
-This configuration needs to point to your Cassandra installation.
+This configuration needs to point to your Cassandra and Elasticsearch installations.
 * Access control including users and organizations is defined in another properties file.
 See `executable/acl.properties.localhost` as an example and the [specification](https://github.com/mnemonic-no/act-platform/wiki/Role-Based-Access-Control) for more details.
 Make sure that your application configuration points to this properties file as well.
@@ -48,7 +49,9 @@ java -Dapplication.properties.file=$PROPERTIES -jar $EXECUTABLE guice module=no.
 
 ##### Testing
 
-* For running the integration tests install [Docker](https://www.docker.com/) and a Cassandra image by `docker pull cassandra`.
+* For running the integration tests install [Docker](https://www.docker.com/).
+* Download a Cassandra image by `docker pull cassandra`.
+* Download an Elasticsearch image by `docker pull docker.elastic.co/elasticsearch/elasticsearch:$TAG`.
 * By default the integration tests will try to connect to Docker on localhost and port 2375. You can set the $DOCKER_HOST environment variable to override this behaviour.
 * Execute `mvn clean install` for running all tests including integration tests.
 * Execute `mvn clean install -DskipSlowTests` for skipping the integration tests.
@@ -59,6 +62,7 @@ java -Dapplication.properties.file=$PROPERTIES -jar $EXECUTABLE guice module=no.
 * Maven for managing dependencies, building the code, running the unit tests, etc.
 * An installation of [Docker](https://www.docker.com/) for running the integration tests.
 * An installation of [Apache Cassandra](https://cassandra.apache.org/) for storage.
+* An installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch) for indexing.
 
 ## Known issues
 

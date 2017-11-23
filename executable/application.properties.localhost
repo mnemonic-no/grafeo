@@ -4,6 +4,11 @@ cassandra.cluster.name=ActPlatform
 cassandra.port=9042
 cassandra.contact.points=localhost
 
+# Configure connection to ElasticSearch cluster using its REST API.
+# Contact points can be a comma-separated list of hostnames/IPs.
+elasticsearch.port=9200
+elasticsearch.contact.points=localhost
+
 # Configure listening port of REST API.
 api.server.port=8888
 

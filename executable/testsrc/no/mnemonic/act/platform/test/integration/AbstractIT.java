@@ -10,11 +10,14 @@ import no.mnemonic.act.platform.auth.properties.PropertiesBasedAccessController;
 import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.elastic.ClientFactory;
+import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.rest.RestModule;
 import no.mnemonic.act.platform.rest.container.ApiServer;
 import no.mnemonic.act.platform.service.ServiceModule;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
+import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.auth.AccessController;
@@ -39,6 +42,8 @@ public abstract class AbstractIT {
   private static ClusterManager clusterManager;
   private static ObjectManager objectManager;
   private static FactManager factManager;
+  private static ClientFactory clientFactory;
+  private static FactSearchManager factSearchManager;
   private static ApiServer apiServer;
 
   @ClassRule
@@ -49,6 +54,14 @@ public abstract class AbstractIT {
           .setTruncateScript("truncate.cql")
           .build();
 
+  @ClassRule
+  public static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
+          // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
+          // Usually this should be the same version as the ElasticSearch client used.
+          .setImageName("elasticsearch/elasticsearch:5.6.4")
+          .addApplicationPort(9200)
+          .build();
+
   @Before
   public void setup() {
     Injector injector = Guice.createInjector(new ModuleIT());
@@ -56,6 +69,8 @@ public abstract class AbstractIT {
     clusterManager = injector.getInstance(ClusterManager.class);
     objectManager = injector.getInstance(ObjectManager.class);
     factManager = injector.getInstance(FactManager.class);
+    clientFactory = injector.getInstance(ClientFactory.class);
+    factSearchManager = injector.getInstance(FactSearchManager.class);
     apiServer = injector.getInstance(ApiServer.class);
 
     // Start up everything in correct order.
@@ -63,6 +78,8 @@ public abstract class AbstractIT {
     clusterManager.startComponent();
     objectManager.startComponent();
     factManager.startComponent();
+    clientFactory.startComponent();
+    factSearchManager.startComponent();
     apiServer.startComponent();
   }
 
@@ -70,12 +87,16 @@ public abstract class AbstractIT {
   public void teardown() {
     // Stop everything in correct order.
     apiServer.stopComponent();
+    factSearchManager.stopComponent();
+    clientFactory.stopComponent();
     factManager.stopComponent();
     objectManager.stopComponent();
     clusterManager.stopComponent();
     accessController.stopComponent();
     // Truncate database.
     cassandra.truncate();
+    // Truncate indices.
+    elastic.deleteIndices();
   }
 
   /* Getters */
@@ -86,6 +107,10 @@ public abstract class AbstractIT {
 
   FactManager getFactManager() {
     return factManager;
+  }
+
+  FactSearchManager getFactSearchManager() {
+    return factSearchManager;
   }
 
   /* Helpers for REST */
@@ -205,6 +230,8 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("cassandra.cluster.name")).toInstance("ActIntegrationTest");
       bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance("localhost");
       bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
+      bind(String.class).annotatedWith(Names.named("elasticsearch.contact.points")).toInstance("localhost");
+      bind(String.class).annotatedWith(Names.named("elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
       bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
     }
   }
