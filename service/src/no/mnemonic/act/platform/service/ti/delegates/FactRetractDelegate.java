@@ -18,6 +18,7 @@ import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
+import java.util.List;
 import java.util.UUID;
 
 public class FactRetractDelegate extends AbstractDelegate {
@@ -40,8 +41,11 @@ public class FactRetractDelegate extends AbstractDelegate {
     TiSecurityContext.get().checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
     // Save everything in database.
     FactEntity retractionFact = saveRetractionFact(request, factToRetract);
-    factStorageHelper.saveInitialAclForNewFact(retractionFact, request.getAcl());
+    List<UUID> subjectsAddedToAcl = factStorageHelper.saveInitialAclForNewFact(retractionFact, request.getAcl());
     factStorageHelper.saveCommentForFact(retractionFact, request.getComment());
+    // Index everything into ElasticSearch.
+    indexCreatedFact(retractionFact, factTypeResolver.resolveRetractionFactType(), subjectsAddedToAcl);
+    reindexExistingFact(factToRetract.getId(), d -> d.setRetracted(true));
 
     return TiRequestContext.get().getFactConverter().apply(retractionFact);
   }

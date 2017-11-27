@@ -37,7 +37,13 @@ public class FactGrantAccessDelegate extends AbstractDelegate {
     }
 
     // Return an existing ACL entry or create a new entry for requested Subject.
-    FactAclEntity aclEntry = ObjectUtils.ifNull(findExistingAclEntry(fact, request.getSubject()), () -> saveNewAclEntry(fact, request.getSubject()));
+    FactAclEntity aclEntry = ObjectUtils.ifNull(findExistingAclEntry(fact, request.getSubject()), () -> {
+      FactAclEntity entry = saveNewAclEntry(fact, request.getSubject());
+      // Also add entry to ElasticSearch to allow searching for Fact.
+      reindexExistingFact(fact.getId(), d -> d.addAclEntry(entry.getSubjectID()));
+      return entry;
+    });
+
     return TiRequestContext.get().getAclEntryConverter().apply(aclEntry);
   }
 

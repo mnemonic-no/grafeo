@@ -34,13 +34,13 @@ public class FactStorageHelperTest {
 
   @Test
   public void testSaveInitialAclSkipWithoutFact() {
-    helper.saveInitialAclForNewFact(null, ListUtils.list(UUID.randomUUID()));
+    assertEquals(ListUtils.list(), helper.saveInitialAclForNewFact(null, ListUtils.list(UUID.randomUUID())));
     verifyNoMoreInteractions(factManager);
   }
 
   @Test
   public void testSaveInitialAclSkipWhenAccessModePublic() {
-    helper.saveInitialAclForNewFact(createFact().setAccessMode(AccessMode.Public), ListUtils.list(UUID.randomUUID()));
+    assertEquals(ListUtils.list(), helper.saveInitialAclForNewFact(createFact().setAccessMode(AccessMode.Public), ListUtils.list(UUID.randomUUID())));
     verifyNoMoreInteractions(factManager);
   }
 
@@ -48,7 +48,7 @@ public class FactStorageHelperTest {
   public void testSaveInitialAclWithAccessModeRoleBased() throws Exception {
     FactEntity fact = createFact().setAccessMode(AccessMode.RoleBased);
     UUID user = UUID.randomUUID();
-    helper.saveInitialAclForNewFact(fact, ListUtils.list(user));
+    assertEquals(ListUtils.list(user), helper.saveInitialAclForNewFact(fact, ListUtils.list(user)));
     verify(factManager).saveFactAclEntry(matchFactAclEntity(fact, user));
   }
 
@@ -57,25 +57,25 @@ public class FactStorageHelperTest {
     FactEntity fact = createFact().setAccessMode(AccessMode.Explicit);
     UUID currentUser = UUID.randomUUID();
     when(currentUserResolver.get()).thenReturn(currentUser);
-    helper.saveInitialAclForNewFact(fact, null);
+    assertEquals(ListUtils.list(currentUser), helper.saveInitialAclForNewFact(fact, null));
     verify(factManager).saveFactAclEntry(matchFactAclEntity(fact, currentUser));
   }
 
   @Test
   public void testSaveAdditionalAclSkipWithoutFact() {
-    helper.saveAdditionalAclForFact(null, ListUtils.list(UUID.randomUUID()));
+    assertEquals(ListUtils.list(), helper.saveAdditionalAclForFact(null, ListUtils.list(UUID.randomUUID())));
     verifyNoMoreInteractions(factManager);
   }
 
   @Test
   public void testSaveAdditionalAclSkipWithoutAcl() {
-    helper.saveAdditionalAclForFact(createFact(), null);
+    assertEquals(ListUtils.list(), helper.saveAdditionalAclForFact(createFact(), null));
     verifyNoMoreInteractions(factManager);
   }
 
   @Test
   public void testSaveAdditionalAclSkipWhenAccessModePublic() {
-    helper.saveAdditionalAclForFact(createFact().setAccessMode(AccessMode.Public), ListUtils.list(UUID.randomUUID()));
+    assertEquals(ListUtils.list(), helper.saveAdditionalAclForFact(createFact().setAccessMode(AccessMode.Public), ListUtils.list(UUID.randomUUID())));
     verifyNoMoreInteractions(factManager);
   }
 
@@ -85,7 +85,7 @@ public class FactStorageHelperTest {
     UUID user = UUID.randomUUID();
     when(factManager.fetchFactAcl(fact.getId())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(user)));
 
-    helper.saveAdditionalAclForFact(fact, ListUtils.list(user));
+    assertEquals(ListUtils.list(), helper.saveAdditionalAclForFact(fact, ListUtils.list(user)));
     verify(factManager).fetchFactAcl(fact.getId());
     verifyNoMoreInteractions(factManager);
   }
@@ -96,7 +96,7 @@ public class FactStorageHelperTest {
     UUID user = UUID.randomUUID();
     when(factManager.fetchFactAcl(fact.getId())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(UUID.randomUUID())));
 
-    helper.saveAdditionalAclForFact(fact, ListUtils.list(user));
+    assertEquals(ListUtils.list(user), helper.saveAdditionalAclForFact(fact, ListUtils.list(user)));
     verify(factManager).fetchFactAcl(fact.getId());
     verify(factManager).saveFactAclEntry(matchFactAclEntity(fact, user));
   }

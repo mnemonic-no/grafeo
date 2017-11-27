@@ -40,7 +40,9 @@ public class FactIT extends AbstractIT {
     assertEquals(201, response.getStatus());
 
     // ... and check that both Fact and Object end up in the database.
-    assertNotNull(getFactManager().getFact(getIdFromModel(getPayload(response))));
+    UUID id = getIdFromModel(getPayload(response));
+    assertNotNull(getFactManager().getFact(id));
+    assertNotNull(getFactSearchManager().getFact(id));
     assertNotNull(getObjectManager().getObject(objectType.getName(), request.getBindings().get(0).getObjectValue()));
   }
 
@@ -96,6 +98,7 @@ public class FactIT extends AbstractIT {
     // ... and check that retraction Fact was created correctly.
     FactEntity retractionFact = getFactManager().getFact(getIdFromModel(getPayload(response)));
     assertNotNull(retractionFact);
+    assertNotNull(getFactSearchManager().getFact(retractionFact.getId()));
     assertEquals(factToRetract.getId(), retractionFact.getInReferenceToID());
   }
 

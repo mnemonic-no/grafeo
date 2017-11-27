@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.GrantFactAccessRequest;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.entity.cassandra.AccessMode;
 import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
 import no.mnemonic.act.platform.entity.cassandra.FactEntity;
@@ -61,6 +62,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
     FactGrantAccessDelegate.create().handle(request);
 
     verify(getFactManager(), never()).saveFactAclEntry(any());
+    verify(getFactSearchManager(), never()).indexFact(any());
     verify(getAclEntryConverter()).apply(matchFactAclEntity(request, existingEntry.getSourceID()));
   }
 
@@ -69,12 +71,14 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
     UUID currentUser = UUID.randomUUID();
     GrantFactAccessRequest request = createGrantAccessRequest();
     when(getFactManager().getFact(request.getFact())).thenReturn(createFactEntity(request));
+    when(getFactSearchManager().getFact(request.getFact())).thenReturn(new FactDocument());
     when(getFactManager().saveFactAclEntry(any())).then(i -> i.getArgument(0));
     when(getSecurityContext().getCurrentUserID()).thenReturn(currentUser);
 
     FactGrantAccessDelegate.create().handle(request);
 
     verify(getFactManager()).saveFactAclEntry(matchFactAclEntity(request, currentUser));
+    verify(getFactSearchManager()).indexFact(argThat(document -> document.getAcl().contains(request.getSubject())));
     verify(getAclEntryConverter()).apply(matchFactAclEntity(request, currentUser));
   }
 

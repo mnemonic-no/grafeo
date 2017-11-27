@@ -38,7 +38,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.4</mnemonic.commons.version>
+    <mnemonic.commons.version>0.2.5</mnemonic.commons.version>
     <mnemonic.services.common.version>0.2.1</mnemonic.services.common.version>
 
     <!-- external dependencies -->
