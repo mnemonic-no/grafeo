@@ -27,7 +27,7 @@ public class DocumentTestUtils {
             .setOrganizationName("organization")
             .setSourceID(UUID.randomUUID())
             .setSourceName("source")
-            .setAccessMode(FactDocument.AccessMode.RoleBased)
+            .setAccessMode(FactDocument.AccessMode.Public)
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321)
             .addAclEntry(UUID.randomUUID())

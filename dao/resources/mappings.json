@@ -1,7 +1,29 @@
 {
   "settings": {
     "index.mapper.dynamic": false,
-    "index.mapping.single_type": true
+    "index.mapping.single_type": true,
+    "index.max_result_window": 10000,
+    "analysis": {
+      "tokenizer": {
+        "domain_tokenizer": {
+          "type": "path_hierarchy",
+          "delimiter": ".",
+          "reverse": true
+        }
+      },
+      "analyzer": {
+        "domain_analyzer": {
+          "type": "custom",
+          "tokenizer": "domain_tokenizer",
+          "filter": [ "trim", "lowercase" ]
+        },
+        "domain_search_analyzer": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "filter": [ "trim", "lowercase" ]
+        }
+      }
+    }
   },
   "mappings": {
     "fact": {
@@ -24,6 +46,11 @@
             "ip": {
               "type": "ip",
               "ignore_malformed": true
+            },
+            "domain": {
+              "type": "text",
+              "analyzer": "domain_analyzer",
+              "search_analyzer": "domain_search_analyzer"
             }
           }
         },
@@ -85,6 +112,11 @@
                 "ip": {
                   "type": "ip",
                   "ignore_malformed": true
+                },
+                "domain": {
+                  "type": "text",
+                  "analyzer": "domain_analyzer",
+                  "search_analyzer": "domain_search_analyzer"
                 }
               }
             },
