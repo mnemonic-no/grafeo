@@ -1,8 +1,8 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -12,7 +12,7 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import java.util.*;
 
 import static no.mnemonic.act.platform.dao.tinkerpop.ObjectProperty.Value;
-import static no.mnemonic.act.platform.entity.cassandra.Direction.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.Direction.*;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.edgeAdditionsNotSupported;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRemovalNotSupported;
 

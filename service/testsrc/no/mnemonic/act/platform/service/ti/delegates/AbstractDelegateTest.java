@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
+import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;

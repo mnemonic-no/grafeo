@@ -5,8 +5,8 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.AclEntry;
 import no.mnemonic.act.platform.api.request.v1.GetFactAclRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 

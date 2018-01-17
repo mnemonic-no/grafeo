@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.entity.cassandra.*;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;

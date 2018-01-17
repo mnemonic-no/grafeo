@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
-import no.mnemonic.act.platform.entity.cassandra.*;
 import org.junit.Test;
 
 import java.time.Clock;

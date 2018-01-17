@@ -4,7 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;

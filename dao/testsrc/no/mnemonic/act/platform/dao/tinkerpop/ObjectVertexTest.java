@@ -1,9 +1,9 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.entity.cassandra.Direction;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Vertex;

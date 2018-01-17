@@ -1,10 +1,10 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
-import no.mnemonic.act.platform.entity.cassandra.Direction;
-import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import org.junit.Test;
 
 import java.util.*;

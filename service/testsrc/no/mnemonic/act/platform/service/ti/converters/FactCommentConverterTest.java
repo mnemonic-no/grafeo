@@ -2,7 +2,7 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.FactComment;
 import no.mnemonic.act.platform.api.model.v1.Source;
-import no.mnemonic.act.platform.entity.cassandra.FactCommentEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import org.junit.Test;
 
 import java.util.UUID;

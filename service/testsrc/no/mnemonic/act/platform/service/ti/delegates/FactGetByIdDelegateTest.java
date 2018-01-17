@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import org.junit.Test;
 

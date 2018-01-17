@@ -4,7 +4,7 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.tinkerpop.exceptions.GraphOperationException;
 import no.mnemonic.act.platform.dao.tinkerpop.utils.ElementFactory;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.commons.configuration.Configuration;

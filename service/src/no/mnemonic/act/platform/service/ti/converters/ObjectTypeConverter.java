@@ -2,7 +2,7 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.Namespace;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
-import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.util.UUID;

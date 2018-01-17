@@ -4,8 +4,8 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
@@ -114,8 +114,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.entity.cassandra.AccessMode.Public));
-    verify(getFactConverter()).apply(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.entity.cassandra.AccessMode.Public));
+    verify(getFactManager()).saveFact(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.Public));
+    verify(getFactConverter()).apply(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.Public));
   }
 
   @Test
@@ -149,7 +149,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
             .setTypeID(UUID.randomUUID());
     FactEntity factToRetract = new FactEntity()
             .setId(request.getFact())
-            .setAccessMode(no.mnemonic.act.platform.entity.cassandra.AccessMode.Public)
+            .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.Public)
             .setBindings(ListUtils.list(new FactEntity.FactObjectBinding().setObjectID(object.getId()).setDirection(Direction.None)));
 
     // Needed for indexing into ElasticSearch.

@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.test.integration;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.request.v1.CreateObjectTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.UpdateObjectTypeRequest;
-import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;

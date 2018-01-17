@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
-import no.mnemonic.act.platform.entity.handlers.EntityHandler;
-import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
+import no.mnemonic.act.platform.dao.handlers.EntityHandler;
+import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import org.junit.*;
 

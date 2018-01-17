@@ -78,7 +78,6 @@
     <module>api</module>
     <module>auth</module>
     <module>dao</module>
-    <module>entity</module>
     <module>executable</module>
     <module>rest</module>
     <module>service</module>

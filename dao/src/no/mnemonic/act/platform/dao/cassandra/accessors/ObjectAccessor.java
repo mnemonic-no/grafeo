@@ -4,13 +4,13 @@ import com.datastax.driver.mapping.Result;
 import com.datastax.driver.mapping.annotations.Accessor;
 import com.datastax.driver.mapping.annotations.Param;
 import com.datastax.driver.mapping.annotations.Query;
-import no.mnemonic.act.platform.entity.cassandra.ObjectByTypeValueEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectByTypeValueEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 
 @Accessor
 public interface ObjectAccessor {

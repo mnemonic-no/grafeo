@@ -2,8 +2,8 @@ package no.mnemonic.act.platform.dao.tinkerpop.utils;
 
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
-import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;

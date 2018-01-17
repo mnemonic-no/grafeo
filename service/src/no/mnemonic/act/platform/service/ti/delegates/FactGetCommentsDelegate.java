@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.FactComment;
 import no.mnemonic.act.platform.api.request.v1.GetFactCommentsRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 
