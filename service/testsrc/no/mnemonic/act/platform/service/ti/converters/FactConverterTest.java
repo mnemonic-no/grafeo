@@ -2,9 +2,9 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
-import no.mnemonic.act.platform.entity.cassandra.AccessMode;
-import no.mnemonic.act.platform.entity.cassandra.Direction;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
+import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 

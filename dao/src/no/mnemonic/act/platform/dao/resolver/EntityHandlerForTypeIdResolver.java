@@ -2,10 +2,10 @@ package no.mnemonic.act.platform.dao.resolver;
 
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
-import no.mnemonic.act.platform.entity.cassandra.ObjectTypeEntity;
-import no.mnemonic.act.platform.entity.handlers.EntityHandler;
-import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.handlers.EntityHandler;
+import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 
 import javax.inject.Inject;
 import java.util.UUID;

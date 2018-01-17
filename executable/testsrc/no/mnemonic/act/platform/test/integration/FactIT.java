@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.request.v1.Direction;
-import no.mnemonic.act.platform.entity.cassandra.*;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;

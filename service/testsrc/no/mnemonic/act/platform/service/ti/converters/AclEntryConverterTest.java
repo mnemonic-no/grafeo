@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.service.ti.converters;
 import no.mnemonic.act.platform.api.model.v1.AclEntry;
 import no.mnemonic.act.platform.api.model.v1.Source;
 import no.mnemonic.act.platform.api.model.v1.Subject;
-import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import org.junit.Test;
 
 import java.util.UUID;

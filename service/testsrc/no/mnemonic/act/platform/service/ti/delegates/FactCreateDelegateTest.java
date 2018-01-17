@@ -5,8 +5,8 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.api.request.v1.Direction;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.entity.cassandra.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
@@ -183,11 +183,11 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
             .setValue(request.getValue())
             .setSourceID(request.getSource())
             .setOrganizationID(request.getOrganization())
-            .setAccessMode(no.mnemonic.act.platform.entity.cassandra.AccessMode.valueOf(request.getAccessMode().name()))
+            .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.valueOf(request.getAccessMode().name()))
             .setLastSeenTimestamp(123)
             .setBindings(ListUtils.list(new FactEntity.FactObjectBinding()
                     .setObjectID(binding.getObjectID())
-                    .setDirection(no.mnemonic.act.platform.entity.cassandra.Direction.valueOf(binding.getDirection().name()))
+                    .setDirection(no.mnemonic.act.platform.dao.cassandra.entity.Direction.valueOf(binding.getDirection().name()))
             ));
 
     when(getFactManager().fetchFactsByValue(request.getValue())).thenReturn(ListUtils.list(existingFact));
@@ -230,7 +230,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     String name = "factType";
     FactTypeEntity.FactObjectBindingDefinition definition = new FactTypeEntity.FactObjectBindingDefinition()
             .setObjectTypeID(objectTypeID)
-            .setDirection(no.mnemonic.act.platform.entity.cassandra.Direction.BiDirectional);
+            .setDirection(no.mnemonic.act.platform.dao.cassandra.entity.Direction.BiDirectional);
     FactTypeEntity type = new FactTypeEntity()
             .setId(id)
             .setName(name)

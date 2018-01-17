@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.dao.elastic;
 
-import no.mnemonic.act.platform.entity.handlers.EntityHandler;
+import no.mnemonic.act.platform.dao.handlers.EntityHandler;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import org.apache.http.HttpStatus;
 import org.elasticsearch.client.Response;

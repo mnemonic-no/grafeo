@@ -4,12 +4,12 @@ import com.datastax.driver.mapping.Result;
 import com.datastax.driver.mapping.annotations.Accessor;
 import com.datastax.driver.mapping.annotations.Param;
 import com.datastax.driver.mapping.annotations.Query;
-import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.entity.cassandra.CassandraEntity.KEY_SPACE;
-import static no.mnemonic.act.platform.entity.cassandra.FactAclEntity.TABLE;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
+import static no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity.TABLE;
 
 @Accessor
 public interface FactAclAccessor {

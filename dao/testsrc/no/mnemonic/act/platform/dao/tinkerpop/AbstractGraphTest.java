@@ -2,7 +2,7 @@ package no.mnemonic.act.platform.dao.tinkerpop;
 
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.entity.cassandra.*;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;

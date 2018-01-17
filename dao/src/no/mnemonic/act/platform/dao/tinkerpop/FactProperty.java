@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
@@ -131,7 +131,7 @@ abstract class FactProperty<V> implements Property<V> {
     }
   }
 
-  static class AccessMode extends FactProperty<no.mnemonic.act.platform.entity.cassandra.AccessMode> {
+  static class AccessMode extends FactProperty<no.mnemonic.act.platform.dao.cassandra.entity.AccessMode> {
     AccessMode(FactEntity fact, FactEdge owner) {
       super(fact, owner);
     }
@@ -142,7 +142,7 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public no.mnemonic.act.platform.entity.cassandra.AccessMode value() throws NoSuchElementException {
+    public no.mnemonic.act.platform.dao.cassandra.entity.AccessMode value() throws NoSuchElementException {
       return getFact().getAccessMode();
     }
   }

@@ -2,7 +2,7 @@ package no.mnemonic.act.platform.service.ti.helpers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.entity.cassandra.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 
 import java.util.UUID;
 

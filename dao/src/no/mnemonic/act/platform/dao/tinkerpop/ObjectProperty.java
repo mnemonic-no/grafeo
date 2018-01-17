@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.entity.cassandra.ObjectEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;

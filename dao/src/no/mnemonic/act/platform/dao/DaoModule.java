@@ -11,9 +11,9 @@ import no.mnemonic.act.platform.dao.elastic.ClientFactory;
 import no.mnemonic.act.platform.dao.elastic.ClientFactoryProvider;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.resolver.EntityHandlerForTypeIdResolver;
-import no.mnemonic.act.platform.entity.handlers.DefaultEntityHandlerFactory;
-import no.mnemonic.act.platform.entity.handlers.EntityHandler;
-import no.mnemonic.act.platform.entity.handlers.EntityHandlerFactory;
+import no.mnemonic.act.platform.dao.handlers.DefaultEntityHandlerFactory;
+import no.mnemonic.act.platform.dao.handlers.EntityHandler;
+import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 
 import java.util.UUID;
 import java.util.function.Function;

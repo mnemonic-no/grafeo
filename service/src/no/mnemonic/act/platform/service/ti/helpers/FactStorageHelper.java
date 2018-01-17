@@ -1,10 +1,10 @@
 package no.mnemonic.act.platform.service.ti.helpers;
 
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.entity.cassandra.AccessMode;
-import no.mnemonic.act.platform.entity.cassandra.FactAclEntity;
-import no.mnemonic.act.platform.entity.cassandra.FactCommentEntity;
-import no.mnemonic.act.platform.entity.cassandra.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
