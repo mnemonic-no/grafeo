@@ -4,26 +4,31 @@ import com.datastax.driver.mapping.Mapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Iterators;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactAclAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactCommentAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactTypeAccessor;
-import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
+import no.mnemonic.act.platform.dao.handlers.EntityHandler;
 import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
+import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -132,7 +137,14 @@ public class FactManager implements LifecycleAspect {
   public FactEntity getFact(UUID id) {
     if (id == null) return null;
     // Decode value using EntityHandler because it's stored encoded.
-    return ObjectUtils.ifNotNull(factMapper.get(id), f -> f.setValue(decodeFactValue(getFactTypeOrFail(f.getTypeID()), f.getValue())));
+    return ObjectUtils.ifNotNull(factMapper.get(id), this::decodeFactValue);
+  }
+
+  public Iterator<FactEntity> getFacts(List<UUID> id) {
+    if (CollectionUtils.isEmpty(id)) return Collections.emptyIterator();
+    // Need to decode values using EntityHandler because they're stored encoded.
+    // Use Iterators.transform() to do this lazily when facts are pulled from Cassandra.
+    return Iterators.transform(factAccessor.fetchByID(id).iterator(), this::decodeFactValue);
   }
 
   public FactEntity saveFact(FactEntity fact) {
@@ -141,7 +153,7 @@ public class FactManager implements LifecycleAspect {
 
     // Encode value using EntityHandler to store value in encoded format.
     // Clone entity first in order to not change supplied fact instance.
-    factMapper.save(fact.clone().setValue(encodeFactValue(getFactTypeOrFail(fact.getTypeID()), fact.getValue())));
+    factMapper.save(encodeFactValue(fact.clone()));
 
     return fact;
   }
@@ -235,12 +247,16 @@ public class FactManager implements LifecycleAspect {
     }
   }
 
-  private String encodeFactValue(FactTypeEntity type, String value) {
-    return entityHandlerFactory.get(type.getEntityHandler(), type.getEntityHandlerParameter()).encode(value);
+  private FactEntity encodeFactValue(FactEntity fact) {
+    FactTypeEntity type = getFactTypeOrFail(fact.getTypeID());
+    EntityHandler handler = entityHandlerFactory.get(type.getEntityHandler(), type.getEntityHandlerParameter());
+    return fact.setValue(handler.encode(fact.getValue()));
   }
 
-  private String decodeFactValue(FactTypeEntity type, String value) {
-    return entityHandlerFactory.get(type.getEntityHandler(), type.getEntityHandlerParameter()).decode(value);
+  private FactEntity decodeFactValue(FactEntity fact) {
+    FactTypeEntity type = getFactTypeOrFail(fact.getTypeID());
+    EntityHandler handler = entityHandlerFactory.get(type.getEntityHandler(), type.getEntityHandlerParameter());
+    return fact.setValue(handler.decode(fact.getValue()));
   }
 
 }

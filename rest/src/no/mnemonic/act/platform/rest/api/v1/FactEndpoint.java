@@ -63,6 +63,30 @@ public class FactEndpoint extends AbstractEndpoint {
   }
 
   @POST
+  @Path("/search")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Search for Facts.",
+          notes = "This operation searches for Facts and returns any matching Facts. With the request body the user can " +
+                  "specify which Facts will be returned. Searching against linked Objects will only be performed one " +
+                  "level deep, i.e. only Objects directly linked to a Fact will be searched. Only the Facts a user has " +
+                  "access to will be returned.",
+          response = Fact.class,
+          responseContainer = "list"
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
+  public Response searchFacts(
+          @ApiParam(value = "Request to search for Facts.") @NotNull @Valid SearchFactRequest request
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return buildResponse(service.searchFacts(getHeader(), request));
+  }
+
+  @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(

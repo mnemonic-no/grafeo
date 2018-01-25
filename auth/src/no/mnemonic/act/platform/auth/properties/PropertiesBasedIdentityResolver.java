@@ -26,8 +26,26 @@ public class PropertiesBasedIdentityResolver implements IdentityResolver {
   }
 
   @Override
+  public UUID resolveOrganizationUUID(OrganizationIdentity identity) {
+    if (!(identity instanceof OrganizationIdentifier)) {
+      throw new IllegalArgumentException("Cannot handle the type of provided identity.");
+    }
+
+    return OrganizationIdentifier.class.cast(identity).getGlobalID();
+  }
+
+  @Override
   public SubjectIdentity resolveSubjectIdentity(UUID id) {
     return SubjectIdentifier.builder().setGlobalID(id).build();
+  }
+
+  @Override
+  public UUID resolveSubjectUUID(SubjectIdentity identity) {
+    if (!(identity instanceof SubjectIdentifier)) {
+      throw new IllegalArgumentException("Cannot handle the type of provided identity.");
+    }
+
+    return SubjectIdentifier.class.cast(identity).getGlobalID();
   }
 
 }

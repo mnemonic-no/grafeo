@@ -30,11 +30,27 @@ public interface IdentityResolver {
   OrganizationIdentity resolveOrganizationIdentity(UUID id);
 
   /**
+   * Maps an OrganizationIdentity to the UUID of an Organization.
+   *
+   * @param identity Implementation-specific OrganizationIdentity
+   * @return Organization UUID
+   */
+  UUID resolveOrganizationUUID(OrganizationIdentity identity);
+
+  /**
    * Maps a Subject identified by UUID to a SubjectIdentity.
    *
    * @param id Subject UUID
    * @return Implementation-specific SubjectIdentity
    */
   SubjectIdentity resolveSubjectIdentity(UUID id);
+
+  /**
+   * Maps a SubjectIdentity to the UUID of a Subject.
+   *
+   * @param identity Implementation-specific SubjectIdentity
+   * @return Subject UUID
+   */
+  UUID resolveSubjectUUID(SubjectIdentity identity);
 
 }

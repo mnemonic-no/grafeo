@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.service.TestSecurityContext;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 import no.mnemonic.services.common.auth.model.Credentials;
@@ -181,6 +182,20 @@ public class SecurityContextTest {
   public void testGetCurrentUserOrganizationIdThrowsUnexpectedAuthenticationFailedException() throws Exception {
     when(organizationResolver.resolveCurrentUserAffiliation(credentials)).thenThrow(InvalidCredentialsException.class);
     context.getCurrentUserOrganizationID();
+  }
+
+  @Test
+  public void testGetAvailableOrganizationID() throws Exception {
+    UUID organizationID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    when(accessController.getAvailableOrganizations(credentials)).thenReturn(SetUtils.set(organization));
+    when(identityResolver.resolveOrganizationUUID(organization)).thenReturn(organizationID);
+    assertEquals(SetUtils.set(organizationID), context.getAvailableOrganizationID());
+  }
+
+  @Test(expected = UnexpectedAuthenticationFailedException.class)
+  public void testGetAvailableOrganizationIdThrowsUnexpectedAuthenticationFailedException() throws Exception {
+    when(accessController.getAvailableOrganizations(credentials)).thenThrow(InvalidCredentialsException.class);
+    context.getAvailableOrganizationID();
   }
 
 }

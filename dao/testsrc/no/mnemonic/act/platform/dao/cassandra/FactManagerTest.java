@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.dao.cassandra;
 
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -148,6 +149,32 @@ public class FactManagerTest extends AbstractManagerTest {
   public void testDecodeWhenRetrievingFact() {
     getFactManager().getFact(createAndSaveFact().getId());
     verify(getEntityHandler(), times(1)).decode(any());
+  }
+
+  @Test
+  public void testFetchFactsById() {
+    FactTypeEntity type = createAndSaveFactType();
+    FactEntity expected = createAndSaveFact(type.getId(), "value");
+    createAndSaveFact(type.getId(), "ignored");
+
+    List<FactEntity> actual = ListUtils.list(getFactManager().getFacts(ListUtils.list(expected.getId())));
+    assertEquals(1, actual.size());
+    assertFact(expected, actual.get(0));
+  }
+
+  @Test
+  public void testFetchFactsByIdDecodeLazily() {
+    Iterator<FactEntity> result = getFactManager().getFacts(ListUtils.list(createAndSaveFact().getId()));
+    verify(getEntityHandler(), never()).decode(any());
+    ListUtils.list(result); // This will iterate the results and pull facts from Cassandra.
+    verify(getEntityHandler(), times(1)).decode(any());
+  }
+
+  @Test
+  public void testFetchFactsByIdWithUnknownId() {
+    assertEquals(0, ListUtils.list(getFactManager().getFacts(null)).size());
+    assertEquals(0, ListUtils.list(getFactManager().getFacts(ListUtils.list())).size());
+    assertEquals(0, ListUtils.list(getFactManager().getFacts(ListUtils.list(UUID.randomUUID()))).size());
   }
 
   @Test

@@ -211,6 +211,21 @@ public interface ThreatIntelligenceService {
   }
 
   /**
+   * Search existing Facts.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request limiting the returned Facts.
+   * @return All Facts fulfilling the request parameters.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   */
+  default ResultSet<Fact> searchFacts(RequestHeader rh, SearchFactRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Create a new Fact.
    *
    * @param rh      Contains meta data about the request.

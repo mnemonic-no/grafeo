@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.dao.handlers.EntityHandler;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
@@ -27,6 +28,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -70,6 +72,8 @@ public class FactSearchManager implements LifecycleAspect {
   @Dependency
   private final ClientFactory clientFactory;
   private final Function<UUID, EntityHandler> entityHandlerForTypeIdResolver;
+
+  private boolean isTestEnvironment = false;
 
   @Inject
   public FactSearchManager(ClientFactory clientFactory, Function<UUID, EntityHandler> entityHandlerForTypeIdResolver) {
@@ -129,6 +133,7 @@ public class FactSearchManager implements LifecycleAspect {
 
     try {
       IndexRequest request = new IndexRequest(INDEX_NAME, TYPE_NAME, fact.getId().toString())
+              .setRefreshPolicy(isTestEnvironment ? WriteRequest.RefreshPolicy.IMMEDIATE : WriteRequest.RefreshPolicy.NONE)
               .source(FACT_DOCUMENT_WRITER.writeValueAsBytes(encodeValues(fact)), XContentType.JSON);
       response = clientFactory.getHighLevelClient().index(request);
     } catch (IOException ex) {
@@ -148,18 +153,17 @@ public class FactSearchManager implements LifecycleAspect {
 
   /**
    * Search for Facts indexed in ElasticSearch by a given search criteria. Only Facts satisfying the search criteria
-   * will be returned. Returns an empty list if no Fact satisfies the search criteria.
+   * will be returned. Returns an empty result container if no Fact satisfies the search criteria.
    * <p>
    * Both 'currentUserID' (identifying the calling user) and 'availableOrganizationID' (identifying the Organizations
    * the calling user has access to) must be set in the search criteria in order to apply access control to Facts. Only
    * Facts accessible to the calling user will be returned.
    *
    * @param criteria Search criteria to match against Facts
-   * @return Facts satisfying search Criteria
+   * @return Facts satisfying search criteria wrapped inside a result container
    */
-  public List<FactDocument> searchFacts(FactSearchCriteria criteria) {
-    List<FactDocument> result = ListUtils.list();
-    if (criteria == null) return result;
+  public SearchResult<FactDocument> searchFacts(FactSearchCriteria criteria) {
+    if (criteria == null) return SearchResult.builder().build();
 
     SearchResponse response;
     try {
@@ -170,9 +174,10 @@ public class FactSearchManager implements LifecycleAspect {
 
     if (response.status() != RestStatus.OK) {
       LOGGER.warning("Could not search for Facts (response code %s).", response.status());
-      return result;
+      return SearchResult.builder().setLimit(criteria.getLimit()).build();
     }
 
+    List<FactDocument> result = ListUtils.list();
     for (SearchHit hit : response.getHits()) {
       FactDocument document = decodeFactDocument(UUID.fromString(hit.getId()), toBytes(hit.getSourceRef()));
       if (document != null) {
@@ -180,8 +185,24 @@ public class FactSearchManager implements LifecycleAspect {
       }
     }
 
-    LOGGER.info("Successfully retrieved %d Facts.", result.size());
-    return result;
+    LOGGER.info("Successfully retrieved %d Facts from a total of %d matching Facts.", result.size(), response.getHits().getTotalHits());
+    return SearchResult.builder()
+            .setLimit(criteria.getLimit())
+            .setCount((int) response.getHits().getTotalHits())
+            .setValues(result)
+            .build();
+  }
+
+  /**
+   * Specify if this class is executed during unit tests (defaults to false). This setting will make indexed documents
+   * available for search immediately.
+   *
+   * @param testEnvironment Whether this class is executed during unit tests
+   * @return Class instance, i.e. 'this'
+   */
+  public FactSearchManager setTestEnvironment(boolean testEnvironment) {
+    this.isTestEnvironment = testEnvironment;
+    return this;
   }
 
   private boolean indexExists() {

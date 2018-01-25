@@ -11,8 +11,11 @@ import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.common.auth.model.NamedFunction;
+import no.mnemonic.services.common.auth.model.OrganizationIdentity;
 
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * The SecurityContext provides methods to perform access control checks, e.g. if a user is allowed to perform
@@ -149,6 +152,24 @@ public abstract class SecurityContext implements AutoCloseable {
       return organizationResolver.resolveCurrentUserAffiliation(credentials).getId();
     } catch (InvalidCredentialsException ex) {
       // getCurrentUserOrganizationID() should only be called in a context with an already authenticated user.
+      throw new UnexpectedAuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
+  }
+
+  /**
+   * Return the IDs of the Organizations the current user has access to.
+   *
+   * @return IDs of available Organizations
+   */
+  public Set<UUID> getAvailableOrganizationID() {
+    try {
+      //noinspection unchecked
+      Set<OrganizationIdentity> organizations = accessController.getAvailableOrganizations(credentials);
+      return organizations.stream()
+              .map(identityResolver::resolveOrganizationUUID)
+              .collect(Collectors.toSet());
+    } catch (InvalidCredentialsException ex) {
+      // getAvailableOrganizations() should only be called in a context with an already authenticated user.
       throw new UnexpectedAuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
     }
   }

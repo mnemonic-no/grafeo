@@ -1,17 +1,13 @@
 package no.mnemonic.act.platform.test.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.api.request.v1.*;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import org.junit.Test;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import java.time.Instant;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
@@ -140,20 +136,6 @@ public class ObjectIT extends AbstractIT {
             .setQuery("g.outE()")
             .addObjectValue(object1.getValue());
     fetchAndAssertList("/v1/object/traverse", request, fact.getId());
-  }
-
-  private void fetchAndAssertSingle(String url, UUID id) throws Exception {
-    Response response = request(url).get();
-    assertEquals(200, response.getStatus());
-    assertEquals(id, getIdFromModel(getPayload(response)));
-  }
-
-  private void fetchAndAssertList(String url, ValidatingRequest request, UUID id) throws Exception {
-    Response response = request(url).post(Entity.json(request));
-    assertEquals(200, response.getStatus());
-    ArrayNode data = (ArrayNode) getPayload(response);
-    assertEquals(1, data.size());
-    assertEquals(id, getIdFromModel(data.get(0)));
   }
 
 }
