@@ -6,6 +6,7 @@ import com.datastax.driver.mapping.annotations.Param;
 import com.datastax.driver.mapping.annotations.Query;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
@@ -13,6 +14,9 @@ import static no.mnemonic.act.platform.dao.cassandra.entity.FactEntity.TABLE;
 
 @Accessor
 public interface FactAccessor {
+
+  @Query("SELECT * FROM " + KEY_SPACE + "." + TABLE + " WHERE id IN :id")
+  Result<FactEntity> fetchByID(@Param("id") List<UUID> id);
 
   @Query("SELECT * FROM " + KEY_SPACE + "." + TABLE + " WHERE value = :value")
   Result<FactEntity> fetchByValue(@Param("value") String value);

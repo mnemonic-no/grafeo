@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.dao.elastic;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
+import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import org.junit.Test;
 
 import java.util.List;
@@ -563,6 +564,18 @@ public class FactSearchManagerTest extends AbstractManagerTest {
     testSearchFactsWithLimit(Integer.MAX_VALUE, 3);
   }
 
+  @Test
+  public void testSearchFactsPopulateSearchResult() {
+    indexFact(d -> d);
+    indexFact(d -> d);
+    indexFact(d -> d);
+
+    SearchResult<FactDocument> result = getFactSearchManager().searchFacts(createFactSearchCriteria(b -> b.setLimit(2)));
+    assertEquals(2, result.getLimit());
+    assertEquals(3, result.getCount());
+    assertEquals(2, result.getValues().size());
+  }
+
   private FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {
     FactSearchCriteria.Builder builder = FactSearchCriteria.builder()
             .setCurrentUserID(UUID.randomUUID())
@@ -579,15 +592,13 @@ public class FactSearchManagerTest extends AbstractManagerTest {
   }
 
   private void testSearchFacts(FactSearchCriteria criteria, FactDocument accessibleFact) {
-    refreshIndices(); // Refresh indices in order to make Facts available in search.
-    List<FactDocument> result = getFactSearchManager().searchFacts(criteria);
+    List<FactDocument> result = getFactSearchManager().searchFacts(criteria).getValues();
     assertEquals(1, result.size());
     assertFactDocument(accessibleFact, result.get(0));
   }
 
   private void testSearchFacts(FactSearchCriteria criteria, int numberOfMatches) {
-    refreshIndices(); // Refresh indices in order to make Facts available in search.
-    List<FactDocument> result = getFactSearchManager().searchFacts(criteria);
+    List<FactDocument> result = getFactSearchManager().searchFacts(criteria).getValues();
     assertEquals(numberOfMatches, result.size());
   }
 
@@ -595,10 +606,9 @@ public class FactSearchManagerTest extends AbstractManagerTest {
     indexFact(d -> d);
     indexFact(d -> d);
     indexFact(d -> d);
-    refreshIndices();
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(limit));
-    List<FactDocument> result = getFactSearchManager().searchFacts(criteria);
+    List<FactDocument> result = getFactSearchManager().searchFacts(criteria).getValues();
     assertEquals(numberOfExpectedResults, result.size());
   }
 

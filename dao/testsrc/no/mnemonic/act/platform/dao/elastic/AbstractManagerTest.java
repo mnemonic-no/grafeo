@@ -2,12 +2,9 @@ package no.mnemonic.act.platform.dao.elastic;
 
 import no.mnemonic.act.platform.dao.handlers.EntityHandler;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
-import org.apache.http.HttpStatus;
-import org.elasticsearch.client.Response;
 import org.junit.*;
 import org.mockito.Mock;
 
-import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -52,6 +49,7 @@ public abstract class AbstractManagerTest {
     when(entityHandler.decode(any())).then(returnsFirstArg());
 
     factSearchManager = new FactSearchManager(clientFactory, entityHandlerForTypeIdResolver);
+    factSearchManager.setTestEnvironment(true);
     factSearchManager.startComponent();
   }
 
@@ -71,17 +69,6 @@ public abstract class AbstractManagerTest {
 
   protected EntityHandler getEntityHandler() {
     return entityHandler;
-  }
-
-  protected void refreshIndices() {
-    try {
-      Response response = clientFactory.getLowLevelClient().performRequest("POST", "_refresh");
-      if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        throw new IllegalStateException("Could not refresh indices.");
-      }
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
   }
 
 }

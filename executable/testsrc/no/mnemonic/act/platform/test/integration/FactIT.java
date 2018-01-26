@@ -24,9 +24,29 @@ public class FactIT extends AbstractIT {
     FactEntity entity = createFact();
 
     // ... and check that it can be received via the REST API.
-    Response response = request("/v1/fact/uuid/" + entity.getId()).get();
-    assertEquals(200, response.getStatus());
-    assertEquals(entity.getId(), getIdFromModel(getPayload(response)));
+    fetchAndAssertSingle("/v1/fact/uuid/" + entity.getId(), entity.getId());
+  }
+
+  @Test
+  public void testSearchFacts() throws Exception {
+    // Create a Fact in the database ...
+    FactEntity entity = createFact();
+
+    // ... and check that it can be found via the REST API.
+    fetchAndAssertList("/v1/fact/search", new SearchFactRequest(), entity.getId());
+  }
+
+  @Test
+  public void testSearchFactsWithFiltering() throws Exception {
+    // Create multiple Facts in the database ...
+    ObjectTypeEntity objectType = createObjectType();
+    FactTypeEntity factType = createFactType(objectType.getId());
+    ObjectEntity object = createObject(objectType.getId());
+    FactEntity fact = createFact(object, factType, f -> f.setValue("fact1"));
+    createFact(object, factType, f -> f.setValue("fact2"));
+
+    // ... and check that only one Fact after filtering is found via the REST API.
+    fetchAndAssertList("/v1/fact/search", new SearchFactRequest().addFactValue(fact.getValue()), fact.getId());
   }
 
   @Test

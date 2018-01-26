@@ -2,10 +2,12 @@ package no.mnemonic.act.platform.test.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.auth.properties.PropertiesBasedAccessController;
 import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
@@ -13,6 +15,8 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.ClientFactory;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.rest.RestModule;
 import no.mnemonic.act.platform.rest.container.ApiServer;
 import no.mnemonic.act.platform.service.ServiceModule;
@@ -26,10 +30,13 @@ import org.junit.Before;
 import org.junit.ClassRule;
 
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.UUID;
+
+import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractIT {
 
@@ -72,6 +79,8 @@ public abstract class AbstractIT {
     clientFactory = injector.getInstance(ClientFactory.class);
     factSearchManager = injector.getInstance(FactSearchManager.class);
     apiServer = injector.getInstance(ApiServer.class);
+
+    factSearchManager.setTestEnvironment(true);
 
     // Start up everything in correct order.
     accessController.startComponent();
@@ -135,6 +144,22 @@ public abstract class AbstractIT {
     return UUID.fromString(node.get("id").textValue());
   }
 
+  /* Helpers for assertions */
+
+  void fetchAndAssertSingle(String url, UUID id) throws Exception {
+    Response response = request(url).get();
+    assertEquals(200, response.getStatus());
+    assertEquals(id, getIdFromModel(getPayload(response)));
+  }
+
+  void fetchAndAssertList(String url, ValidatingRequest request, UUID id) throws Exception {
+    Response response = request(url).post(Entity.json(request));
+    assertEquals(200, response.getStatus());
+    ArrayNode data = (ArrayNode) getPayload(response);
+    assertEquals(1, data.size());
+    assertEquals(id, getIdFromModel(data.get(0)));
+  }
+
   /* Helpers for Cassandra */
 
   ObjectTypeEntity createObjectType() {
@@ -195,7 +220,30 @@ public abstract class AbstractIT {
             .setFactID(fact.getId())
             .setDirection(factType.getRelevantObjectBindings().get(0).getDirection()));
 
-    return getFactManager().saveFact(preparation.prepare(fact));
+    fact = getFactManager().saveFact(preparation.prepare(fact));
+
+    getFactSearchManager().indexFact(new FactDocument()
+            .setId(fact.getId())
+            .setTypeID(factType.getId())
+            .setTypeName(factType.getName())
+            .setValue(fact.getValue())
+            .setInReferenceTo(fact.getInReferenceToID())
+            .setOrganizationID(fact.getOrganizationID())
+            .setOrganizationName("organizationName")
+            .setSourceID(fact.getSourceID())
+            .setSourceName("sourceName")
+            .setAccessMode(FactDocument.AccessMode.valueOf(fact.getAccessMode().name()))
+            .setTimestamp(fact.getTimestamp())
+            .setLastSeenTimestamp(fact.getLastSeenTimestamp())
+            .addObject(new ObjectDocument()
+                    .setId(object.getId())
+                    .setTypeID(object.getTypeID())
+                    .setValue(object.getValue())
+                    .setDirection(ObjectDocument.Direction.valueOf(binding.getDirection().name()))
+            )
+    );
+
+    return fact;
   }
 
   ObjectEntity createObject() {

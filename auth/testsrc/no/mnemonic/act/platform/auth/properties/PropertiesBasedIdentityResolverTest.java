@@ -35,11 +35,35 @@ public class PropertiesBasedIdentityResolverTest {
   }
 
   @Test
+  public void testResolveOrganizationUUID() {
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    OrganizationIdentity identity = OrganizationIdentifier.builder().setGlobalID(id).build();
+    assertEquals(id, resolver.resolveOrganizationUUID(identity));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testResolveOrganizationUuidWithWrongIdentityType() {
+    resolver.resolveOrganizationUUID(new OrganizationIdentity() {});
+  }
+
+  @Test
   public void testResolveSubjectIdentity() {
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
     SubjectIdentity identity = resolver.resolveSubjectIdentity(id);
     assertTrue(identity instanceof SubjectIdentifier);
     assertEquals(id, SubjectIdentifier.class.cast(identity).getGlobalID());
+  }
+
+  @Test
+  public void testResolveSubjectUUID() {
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    SubjectIdentity identity = SubjectIdentifier.builder().setGlobalID(id).build();
+    assertEquals(id, resolver.resolveSubjectUUID(identity));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testResolveSubjectUuidWithWrongIdentityType() {
+    resolver.resolveSubjectUUID(new SubjectIdentity() {});
   }
 
 }

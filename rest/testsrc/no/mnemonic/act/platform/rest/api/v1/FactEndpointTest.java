@@ -39,6 +39,19 @@ public class FactEndpointTest extends AbstractEndpointTest {
   }
 
   @Test
+  public void testSearchFacts() throws Exception {
+    when(getTiService().searchFacts(any(), isA(SearchFactRequest.class))).then(i -> ResultSet.builder().setValues(createFacts()).build());
+
+    Response response = target("/v1/fact/search").request().post(Entity.json(new SearchFactRequest()));
+    JsonNode payload = getPayload(response);
+    assertEquals(200, response.getStatus());
+    assertTrue(payload.isArray());
+    assertEquals(3, payload.size());
+
+    verify(getTiService(), times(1)).searchFacts(any(), isA(SearchFactRequest.class));
+  }
+
+  @Test
   public void testCreateFact() throws Exception {
     UUID id = UUID.randomUUID();
     when(getTiService().createFact(any(), isA(CreateFactRequest.class))).then(i -> Fact.builder().setId(id).build());
@@ -140,6 +153,14 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(comment.toString(), getPayload(response).get("id").textValue());
 
     verify(getTiService(), times(1)).createFactComment(any(), isA(CreateFactCommentRequest.class));
+  }
+
+  private Collection<Fact> createFacts() {
+    Collection<Fact> facts = new HashSet<>();
+    for (int i = 0; i < 3; i++) {
+      facts.add(Fact.builder().setId(UUID.randomUUID()).build());
+    }
+    return facts;
   }
 
   private Collection<AclEntry> createFactAcl() {

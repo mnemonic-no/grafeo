@@ -12,8 +12,8 @@ import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.Service;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
@@ -197,6 +197,12 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   public Fact getFact(RequestHeader rh, GetFactByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return FactGetByIdDelegate.create().handle(request);
+  }
+
+  @Override
+  public ResultSet<Fact> searchFacts(RequestHeader rh, SearchFactRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return FactSearchDelegate.create().handle(request);
   }
 
   @Override
