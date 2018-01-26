@@ -47,27 +47,4 @@ public class FactGetByIdDelegateTest extends AbstractDelegateTest {
     verify(getFactConverter()).apply(entity);
   }
 
-  @Test
-  public void testFetchFactWithInReferenceTo() throws Exception {
-    FactEntity inReferenceTo = new FactEntity().setId(UUID.randomUUID());
-    FactEntity fact = new FactEntity().setId(UUID.randomUUID()).setInReferenceToID(inReferenceTo.getId());
-
-    when(getFactManager().getFact(fact.getId())).thenReturn(fact);
-    when(getFactManager().getFact(inReferenceTo.getId())).thenReturn(inReferenceTo);
-    FactGetByIdDelegate.create().handle(new GetFactByIdRequest().setId(fact.getId()));
-    verify(getFactConverter()).apply(argThat(entity -> entity == fact && entity.getInReferenceToID().equals(inReferenceTo.getId())));
-  }
-
-  @Test
-  public void testFetchFactNoAccessToInReferenceTo() throws Exception {
-    FactEntity inReferenceTo = new FactEntity().setId(UUID.randomUUID());
-    FactEntity fact = new FactEntity().setId(UUID.randomUUID()).setInReferenceToID(inReferenceTo.getId());
-
-    when(getFactManager().getFact(fact.getId())).thenReturn(fact);
-    when(getFactManager().getFact(inReferenceTo.getId())).thenReturn(inReferenceTo);
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(inReferenceTo);
-    FactGetByIdDelegate.create().handle(new GetFactByIdRequest().setId(fact.getId()));
-    verify(getFactConverter()).apply(argThat(entity -> entity.getId().equals(fact.getId()) && entity.getInReferenceToID() == null));
-  }
-
 }

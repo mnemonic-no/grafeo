@@ -228,6 +228,22 @@ public class FactIT extends AbstractIT {
     assertEquals(403, request("/v1/fact/uuid/" + factID, 3).get().getStatus()); // Not in ACL.
   }
 
+  @Test
+  public void testFetchFactSanitizeInReferenceToFact() throws Exception {
+    ObjectTypeEntity objectType = createObjectType();
+    FactTypeEntity factType = createFactType(objectType.getId());
+    ObjectEntity object = createObject(objectType.getId());
+    // Create a referenced Fact with explicit access ...
+    FactEntity referencedFact = createFact(object, factType, f -> f.setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.Explicit));
+    // ... and reference this Fact from another Fact ...
+    FactEntity referencingFact = createFact(object, factType, f -> f.setInReferenceToID(referencedFact.getId()));
+
+    // ... and check that the referenced Fact is not returned by the REST API.
+    Response response = request("/v1/fact/uuid/" + referencingFact.getId()).get();
+    assertEquals(200, response.getStatus());
+    assertTrue(getPayload(response).get("inReferenceTo").isNull());
+  }
+
   private FactAclEntity createAclEntry(FactEntity fact) {
     FactAclEntity entry = new FactAclEntity()
             .setId(UUID.randomUUID())
