@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -17,10 +18,11 @@ import static org.junit.Assert.assertNull;
 public class FactConverterTest {
 
   private final Function<UUID, FactType> factTypeConverter = id -> FactType.builder().setId(id).build();
-  private final Function<UUID, Fact> inReferenceToConverter = id -> Fact.builder().setId(id).build();
   private final Function<UUID, Organization> organizationConverter = id -> Organization.builder().setId(id).build();
   private final Function<UUID, Source> sourceConverter = id -> Source.builder().setId(id).build();
   private final Function<UUID, Object> objectConverter = id -> Object.builder().setId(id).build();
+  private final Function<UUID, FactEntity> factEntityResolver = id -> createEntity().setId(id);
+  private final Predicate<FactEntity> accessChecker = fact -> true;
 
   @Test
   public void testConvertFact() {
@@ -33,23 +35,40 @@ public class FactConverterTest {
     assertNull(createFactConverter().apply(null));
   }
 
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutFactTypeConverterThrowsException() {
-    FactConverter.builder()
-            .setInReferenceToConverter(inReferenceToConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutInReferenceToConverterThrowsException() {
-    FactConverter.builder()
+  @Test
+  public void testConvertFactCannotResolveInReferenceToFact() {
+    FactConverter converter = FactConverter.builder()
             .setFactTypeConverter(factTypeConverter)
             .setOrganizationConverter(organizationConverter)
             .setSourceConverter(sourceConverter)
             .setObjectConverter(objectConverter)
+            .setFactEntityResolver(id -> null)
+            .setAccessChecker(accessChecker)
+            .build();
+    assertNull(converter.apply(createEntity()).getInReferenceTo());
+  }
+
+  @Test
+  public void testConvertFactNoAccessToInReferenceToFact() {
+    FactConverter converter = FactConverter.builder()
+            .setFactTypeConverter(factTypeConverter)
+            .setOrganizationConverter(organizationConverter)
+            .setSourceConverter(sourceConverter)
+            .setObjectConverter(objectConverter)
+            .setFactEntityResolver(factEntityResolver)
+            .setAccessChecker(fact -> false)
+            .build();
+    assertNull(converter.apply(createEntity()).getInReferenceTo());
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateConverterWithoutFactTypeConverterThrowsException() {
+    FactConverter.builder()
+            .setOrganizationConverter(organizationConverter)
+            .setSourceConverter(sourceConverter)
+            .setObjectConverter(objectConverter)
+            .setFactEntityResolver(factEntityResolver)
+            .setAccessChecker(accessChecker)
             .build();
   }
 
@@ -57,9 +76,10 @@ public class FactConverterTest {
   public void testCreateConverterWithoutOrganizationConverterThrowsException() {
     FactConverter.builder()
             .setFactTypeConverter(factTypeConverter)
-            .setInReferenceToConverter(inReferenceToConverter)
             .setSourceConverter(sourceConverter)
             .setObjectConverter(objectConverter)
+            .setFactEntityResolver(factEntityResolver)
+            .setAccessChecker(accessChecker)
             .build();
   }
 
@@ -67,9 +87,10 @@ public class FactConverterTest {
   public void testCreateConverterWithoutSourceConverterThrowsException() {
     FactConverter.builder()
             .setFactTypeConverter(factTypeConverter)
-            .setInReferenceToConverter(inReferenceToConverter)
             .setOrganizationConverter(organizationConverter)
             .setObjectConverter(objectConverter)
+            .setFactEntityResolver(factEntityResolver)
+            .setAccessChecker(accessChecker)
             .build();
   }
 
@@ -77,19 +98,43 @@ public class FactConverterTest {
   public void testCreateConverterWithoutObjectConverterThrowsException() {
     FactConverter.builder()
             .setFactTypeConverter(factTypeConverter)
-            .setInReferenceToConverter(inReferenceToConverter)
             .setOrganizationConverter(organizationConverter)
             .setSourceConverter(sourceConverter)
+            .setFactEntityResolver(factEntityResolver)
+            .setAccessChecker(accessChecker)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateConverterWithoutFactEntityResolverThrowsException() {
+    FactConverter.builder()
+            .setFactTypeConverter(factTypeConverter)
+            .setOrganizationConverter(organizationConverter)
+            .setSourceConverter(sourceConverter)
+            .setObjectConverter(objectConverter)
+            .setAccessChecker(accessChecker)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateConverterWithoutAccessCheckerThrowsException() {
+    FactConverter.builder()
+            .setFactTypeConverter(factTypeConverter)
+            .setOrganizationConverter(organizationConverter)
+            .setSourceConverter(sourceConverter)
+            .setObjectConverter(objectConverter)
+            .setFactEntityResolver(factEntityResolver)
             .build();
   }
 
   private FactConverter createFactConverter() {
     return FactConverter.builder()
             .setFactTypeConverter(factTypeConverter)
-            .setInReferenceToConverter(inReferenceToConverter)
             .setOrganizationConverter(organizationConverter)
             .setSourceConverter(sourceConverter)
             .setObjectConverter(objectConverter)
+            .setFactEntityResolver(factEntityResolver)
+            .setAccessChecker(accessChecker)
             .build();
   }
 

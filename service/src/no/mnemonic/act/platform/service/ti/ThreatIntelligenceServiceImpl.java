@@ -12,7 +12,6 @@ import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.Service;
@@ -78,10 +77,11 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .build();
     this.factConverter = FactConverter.builder()
             .setFactTypeConverter(createFactTypeByIdConverter())
-            .setInReferenceToConverter(createInReferenceToConverter())
             .setOrganizationConverter(organizationResolver::resolveOrganization)
             .setSourceConverter(createSourceConverter())
             .setObjectConverter(createObjectByIdConverter())
+            .setFactEntityResolver(factManager::getFact)
+            .setAccessChecker(fact -> TiSecurityContext.get().hasReadPermission(fact))
             .build();
     this.aclEntryConverter = AclEntryConverter.builder()
             .setSourceConverter(createSourceConverter())
@@ -303,16 +303,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
 
   private Function<UUID, Object> createObjectByIdConverter() {
     return id -> ObjectUtils.ifNotNull(objectManager.getObject(id), objectConverter, Object.builder().setId(id).setValue("N/A").build());
-  }
-
-  private Function<UUID, Fact> createInReferenceToConverter() {
-    return id -> {
-      FactEntity inReferenceTo = factManager.getFact(id);
-      if (inReferenceTo == null) return null;
-      // Assume that access to 'inReferenceTo' Fact was already verified.
-      // Also, avoid resolving recursive 'inReferenceTo' Facts. Clone entity first in order to not disturb DAO layer.
-      return factConverter.apply(inReferenceTo.clone().setInReferenceToID(null));
-    };
   }
 
 }
