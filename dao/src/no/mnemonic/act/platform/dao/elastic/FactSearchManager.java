@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.dao.handlers.EntityHandler;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -36,6 +36,15 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.SimpleQueryStringBuilder;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.filter.Filter;
+import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import javax.inject.Inject;
@@ -51,6 +60,7 @@ import java.util.stream.Collectors;
 
 import static org.elasticsearch.common.bytes.BytesReference.toBytes;
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 
 /**
  * Class for indexing Facts into ElasticSearch as well as for retrieving and searching indexed Facts.
@@ -63,10 +73,18 @@ public class FactSearchManager implements LifecycleAspect {
   private static final String MAPPINGS_JSON = "mappings.json";
   private static final int MAX_RESULT_WINDOW = 10_000; // Must be the same value as specified in mappings.json.
 
+  private static final String FILTER_FACTS_AGGREGATION_NAME = "FilterFactsAggregation";
+  private static final String NESTED_OBJECTS_AGGREGATION_NAME = "NestedObjectsAggregation";
+  private static final String FILTER_OBJECTS_AGGREGATION_NAME = "FilterObjectsAggregation";
+  private static final String OBJECTS_COUNT_AGGREGATION_NAME = "ObjectsCountAggregation";
+  private static final String UNIQUE_OBJECTS_AGGREGATION_NAME = "UniqueObjectsAggregation";
+  private static final String UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME = "UniqueObjectsSourceAggregation";
+
   private static final Logger LOGGER = Logging.getLogger(FactSearchManager.class);
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final ObjectReader FACT_DOCUMENT_READER = MAPPER.readerFor(FactDocument.class);
+  private static final ObjectReader OBJECT_DOCUMENT_READER = MAPPER.readerFor(ObjectDocument.class);
   private static final ObjectWriter FACT_DOCUMENT_WRITER = MAPPER.writerFor(FactDocument.class);
 
   @Dependency
@@ -163,18 +181,18 @@ public class FactSearchManager implements LifecycleAspect {
    * @return Facts satisfying search criteria wrapped inside a result container
    */
   public SearchResult<FactDocument> searchFacts(FactSearchCriteria criteria) {
-    if (criteria == null) return SearchResult.builder().build();
+    if (criteria == null) return SearchResult.<FactDocument>builder().build();
 
     SearchResponse response;
     try {
-      response = clientFactory.getHighLevelClient().search(buildSearchRequest(criteria));
+      response = clientFactory.getHighLevelClient().search(buildFactsSearchRequest(criteria));
     } catch (IOException ex) {
       throw logAndExit(ex, "Could not perform request to search for Facts.");
     }
 
     if (response.status() != RestStatus.OK) {
       LOGGER.warning("Could not search for Facts (response code %s).", response.status());
-      return SearchResult.builder().setLimit(criteria.getLimit()).build();
+      return SearchResult.<FactDocument>builder().setLimit(criteria.getLimit()).build();
     }
 
     List<FactDocument> result = ListUtils.list();
@@ -186,9 +204,55 @@ public class FactSearchManager implements LifecycleAspect {
     }
 
     LOGGER.info("Successfully retrieved %d Facts from a total of %d matching Facts.", result.size(), response.getHits().getTotalHits());
-    return SearchResult.builder()
+    return SearchResult.<FactDocument>builder()
             .setLimit(criteria.getLimit())
             .setCount((int) response.getHits().getTotalHits())
+            .setValues(result)
+            .build();
+  }
+
+  /**
+   * Search for Objects indexed in ElasticSearch by a given search criteria. Only Objects satisfying the search criteria
+   * will be returned. Returns an empty result container if no Object satisfies the search criteria.
+   * <p>
+   * First, the result will be reduced to only the Facts satisfying the search criteria. Then, for all matching Facts
+   * the bound Objects will be reduced to the unique Objects satisfying the search criteria.
+   * <p>
+   * Both 'currentUserID' (identifying the calling user) and 'availableOrganizationID' (identifying the Organizations
+   * the calling user has access to) must be set in the search criteria in order to apply access control to Facts. Only
+   * Objects bound to Facts accessible to the calling user will be returned.
+   *
+   * @param criteria Search criteria to match against Facts and their bound Objects
+   * @return Objects satisfying search criteria wrapped inside a result container
+   */
+  public SearchResult<ObjectDocument> searchObjects(FactSearchCriteria criteria) {
+    if (criteria == null) return SearchResult.<ObjectDocument>builder().build();
+
+    SearchResponse response;
+    try {
+      response = clientFactory.getHighLevelClient().search(buildObjectsSearchRequest(criteria));
+    } catch (IOException ex) {
+      throw logAndExit(ex, "Could not perform request to search for Objects.");
+    }
+
+    if (response.status() != RestStatus.OK) {
+      LOGGER.warning("Could not search for Objects (response code %s).", response.status());
+      return SearchResult.<ObjectDocument>builder().setLimit(criteria.getLimit()).build();
+    }
+
+    Aggregations resultAggregations = resolveSearchObjectsResultAggregations(response);
+    if (resultAggregations == null) {
+      LOGGER.warning("Could not search for Objects (no aggregations returned).");
+      return SearchResult.<ObjectDocument>builder().setLimit(criteria.getLimit()).build();
+    }
+
+    int count = retrieveSearchObjectsResultCount(resultAggregations);
+    List<ObjectDocument> result = retrieveSearchObjectsResultValues(resultAggregations);
+
+    LOGGER.info("Successfully retrieved %d Objects from a total of %d matching Objects.", result.size(), count);
+    return SearchResult.<ObjectDocument>builder()
+            .setLimit(criteria.getLimit())
+            .setCount(count)
             .setValues(result)
             .build();
   }
@@ -239,20 +303,33 @@ public class FactSearchManager implements LifecycleAspect {
     LOGGER.info("Successfully created index '%s'.", INDEX_NAME);
   }
 
-  private SearchRequest buildSearchRequest(FactSearchCriteria criteria) {
+  private SearchRequest buildFactsSearchRequest(FactSearchCriteria criteria) {
+    SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+            .size(calculateMaximumSize(criteria))
+            .query(buildFactsQuery(criteria));
+    return new SearchRequest()
+            .indices(INDEX_NAME)
+            .types(TYPE_NAME)
+            .source(sourceBuilder);
+  }
+
+  private SearchRequest buildObjectsSearchRequest(FactSearchCriteria criteria) {
+    SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+            .size(0) // Not interested in the search hits as the search result is part of the returned aggregations.
+            .aggregation(buildObjectsAggregation(criteria));
+    return new SearchRequest()
+            .indices(INDEX_NAME)
+            .types(TYPE_NAME)
+            .source(sourceBuilder);
+  }
+
+  private QueryBuilder buildFactsQuery(FactSearchCriteria criteria) {
     BoolQueryBuilder rootQuery = boolQuery();
     applySimpleFilterQueries(criteria, rootQuery);
     applyKeywordSearchQuery(criteria, rootQuery);
     applyTimestampSearchQuery(criteria, rootQuery);
     applyAccessControlQuery(criteria, rootQuery);
-
-    SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
-            .size(criteria.getLimit() > 0 && criteria.getLimit() < MAX_RESULT_WINDOW ? criteria.getLimit() : MAX_RESULT_WINDOW)
-            .query(rootQuery);
-    return new SearchRequest()
-            .indices(INDEX_NAME)
-            .types(TYPE_NAME)
-            .source(sourceBuilder);
+    return rootQuery;
   }
 
   private void applySimpleFilterQueries(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
@@ -315,25 +392,14 @@ public class FactSearchManager implements LifecycleAspect {
 
   private void applyKeywordSearchQuery(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
     if (StringUtils.isBlank(criteria.getKeywords())) return;
-
-    // Set default values if not provided by criteria.
-    Set<FactSearchCriteria.KeywordFieldStrategy> fieldStrategies = CollectionUtils.isEmpty(criteria.getKeywordFieldStrategy()) ?
-            SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.all) : criteria.getKeywordFieldStrategy();
-    FactSearchCriteria.MatchStrategy matchStrategy = ObjectUtils.ifNull(criteria.getKeywordMatchStrategy(), FactSearchCriteria.MatchStrategy.any);
-
-    applyFieldStrategy(rootQuery, field -> createFieldQuery(field, criteria.getKeywords()), fieldStrategies, matchStrategy);
+    applyFieldStrategy(rootQuery, field -> createFieldQuery(field, criteria.getKeywords()),
+            criteria.getKeywordFieldStrategy(), criteria.getKeywordMatchStrategy());
   }
 
   private void applyTimestampSearchQuery(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
     if (criteria.getStartTimestamp() == null && criteria.getEndTimestamp() == null) return;
-
-    // Set default values if not provided by criteria.
-    Set<FactSearchCriteria.TimeFieldStrategy> fieldStrategies = CollectionUtils.isEmpty(criteria.getTimeFieldStrategy()) ?
-            SetUtils.set(FactSearchCriteria.TimeFieldStrategy.all) : criteria.getTimeFieldStrategy();
-    FactSearchCriteria.MatchStrategy matchStrategy = ObjectUtils.ifNull(criteria.getTimeMatchStrategy(), FactSearchCriteria.MatchStrategy.any);
-
     applyFieldStrategy(rootQuery, field -> createFieldQuery(field, criteria.getStartTimestamp(), criteria.getEndTimestamp()),
-            fieldStrategies, matchStrategy);
+            criteria.getTimeFieldStrategy(), criteria.getTimeMatchStrategy());
   }
 
   private void applyFieldStrategy(BoolQueryBuilder rootQuery, Function<String, QueryBuilder> fieldQueryResolver,
@@ -397,6 +463,138 @@ public class FactSearchManager implements LifecycleAspect {
     rootQuery.filter(accessQuery);
   }
 
+  private AggregationBuilder buildObjectsAggregation(FactSearchCriteria criteria) {
+    // 1. Reduce to Facts matching the search criteria.
+    return filter(FILTER_FACTS_AGGREGATION_NAME, buildFactsQuery(criteria))
+            // 2. Map to nested Object documents.
+            .subAggregation(nested(NESTED_OBJECTS_AGGREGATION_NAME, "objects")
+                    // 3. Reduce to Objects matching the search criteria.
+                    .subAggregation(filter(FILTER_OBJECTS_AGGREGATION_NAME, buildObjectsQuery(criteria))
+                            // 4. Calculate the number of unique Objects by id. This will give the 'count' value.
+                            // If 'count' is smaller than MAX_RESULT_WINDOW a correct value is expected, thus,
+                            // the precision threshold is set to MAX_RESULT_WINDOW.
+                            .subAggregation(cardinality(OBJECTS_COUNT_AGGREGATION_NAME)
+                                    .field("objects.id")
+                                    .precisionThreshold(MAX_RESULT_WINDOW)
+                            )
+                            // 5. Reduce to buckets of unique Objects by id, restricted to the search criteria's limit.
+                            // This will give the actual search results.
+                            .subAggregation(terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
+                                    .field("objects.id")
+                                    .size(calculateMaximumSize(criteria))
+                                    // 6. Map to the unique Object's source. Set size to 1, because all Objects in one
+                                    // bucket are the same (ignoring 'direction' which isn't relevant for Object search).
+                                    .subAggregation(topHits(UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME)
+                                            .size(1)
+                                    )
+                            )
+                    )
+            );
+  }
+
+  private QueryBuilder buildObjectsQuery(FactSearchCriteria criteria) {
+    BoolQueryBuilder rootQuery = boolQuery();
+
+    // Apply all simple filter queries on Objects. It's not necessary to wrap them inside a nested query because the
+    // query is executed inside a nested aggregation which has direct access to the nested documents.
+    if (!CollectionUtils.isEmpty(criteria.getObjectID())) {
+      rootQuery.filter(termsQuery("objects.id", criteria.getObjectID()));
+    }
+
+    if (!CollectionUtils.isEmpty(criteria.getObjectTypeID())) {
+      rootQuery.filter(termsQuery("objects.typeID", criteria.getObjectTypeID()));
+    }
+
+    if (!CollectionUtils.isEmpty(criteria.getObjectTypeName())) {
+      rootQuery.filter(termsQuery("objects.typeName", criteria.getObjectTypeName()));
+    }
+
+    if (!CollectionUtils.isEmpty(criteria.getObjectValue())) {
+      rootQuery.filter(termsQuery("objects.value", criteria.getObjectValue()));
+    }
+
+    // Apply keyword search on Object values if necessary.
+    if (!StringUtils.isBlank(criteria.getKeywords()) &&
+            (criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.objectValue) ||
+                    criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.all))) {
+      // Values are indexed differently. Avoid errors by setting 'lenient' to true.
+      applyFieldStrategy(rootQuery, field -> simpleQueryStringQuery(criteria.getKeywords()).field(field).lenient(true),
+              SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.objectValue), criteria.getKeywordMatchStrategy());
+    }
+
+    return rootQuery;
+  }
+
+  private int calculateMaximumSize(FactSearchCriteria criteria) {
+    return criteria.getLimit() > 0 && criteria.getLimit() < MAX_RESULT_WINDOW ? criteria.getLimit() : MAX_RESULT_WINDOW;
+  }
+
+  private Aggregations resolveSearchObjectsResultAggregations(SearchResponse response) {
+    // Go through the returned aggregations as defined by the search request and pick out the aggregations
+    // which should contain the search results (count and values).
+    Aggregation filterFactsAggregation = response.getAggregations().get(FILTER_FACTS_AGGREGATION_NAME);
+    if (!(filterFactsAggregation instanceof Filter)) {
+      return null;
+    }
+
+    Aggregation nestedObjectsAggregation = Filter.class.cast(filterFactsAggregation).getAggregations().get(NESTED_OBJECTS_AGGREGATION_NAME);
+    if (!(nestedObjectsAggregation instanceof Nested)) {
+      return null;
+    }
+
+    Aggregation filterObjectsAggregation = Nested.class.cast(nestedObjectsAggregation).getAggregations().get(FILTER_OBJECTS_AGGREGATION_NAME);
+    if (!(filterObjectsAggregation instanceof Filter)) {
+      return null;
+    }
+
+    return Filter.class.cast(filterObjectsAggregation).getAggregations();
+  }
+
+  private int retrieveSearchObjectsResultCount(Aggregations resultAggregations) {
+    Aggregation objectsCountAggregation = resultAggregations.get(OBJECTS_COUNT_AGGREGATION_NAME);
+    if (!(objectsCountAggregation instanceof Cardinality)) {
+      LOGGER.warning("Could not retrieve result count when searching for Objects.");
+      return -1;
+    }
+
+    // Retrieve Object count from the cardinality aggregation.
+    return (int) Cardinality.class.cast(objectsCountAggregation).getValue();
+  }
+
+  private List<ObjectDocument> retrieveSearchObjectsResultValues(Aggregations resultAggregations) {
+    List<ObjectDocument> result = ListUtils.list();
+
+    Aggregation uniqueObjectsAggregation = resultAggregations.get(UNIQUE_OBJECTS_AGGREGATION_NAME);
+    if (!(uniqueObjectsAggregation instanceof Terms)) {
+      LOGGER.warning("Could not retrieve result values when searching for Objects.");
+      return result;
+    }
+
+    List<? extends Terms.Bucket> buckets = Terms.class.cast(uniqueObjectsAggregation).getBuckets();
+    if (CollectionUtils.isEmpty(buckets)) {
+      // No buckets means no results.
+      return result;
+    }
+
+    // Each bucket contains one unique Object, where the TopHits aggregation provides the document source.
+    for (Terms.Bucket bucket : buckets) {
+      Aggregation uniqueObjectsSourceAggregation = bucket.getAggregations().get(UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME);
+      if (!(uniqueObjectsSourceAggregation instanceof TopHits)) continue;
+
+      // Each bucket should contain only one hit with one unique Object.
+      SearchHits hits = TopHits.class.cast(uniqueObjectsSourceAggregation).getHits();
+      if (hits.getHits().length < 1) continue;
+
+      // Retrieve Object document from provided search hit.
+      ObjectDocument document = decodeObjectDocument(toBytes(hits.getAt(0).getSourceRef()));
+      if (document != null) {
+        result.add(document);
+      }
+    }
+
+    return result;
+  }
+
   private FactDocument decodeFactDocument(UUID factID, byte[] source) {
     try {
       FactDocument fact = decodeValues(FACT_DOCUMENT_READER.readValue(source));
@@ -404,6 +602,17 @@ public class FactSearchManager implements LifecycleAspect {
       return fact.setId(factID);
     } catch (IOException ex) {
       LOGGER.warning(ex, "Could not deserialize Fact with id = %s. Source document not stored?", factID);
+      return null;
+    }
+  }
+
+  private ObjectDocument decodeObjectDocument(byte[] source) {
+    try {
+      ObjectDocument object = OBJECT_DOCUMENT_READER.readValue(source);
+      // Decode Object value using EntityHandler because it's stored encoded.
+      return object.setValue(entityHandlerForTypeIdResolver.apply(object.getTypeID()).decode(object.getValue()));
+    } catch (IOException ex) {
+      LOGGER.warning(ex, "Could not deserialize Object. Source of nested document not returned?");
       return null;
     }
   }
