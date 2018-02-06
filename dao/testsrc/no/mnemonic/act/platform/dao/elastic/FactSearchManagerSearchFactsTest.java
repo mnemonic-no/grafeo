@@ -9,78 +9,13 @@ import org.junit.Test;
 import java.util.List;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.*;
+import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.assertFactDocument;
+import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.createObjectDocument;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-public class FactSearchManagerTest extends AbstractManagerTest {
-
-  @Test
-  public void testGetFactNullId() {
-    assertNull(getFactSearchManager().getFact(null));
-  }
-
-  @Test
-  public void testGetFactNonIndexedFact() {
-    assertNull(getFactSearchManager().getFact(UUID.randomUUID()));
-  }
-
-  @Test
-  public void testIndexFactNullFact() {
-    assertNull(getFactSearchManager().indexFact(null));
-  }
-
-  @Test
-  public void testIndexFactEmptyFact() {
-    assertNull(getFactSearchManager().indexFact(new FactDocument()));
-  }
-
-  @Test
-  public void testIndexAndGetFact() {
-    FactDocument fact = createFactDocument();
-
-    FactDocument indexedFact = getFactSearchManager().indexFact(fact);
-    assertNotNull(indexedFact);
-    assertSame(fact, indexedFact);
-    assertFactDocument(fact, indexedFact);
-
-    FactDocument fetchedFact = getFactSearchManager().getFact(fact.getId());
-    assertNotNull(fetchedFact);
-    assertNotSame(fact, fetchedFact);
-    assertFactDocument(fact, fetchedFact);
-  }
-
-  @Test
-  public void testReindexAndGetFact() {
-    FactDocument fact = createFactDocument();
-
-    getFactSearchManager().indexFact(fact.setValue("originalValue"));
-    FactDocument indexedFact1 = getFactSearchManager().getFact(fact.getId());
-    assertEquals(fact.getId(), indexedFact1.getId());
-    assertEquals("originalValue", indexedFact1.getValue());
-
-    getFactSearchManager().indexFact(fact.setValue("updatedValue"));
-    FactDocument indexedFact2 = getFactSearchManager().getFact(fact.getId());
-    assertEquals(fact.getId(), indexedFact2.getId());
-    assertEquals("updatedValue", indexedFact2.getValue());
-  }
-
-  @Test
-  public void testIndexFactEncodesValues() {
-    getFactSearchManager().indexFact(createFactDocument());
-    verify(getEntityHandler(), times(2)).encode(any());
-  }
-
-  @Test
-  public void testGetFactDecodesValues() {
-    FactDocument fact = createFactDocument();
-    getFactSearchManager().indexFact(fact);
-    getFactSearchManager().getFact(fact.getId());
-    verify(getEntityHandler(), times(2)).decode(any());
-  }
+public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
 
   @Test
   public void testSearchFactsWithNoCriteria() {
@@ -576,21 +511,6 @@ public class FactSearchManagerTest extends AbstractManagerTest {
     assertEquals(2, result.getValues().size());
   }
 
-  private FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {
-    FactSearchCriteria.Builder builder = FactSearchCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID());
-    if (preparation != null) {
-      builder = preparation.prepare(builder);
-    }
-    return builder.build();
-  }
-
-  private FactDocument indexFact(ObjectPreparation<FactDocument> preparation) {
-    FactDocument document = preparation != null ? preparation.prepare(createFactDocument()) : createFactDocument();
-    return getFactSearchManager().indexFact(document);
-  }
-
   private void testSearchFacts(FactSearchCriteria criteria, FactDocument accessibleFact) {
     List<FactDocument> result = getFactSearchManager().searchFacts(criteria).getValues();
     assertEquals(1, result.size());
@@ -610,10 +530,6 @@ public class FactSearchManagerTest extends AbstractManagerTest {
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(limit));
     List<FactDocument> result = getFactSearchManager().searchFacts(criteria).getValues();
     assertEquals(numberOfExpectedResults, result.size());
-  }
-
-  interface ObjectPreparation<T> {
-    T prepare(T e);
   }
 
 }

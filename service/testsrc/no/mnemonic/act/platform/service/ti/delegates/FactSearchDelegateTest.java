@@ -73,7 +73,7 @@ public class FactSearchDelegateTest extends AbstractDelegateTest {
   }
 
   private SearchResult<FactDocument> createSearchResult(UUID factID) {
-    return SearchResult.builder()
+    return SearchResult.<FactDocument>builder()
             .setLimit(25)
             .setCount(100)
             .addValue(new FactDocument().setId(factID))

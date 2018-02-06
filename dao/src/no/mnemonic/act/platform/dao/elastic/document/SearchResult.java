@@ -50,7 +50,7 @@ public class SearchResult<T extends ElasticDocument> {
     return values;
   }
 
-  public static <T extends FactDocument> Builder<T> builder() {
+  public static <T extends ElasticDocument> Builder<T> builder() {
     return new Builder<>();
   }
 

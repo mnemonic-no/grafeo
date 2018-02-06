@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.dao.api;
 
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -118,15 +119,19 @@ public class FactSearchCriteria {
     this.objectValue = objectValue;
     this.retracted = retracted;
     this.keywords = keywords;
-    this.keywordFieldStrategy = keywordFieldStrategy;
-    this.keywordMatchStrategy = keywordMatchStrategy;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
-    this.timeFieldStrategy = timeFieldStrategy;
-    this.timeMatchStrategy = timeMatchStrategy;
     this.limit = limit;
     this.currentUserID = currentUserID;
     this.availableOrganizationID = availableOrganizationID;
+
+    // Set default values for strategies if not provided by user.
+    this.keywordFieldStrategy = !CollectionUtils.isEmpty(keywordFieldStrategy) ? keywordFieldStrategy :
+            SetUtils.set(KeywordFieldStrategy.all);
+    this.keywordMatchStrategy = ObjectUtils.ifNull(keywordMatchStrategy, MatchStrategy.any);
+    this.timeFieldStrategy = !CollectionUtils.isEmpty(timeFieldStrategy) ? timeFieldStrategy :
+            SetUtils.set(TimeFieldStrategy.all);
+    this.timeMatchStrategy = ObjectUtils.ifNull(timeMatchStrategy, MatchStrategy.any);
   }
 
   /**

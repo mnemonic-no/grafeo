@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.dao.elastic;
 
+import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.handlers.EntityHandler;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import org.junit.*;
@@ -8,6 +10,7 @@ import org.mockito.Mock;
 import java.util.UUID;
 import java.util.function.Function;
 
+import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.createFactDocument;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -69,6 +72,25 @@ public abstract class AbstractManagerTest {
 
   protected EntityHandler getEntityHandler() {
     return entityHandler;
+  }
+
+  FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {
+    FactSearchCriteria.Builder builder = FactSearchCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID());
+    if (preparation != null) {
+      builder = preparation.prepare(builder);
+    }
+    return builder.build();
+  }
+
+  FactDocument indexFact(ObjectPreparation<FactDocument> preparation) {
+    FactDocument document = preparation != null ? preparation.prepare(createFactDocument()) : createFactDocument();
+    return getFactSearchManager().indexFact(document);
+  }
+
+  interface ObjectPreparation<T> {
+    T prepare(T e);
   }
 
 }
