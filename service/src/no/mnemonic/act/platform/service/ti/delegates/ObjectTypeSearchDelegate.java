@@ -30,7 +30,7 @@ public class ObjectTypeSearchDelegate {
             .map(TiRequestContext.get().getObjectTypeConverter())
             .collect(Collectors.toList());
 
-    return ResultSet.builder()
+    return ResultSet.<ObjectType>builder()
             .setCount(types.size())
             .setLimit(0)
             .setValues(types)

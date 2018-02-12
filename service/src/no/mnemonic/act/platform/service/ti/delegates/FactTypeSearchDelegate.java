@@ -30,7 +30,7 @@ public class FactTypeSearchDelegate {
             .map(TiRequestContext.get().getFactTypeConverter())
             .collect(Collectors.toList());
 
-    return ResultSet.builder()
+    return ResultSet.<FactType>builder()
             .setCount(types.size())
             .setLimit(0)
             .setValues(types)

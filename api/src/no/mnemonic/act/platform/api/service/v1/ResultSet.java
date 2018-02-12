@@ -35,8 +35,8 @@ public class ResultSet<T> {
     return values;
   }
 
-  public static Builder builder() {
-    return new Builder();
+  public static <T> Builder<T> builder() {
+    return new Builder<>();
   }
 
   public static class Builder<T> {
@@ -51,17 +51,17 @@ public class ResultSet<T> {
       return new ResultSet<>(limit, count, values);
     }
 
-    public Builder setLimit(int limit) {
+    public Builder<T> setLimit(int limit) {
       this.limit = limit;
       return this;
     }
 
-    public Builder setCount(int count) {
+    public Builder<T> setCount(int count) {
       this.count = count;
       return this;
     }
 
-    public Builder setValues(Collection<T> values) {
+    public Builder<T> setValues(Collection<T> values) {
       this.values = values;
       return this;
     }

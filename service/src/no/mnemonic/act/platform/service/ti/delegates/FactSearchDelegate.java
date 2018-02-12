@@ -42,7 +42,7 @@ public class FactSearchDelegate extends AbstractDelegate {
             .map(TiRequestContext.get().getFactConverter())
             .collect(Collectors.toList());
 
-    return ResultSet.builder()
+    return ResultSet.<Fact>builder()
             .setCount(searchResult.getCount())
             .setLimit(searchResult.getLimit())
             .setValues(facts)

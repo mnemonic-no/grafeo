@@ -40,7 +40,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
 
   @Test
   public void testSearchFacts() throws Exception {
-    when(getTiService().searchFacts(any(), isA(SearchFactRequest.class))).then(i -> ResultSet.builder().setValues(createFacts()).build());
+    when(getTiService().searchFacts(any(), isA(SearchFactRequest.class))).then(i -> ResultSet.<Fact>builder().setValues(createFacts()).build());
 
     Response response = target("/v1/fact/search").request().post(Entity.json(new SearchFactRequest()));
     JsonNode payload = getPayload(response);
@@ -84,7 +84,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     UUID fact = UUID.randomUUID();
     when(getTiService().getFactAcl(any(), isA(GetFactAclRequest.class))).then(i -> {
       assertEquals(fact, i.<GetFactAclRequest>getArgument(1).getFact());
-      return ResultSet.builder().setValues(createFactAcl()).build();
+      return ResultSet.<AclEntry>builder().setValues(createFactAcl()).build();
     });
 
     Response response = target(String.format("/v1/fact/uuid/%s/access", fact)).request().get();
@@ -123,7 +123,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
       assertEquals(fact, request.getFact());
       assertEquals(1480520820000L, (long) request.getBefore());
       assertEquals(1480520821000L, (long) request.getAfter());
-      return ResultSet.builder().setValues(createFactComments()).build();
+      return ResultSet.<FactComment>builder().setValues(createFactComments()).build();
     });
 
     Response response = target(String.format("/v1/fact/uuid/%s/comments", fact))

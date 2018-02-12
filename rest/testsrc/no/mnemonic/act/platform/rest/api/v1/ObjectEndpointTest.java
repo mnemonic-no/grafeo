@@ -62,7 +62,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     UUID id = UUID.randomUUID();
     when(getTiService().searchObjectFacts(any(), isA(SearchObjectFactsRequest.class))).then(i -> {
       assertEquals(id, i.<SearchObjectFactsRequest>getArgument(1).getObjectID());
-      return ResultSet.builder().setValues(createFacts()).build();
+      return ResultSet.<Fact>builder().setValues(createFacts()).build();
     });
 
     Response response = target(String.format("/v1/object/uuid/%s/facts", id)).request().post(Entity.json(new SearchObjectFactsRequest()));
@@ -82,7 +82,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
       SearchObjectFactsRequest request = i.getArgument(1);
       assertEquals(type, request.getObjectType());
       assertEquals(value, request.getObjectValue());
-      return ResultSet.builder().setValues(createFacts()).build();
+      return ResultSet.<Fact>builder().setValues(createFacts()).build();
     });
 
     Response response = target(String.format("/v1/object/%s/%s/facts", type, value)).request().post(Entity.json(new SearchObjectFactsRequest()));
@@ -139,7 +139,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
 
   @Test
   public void testSearchObjects() throws Exception {
-    when(getTiService().searchObjects(any(), isA(SearchObjectRequest.class))).then(i -> ResultSet.builder().setValues(createObjects()).build());
+    when(getTiService().searchObjects(any(), isA(SearchObjectRequest.class))).then(i -> ResultSet.<Object>builder().setValues(createObjects()).build());
 
     Response response = target("/v1/object/search").request().post(Entity.json(new SearchObjectRequest()));
     JsonNode payload = getPayload(response);

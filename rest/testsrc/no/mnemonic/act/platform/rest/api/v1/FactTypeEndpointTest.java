@@ -38,7 +38,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
 
   @Test
   public void testSearchFactTypes() throws Exception {
-    when(getTiService().searchFactTypes(any(), isA(SearchFactTypeRequest.class))).then(i -> ResultSet.builder().setValues(createFactTypes()).build());
+    when(getTiService().searchFactTypes(any(), isA(SearchFactTypeRequest.class))).then(i -> ResultSet.<FactType>builder().setValues(createFactTypes()).build());
 
     Response response = target("/v1/factType").request().get();
     JsonNode payload = getPayload(response);

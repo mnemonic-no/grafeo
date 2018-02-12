@@ -80,32 +80,32 @@ public class ResultStash<T> {
               .build();
     }
 
-    public Builder setStatus(Response.Status status) {
+    public Builder<T> setStatus(Response.Status status) {
       this.status = status;
       return this;
     }
 
-    public Builder setLimit(int limit) {
+    public Builder<T> setLimit(int limit) {
       this.limit = limit;
       return this;
     }
 
-    public Builder setCount(int count) {
+    public Builder<T> setCount(int count) {
       this.count = count;
       return this;
     }
 
-    public Builder setSize(int size) {
+    public Builder<T> setSize(int size) {
       this.size = size;
       return this;
     }
 
-    public Builder setData(T data) {
+    public Builder<T> setData(T data) {
       this.data = data;
       return this;
     }
 
-    public Builder addActionError(String message, String messageTemplate) {
+    public Builder<T> addActionError(String message, String messageTemplate) {
       ResultMessage error = ResultMessage.builder()
               .setType(ResultMessage.Type.ActionError)
               .setMessage(message)
@@ -116,7 +116,7 @@ public class ResultStash<T> {
       return this;
     }
 
-    public Builder addActionError(String message, String messageTemplate, String field, String value) {
+    public Builder<T> addActionError(String message, String messageTemplate, String field, String value) {
       ResultMessage error = ResultMessage.builder()
               .setType(ResultMessage.Type.ActionError)
               .setMessage(message)
@@ -129,7 +129,7 @@ public class ResultStash<T> {
       return this;
     }
 
-    public Builder addFieldError(String message, String messageTemplate, String field, String value) {
+    public Builder<T> addFieldError(String message, String messageTemplate, String field, String value) {
       ResultMessage error = ResultMessage.builder()
               .setType(ResultMessage.Type.FieldError)
               .setMessage(message)

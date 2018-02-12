@@ -49,7 +49,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   private final TestMethod byObjectSearchHandle = (object, query) -> {
     TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest().setQuery(query);
     Set<Object> searchResult = Collections.singleton(Object.builder().setId(object.getId()).build());
-    when(objectSearch.handle(request)).thenReturn(ResultSet.builder().setValues(searchResult).build());
+    when(objectSearch.handle(request)).thenReturn(ResultSet.<Object>builder().setValues(searchResult).build());
 
     return delegate.handle(request);
   };
@@ -210,7 +210,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   @Test
   public void testTraverseGraphByObjectSearchWithoutSearchResult() throws Exception {
     TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest();
-    when(objectSearch.handle(request)).thenReturn(ResultSet.builder().build());
+    when(objectSearch.handle(request)).thenReturn(ResultSet.<Object>builder().build());
 
     ResultSet<?> result = delegate.handle(request);
     assertTrue(result.getValues().isEmpty());
