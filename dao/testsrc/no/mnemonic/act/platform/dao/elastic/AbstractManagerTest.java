@@ -89,6 +89,10 @@ public abstract class AbstractManagerTest {
     return getFactSearchManager().indexFact(document);
   }
 
+  <T> T first(Iterable<T> iterable) {
+    return iterable.iterator().next();
+  }
+
   interface ObjectPreparation<T> {
     T prepare(T e);
   }
