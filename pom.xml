@@ -38,26 +38,26 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.5</mnemonic.commons.version>
-    <mnemonic.services.common.version>0.2.1</mnemonic.services.common.version>
+    <mnemonic.commons.version>0.2.9</mnemonic.commons.version>
+    <mnemonic.services.common.version>0.3.1</mnemonic.services.common.version>
 
     <!-- external dependencies -->
-    <cassandra.version>3.3.0</cassandra.version>
-    <elastic.search.version>5.6.4</elastic.search.version>
-    <guava.version>23.0</guava.version>
+    <cassandra.version>3.4.0</cassandra.version>
+    <elastic.search.version>5.6.7</elastic.search.version>
+    <guava.version>24.0-jre</guava.version>
     <guice.version>4.1.0</guice.version>
-    <hibernate.validator.version>6.0.2.Final</hibernate.validator.version>
-    <jackson.version>2.8.11</jackson.version>
-    <javax.el.version>3.0.1-b08</javax.el.version>
+    <hibernate.validator.version>6.0.7.Final</hibernate.validator.version>
+    <jackson.version>2.9.4</jackson.version>
+    <javax.el.version>3.0.1-b09</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
-    <javax.validation.version>2.0.0.Final</javax.validation.version>
+    <javax.validation.version>2.0.1.Final</javax.validation.version>
     <javax.ws.rs.version>2.0.1</javax.ws.rs.version>
-    <jetty.version>9.4.6.v20170531</jetty.version>
+    <jetty.version>9.4.8.v20171121</jetty.version>
     <junit.version>4.12</junit.version>
-    <mockito.version>2.10.0</mockito.version>
+    <mockito.version>2.15.0</mockito.version>
     <resteasy.version>3.1.4.Final</resteasy.version>
-    <swagger.version>1.5.16</swagger.version>
-    <tinkerpop.version>3.2.5</tinkerpop.version>
+    <swagger.version>1.5.18</swagger.version>
+    <tinkerpop.version>3.3.1</tinkerpop.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.0.0</maven.clean.version>
