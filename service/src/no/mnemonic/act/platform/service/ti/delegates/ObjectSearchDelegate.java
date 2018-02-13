@@ -33,7 +33,7 @@ public class ObjectSearchDelegate extends AbstractDelegate {
 
     List<ObjectEntity> filteredObjects = filterObjects(request);
 
-    return ResultSet.builder()
+    return ResultSet.<Object>builder()
             .setCount(filteredObjects.size())
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
             .setValues(filteredObjects.stream().map(TiRequestContext.get().getObjectConverter()).collect(Collectors.toList()))

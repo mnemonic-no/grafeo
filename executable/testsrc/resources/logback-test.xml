@@ -1,4 +1,0 @@
-<configuration>
-  <!-- Reduce console output during tests. -->
-  <root level="OFF" />
-</configuration>

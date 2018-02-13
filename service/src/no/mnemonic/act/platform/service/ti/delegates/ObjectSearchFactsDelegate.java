@@ -38,7 +38,7 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
     List<FactEntity> filteredFacts = filterFacts(resolvedFacts, request); // Filtered Facts based on request.
     List<FactEntity> limitedFacts = limitFacts(filteredFacts, request); // Final result after applying limit.
 
-    return ResultSet.builder()
+    return ResultSet.<Fact>builder()
             .setCount(filteredFacts.size())
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
             .setValues(limitedFacts.stream().map(TiRequestContext.get().getFactConverter()).collect(Collectors.toList()))

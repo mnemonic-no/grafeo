@@ -33,7 +33,7 @@ public class FactGetAclDelegate extends AbstractDelegate {
             .map(TiRequestContext.get().getAclEntryConverter())
             .collect(Collectors.toList());
 
-    return ResultSet.builder()
+    return ResultSet.<AclEntry>builder()
             .setCount(acl.size())
             .setLimit(0)
             .setValues(acl)

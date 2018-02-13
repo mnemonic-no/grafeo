@@ -35,7 +35,7 @@ public class FactGetCommentsDelegate extends AbstractDelegate {
             .map(TiRequestContext.get().getFactCommentConverter())
             .collect(Collectors.toList());
 
-    return ResultSet.builder()
+    return ResultSet.<FactComment>builder()
             .setCount(comments.size())
             .setLimit(0)
             .setValues(comments)

@@ -41,7 +41,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
 
   @Test
   public void testSearchObjectTypes() throws Exception {
-    when(getTiService().searchObjectTypes(any(), isA(SearchObjectTypeRequest.class))).then(i -> ResultSet.builder().setValues(createObjectTypes()).build());
+    when(getTiService().searchObjectTypes(any(), isA(SearchObjectTypeRequest.class))).then(i -> ResultSet.<ObjectType>builder().setValues(createObjectTypes()).build());
 
     Response response = target("/v1/objectType").request().get();
     JsonNode payload = getPayload(response);
