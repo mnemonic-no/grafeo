@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
+import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
@@ -40,10 +42,10 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.bucket.filter.Filter;
-import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.HasAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
@@ -79,6 +81,10 @@ public class FactSearchManager implements LifecycleAspect {
   private static final String OBJECTS_COUNT_AGGREGATION_NAME = "ObjectsCountAggregation";
   private static final String UNIQUE_OBJECTS_AGGREGATION_NAME = "UniqueObjectsAggregation";
   private static final String UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME = "UniqueObjectsSourceAggregation";
+  private static final String REVERSED_FACTS_AGGREGATION_NAME = "ReversedFactsAggregation";
+  private static final String UNIQUE_FACT_TYPES_AGGREGATION_NAME = "UniqueFactTypesAggregation";
+  private static final String MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME = "MaxLastAddedTimestampAggregation";
+  private static final String MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME = "MaxLastSeenTimestampAggregation";
 
   private static final Logger LOGGER = Logging.getLogger(FactSearchManager.class);
 
@@ -240,14 +246,8 @@ public class FactSearchManager implements LifecycleAspect {
       return SearchResult.<ObjectDocument>builder().setLimit(criteria.getLimit()).build();
     }
 
-    Aggregations resultAggregations = resolveSearchObjectsResultAggregations(response);
-    if (resultAggregations == null) {
-      LOGGER.warning("Could not search for Objects (no aggregations returned).");
-      return SearchResult.<ObjectDocument>builder().setLimit(criteria.getLimit()).build();
-    }
-
-    int count = retrieveSearchObjectsResultCount(resultAggregations);
-    List<ObjectDocument> result = retrieveSearchObjectsResultValues(resultAggregations);
+    int count = retrieveSearchObjectsResultCount(response);
+    List<ObjectDocument> result = retrieveSearchObjectsResultValues(response);
 
     LOGGER.info("Successfully retrieved %d Objects from a total of %d matching Objects.", result.size(), count);
     return SearchResult.<ObjectDocument>builder()
@@ -255,6 +255,40 @@ public class FactSearchManager implements LifecycleAspect {
             .setCount(count)
             .setValues(result)
             .build();
+  }
+
+  /**
+   * Calculate statistics about the Facts bound to Objects. For each Object specified in the statistics criteria it is
+   * calculated how many Facts of each FactType are bound to the Object and when a Fact of that FactType was last added
+   * and last seen.
+   * <p>
+   * Both 'currentUserID' (identifying the calling user) and 'availableOrganizationID' (identifying the Organizations
+   * the calling user has access to) must be set in the statistics criteria in order to apply access control to Facts.
+   * Only statistics for Objects bound to Facts accessible to the calling user will be returned, and only accessible
+   * Facts will be included in the returned statistics.
+   *
+   * @param criteria Criteria to specify for which Objects statistics should be calculated
+   * @return Result container with the calculated statistics for each Object
+   */
+  public ObjectStatisticsResult calculateObjectStatistics(ObjectStatisticsCriteria criteria) {
+    if (criteria == null) return ObjectStatisticsResult.builder().build();
+
+    SearchResponse response;
+    try {
+      response = clientFactory.getHighLevelClient().search(buildObjectStatisticsSearchRequest(criteria));
+    } catch (IOException ex) {
+      throw logAndExit(ex, "Could not perform request to calculate Object statistics.");
+    }
+
+    if (response.status() != RestStatus.OK) {
+      LOGGER.warning("Could not calculate Object statistics (response code %s).", response.status());
+      return ObjectStatisticsResult.builder().build();
+    }
+
+    ObjectStatisticsResult result = retrieveObjectStatisticsResult(response);
+
+    LOGGER.info("Successfully retrieved statistics for %d Objects.", result.getStatisticsCount());
+    return result;
   }
 
   /**
@@ -323,13 +357,24 @@ public class FactSearchManager implements LifecycleAspect {
             .source(sourceBuilder);
   }
 
+  private SearchRequest buildObjectStatisticsSearchRequest(ObjectStatisticsCriteria criteria) {
+    SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+            .size(0) // Not interested in the search hits as the search result is part of the returned aggregations.
+            .aggregation(buildObjectStatisticsAggregation(criteria));
+    return new SearchRequest()
+            .indices(INDEX_NAME)
+            .types(TYPE_NAME)
+            .source(sourceBuilder);
+  }
+
   private QueryBuilder buildFactsQuery(FactSearchCriteria criteria) {
     BoolQueryBuilder rootQuery = boolQuery();
     applySimpleFilterQueries(criteria, rootQuery);
     applyKeywordSearchQuery(criteria, rootQuery);
     applyTimestampSearchQuery(criteria, rootQuery);
-    applyAccessControlQuery(criteria, rootQuery);
-    return rootQuery;
+
+    // Always apply access control query.
+    return rootQuery.filter(createAccessControlQuery(criteria.getCurrentUserID(), criteria.getAvailableOrganizationID()));
   }
 
   private void applySimpleFilterQueries(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
@@ -440,27 +485,24 @@ public class FactSearchManager implements LifecycleAspect {
             .to(endTimestamp != null && endTimestamp > 0 ? endTimestamp : null);
   }
 
-  private void applyAccessControlQuery(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
+  private QueryBuilder createAccessControlQuery(UUID currentUserID, Set<UUID> availableOrganizationID) {
     // Query to verify that user has access to Fact ...
-    BoolQueryBuilder accessQuery = boolQuery()
+    return boolQuery()
             // ... if Fact is public.
             .should(termQuery("accessMode", FactDocument.AccessMode.Public))
             // ... if AccessMode == Explicit user must be in ACL.
             .should(boolQuery()
                     .filter(termQuery("accessMode", FactDocument.AccessMode.Explicit))
-                    .filter(termQuery("acl", criteria.getCurrentUserID()))
+                    .filter(termQuery("acl", currentUserID))
             )
             // ... if AccessMode == RoleBased user must be in ACL or have access to the owning Organization.
             .should(boolQuery()
                     .filter(termQuery("accessMode", FactDocument.AccessMode.RoleBased))
                     .filter(boolQuery()
-                            .should(termQuery("acl", criteria.getCurrentUserID()))
-                            .should(termsQuery("organizationID", criteria.getAvailableOrganizationID()))
+                            .should(termQuery("acl", currentUserID))
+                            .should(termsQuery("organizationID", availableOrganizationID))
                     )
             );
-
-    // Always apply access control query.
-    rootQuery.filter(accessQuery);
   }
 
   private AggregationBuilder buildObjectsAggregation(FactSearchCriteria criteria) {
@@ -529,29 +571,46 @@ public class FactSearchManager implements LifecycleAspect {
     return criteria.getLimit() > 0 && criteria.getLimit() < MAX_RESULT_WINDOW ? criteria.getLimit() : MAX_RESULT_WINDOW;
   }
 
-  private Aggregations resolveSearchObjectsResultAggregations(SearchResponse response) {
-    // Go through the returned aggregations as defined by the search request and pick out the aggregations
-    // which should contain the search results (count and values).
-    Aggregation filterFactsAggregation = response.getAggregations().get(FILTER_FACTS_AGGREGATION_NAME);
-    if (!(filterFactsAggregation instanceof Filter)) {
-      return null;
-    }
+  private AggregationBuilder buildObjectStatisticsAggregation(ObjectStatisticsCriteria criteria) {
+    QueryBuilder accessControlQuery = createAccessControlQuery(criteria.getCurrentUserID(), criteria.getAvailableOrganizationID());
+    QueryBuilder objectsQuery = termsQuery("objects.id", criteria.getObjectID());
 
-    Aggregation nestedObjectsAggregation = Filter.class.cast(filterFactsAggregation).getAggregations().get(NESTED_OBJECTS_AGGREGATION_NAME);
-    if (!(nestedObjectsAggregation instanceof Nested)) {
-      return null;
-    }
-
-    Aggregation filterObjectsAggregation = Nested.class.cast(nestedObjectsAggregation).getAggregations().get(FILTER_OBJECTS_AGGREGATION_NAME);
-    if (!(filterObjectsAggregation instanceof Filter)) {
-      return null;
-    }
-
-    return Filter.class.cast(filterObjectsAggregation).getAggregations();
+    // 1. Reduce to only the Facts the user has access to. Non-accessible Facts won't be available in sub aggregations!
+    return filter(FILTER_FACTS_AGGREGATION_NAME, accessControlQuery)
+            // 2. Map to nested Object documents.
+            .subAggregation(nested(NESTED_OBJECTS_AGGREGATION_NAME, "objects")
+                    // 3. Reduce to only the Objects for which statistics should be calculated.
+                    .subAggregation(filter(FILTER_OBJECTS_AGGREGATION_NAME, objectsQuery)
+                            // 4. Reduce to buckets of unique Objects by id. There shouldn't be more buckets than the
+                            // number of Objects for which statistics will be calculated ('size' parameter).
+                            .subAggregation(terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
+                                    .field("objects.id")
+                                    .size(criteria.getObjectID().size())
+                                    // 5. Reverse nested aggregation to have access to parent Facts.
+                                    .subAggregation(reverseNested(REVERSED_FACTS_AGGREGATION_NAME)
+                                            // 6. Create one bucket for each FactType. Set 'size' to MAX_RESULT_WINDOW
+                                            // in order to get the statistics for all FactTypes. The returned 'doc_count'
+                                            // will give the number of Facts per FactType.
+                                            .subAggregation(terms(UNIQUE_FACT_TYPES_AGGREGATION_NAME)
+                                                    .field("typeID")
+                                                    .size(MAX_RESULT_WINDOW)
+                                                    // 7. Calculate the maximum lastAddedTimestamp per FactType.
+                                                    .subAggregation(max(MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME)
+                                                            .field("timestamp")
+                                                    )
+                                                    // 8. Calculate the maximum lastSeenTimestamp per FactType.
+                                                    .subAggregation(max(MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME)
+                                                            .field("lastSeenTimestamp")
+                                                    )
+                                            )
+                                    )
+                            )
+                    )
+            );
   }
 
-  private int retrieveSearchObjectsResultCount(Aggregations resultAggregations) {
-    Aggregation objectsCountAggregation = resultAggregations.get(OBJECTS_COUNT_AGGREGATION_NAME);
+  private int retrieveSearchObjectsResultCount(SearchResponse response) {
+    Aggregation objectsCountAggregation = resolveChildAggregation(response.getAggregations(), OBJECTS_COUNT_AGGREGATION_NAME);
     if (!(objectsCountAggregation instanceof Cardinality)) {
       LOGGER.warning("Could not retrieve result count when searching for Objects.");
       return -1;
@@ -561,10 +620,10 @@ public class FactSearchManager implements LifecycleAspect {
     return (int) Cardinality.class.cast(objectsCountAggregation).getValue();
   }
 
-  private List<ObjectDocument> retrieveSearchObjectsResultValues(Aggregations resultAggregations) {
+  private List<ObjectDocument> retrieveSearchObjectsResultValues(SearchResponse response) {
     List<ObjectDocument> result = ListUtils.list();
 
-    Aggregation uniqueObjectsAggregation = resultAggregations.get(UNIQUE_OBJECTS_AGGREGATION_NAME);
+    Aggregation uniqueObjectsAggregation = resolveChildAggregation(response.getAggregations(), UNIQUE_OBJECTS_AGGREGATION_NAME);
     if (!(uniqueObjectsAggregation instanceof Terms)) {
       LOGGER.warning("Could not retrieve result values when searching for Objects.");
       return result;
@@ -593,6 +652,76 @@ public class FactSearchManager implements LifecycleAspect {
     }
 
     return result;
+  }
+
+  private ObjectStatisticsResult retrieveObjectStatisticsResult(SearchResponse response) {
+    Aggregation uniqueObjectsAggregation = resolveChildAggregation(response.getAggregations(), UNIQUE_OBJECTS_AGGREGATION_NAME);
+    if (!(uniqueObjectsAggregation instanceof Terms)) {
+      LOGGER.warning("Could not retrieve results when calculating statistics for Objects.");
+      return ObjectStatisticsResult.builder().build();
+    }
+
+    List<? extends Terms.Bucket> uniqueObjectBuckets = Terms.class.cast(uniqueObjectsAggregation).getBuckets();
+    if (CollectionUtils.isEmpty(uniqueObjectBuckets)) {
+      // No buckets means no results.
+      return ObjectStatisticsResult.builder().build();
+    }
+
+    ObjectStatisticsResult.Builder resultBuilder = ObjectStatisticsResult.builder();
+
+    // Each bucket contains one unique Object. Calculate the statistics for each Object.
+    for (Terms.Bucket objectBucket : uniqueObjectBuckets) {
+      UUID objectID = UUID.fromString(objectBucket.getKeyAsString());
+
+      // Resolve buckets of unique FactTypes ...
+      Aggregation uniqueFactTypesAggregation = resolveChildAggregation(objectBucket.getAggregations(), UNIQUE_FACT_TYPES_AGGREGATION_NAME);
+      if (!(uniqueFactTypesAggregation instanceof Terms)) continue;
+
+      List<? extends Terms.Bucket> uniqueFactTypeBuckets = Terms.class.cast(uniqueFactTypesAggregation).getBuckets();
+      if (CollectionUtils.isEmpty(uniqueFactTypeBuckets)) continue;
+
+      // ... and add the statistics for each FactType to the result.
+      for (Terms.Bucket factTypeBucket : uniqueFactTypeBuckets) {
+        UUID factTypeID = UUID.fromString(factTypeBucket.getKeyAsString());
+        int factCount = (int) factTypeBucket.getDocCount();
+        long lastAddedTimestamp = retrieveMaxTimestamp(factTypeBucket, MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME);
+        long lastSeenTimestamp = retrieveMaxTimestamp(factTypeBucket, MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME);
+        resultBuilder.addStatistic(objectID, new ObjectStatisticsResult.FactStatistic(factTypeID, factCount, lastAddedTimestamp, lastSeenTimestamp));
+      }
+    }
+
+    return resultBuilder.build();
+  }
+
+  private long retrieveMaxTimestamp(Terms.Bucket bucket, String targetAggregationName) {
+    Aggregation maxAggregation = bucket.getAggregations().get(targetAggregationName);
+    if (!(maxAggregation instanceof Max)) {
+      LOGGER.warning("Could not retrieve maximum timestamp when calculating statistics for Objects.");
+      return -1;
+    }
+
+    // Retrieve maximum timestamp from the max aggregation.
+    return Math.round(Max.class.cast(maxAggregation).getValue());
+  }
+
+  private Aggregation resolveChildAggregation(Aggregations aggregations, String targetAggregationName) {
+    if (aggregations == null) return null;
+
+    for (Aggregation aggregation : aggregations) {
+      // Check if 'aggregation' is already the target aggregation.
+      if (aggregation.getName().equals(targetAggregationName)) {
+        return aggregation;
+      }
+
+      // Otherwise check all sub aggregations if applicable.
+      if (HasAggregations.class.isAssignableFrom(aggregation.getClass())) {
+        Aggregation target = resolveChildAggregation(HasAggregations.class.cast(aggregation).getAggregations(), targetAggregationName);
+        if (target != null) return target;
+      }
+    }
+
+    // Couldn't find target aggregation.
+    return null;
   }
 
   private FactDocument decodeFactDocument(UUID factID, byte[] source) {

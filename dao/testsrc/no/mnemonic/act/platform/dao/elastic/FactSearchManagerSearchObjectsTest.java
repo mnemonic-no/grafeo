@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import org.junit.Test;
 
-import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.assertObjectDocument;
@@ -204,10 +203,6 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
     assertEquals(1, result.getCount());
     assertEquals(1, result.getValues().size());
     assertObjectDocument(accessibleObject, result.getValues().get(0));
-  }
-
-  private <T> T first(Set<T> set) {
-    return set.iterator().next();
   }
 
 }
