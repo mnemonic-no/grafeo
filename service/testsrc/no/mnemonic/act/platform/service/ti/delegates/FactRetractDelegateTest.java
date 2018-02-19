@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
+import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
@@ -71,6 +72,19 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
+  public void testRetractFactWithLessRestrictiveAccessMode() throws Exception {
+    RetractFactRequest request = mockRetractingFact().setAccessMode(AccessMode.Public);
+
+    try {
+      delegate.handle(request);
+      fail();
+    } catch (InvalidArgumentException ignored) {
+      verify(getFactManager()).getFact(request.getFact());
+      verifyNoMoreInteractions(getFactManager()); // Nothing should be saved to Cassandra.
+    }
+  }
+
+  @Test
   public void testRetractFact() throws Exception {
     RetractFactRequest request = mockRetractingFact();
 
@@ -114,8 +128,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.Public));
-    verify(getFactConverter()).apply(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.Public));
+    verify(getFactManager()).saveFact(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased));
+    verify(getFactConverter()).apply(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased));
   }
 
   @Test
@@ -141,7 +155,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     verify(getFactSearchManager(), times(2)).indexFact(matchFactDocument(request));
   }
 
-  private RetractFactRequest mockRetractingFact() throws Exception {
+  private RetractFactRequest mockRetractingFact() {
     RetractFactRequest request = crateRetractRequest();
 
     ObjectEntity object = new ObjectEntity()
@@ -149,7 +163,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
             .setTypeID(UUID.randomUUID());
     FactEntity factToRetract = new FactEntity()
             .setId(request.getFact())
-            .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.Public)
+            .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased)
             .setBindings(ListUtils.list(new FactEntity.FactObjectBinding().setObjectID(object.getId()).setDirection(Direction.None)));
 
     // Needed for indexing into ElasticSearch.
@@ -171,7 +185,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
             .setOrganization(UUID.randomUUID())
             .setSource(UUID.randomUUID())
             .setComment("Hello World!")
-            .setAccessMode(AccessMode.RoleBased)
+            .setAccessMode(AccessMode.Explicit)
             .setAcl(ListUtils.list(UUID.randomUUID()));
   }
 

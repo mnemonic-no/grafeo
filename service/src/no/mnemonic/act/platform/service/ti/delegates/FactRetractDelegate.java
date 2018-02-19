@@ -17,11 +17,21 @@ import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.MapUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+
 public class FactRetractDelegate extends AbstractDelegate {
+
+  private static final Map<AccessMode, Integer> ACCESS_MODE_ORDER = MapUtils.map(
+          T(AccessMode.Public, 0),
+          T(AccessMode.RoleBased, 1),
+          T(AccessMode.Explicit, 2)
+  );
 
   private final FactTypeResolver factTypeResolver;
   private final FactStorageHelper factStorageHelper;
@@ -78,7 +88,7 @@ public class FactRetractDelegate extends AbstractDelegate {
     }
   }
 
-  private FactEntity saveRetractionFact(RetractFactRequest request, FactEntity factToRetract) {
+  private FactEntity saveRetractionFact(RetractFactRequest request, FactEntity factToRetract) throws InvalidArgumentException {
     FactEntity retractionFact = new FactEntity()
             .setId(UUID.randomUUID()) // Need to provide client-generated ID.
             .setTypeID(factTypeResolver.resolveRetractionFactType().getId())
@@ -104,9 +114,18 @@ public class FactRetractDelegate extends AbstractDelegate {
     return retractionFact;
   }
 
-  private AccessMode resolveAccessMode(RetractFactRequest request, FactEntity factToRetract) {
+  private AccessMode resolveAccessMode(RetractFactRequest request, FactEntity factToRetract) throws InvalidArgumentException {
     // If no AccessMode provided fall back to the AccessMode from the Fact to retract.
-    return ObjectUtils.ifNotNull(request.getAccessMode(), m -> AccessMode.valueOf(m.name()), factToRetract.getAccessMode());
+    AccessMode mode = ObjectUtils.ifNotNull(request.getAccessMode(), m -> AccessMode.valueOf(m.name()), factToRetract.getAccessMode());
+
+    // The AccessMode of the Retraction Fact should not be less restrictive than the AccessMode of the Fact to retract.
+    if (ACCESS_MODE_ORDER.get(mode) < ACCESS_MODE_ORDER.get(factToRetract.getAccessMode())) {
+      throw new InvalidArgumentException()
+              .addValidationError("Requested AccessMode cannot be less restrictive than AccessMode of the Fact to retract.",
+                      "access.mode.too.wide", "accessMode", mode.name());
+    }
+
+    return mode;
   }
 
 }
