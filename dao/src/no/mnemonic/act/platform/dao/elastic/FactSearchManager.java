@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.dao.elastic;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
@@ -37,6 +38,8 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.SimpleQueryStringBuilder;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -53,10 +56,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -176,6 +176,42 @@ public class FactSearchManager implements LifecycleAspect {
   }
 
   /**
+   * Retrieve all Facts which are considered logically the same when matched against a given search criteria, i.e. the
+   * following condition holds: an indexed Fact matches the search criteria and will be included in the returned result
+   * if and only if the value, FactType, organization, source, access mode and all bound Objects (including direction)
+   * match exactly. If no Fact satisfies this condition an empty result container is returned.
+   * <p>
+   * This method can be used to determine if a Fact already logically exists in the system, e.g. before a new Fact is
+   * created. No access control will be performed. This must be done by the caller.
+   *
+   * @param criteria Criteria to retrieve existing Facts
+   * @return All Facts satisfying search criteria wrapped inside a result container
+   */
+  public SearchResult<FactDocument> retrieveExistingFacts(FactExistenceSearchCriteria criteria) {
+    if (criteria == null) return SearchResult.<FactDocument>builder().build();
+
+    SearchResponse response;
+    try {
+      response = clientFactory.getHighLevelClient().search(buildFactExistenceSearchRequest(criteria));
+    } catch (IOException ex) {
+      throw logAndExit(ex, "Could not perform request to search for existing Facts.");
+    }
+
+    if (response.status() != RestStatus.OK) {
+      LOGGER.warning("Could not search for existing Facts (response code %s).", response.status());
+      return SearchResult.<FactDocument>builder().build();
+    }
+
+    List<FactDocument> result = retrieveFactDocuments(response);
+
+    LOGGER.info("Successfully retrieved %d existing Facts.", result.size());
+    return SearchResult.<FactDocument>builder()
+            .setCount((int) response.getHits().getTotalHits())
+            .setValues(result)
+            .build();
+  }
+
+  /**
    * Search for Facts indexed in ElasticSearch by a given search criteria. Only Facts satisfying the search criteria
    * will be returned. Returns an empty result container if no Fact satisfies the search criteria.
    * <p>
@@ -201,13 +237,7 @@ public class FactSearchManager implements LifecycleAspect {
       return SearchResult.<FactDocument>builder().setLimit(criteria.getLimit()).build();
     }
 
-    List<FactDocument> result = ListUtils.list();
-    for (SearchHit hit : response.getHits()) {
-      FactDocument document = decodeFactDocument(UUID.fromString(hit.getId()), toBytes(hit.getSourceRef()));
-      if (document != null) {
-        result.add(document);
-      }
-    }
+    List<FactDocument> result = retrieveFactDocuments(response);
 
     LOGGER.info("Successfully retrieved %d Facts from a total of %d matching Facts.", result.size(), response.getHits().getTotalHits());
     return SearchResult.<FactDocument>builder()
@@ -337,6 +367,16 @@ public class FactSearchManager implements LifecycleAspect {
     LOGGER.info("Successfully created index '%s'.", INDEX_NAME);
   }
 
+  private SearchRequest buildFactExistenceSearchRequest(FactExistenceSearchCriteria criteria) {
+    SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+            .size(MAX_RESULT_WINDOW) // Always return all matching documents, but usually this should be zero or one.
+            .query(buildFactExistenceQuery(criteria));
+    return new SearchRequest()
+            .indices(INDEX_NAME)
+            .types(TYPE_NAME)
+            .source(sourceBuilder);
+  }
+
   private SearchRequest buildFactsSearchRequest(FactSearchCriteria criteria) {
     SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
             .size(calculateMaximumSize(criteria))
@@ -365,6 +405,34 @@ public class FactSearchManager implements LifecycleAspect {
             .indices(INDEX_NAME)
             .types(TYPE_NAME)
             .source(sourceBuilder);
+  }
+
+  private QueryBuilder buildFactExistenceQuery(FactExistenceSearchCriteria criteria) {
+    // Fact values are stored encoded, thus, in order to match exactly the value from the criteria must be encoded as well.
+    String encodedValue = entityHandlerForTypeIdResolver.apply(criteria.getFactTypeID()).encode(criteria.getFactValue());
+
+    // First, define all filters on direct Fact fields. Every field from the criteria must match.
+    BoolQueryBuilder rootQuery = boolQuery()
+            .filter(termQuery("value", encodedValue))
+            .filter(termQuery("typeID", criteria.getFactTypeID()))
+            .filter(termQuery("sourceID", criteria.getSourceID()))
+            .filter(termQuery("organizationID", criteria.getOrganizationID()))
+            .filter(termQuery("accessMode", criteria.getAccessMode()));
+
+    // Second, define filters on nested Objects. Also all Objects must match.
+    for (FactExistenceSearchCriteria.ObjectExistence object : criteria.getObjects()) {
+      BoolQueryBuilder objectsQuery = boolQuery()
+              .filter(termQuery("objects.id", object.getObjectID()))
+              .filter(termQuery("objects.direction", object.getDirection()));
+      rootQuery.filter(nestedQuery("objects", objectsQuery, ScoreMode.None));
+    }
+
+    // Third, also the number of bound Objects must match. It uses a script query because the number of bound Objects
+    // isn't directly available. This query should be fast because the other filters should already reduce the number of
+    // Facts to a small number. Alternatively, the number of bound Objects could be de-normalized into Fact documents.
+    String scriptCode = "params._source.objects.length == params.count";
+    Map<String, Object> scriptParameters = Collections.singletonMap("count", criteria.getObjects().size());
+    return rootQuery.filter(scriptQuery(new Script(ScriptType.INLINE, "painless", scriptCode, scriptParameters)));
   }
 
   private QueryBuilder buildFactsQuery(FactSearchCriteria criteria) {
@@ -607,6 +675,17 @@ public class FactSearchManager implements LifecycleAspect {
                             )
                     )
             );
+  }
+
+  private List<FactDocument> retrieveFactDocuments(SearchResponse response) {
+    List<FactDocument> result = ListUtils.list();
+    for (SearchHit hit : response.getHits()) {
+      FactDocument document = decodeFactDocument(UUID.fromString(hit.getId()), toBytes(hit.getSourceRef()));
+      if (document != null) {
+        result.add(document);
+      }
+    }
+    return result;
   }
 
   private int retrieveSearchObjectsResultCount(SearchResponse response) {
