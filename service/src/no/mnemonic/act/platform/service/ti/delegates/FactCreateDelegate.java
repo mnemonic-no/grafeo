@@ -1,11 +1,15 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
+import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
+import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
@@ -21,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class FactCreateDelegate extends AbstractDelegate {
 
@@ -131,35 +136,31 @@ public class FactCreateDelegate extends AbstractDelegate {
     }
   }
 
-  private FactEntity resolveExistingFact(CreateFactRequest request, FactTypeEntity type) {
+  private FactEntity resolveExistingFact(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
     // Skip confidenceLevel for now as it's currently not provided in the request.
-    FactEntity existingFact = TiRequestContext.get().getFactManager().fetchFactsByValue(request.getValue())
-            .stream()
-            .filter(f -> f.getTypeID().equals(type.getId()))
-            .filter(f -> f.getSourceID().equals(resolveSource(request.getSource())))
-            .filter(f -> f.getOrganizationID().equals(resolveOrganization(request.getOrganization())))
-            .filter(f -> f.getAccessMode().name().equals(request.getAccessMode().name()))
-            .filter(f -> {
-              try {
-                return f.getBindings().equals(resolveFactObjectBindings(request.getBindings()));
-              } catch (InvalidArgumentException ignored) {
-                // Should not happen because objectResolver.resolveObject() which could cause an InvalidArgumentException
-                // in resolveFactObjectBindings() was already called during input validation and would have failed then.
-                return false;
-              }
-            })
-            .findFirst()
-            .orElse(null);
-
-    try {
-      // Make sure that user has access to an existing Fact ...
-      TiSecurityContext.get().checkReadPermission(existingFact);
-    } catch (AccessDeniedException | AuthenticationFailedException ignored) {
-      // ... if not a new Fact needs to be created.
-      return null;
+    FactExistenceSearchCriteria.Builder criteriaBuilder = FactExistenceSearchCriteria.builder()
+            .setFactValue(request.getValue())
+            .setFactTypeID(type.getId())
+            .setSourceID(resolveSource(request.getSource()))
+            .setOrganizationID(resolveOrganization(request.getOrganization()))
+            .setAccessMode(request.getAccessMode().name());
+    // Need to resolve bindings in order to get the correct objectID if this isn't provided in the request.
+    for (FactEntity.FactObjectBinding binding : resolveFactObjectBindings(request.getBindings())) {
+      criteriaBuilder.addObject(binding.getObjectID(), binding.getDirection().name());
     }
 
-    return existingFact;
+    // Try to fetch any existing Facts from ElasticSearch.
+    SearchResult<FactDocument> result = TiRequestContext.get().getFactSearchManager().retrieveExistingFacts(criteriaBuilder.build());
+    if (result.getCount() <= 0) {
+      return null; // No results, need to create new Fact.
+    }
+
+    // Fetch the authorative data from Cassandra, apply permission check and return existing Fact if accessible.
+    List<UUID> factID = result.getValues().stream().map(FactDocument::getId).collect(Collectors.toList());
+    return Streams.stream(TiRequestContext.get().getFactManager().getFacts(factID))
+            .filter(fact -> TiSecurityContext.get().hasReadPermission(fact))
+            .findFirst()
+            .orElse(null);
   }
 
   private FactEntity saveFact(CreateFactRequest request, FactTypeEntity type)

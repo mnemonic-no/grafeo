@@ -10,7 +10,6 @@ DROP TABLE IF EXISTS act.object_by_type_value;
 DROP INDEX IF EXISTS act.fact_type_name_index;
 DROP TABLE IF EXISTS act.fact_type;
 DROP TABLE IF EXISTS act.fact;
-DROP INDEX IF EXISTS act.fact_value_index;
 DROP TABLE IF EXISTS act.fact_comment;
 DROP TABLE IF EXISTS act.fact_acl;
 DROP TABLE IF EXISTS act.evidence_submission;
@@ -96,8 +95,6 @@ CREATE TABLE IF NOT EXISTS act.fact (
   bindings VARCHAR,
   PRIMARY KEY (id)
 );
-
-CREATE INDEX IF NOT EXISTS fact_value_index ON act.fact (value);
 
 CREATE TABLE IF NOT EXISTS act.fact_comment (
   fact_id UUID,

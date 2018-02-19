@@ -18,9 +18,6 @@ public interface FactAccessor {
   @Query("SELECT * FROM " + KEY_SPACE + "." + TABLE + " WHERE id IN :id")
   Result<FactEntity> fetchByID(@Param("id") List<UUID> id);
 
-  @Query("SELECT * FROM " + KEY_SPACE + "." + TABLE + " WHERE value = :value")
-  Result<FactEntity> fetchByValue(@Param("value") String value);
-
   @Query("UPDATE " + KEY_SPACE + "." + TABLE + " SET last_seen_timestamp = :timestamp WHERE id = :id")
   void refreshLastSeenTimestamp(@Param("id") UUID id, @Param("timestamp") long timestamp);
 

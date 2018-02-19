@@ -5,8 +5,10 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.api.request.v1.Direction;
+import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
@@ -190,7 +192,16 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
                     .setDirection(no.mnemonic.act.platform.dao.cassandra.entity.Direction.valueOf(binding.getDirection().name()))
             ));
 
-    when(getFactManager().fetchFactsByValue(request.getValue())).thenReturn(ListUtils.list(existingFact));
+    // Mock fetching of existing Fact.
+    when(getFactSearchManager().retrieveExistingFacts(matchFactExistenceSearchCriteria(request)))
+            .thenReturn(SearchResult.<FactDocument>builder()
+                    .setCount(1)
+                    .addValue(new FactDocument().setId(existingFact.getId()))
+                    .build());
+    when(getFactManager().getFacts(ListUtils.list(existingFact.getId()))).thenReturn(ListUtils.list(existingFact).iterator());
+    when(getSecurityContext().hasReadPermission(existingFact)).thenReturn(true);
+
+    // Mock stuff needed for refreshing Fact.
     when(getFactManager().refreshFact(existingFact.getId())).thenReturn(existingFact);
     when(getFactSearchManager().getFact(existingFact.getId())).thenReturn(new FactDocument());
     when(factStorageHelper.saveAdditionalAclForFact(existingFact, request.getAcl())).thenReturn(request.getAcl());
@@ -216,6 +227,9 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     mockFetchingFactType(objectTypeID);
     mockFetchingObject(binding.getObjectID(), objectTypeID);
     mockValidator(true);
+
+    // Mock fetching of existing Fact.
+    when(getFactSearchManager().retrieveExistingFacts(any())).thenReturn(SearchResult.<FactDocument>builder().build());
 
     // Mock stuff needed for saving Fact.
     when(getFactManager().getFact(request.getInReferenceTo())).thenReturn(new FactEntity());
@@ -330,6 +344,20 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
       assertNotNull(entity.getFactID());
       assertEquals(requestedBinding.getObjectID(), entity.getObjectID());
       assertEquals(requestedBinding.getDirection().name(), entity.getDirection().name());
+      return true;
+    });
+  }
+
+  private FactExistenceSearchCriteria matchFactExistenceSearchCriteria(CreateFactRequest request) {
+    return argThat(criteria -> {
+      assertEquals(request.getValue(), criteria.getFactValue());
+      assertNotNull(criteria.getFactTypeID());
+      assertEquals(request.getSource(), criteria.getSourceID());
+      assertEquals(request.getOrganization(), criteria.getOrganizationID());
+      assertEquals(request.getAccessMode().name(), criteria.getAccessMode().name());
+      assertEquals(request.getBindings().size(), criteria.getObjects().size());
+      assertEquals(request.getBindings().get(0).getObjectID(), criteria.getObjects().iterator().next().getObjectID());
+      assertEquals(request.getBindings().get(0).getDirection().name(), criteria.getObjects().iterator().next().getDirection().name());
       return true;
     });
   }
