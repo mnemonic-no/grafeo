@@ -15,7 +15,6 @@ import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
@@ -232,19 +231,6 @@ public class FactEntity implements CassandraEntity {
     public FactObjectBinding setDirectionValue(int value) {
       this.direction = Direction.getValueMap().getOrDefault(value, Direction.None);
       return this;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      FactObjectBinding that = (FactObjectBinding) o;
-      return Objects.equals(objectID, that.objectID) && direction == that.direction;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(objectID, direction);
     }
   }
 
