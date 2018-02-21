@@ -309,7 +309,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   }
 
   private ObjectEntity mockFullTraversal() {
-    when(getSecurityContext().hasReadPermission(any())).thenReturn(true);
+    when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(true);
 
     ObjectEntity otherObject = mockFetchObject();
     FactEntity fact = mockFetchFact(otherObject);

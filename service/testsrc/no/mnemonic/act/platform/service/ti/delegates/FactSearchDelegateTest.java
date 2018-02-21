@@ -27,7 +27,7 @@ public class FactSearchDelegateTest extends AbstractDelegateTest {
     UUID factID = UUID.randomUUID();
     when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(getSecurityContext().getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
-    when(getSecurityContext().hasReadPermission(any())).thenReturn(true);
+    when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(true);
     when(getFactSearchManager().searchFacts(any())).thenReturn(createSearchResult(factID));
     when(getFactManager().getFacts(any())).thenReturn(Collections.singleton(new FactEntity().setId(factID)).iterator());
     when(getFactConverter().apply(any())).thenReturn(Fact.builder().setId(factID).build());
@@ -52,7 +52,7 @@ public class FactSearchDelegateTest extends AbstractDelegateTest {
 
   @Test
   public void testSearchFactsFilterNonAccessibleFacts() throws Exception {
-    when(getSecurityContext().hasReadPermission(any())).thenReturn(false);
+    when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(false);
     ResultSet<Fact> result = FactSearchDelegate.create().handle(new SearchFactRequest());
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());
@@ -69,7 +69,7 @@ public class FactSearchDelegateTest extends AbstractDelegateTest {
     verify(getFactSearchManager()).searchFacts(any());
     verify(getFactManager()).getFacts(any());
     verify(getFactConverter()).apply(any());
-    verify(getSecurityContext()).hasReadPermission(any());
+    verify(getSecurityContext()).hasReadPermission(isA(FactEntity.class));
   }
 
   private SearchResult<FactDocument> createSearchResult(UUID factID) {

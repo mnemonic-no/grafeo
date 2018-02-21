@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
@@ -29,7 +28,7 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
   public void testGetFactCommentsNoAccessToFact() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(any());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
 
     FactGetCommentsDelegate.create().handle(request);
   }

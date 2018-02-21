@@ -138,7 +138,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testCreateFactFailsNoAccessToInReferenceTo() throws Exception {
     CreateFactRequest request = mockCreateFact();
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(any());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
     delegate.handle(request);
   }
 
