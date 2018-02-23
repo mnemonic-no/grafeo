@@ -12,6 +12,8 @@ import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.Service;
@@ -28,8 +30,11 @@ import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 
 import javax.inject.Inject;
+import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenceService {
 
@@ -101,6 +106,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
             .setAclResolver(factManager::fetchFactAcl)
+            .setFactsBoundToObjectResolver(createFactsBoundToObjectResolver())
             .build();
   }
 
@@ -303,6 +309,18 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
 
   private Function<UUID, Object> createObjectByIdConverter() {
     return id -> ObjectUtils.ifNotNull(objectManager.getObject(id), objectConverter, Object.builder().setId(id).setValue("N/A").build());
+  }
+
+  private Function<UUID, Iterator<FactEntity>> createFactsBoundToObjectResolver() {
+    return objectID -> {
+      // Look up bindings for the given Object ID ...
+      List<UUID> factID = objectManager.fetchObjectFactBindings(objectID)
+              .stream()
+              .map(ObjectFactBindingEntity::getFactID)
+              .collect(Collectors.toList());
+      // ... and use those to fetch the bound Facts.
+      return factManager.getFacts(factID);
+    };
   }
 
 }

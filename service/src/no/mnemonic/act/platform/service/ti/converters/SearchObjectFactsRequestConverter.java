@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
-import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
+import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -8,21 +8,21 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public class SearchFactRequestConverter implements Converter<SearchFactRequest, FactSearchCriteria> {
+public class SearchObjectFactsRequestConverter implements Converter<SearchObjectFactsRequest, FactSearchCriteria> {
 
   private static final int DEFAULT_LIMIT = 25;
 
   private final Supplier<UUID> currentUserIdSupplier;
   private final Supplier<Set<UUID>> availableOrganizationIdSupplier;
 
-  private SearchFactRequestConverter(Supplier<UUID> currentUserIdSupplier, Supplier<Set<UUID>> availableOrganizationIdSupplier) {
+  private SearchObjectFactsRequestConverter(Supplier<UUID> currentUserIdSupplier, Supplier<Set<UUID>> availableOrganizationIdSupplier) {
     this.currentUserIdSupplier = currentUserIdSupplier;
     this.availableOrganizationIdSupplier = availableOrganizationIdSupplier;
   }
 
   @Override
-  public Class<SearchFactRequest> getSourceType() {
-    return SearchFactRequest.class;
+  public Class<SearchObjectFactsRequest> getSourceType() {
+    return SearchObjectFactsRequest.class;
   }
 
   @Override
@@ -31,17 +31,15 @@ public class SearchFactRequestConverter implements Converter<SearchFactRequest, 
   }
 
   @Override
-  public FactSearchCriteria apply(SearchFactRequest request) {
+  public FactSearchCriteria apply(SearchObjectFactsRequest request) {
     if (request == null) return null;
     return FactSearchCriteria.builder()
-            .setObjectTypeID(onlyUUID(request.getObjectType()))
-            .setObjectTypeName(noneUUID(request.getObjectType()))
+            .addObjectID(request.getObjectID())
+            .addObjectTypeName(request.getObjectType())
+            .addObjectValue(request.getObjectValue())
             .setFactTypeID(onlyUUID(request.getFactType()))
             .setFactTypeName(noneUUID(request.getFactType()))
-            .setObjectValue(request.getObjectValue())
             .setFactValue(request.getFactValue())
-            .setOrganizationID(onlyUUID(request.getOrganization()))
-            .setOrganizationName(noneUUID(request.getOrganization()))
             .setSourceID(onlyUUID(request.getSource()))
             .setSourceName(noneUUID(request.getSource()))
             .setRetracted(determineRetracted(request.getIncludeRetracted()))
@@ -73,10 +71,10 @@ public class SearchFactRequestConverter implements Converter<SearchFactRequest, 
     private Builder() {
     }
 
-    public SearchFactRequestConverter build() {
-      ObjectUtils.notNull(currentUserIdSupplier, "Cannot instantiate SearchFactRequestConverter without 'currentUserIdSupplier'.");
-      ObjectUtils.notNull(availableOrganizationIdSupplier, "Cannot instantiate SearchFactRequestConverter without 'availableOrganizationIdSupplier'.");
-      return new SearchFactRequestConverter(currentUserIdSupplier, availableOrganizationIdSupplier);
+    public SearchObjectFactsRequestConverter build() {
+      ObjectUtils.notNull(currentUserIdSupplier, "Cannot instantiate SearchObjectFactsRequestConverter without 'currentUserIdSupplier'.");
+      ObjectUtils.notNull(availableOrganizationIdSupplier, "Cannot instantiate SearchObjectFactsRequestConverter without 'availableOrganizationIdSupplier'.");
+      return new SearchObjectFactsRequestConverter(currentUserIdSupplier, availableOrganizationIdSupplier);
     }
 
     public Builder setCurrentUserIdSupplier(Supplier<UUID> currentUserIdSupplier) {

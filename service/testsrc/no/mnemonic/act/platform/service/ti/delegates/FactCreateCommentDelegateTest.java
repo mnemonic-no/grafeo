@@ -27,7 +27,7 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
   public void testCreateFactCommentNoAccessToFact() throws Exception {
     CreateFactCommentRequest request = createFactCommentRequest();
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(any());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
 
     FactCreateCommentDelegate.create().handle(request);
   }

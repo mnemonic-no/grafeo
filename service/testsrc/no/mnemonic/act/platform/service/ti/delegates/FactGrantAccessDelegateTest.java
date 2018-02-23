@@ -4,10 +4,10 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.GrantFactAccessRequest;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
   public void testGrantFactAccessNoAccessToFact() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(any());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
 
     FactGrantAccessDelegate.create().handle(request);
   }

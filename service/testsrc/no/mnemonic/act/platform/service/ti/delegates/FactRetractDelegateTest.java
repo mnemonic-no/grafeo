@@ -58,7 +58,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testRetractFactNoAccessToFact() throws Exception {
     RetractFactRequest request = mockRetractingFact();
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(any());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
 
     delegate.handle(request);
   }
