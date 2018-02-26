@@ -30,6 +30,7 @@ import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -79,6 +80,9 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .build();
     this.objectConverter = ObjectConverter.builder()
             .setObjectTypeConverter(createObjectTypeByIdConverter())
+            .setFactTypeConverter(createFactTypeByIdConverter())
+            // Don't include statistics by default, e.g. when including Objects as part of Facts.
+            .setFactStatisticsResolver(objectID -> Collections.emptyList())
             .build();
     this.factConverter = FactConverter.builder()
             .setFactTypeConverter(createFactTypeByIdConverter())
