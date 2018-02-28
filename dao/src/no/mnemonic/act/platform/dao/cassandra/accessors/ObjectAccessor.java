@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.ObjectByTypeValueEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
@@ -15,8 +16,8 @@ import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_
 @Accessor
 public interface ObjectAccessor {
 
-  @Query("SELECT * FROM " + KEY_SPACE + "." + ObjectEntity.TABLE)
-  Result<ObjectEntity> fetch();
+  @Query("SELECT * FROM " + KEY_SPACE + "." + ObjectEntity.TABLE + " WHERE id IN :id")
+  Result<ObjectEntity> fetchByID(@Param("id") List<UUID> id);
 
   @Query("SELECT * FROM " + KEY_SPACE + "." + ObjectByTypeValueEntity.TABLE + " WHERE object_type_id = :type AND object_value = :value")
   ObjectByTypeValueEntity getObjectByTypeValue(@Param("type") UUID objectTypeID, @Param("value") String objectValue);
