@@ -1,18 +1,18 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
-import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
 import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class ObjectManagerTest extends AbstractManagerTest {
 
@@ -145,19 +145,26 @@ public class ObjectManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testFetchObjects() {
-    List<ObjectEntity> expected = createAndSaveObjects();
-    List<ObjectEntity> actual = new ArrayList<>();
+  public void testFetchObjectsById() {
+    ObjectEntity expected = createAndSaveObjects().get(0);
+    List<ObjectEntity> actual = ListUtils.list(getObjectManager().getObjects(ListUtils.list(expected.getId())));
+    assertEquals(1, actual.size());
+    assertObject(expected, actual.get(0));
+  }
 
-    Iterator<ObjectEntity> objectIterator = getObjectManager().fetchObjects();
-    while (objectIterator.hasNext()) {
-      actual.add(objectIterator.next());
-    }
+  @Test
+  public void testFetchObjectsByIdDecodeLazily() {
+    Iterator<ObjectEntity> result = getObjectManager().getObjects(ListUtils.list(createAndSaveObject().getId()));
+    verify(getEntityHandler(), never()).decode(any());
+    ListUtils.list(result); // This will iterate the results and pull objects from Cassandra.
+    verify(getEntityHandler(), times(1)).decode(any());
+  }
 
-    expected.sort(Comparator.comparing(ObjectEntity::getId));
-    actual.sort(Comparator.comparing(ObjectEntity::getId));
-
-    assertObjects(expected, actual);
+  @Test
+  public void testFetchObjectsByIdWithUnknownId() {
+    assertEquals(0, ListUtils.list(getObjectManager().getObjects(null)).size());
+    assertEquals(0, ListUtils.list(getObjectManager().getObjects(ListUtils.list())).size());
+    assertEquals(0, ListUtils.list(getObjectManager().getObjects(ListUtils.list(UUID.randomUUID()))).size());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -338,13 +345,6 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getTypeID(), actual.getTypeID());
     assertEquals(expected.getValue(), actual.getValue());
-  }
-
-  private void assertObjects(List<ObjectEntity> expected, List<ObjectEntity> actual) {
-    assertEquals(expected.size(), actual.size());
-    for (int i = 0; i < expected.size(); i++) {
-      assertObject(expected.get(i), actual.get(i));
-    }
   }
 
   private void assertObjectFactBinding(ObjectFactBindingEntity expected, ObjectFactBindingEntity actual) {
