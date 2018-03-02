@@ -9,11 +9,11 @@ import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
 import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
@@ -120,9 +120,9 @@ public class TraverseGraphDelegate extends AbstractDelegate {
   }
 
   private ResultSet<?> handle(ObjectEntity startingObject, String query)
-          throws AccessDeniedException, InvalidArgumentException, OperationTimeoutException {
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     // Verify that user has access to starting point of graph traversal.
-    checkObjectAccess(startingObject);
+    securityContext.checkReadPermission(startingObject);
     // Execute traversal and process results.
     executeTraversal(Collections.singleton(startingObject.getId()), query);
 

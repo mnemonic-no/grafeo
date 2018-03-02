@@ -10,7 +10,7 @@ import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.
 
 public class FactTypeResolver {
 
-  public static final UUID RETRACTION_FACT_TYPE_ID = UUID.nameUUIDFromBytes("SystemRetractionFactType".getBytes());
+  static final UUID RETRACTION_FACT_TYPE_ID = UUID.nameUUIDFromBytes("SystemRetractionFactType".getBytes());
   static final String RETRACTION_FACT_TYPE_NAME = "Retraction";
 
   private final FactManager factManager;

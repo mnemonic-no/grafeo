@@ -35,7 +35,10 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     TraverseByObjectIdRequest request = new TraverseByObjectIdRequest()
             .setId(object.getId())
             .setQuery(query);
-    return delegate.handle(request);
+    ResultSet<?> result = delegate.handle(request);
+    // Permission check should be performed on starting point of graph traversal.
+    verify(getSecurityContext()).checkReadPermission(object);
+    return result;
   };
 
   private final TestMethod byTypeValueHandle = (object, query) -> {
@@ -43,7 +46,10 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
             .setType("objectType")
             .setValue(object.getValue())
             .setQuery(query);
-    return delegate.handle(request);
+    ResultSet<?> result = delegate.handle(request);
+    // Permission check should be performed on starting point of graph traversal.
+    verify(getSecurityContext()).checkReadPermission(object);
+    return result;
   };
 
   private final TestMethod byObjectSearchHandle = (object, query) -> {
@@ -77,6 +83,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   @Test
   public void testTraverseGraphByObjectIdWithoutObject() throws Exception {
     TraverseByObjectIdRequest request = new TraverseByObjectIdRequest().setId(UUID.randomUUID());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
 
     try {
       delegate.handle(request);
@@ -85,16 +92,6 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
       verify(getObjectManager()).getObject(request.getId());
       verifyNoMoreInteractions(getObjectManager());
     }
-  }
-
-  @Test
-  public void testTraverseGraphByObjectIdWithoutFacts() throws Exception {
-    testTraverseGraphWithoutFacts(byIdHandle);
-  }
-
-  @Test
-  public void testTraverseGraphByObjectIdWithoutAccessToFacts() throws Exception {
-    testTraverseGraphWithoutAccessToFacts(byIdHandle);
   }
 
   @Test
@@ -150,6 +147,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   public void testTraverseGraphByObjectTypeValueWithoutObject() throws Exception {
     TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest().setType("type").setValue("value");
     when(getObjectManager().getObjectType(request.getType())).thenReturn(new ObjectTypeEntity());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
 
     try {
       delegate.handle(request);
@@ -159,16 +157,6 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
       verify(getObjectManager()).getObject(request.getType(), request.getValue());
       verifyNoMoreInteractions(getObjectManager());
     }
-  }
-
-  @Test
-  public void testTraverseGraphByObjectTypeValueWithoutFacts() throws Exception {
-    testTraverseGraphWithoutFacts(byTypeValueHandle);
-  }
-
-  @Test
-  public void testTraverseGraphByObjectTypeValueWithoutAccessToFacts() throws Exception {
-    testTraverseGraphWithoutAccessToFacts(byTypeValueHandle);
   }
 
   @Test
@@ -244,32 +232,6 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   @Test(expected = OperationTimeoutException.class)
   public void testTraverseGraphByObjectSearchTimeout() throws Exception {
     testTraverseGraphTimeout(byObjectSearchHandle);
-  }
-
-  private void testTraverseGraphWithoutFacts(TestMethod method) throws Exception {
-    ObjectEntity object = mockFetchObject();
-
-    try {
-      method.execute(object, "g.out()");
-      fail();
-    } catch (AccessDeniedException ignored) {
-      verify(getObjectManager()).fetchObjectFactBindings(object.getId());
-      verify(getFactManager(), never()).getFact(any());
-    }
-  }
-
-  private void testTraverseGraphWithoutAccessToFacts(TestMethod method) throws Exception {
-    FactEntity fact = mockFetchFact();
-    ObjectEntity object = mockFetchObject(fact);
-
-    try {
-      method.execute(object, "g.out()");
-      fail();
-    } catch (AccessDeniedException ignored) {
-      verify(getObjectManager()).fetchObjectFactBindings(object.getId());
-      verify(getFactManager()).getFact(fact.getId());
-      verify(getSecurityContext()).hasReadPermission(fact);
-    }
   }
 
   private void testTraverseGraphReturnEdges(TestMethod method) throws Exception {

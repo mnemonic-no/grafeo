@@ -1,7 +1,6 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
 import com.google.common.collect.Streams;
-import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
@@ -16,15 +15,12 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -217,43 +213,6 @@ abstract class AbstractDelegate {
   }
 
   /**
-   * Resolve Facts bound to one Object (identified by id). It will only return the Facts the current user has access to.
-   *
-   * @param objectID ID of Object
-   * @return Resolved Facts bound to one Object
-   */
-  List<FactEntity> resolveFactsForObject(UUID objectID) {
-    // Fetch Facts bound to Object, but only keep those the current user has access to.
-    return TiRequestContext.get().getObjectManager().fetchObjectFactBindings(objectID)
-            .stream()
-            .map(binding -> TiRequestContext.get().getFactManager().getFact(binding.getFactID()))
-            .filter(fact -> TiSecurityContext.get().hasReadPermission(fact))
-            .collect(Collectors.toList());
-  }
-
-  /**
-   * Verify that the current user has access to an Object. The user must have access to at least one Fact bound to the Object.
-   *
-   * @param object Object to verify access.
-   * @return Facts bound to the Object which are accessible to the current user.
-   * @throws AccessDeniedException Thrown if the current user does not have access to the Object.
-   */
-  List<FactEntity> checkObjectAccess(ObjectEntity object) throws AccessDeniedException {
-    if (object == null) {
-      // User should not get a different response if an Object is not in the system or if user does not have access to it.
-      throw new AccessDeniedException("No access to Object.");
-    }
-
-    List<FactEntity> facts = resolveFactsForObject(object.getId());
-    if (CollectionUtils.isEmpty(facts)) {
-      // User does not have access to any Facts bound to this Object.
-      throw new AccessDeniedException("No access to Object.");
-    }
-
-    return facts;
-  }
-
-  /**
    * Index a newly created Fact into ElasticSearch. Only call this method after a Fact and its related data were
    * persisted to Cassandra.
    *
@@ -331,64 +290,6 @@ abstract class AbstractDelegate {
             .setLimit(searchResult.getLimit())
             .setValues(facts)
             .build();
-  }
-
-  /**
-   * Filter Facts by FactType.
-   *
-   * @param types FactType names to filter by.
-   * @return Predicate which returns true if a Fact matches a FactType.
-   */
-  Predicate<FactEntity> factTypeFilter(Set<String> types) {
-    return fact -> {
-      if (CollectionUtils.isEmpty(types)) {
-        return true;
-      }
-
-      FactTypeEntity factType = TiRequestContext.get().getFactManager().getFactType(fact.getTypeID());
-      return types.contains(factType.getName());
-    };
-  }
-
-  /**
-   * Filter Facts by Fact value.
-   *
-   * @param values Values to filter by.
-   * @return Predicate which returns true if a Fact matches a value.
-   */
-  Predicate<FactEntity> factValueFilter(Set<String> values) {
-    return fact -> CollectionUtils.isEmpty(values) || values.contains(fact.getValue());
-  }
-
-  /**
-   * Filter Facts by Source.
-   *
-   * @param sources Source UUIDs to filter by.
-   * @return Predicate which returns true if a Fact matches a Source.
-   */
-  Predicate<FactEntity> sourceFilter(Set<String> sources) {
-    // TODO: For now match on UUID, but it should match on name once Source is properly implemented.
-    return fact -> CollectionUtils.isEmpty(sources) || sources.contains(fact.getSourceID().toString());
-  }
-
-  /**
-   * Filter Facts which were created before a specific timestamp.
-   *
-   * @param before Timestamp
-   * @return Predicate which returns true if a Fact was created before the given timestamp.
-   */
-  Predicate<FactEntity> beforeFilter(Long before) {
-    return fact -> before == null || fact.getTimestamp() < before;
-  }
-
-  /**
-   * Filter Facts which were created after a specific timestamp.
-   *
-   * @param after Timestamp
-   * @return Predicate which returns true if a Fact was created after the given timestamp.
-   */
-  Predicate<FactEntity> afterFilter(Long after) {
-    return fact -> after == null || fact.getTimestamp() > after;
   }
 
 }
