@@ -85,7 +85,17 @@ public class ObjectEndpoint extends AbstractEndpoint {
           notes = "This operation returns the Facts linked to a specific Object which is identified by its UUID. " +
                   "With the request body the user can specify which Facts will be included in the result. Only the " +
                   "Facts a user has access to will be returned. The request will be rejected with a 403 if a user " +
-                  "does not have access to any Facts linked to the requested Object.",
+                  "does not have access to any Facts linked to the requested Object.\n\n" +
+                  "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
+                  "Fact organization, Fact source and Fact value. The 'keywords' parameter must match one " +
+                  "of those fields. The following search features are available when using this parameter.\n\n" +
+                  "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
+                  "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
+                  "* A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.\n\n" +
+                  "Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search " +
+                  "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
+                  "'factType' in addition.\n\n" +
+                  "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
           response = Fact.class,
           responseContainer = "list"
   )
@@ -110,7 +120,17 @@ public class ObjectEndpoint extends AbstractEndpoint {
           notes = "This operation returns the Facts linked to a specific Object which is identified by its ObjectType " +
                   "and its value. With the request body the user can specify which Facts will be included in the result. " +
                   "Only the Facts a user has access to will be returned. The request will be rejected with a 403 if " +
-                  "a user does not have access to any Facts linked to the requested Object.",
+                  "a user does not have access to any Facts linked to the requested Object.\n\n" +
+                  "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
+                  "Fact organization, Fact source and Fact value. The 'keywords' parameter must match one " +
+                  "of those fields. The following search features are available when using this parameter.\n\n" +
+                  "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
+                  "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
+                  "* A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.\n\n" +
+                  "Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search " +
+                  "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
+                  "'factType' in addition.\n\n" +
+                  "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
           response = Fact.class,
           responseContainer = "list"
   )
@@ -207,7 +227,17 @@ public class ObjectEndpoint extends AbstractEndpoint {
                   "Objects will be returned. Searching against linked Facts will only be performed one level deep, " +
                   "i.e. only Facts directly linked to an Object will be searched. The result will be restricted to the " +
                   "Objects and Facts a user has access to. In order to return an Object a user needs to have access to " +
-                  "at least one Fact linked to the Object.",
+                  "at least one Fact linked to the Object.\n\n" +
+                  "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
+                  "Fact organization, Fact source, Fact value and Object value. The 'keywords' parameter must match one " +
+                  "of those fields. The following search features are available when using this parameter.\n\n" +
+                  "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
+                  "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
+                  "* A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.\n\n" +
+                  "Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search " +
+                  "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
+                  "'factType' or 'objectType' in addition.\n\n" +
+                  "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
           response = Object.class,
           responseContainer = "list"
   )

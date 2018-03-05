@@ -3,10 +3,13 @@ package no.mnemonic.act.platform.service.ti.converters;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
+
+import static no.mnemonic.act.platform.dao.api.FactSearchCriteria.KeywordFieldStrategy.*;
 
 public class SearchObjectFactsRequestConverter implements Converter<SearchObjectFactsRequest, FactSearchCriteria> {
 
@@ -37,9 +40,13 @@ public class SearchObjectFactsRequestConverter implements Converter<SearchObject
             .addObjectID(request.getObjectID())
             .addObjectTypeName(request.getObjectType())
             .addObjectValue(request.getObjectValue())
+            .setKeywords(request.getKeywords())
+            .setKeywordFieldStrategy(SetUtils.set(factValue, organization, source))
             .setFactTypeID(onlyUUID(request.getFactType()))
             .setFactTypeName(noneUUID(request.getFactType()))
             .setFactValue(request.getFactValue())
+            .setOrganizationID(onlyUUID(request.getOrganization()))
+            .setOrganizationName(noneUUID(request.getOrganization()))
             .setSourceID(onlyUUID(request.getSource()))
             .setSourceName(noneUUID(request.getSource()))
             .setRetracted(determineRetracted(request.getIncludeRetracted()))

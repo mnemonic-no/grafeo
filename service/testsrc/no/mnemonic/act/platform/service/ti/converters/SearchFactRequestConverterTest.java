@@ -45,6 +45,14 @@ public class SearchFactRequestConverterTest {
   }
 
   @Test
+  public void testConvertRequestFilterByKeywords() {
+    FactSearchCriteria criteria = converter.apply(new SearchFactRequest().setKeywords("keyword"));
+    assertEquals("keyword", criteria.getKeywords());
+    assertEquals(SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.all), criteria.getKeywordFieldStrategy());
+    assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getKeywordMatchStrategy());
+  }
+
+  @Test
   public void testConvertRequestFilterOnObjectType() {
     UUID id = UUID.randomUUID();
     String name = "name";

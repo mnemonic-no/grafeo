@@ -19,8 +19,10 @@ public class SearchObjectFactsRequestTest extends AbstractRequestTest {
             "objectID : '%s'," +
             "objectType : 'objectType'," +
             "objectValue : 'objectValue'," +
+            "keywords : 'keyword'," +
             "factType : ['factType']," +
             "factValue : ['factValue']," +
+            "organization : ['organization']," +
             "source : ['source']," +
             "includeRetracted : true," +
             "before : '2016-11-30T15:47:00Z'," +
@@ -32,8 +34,10 @@ public class SearchObjectFactsRequestTest extends AbstractRequestTest {
     assertEquals(objectID, request.getObjectID());
     assertEquals("objectType", request.getObjectType());
     assertEquals("objectValue", request.getObjectValue());
+    assertEquals("keyword", request.getKeywords());
     assertEquals(SetUtils.set("factType"), request.getFactType());
     assertEquals(SetUtils.set("factValue"), request.getFactValue());
+    assertEquals(SetUtils.set("organization"), request.getOrganization());
     assertEquals(SetUtils.set("source"), request.getSource());
     assertTrue(request.getIncludeRetracted());
     assertEquals(1480520820000L, request.getBefore().longValue());

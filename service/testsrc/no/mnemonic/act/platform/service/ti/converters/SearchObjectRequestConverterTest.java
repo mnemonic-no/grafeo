@@ -44,6 +44,14 @@ public class SearchObjectRequestConverterTest {
   }
 
   @Test
+  public void testConvertRequestFilterByKeywords() {
+    FactSearchCriteria criteria = converter.apply(new SearchObjectRequest().setKeywords("keyword"));
+    assertEquals("keyword", criteria.getKeywords());
+    assertEquals(SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.all), criteria.getKeywordFieldStrategy());
+    assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getKeywordMatchStrategy());
+  }
+
+  @Test
   public void testConvertRequestFilterOnObjectType() {
     UUID id = UUID.randomUUID();
     String name = "name";
@@ -77,6 +85,18 @@ public class SearchObjectRequestConverterTest {
   public void testConvertRequestFilterOnFactValue() {
     FactSearchCriteria criteria = converter.apply(new SearchObjectRequest().addFactValue("value"));
     assertEquals(SetUtils.set("value"), criteria.getFactValue());
+  }
+
+  @Test
+  public void testConvertRequestFilterOnOrganization() {
+    UUID id = UUID.randomUUID();
+    String name = "name";
+    FactSearchCriteria criteria = converter.apply(new SearchObjectRequest()
+            .addOrganization(id.toString())
+            .addOrganization(name)
+    );
+    assertEquals(SetUtils.set(id), criteria.getOrganizationID());
+    assertEquals(SetUtils.set(name), criteria.getOrganizationName());
   }
 
   @Test

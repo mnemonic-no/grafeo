@@ -14,6 +14,7 @@ public class SearchFactRequestTest extends AbstractRequestTest {
   @Test
   public void testDecodeRequest() throws Exception {
     String json = "{" +
+            "keywords : 'keyword'," +
             "objectType : ['objectType']," +
             "factType : ['factType']," +
             "objectValue : ['objectValue']," +
@@ -27,6 +28,7 @@ public class SearchFactRequestTest extends AbstractRequestTest {
             "}";
 
     SearchFactRequest request = getMapper().readValue(json, SearchFactRequest.class);
+    assertEquals("keyword", request.getKeywords());
     assertEquals(SetUtils.set("objectType"), request.getObjectType());
     assertEquals(SetUtils.set("factType"), request.getFactType());
     assertEquals(SetUtils.set("objectValue"), request.getObjectValue());

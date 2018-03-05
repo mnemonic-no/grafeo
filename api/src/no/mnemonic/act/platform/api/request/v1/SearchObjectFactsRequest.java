@@ -22,10 +22,14 @@ public class SearchObjectFactsRequest implements ValidatingRequest {
   @ApiModelProperty(hidden = true)
   private String objectValue;
   // Restrict returned Facts bound to one Object.
+  @ApiModelProperty(value = "Only return Facts matching a keyword query")
+  private String keywords;
   @ApiModelProperty(value = "Only return Facts with a specific FactType")
   private Set<String> factType;
   @ApiModelProperty(value = "Only return Facts matching a specific value")
   private Set<String> factValue;
+  @ApiModelProperty(value = "Only return Facts belonging to a specific Organization")
+  private Set<String> organization;
   @ApiModelProperty(value = "Only return Facts coming from a specific Source")
   private Set<String> source;
   @ApiModelProperty(value = "Include retracted Facts (default false)", example = "false")
@@ -40,6 +44,15 @@ public class SearchObjectFactsRequest implements ValidatingRequest {
   @Min(0)
   private Integer limit;
   // TODO: Add minConfidence/maxConfidence once confidence level is defined.
+
+  public String getKeywords() {
+    return keywords;
+  }
+
+  public SearchObjectFactsRequest setKeywords(String keywords) {
+    this.keywords = keywords;
+    return this;
+  }
 
   public UUID getObjectID() {
     return objectID;
@@ -93,6 +106,20 @@ public class SearchObjectFactsRequest implements ValidatingRequest {
 
   public SearchObjectFactsRequest addFactValue(String factValue) {
     this.factValue = SetUtils.addToSet(this.factValue, factValue);
+    return this;
+  }
+
+  public Set<String> getOrganization() {
+    return organization;
+  }
+
+  public SearchObjectFactsRequest setOrganization(Set<String> organization) {
+    this.organization = organization;
+    return this;
+  }
+
+  public SearchObjectFactsRequest addOrganization(String organization) {
+    this.organization = SetUtils.addToSet(this.organization, organization);
     return this;
   }
 
