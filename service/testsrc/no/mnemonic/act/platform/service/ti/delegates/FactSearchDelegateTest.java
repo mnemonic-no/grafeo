@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -57,6 +58,18 @@ public class FactSearchDelegateTest extends AbstractDelegateTest {
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());
     assertEquals(0, result.getValues().size());
+  }
+
+  @Test
+  public void testSearchFactsNoResult() throws Exception {
+    when(getFactSearchManager().searchFacts(any())).thenReturn(SearchResult.<FactDocument>builder().build());
+    when(getFactManager().getFacts(any())).thenReturn(Collections.emptyIterator());
+    ResultSet<Fact> result = FactSearchDelegate.create().handle(new SearchFactRequest());
+    assertEquals(0, result.getCount());
+    assertEquals(0, result.getValues().size());
+
+    verify(getFactSearchManager()).searchFacts(any());
+    verify(getFactManager()).getFacts(argThat(List::isEmpty));
   }
 
   @Test

@@ -14,6 +14,7 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -105,6 +106,18 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
+  public void testSearchObjectFactsByIdNoResult() throws Exception {
+    SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(UUID.randomUUID());
+    testSearchObjectFactsNoResult(request);
+  }
+
+  @Test
+  public void testSearchObjectFactsByTypeValueNoResult() throws Exception {
+    SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
+    testSearchObjectFactsNoResult(request);
+  }
+
+  @Test
   public void testSearchObjectFactsById() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(UUID.randomUUID());
     testSearchObjectFacts(request);
@@ -138,6 +151,19 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());
     assertEquals(0, result.getValues().size());
+  }
+
+  private void testSearchObjectFactsNoResult(SearchObjectFactsRequest request) throws Exception {
+    mockSearchObjectFacts();
+    when(getFactSearchManager().searchFacts(any())).thenReturn(SearchResult.<FactDocument>builder().build());
+    when(getFactManager().getFacts(any())).thenReturn(Collections.emptyIterator());
+
+    ResultSet<Fact> result = ObjectSearchFactsDelegate.create().handle(request);
+    assertEquals(0, result.getCount());
+    assertEquals(0, result.getValues().size());
+
+    verify(getFactSearchManager()).searchFacts(any());
+    verify(getFactManager()).getFacts(argThat(List::isEmpty));
   }
 
   private void testSearchObjectFacts(SearchObjectFactsRequest request) throws Exception {
