@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.dao.api.FactSearchCriteria.KeywordFieldStrategy.*;
 import static org.junit.Assert.*;
 
 public class SearchObjectFactsRequestConverterTest {
@@ -45,6 +46,14 @@ public class SearchObjectFactsRequestConverterTest {
   }
 
   @Test
+  public void testConvertRequestFilterByKeywords() {
+    FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest().setKeywords("keyword"));
+    assertEquals("keyword", criteria.getKeywords());
+    assertEquals(SetUtils.set(factValue, organization, source), criteria.getKeywordFieldStrategy());
+    assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getKeywordMatchStrategy());
+  }
+
+  @Test
   public void testConvertRequestFilterOnObject() {
     UUID id = UUID.randomUUID();
     String type = "type";
@@ -76,6 +85,18 @@ public class SearchObjectFactsRequestConverterTest {
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .addFactValue("value"));
     assertEquals(SetUtils.set("value"), criteria.getFactValue());
+  }
+
+  @Test
+  public void testConvertRequestFilterOnOrganization() {
+    UUID id = UUID.randomUUID();
+    String name = "name";
+    FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
+            .addOrganization(id.toString())
+            .addOrganization(name)
+    );
+    assertEquals(SetUtils.set(id), criteria.getOrganizationID());
+    assertEquals(SetUtils.set(name), criteria.getOrganizationName());
   }
 
   @Test

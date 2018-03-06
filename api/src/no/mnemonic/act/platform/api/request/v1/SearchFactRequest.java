@@ -13,6 +13,8 @@ import java.util.Set;
 @ApiModel(description = "Search for Facts.")
 public class SearchFactRequest implements ValidatingRequest {
 
+  @ApiModelProperty(value = "Only return Facts matching a keyword query")
+  private String keywords;
   @ApiModelProperty(value = "Only return Facts with Objects having a specific ObjectType")
   private Set<String> objectType;
   @ApiModelProperty(value = "Only return Facts having a specific FactType")
@@ -39,6 +41,15 @@ public class SearchFactRequest implements ValidatingRequest {
   @Min(0)
   private Integer limit;
   // TODO: Add minConfidence/maxConfidence once confidence level is defined.
+
+  public String getKeywords() {
+    return keywords;
+  }
+
+  public SearchFactRequest setKeywords(String keywords) {
+    this.keywords = keywords;
+    return this;
+  }
 
   public Set<String> getObjectType() {
     return objectType;

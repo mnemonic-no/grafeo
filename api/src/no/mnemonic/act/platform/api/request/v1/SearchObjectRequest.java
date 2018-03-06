@@ -13,6 +13,8 @@ import java.util.Set;
 @ApiModel(description = "Search for Objects.")
 public class SearchObjectRequest implements ValidatingRequest {
 
+  @ApiModelProperty(value = "Only return Objects matching a keyword query")
+  private String keywords;
   @ApiModelProperty(value = "Only return Objects with a specific ObjectType")
   private Set<String> objectType;
   @ApiModelProperty(value = "Only return Objects with Facts having a specific FactType")
@@ -21,6 +23,8 @@ public class SearchObjectRequest implements ValidatingRequest {
   private Set<String> objectValue;
   @ApiModelProperty(value = "Only return Objects with Facts matching a specific value")
   private Set<String> factValue;
+  @ApiModelProperty(value = "Only return Objects with Facts belonging to a specific Organization")
+  private Set<String> organization;
   @ApiModelProperty(value = "Only return Objects with Facts coming from a specific Source")
   private Set<String> source;
   @ApiModelProperty(value = "Only return Objects with Facts added before a specific timestamp",
@@ -35,6 +39,15 @@ public class SearchObjectRequest implements ValidatingRequest {
   @Min(0)
   private Integer limit;
   // TODO: Add minConfidence/maxConfidence once confidence level is defined.
+
+  public String getKeywords() {
+    return keywords;
+  }
+
+  public SearchObjectRequest setKeywords(String keywords) {
+    this.keywords = keywords;
+    return this;
+  }
 
   public Set<String> getObjectType() {
     return objectType;
@@ -89,6 +102,20 @@ public class SearchObjectRequest implements ValidatingRequest {
 
   public SearchObjectRequest addFactValue(String factValue) {
     this.factValue = SetUtils.addToSet(this.factValue, factValue);
+    return this;
+  }
+
+  public Set<String> getOrganization() {
+    return organization;
+  }
+
+  public SearchObjectRequest setOrganization(Set<String> organization) {
+    this.organization = organization;
+    return this;
+  }
+
+  public SearchObjectRequest addOrganization(String organization) {
+    this.organization = SetUtils.addToSet(this.organization, organization);
     return this;
   }
 

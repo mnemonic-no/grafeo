@@ -34,12 +34,15 @@ public class SearchObjectRequestConverter implements Converter<SearchObjectReque
   public FactSearchCriteria apply(SearchObjectRequest request) {
     if (request == null) return null;
     return FactSearchCriteria.builder()
+            .setKeywords(request.getKeywords())
             .setObjectTypeID(onlyUUID(request.getObjectType()))
             .setObjectTypeName(noneUUID(request.getObjectType()))
             .setFactTypeID(onlyUUID(request.getFactType()))
             .setFactTypeName(noneUUID(request.getFactType()))
             .setObjectValue(request.getObjectValue())
             .setFactValue(request.getFactValue())
+            .setOrganizationID(onlyUUID(request.getOrganization()))
+            .setOrganizationName(noneUUID(request.getOrganization()))
             .setSourceID(onlyUUID(request.getSource()))
             .setSourceName(noneUUID(request.getSource()))
             .setStartTimestamp(request.getAfter())
