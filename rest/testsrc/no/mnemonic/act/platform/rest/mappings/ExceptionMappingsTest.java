@@ -144,14 +144,42 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   public void testFieldParsingErrorReturns412() throws Exception {
     Response response = target("/v1/fact").request().post(Entity.json("{\"source\" : \"something\"}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "Invalid JSON field detected.", "invalid.json.field", "source", "something");
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "source", "something");
   }
 
   @Test
   public void testFieldParsingErrorWithWrongEnumReturns412() throws Exception {
     Response response = target("/v1/fact").request().post(Entity.json("{\"bindings\" : [{\"direction\" : \"something\"}]}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "Invalid JSON field detected.", "invalid.json.field", "bindings[0].direction", "something");
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "bindings[0].direction", "something");
+  }
+
+  @Test
+  public void testFieldParsingErrorWithWrongTimestampReturns412() throws Exception {
+    Response response = target("/v1/fact/search").request().post(Entity.json("{\"after\" : \"something\"}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "after", "something");
+  }
+
+  @Test
+  public void testFieldParsingErrorWithWrongArrayValueReturns412() throws Exception {
+    Response response = target("/v1/fact").request().post(Entity.json("{\"acl\" : [\"something\"]}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "acl[0]", "something");
+  }
+
+  @Test
+  public void testFieldParsingTypeErrorReturns412() throws Exception {
+    Response response = target("/v1/fact").request().post(Entity.json("{\"acl\" : \"123e4567-e89b-12d3-a456-426655440000\"}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "JSON field has an invalid type.", "invalid.json.field.type", "acl", "");
+  }
+
+  @Test
+  public void testFieldParsingTypeErrorWithWrongTimestampReturns412() throws Exception {
+    Response response = target("/v1/fact/search").request().post(Entity.json("{\"after\" : true}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "JSON field has an invalid type.", "invalid.json.field.type", "after", "");
   }
 
   @Test
