@@ -17,7 +17,7 @@ public class InvalidFormatMapper implements ExceptionMapper<InvalidFormatExcepti
 
     return ResultStash.builder()
             .setStatus(Response.Status.PRECONDITION_FAILED)
-            .addFieldError("Invalid JSON field detected.", "invalid.json.field", MapperUtils.printPropertyPath(ex), value)
+            .addFieldError("JSON field has an invalid value.", "invalid.json.field.value", MapperUtils.printPropertyPath(ex), value)
             .buildResponse();
   }
 
