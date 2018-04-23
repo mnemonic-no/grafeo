@@ -5,14 +5,17 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
+import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
@@ -67,7 +70,11 @@ public class FactCreateDelegate extends AbstractDelegate {
     // Always add provided comment.
     factStorageHelper.saveCommentForFact(fact, request.getComment());
 
-    return TiRequestContext.get().getFactConverter().apply(fact);
+    // Register TriggerEvent before returning added Fact.
+    Fact addedFact = TiRequestContext.get().getFactConverter().apply(fact);
+    registerTriggerEvent(addedFact);
+
+    return addedFact;
   }
 
   public static Builder builder() {
@@ -228,6 +235,15 @@ public class FactCreateDelegate extends AbstractDelegate {
       document.setAcl(SetUtils.union(document.getAcl(), SetUtils.set(acl)));
       return document;
     });
+  }
+
+  private void registerTriggerEvent(Fact addedFact) {
+    TiServiceEvent event = TiServiceEvent.forEvent(TiServiceEvent.EventName.FactAdded)
+            .setOrganization(ObjectUtils.ifNotNull(addedFact.getOrganization(), Organization.Info::getId))
+            .setAccessMode(addedFact.getAccessMode())
+            .addContextParameter("addedFact", addedFact)
+            .build();
+    TriggerContext.get().registerTriggerEvent(event);
   }
 
 }

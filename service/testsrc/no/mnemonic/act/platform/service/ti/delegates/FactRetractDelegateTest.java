@@ -3,6 +3,8 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
+import no.mnemonic.act.platform.api.model.v1.Fact;
+import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
@@ -93,7 +95,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     verify(getFactManager()).saveFact(matchFactEntity(request));
     verify(factStorageHelper).saveInitialAclForNewFact(matchFactEntity(request), eq(request.getAcl()));
     verify(factStorageHelper).saveCommentForFact(matchFactEntity(request), eq(request.getComment()));
-    verify(getFactConverter()).apply(matchFactEntity(request));
+    verify(getFactConverter(), times(2)).apply(matchFactEntity(request));
   }
 
   @Test
@@ -103,10 +105,12 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     when(getSecurityContext().getCurrentUserOrganizationID()).thenReturn(organizationID);
 
-    delegate.handle(request);
+    Fact fact = delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> organizationID.equals(e.getOrganizationID())));
-    verify(getFactConverter()).apply(argThat(e -> organizationID.equals(e.getOrganizationID())));
+    verify(getFactManager()).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && organizationID.equals(e.getOrganizationID())));
+    verify(getFactConverter()).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && organizationID.equals(e.getOrganizationID())));
   }
 
   @Test
@@ -116,20 +120,24 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     when(getSecurityContext().getCurrentUserID()).thenReturn(sourceID);
 
-    delegate.handle(request);
+    Fact fact = delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> sourceID.equals(e.getSourceID())));
-    verify(getFactConverter()).apply(argThat(e -> sourceID.equals(e.getSourceID())));
+    verify(getFactManager()).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && sourceID.equals(e.getSourceID())));
+    verify(getFactConverter()).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && sourceID.equals(e.getSourceID())));
   }
 
   @Test
   public void testRetractFactSetMissingAccessMode() throws Exception {
     RetractFactRequest request = mockRetractingFact().setAccessMode(null);
 
-    delegate.handle(request);
+    Fact fact = delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased));
-    verify(getFactConverter()).apply(argThat(e -> e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased));
+    verify(getFactManager()).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased));
+    verify(getFactConverter()).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && e.getAccessMode() == no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased));
   }
 
   @Test
@@ -155,6 +163,23 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     verify(getFactSearchManager(), times(2)).indexFact(matchFactDocument(request));
   }
 
+  @Test
+  public void testRetractFactRegistersTriggerEvent() throws Exception {
+    RetractFactRequest request = mockRetractingFact();
+
+    Fact retractionFact = delegate.handle(request);
+
+    verify(getTriggerContext()).registerTriggerEvent(argThat(event -> {
+      assertNotNull(event);
+      assertEquals("FactRetracted", event.getEvent());
+      assertEquals(retractionFact.getOrganization().getId(), event.getOrganization());
+      assertEquals("Private", event.getAccessMode().name());
+      assertEquals(request.getFact(), Fact.class.cast(event.getContextParameters().get("retractedFact")).getId());
+      assertSame(retractionFact, event.getContextParameters().get("retractionFact"));
+      return true;
+    }));
+  }
+
   private RetractFactRequest mockRetractingFact() {
     RetractFactRequest request = crateRetractRequest();
 
@@ -176,6 +201,16 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(factToRetract);
     when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
 
+    // Mock FactConverter needed for registering TriggerEvent.
+    when(getFactConverter().apply(any())).then(i -> {
+      FactEntity entity = i.getArgument(0);
+      return Fact.builder()
+              .setId(entity.getId())
+              .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(entity.getAccessMode().name()))
+              .setOrganization(Organization.builder().setId(entity.getOrganizationID()).build().toInfo())
+              .build();
+    });
+
     return request;
   }
 
@@ -191,6 +226,11 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
   private FactEntity matchFactEntity(RetractFactRequest request) {
     return argThat(entity -> {
+      // Needed for FactConverter as this will be called both for the retraction Fact and the retracted Fact.
+      if (Objects.equals(request.getFact(), entity.getId())) {
+        return true;
+      }
+
       assertNotNull(entity.getId());
       assertNotNull(entity.getTypeID());
       assertNotNull(entity.getValue());

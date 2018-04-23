@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.*;
@@ -20,6 +21,8 @@ abstract class AbstractDelegateTest {
 
   @Mock
   private TiSecurityContext securityContext;
+  @Mock
+  private TriggerContext triggerContext;
   @Mock
   private ObjectManager objectManager;
   @Mock
@@ -62,17 +65,23 @@ abstract class AbstractDelegateTest {
             .build();
 
     SecurityContext.set(securityContext);
+    TriggerContext.set(triggerContext);
     RequestContext.set(requestContext);
   }
 
   @After
-  public void cleanup() throws Exception {
+  public void cleanup() {
     SecurityContext.clear();
+    TriggerContext.clear();
     RequestContext.clear();
   }
 
   TiSecurityContext getSecurityContext() {
     return TiSecurityContext.get();
+  }
+
+  TriggerContext getTriggerContext() {
+    return TriggerContext.get();
   }
 
   ObjectManager getObjectManager() {

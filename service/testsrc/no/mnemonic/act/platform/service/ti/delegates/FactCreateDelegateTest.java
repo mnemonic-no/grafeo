@@ -2,6 +2,8 @@ package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.model.v1.Fact;
+import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.api.request.v1.Direction;
@@ -169,6 +171,22 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
+  public void testCreateFactRegistersTriggerEvent() throws Exception {
+    CreateFactRequest request = mockCreateFact();
+
+    Fact addedFact = delegate.handle(request);
+
+    verify(getTriggerContext()).registerTriggerEvent(argThat(event -> {
+      assertNotNull(event);
+      assertEquals("FactAdded", event.getEvent());
+      assertEquals(request.getOrganization(), event.getOrganization());
+      assertEquals(request.getAccessMode().name(), event.getAccessMode().name());
+      assertSame(addedFact, event.getContextParameters().get("addedFact"));
+      return true;
+    }));
+  }
+
+  @Test
   public void testRefreshExistingFact() throws Exception {
     CreateFactRequest.FactObjectBinding binding = createBindingRequest();
     CreateFactRequest request = createRequest().addBinding(binding);
@@ -206,6 +224,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     when(getFactSearchManager().getFact(existingFact.getId())).thenReturn(new FactDocument());
     when(factStorageHelper.saveAdditionalAclForFact(existingFact, request.getAcl())).thenReturn(request.getAcl());
 
+    mockFactConverter();
+
     delegate.handle(request);
 
     verify(getFactManager()).refreshFact(existingFact.getId());
@@ -235,6 +255,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getInReferenceTo())).thenReturn(new FactEntity());
     when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
     when(factStorageHelper.saveInitialAclForNewFact(any(), any())).thenAnswer(i -> i.getArgument(1));
+
+    mockFactConverter();
 
     return request;
   }
@@ -275,6 +297,18 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     when(getValidatorFactory().get(anyString(), anyString())).thenReturn(validator);
 
     return validator;
+  }
+
+  private void mockFactConverter() {
+    // Mock FactConverter needed for registering TriggerEvent.
+    when(getFactConverter().apply(any())).then(i -> {
+      FactEntity entity = i.getArgument(0);
+      return Fact.builder()
+              .setId(entity.getId())
+              .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(entity.getAccessMode().name()))
+              .setOrganization(Organization.builder().setId(entity.getOrganizationID()).build().toInfo())
+              .build();
+    });
   }
 
   private CreateFactRequest createRequest() {
