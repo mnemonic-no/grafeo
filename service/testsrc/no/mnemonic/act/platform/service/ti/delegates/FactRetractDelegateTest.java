@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -171,11 +172,11 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     verify(getTriggerContext()).registerTriggerEvent(argThat(event -> {
       assertNotNull(event);
-      assertEquals("FactRetracted", event.getEvent());
+      assertEquals(TiServiceEvent.EventName.FactRetracted.name(), event.getEvent());
       assertEquals(retractionFact.getOrganization().getId(), event.getOrganization());
       assertEquals("Private", event.getAccessMode().name());
-      assertEquals(request.getFact(), Fact.class.cast(event.getContextParameters().get("retractedFact")).getId());
-      assertSame(retractionFact, event.getContextParameters().get("retractionFact"));
+      assertEquals(request.getFact(), Fact.class.cast(event.getContextParameters().get(TiServiceEvent.ContextParameter.RetractedFact.name())).getId());
+      assertSame(retractionFact, event.getContextParameters().get(TiServiceEvent.ContextParameter.RetractionFact.name()));
       return true;
     }));
   }

@@ -241,7 +241,7 @@ public class FactCreateDelegate extends AbstractDelegate {
     TiServiceEvent event = TiServiceEvent.forEvent(TiServiceEvent.EventName.FactAdded)
             .setOrganization(ObjectUtils.ifNotNull(addedFact.getOrganization(), Organization.Info::getId))
             .setAccessMode(addedFact.getAccessMode())
-            .addContextParameter("addedFact", addedFact)
+            .addContextParameter(TiServiceEvent.ContextParameter.AddedFact.name(), addedFact)
             .build();
     TriggerContext.get().registerTriggerEvent(event);
   }

@@ -143,8 +143,8 @@ public class FactRetractDelegate extends AbstractDelegate {
     TiServiceEvent event = TiServiceEvent.forEvent(TiServiceEvent.EventName.FactRetracted)
             .setOrganization(ObjectUtils.ifNotNull(retractionFact.getOrganization(), Organization.Info::getId))
             .setAccessMode(retractionFact.getAccessMode())
-            .addContextParameter("retractionFact", retractionFact)
-            .addContextParameter("retractedFact", retractedFact)
+            .addContextParameter(TiServiceEvent.ContextParameter.RetractionFact.name(), retractionFact)
+            .addContextParameter(TiServiceEvent.ContextParameter.RetractedFact.name(), retractedFact)
             .build();
     TriggerContext.get().registerTriggerEvent(event);
   }

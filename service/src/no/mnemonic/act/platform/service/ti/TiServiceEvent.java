@@ -15,6 +15,12 @@ import java.util.UUID;
  */
 public class TiServiceEvent implements TriggerEvent {
 
+  private static final String TI_SERVICE_NAME = "ThreatIntelligenceService";
+
+  public enum ContextParameter {
+    AddedFact, RetractionFact, RetractedFact
+  }
+
   public enum EventName {
     FactAdded, FactRetracted
   }
@@ -47,7 +53,7 @@ public class TiServiceEvent implements TriggerEvent {
 
   @Override
   public String getService() {
-    return "ThreatIntelligenceService";
+    return TI_SERVICE_NAME;
   }
 
   @Override

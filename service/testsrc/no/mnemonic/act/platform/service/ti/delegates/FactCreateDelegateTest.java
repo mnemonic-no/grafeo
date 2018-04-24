@@ -12,6 +12,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
@@ -178,10 +179,10 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     verify(getTriggerContext()).registerTriggerEvent(argThat(event -> {
       assertNotNull(event);
-      assertEquals("FactAdded", event.getEvent());
+      assertEquals(TiServiceEvent.EventName.FactAdded.name(), event.getEvent());
       assertEquals(request.getOrganization(), event.getOrganization());
       assertEquals(request.getAccessMode().name(), event.getAccessMode().name());
-      assertSame(addedFact, event.getContextParameters().get("addedFact"));
+      assertSame(addedFact, event.getContextParameters().get(TiServiceEvent.ContextParameter.AddedFact.name()));
       return true;
     }));
   }
