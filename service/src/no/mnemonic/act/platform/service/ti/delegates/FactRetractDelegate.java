@@ -5,14 +5,17 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
+import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -57,7 +60,12 @@ public class FactRetractDelegate extends AbstractDelegate {
     indexCreatedFact(retractionFact, factTypeResolver.resolveRetractionFactType(), subjectsAddedToAcl);
     reindexExistingFact(factToRetract.getId(), d -> d.setRetracted(true));
 
-    return TiRequestContext.get().getFactConverter().apply(retractionFact);
+    // Register TriggerEvent before returning Retraction Fact.
+    Fact retractionFactParameter = TiRequestContext.get().getFactConverter().apply(retractionFact);
+    Fact retractedFactParameter = TiRequestContext.get().getFactConverter().apply(factToRetract);
+    registerTriggerEvent(retractionFactParameter, retractedFactParameter);
+
+    return retractionFactParameter;
   }
 
   public static Builder builder() {
@@ -126,6 +134,19 @@ public class FactRetractDelegate extends AbstractDelegate {
     }
 
     return mode;
+  }
+
+  private void registerTriggerEvent(Fact retractionFact, Fact retractedFact) {
+    // The AccessMode of the Retraction Fact cannot be less restrictive than the AccessMode of the Fact to retract,
+    // thus, it is safe to always include both Facts as context parameters when the event's AccessMode is set to
+    // the AccessMode of the Retraction Fact (i.e. to the more restrictive AccessMode).
+    TiServiceEvent event = TiServiceEvent.forEvent(TiServiceEvent.EventName.FactRetracted)
+            .setOrganization(ObjectUtils.ifNotNull(retractionFact.getOrganization(), Organization.Info::getId))
+            .setAccessMode(retractionFact.getAccessMode())
+            .addContextParameter(TiServiceEvent.ContextParameter.RetractionFact.name(), retractionFact)
+            .addContextParameter(TiServiceEvent.ContextParameter.RetractedFact.name(), retractedFact)
+            .build();
+    TriggerContext.get().registerTriggerEvent(event);
   }
 
 }

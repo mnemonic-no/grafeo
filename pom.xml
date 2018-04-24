@@ -38,8 +38,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.9</mnemonic.commons.version>
-    <mnemonic.services.common.version>0.3.1</mnemonic.services.common.version>
+    <mnemonic.commons.version>0.2.12</mnemonic.commons.version>
+    <mnemonic.services.common.version>0.3.7</mnemonic.services.common.version>
+    <mnemonic.services.triggers.version>0.0.1</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
     <cassandra.version>3.4.0</cassandra.version>

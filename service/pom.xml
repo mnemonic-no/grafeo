@@ -50,8 +50,18 @@
     </dependency>
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
+      <artifactId>logging</artifactId>
+      <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
       <artifactId>utilities</artifactId>
       <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.services.triggers</groupId>
+      <artifactId>pipeline-api</artifactId>
+      <version>${mnemonic.services.triggers.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
