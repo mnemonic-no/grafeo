@@ -64,6 +64,16 @@
       <version>${mnemonic.services.triggers.version}</version>
     </dependency>
     <dependency>
+      <groupId>no.mnemonic.services.triggers</groupId>
+      <artifactId>pipeline-worker</artifactId>
+      <version>${mnemonic.services.triggers.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.services.triggers</groupId>
+      <artifactId>service</artifactId>
+      <version>${mnemonic.services.triggers.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>

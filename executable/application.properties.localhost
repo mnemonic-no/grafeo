@@ -15,3 +15,6 @@ api.server.port=8888
 # Configure where the ACL file is located and how often it will be read (interval in ms).
 access.controller.properties.file=./acl.properties.localhost
 access.controller.read.interval=60000
+
+# Configure the directory where the TriggerAdministrationService looks for its configuration files.
+trigger.administration.service.configuration.directory=./examples

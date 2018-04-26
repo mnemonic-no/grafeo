@@ -25,6 +25,8 @@ import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.auth.AccessController;
+import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
+import no.mnemonic.services.triggers.pipeline.worker.InMemoryQueueWorker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -41,11 +43,13 @@ import static org.junit.Assert.assertEquals;
 public abstract class AbstractIT {
 
   private static final String ACL_FILE = ClassLoader.getSystemResource("acl.properties").getPath();
+  private static final String RESOURCES_FOLDER = ClassLoader.getSystemResource("").getPath();
   private static final int API_SERVER_PORT = AvailablePortFinder.getAvailablePort(8000);
 
   private final static ObjectMapper mapper = new ObjectMapper();
 
   private static PropertiesBasedAccessController accessController;
+  private static InMemoryQueueWorker triggerEventConsumer;
   private static ClusterManager clusterManager;
   private static ObjectManager objectManager;
   private static FactManager factManager;
@@ -78,6 +82,7 @@ public abstract class AbstractIT {
   public void setup() {
     Injector injector = Guice.createInjector(new ModuleIT());
     accessController = (PropertiesBasedAccessController) injector.getInstance(AccessController.class);
+    triggerEventConsumer = (InMemoryQueueWorker) injector.getInstance(TriggerEventConsumer.class);
     clusterManager = injector.getInstance(ClusterManager.class);
     objectManager = injector.getInstance(ObjectManager.class);
     factManager = injector.getInstance(FactManager.class);
@@ -89,6 +94,7 @@ public abstract class AbstractIT {
 
     // Start up everything in correct order.
     accessController.startComponent();
+    triggerEventConsumer.startComponent();
     clusterManager.startComponent();
     objectManager.startComponent();
     factManager.startComponent();
@@ -106,6 +112,7 @@ public abstract class AbstractIT {
     factManager.stopComponent();
     objectManager.stopComponent();
     clusterManager.stopComponent();
+    triggerEventConsumer.stopComponent();
     accessController.stopComponent();
     // Truncate database.
     cassandra.truncate();
@@ -280,6 +287,7 @@ public abstract class AbstractIT {
       // Configuration
       bind(String.class).annotatedWith(Names.named("access.controller.properties.file")).toInstance(ACL_FILE);
       bind(String.class).annotatedWith(Names.named("access.controller.read.interval")).toInstance("60000");
+      bind(String.class).annotatedWith(Names.named("trigger.administration.service.configuration.directory")).toInstance(RESOURCES_FOLDER);
       bind(String.class).annotatedWith(Names.named("cassandra.cluster.name")).toInstance("ActIntegrationTest");
       bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance("localhost");
       bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
