@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+  <Properties>
+    <Property name="baseDir">logs</Property>
+  </Properties>
+  <Appenders>
+    <RollingRandomAccessFile name="ActionTriggersLogs"
+                             immediateFlush="false"
+                             fileName="${baseDir}/triggers.log"
+                             filePattern="${baseDir}/triggers-%d{yyyy-MM-dd}.log.gz">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+      <!-- Create a log file per day by rolling over at midnight each day. -->
+      <CronTriggeringPolicy schedule="0 0 0 * * ?" evaluateOnStartup="true"/>
+      <!-- Delete log files older than 30 days. -->
+      <DefaultRolloverStrategy>
+        <Delete basePath="${baseDir}">
+          <IfFileName glob="triggers-*.log.gz"/>
+          <IfLastModified age="30d"/>
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingRandomAccessFile>
+    <RollingRandomAccessFile name="ServiceLogs"
+                             immediateFlush="false"
+                             fileName="${baseDir}/service.log"
+                             filePattern="${baseDir}/service-%d{yyyy-MM-dd}.log.gz">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+      <!-- Create a log file per day by rolling over at midnight each day. -->
+      <CronTriggeringPolicy schedule="0 0 0 * * ?" evaluateOnStartup="true"/>
+      <!-- Delete log files older than 30 days. -->
+      <DefaultRolloverStrategy>
+        <Delete basePath="${baseDir}">
+          <IfFileName glob="service-*.log.gz"/>
+          <IfLastModified age="30d"/>
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingRandomAccessFile>
+  </Appenders>
+  <Loggers>
+    <!-- Write everything related to ActionTriggers in an own log file (and be verbose right now). -->
+    <AsyncLogger name="no.mnemonic.services.triggers" level="debug" additivity="false">
+      <AppenderRef ref="ActionTriggersLogs"/>
+    </AsyncLogger>
+    <!-- Everything else goes into the service logs. -->
+    <AsyncRoot level="info">
+      <AppenderRef ref="ServiceLogs"/>
+    </AsyncRoot>
+  </Loggers>
+</Configuration>

@@ -14,6 +14,20 @@
 
   <build>
     <testSourceDirectory>testsrc</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>../</directory>
+        <includes>
+          <include>LICENSE</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>resources</directory>
+        <includes>
+          <include>**/**</include>
+        </includes>
+      </resource>
+    </resources>
     <testResources>
       <testResource>
         <directory>testsrc/resources</directory>
@@ -80,6 +94,33 @@
       <version>${mnemonic.commons.version}</version>
       <scope>runtime</scope>
     </dependency>
+    <!-- Dependencies required for logging. -->
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>logging-log4j</artifactId>
+      <version>${mnemonic.commons.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>${log4j.version}</version>
+      <scope>runtime</scope>
+      <exclusions>
+        <!-- Excluded alpha (!!!) dependency due to CVE-2018-8088 and use the dependency pulled in from the libraries
+             actually using SLF4J. If no library would use SLF4J this bridge wouldn't be needed in the first place. -->
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.lmax</groupId>
+      <artifactId>disruptor</artifactId>
+      <version>${disruptor.version}</version>
+      <scope>runtime</scope>
+    </dependency>
     <!-- Needed for integration tests. -->
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
@@ -98,6 +139,12 @@
           <artifactId>achilles-embedded</artifactId>
         </exclusion>
       </exclusions>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

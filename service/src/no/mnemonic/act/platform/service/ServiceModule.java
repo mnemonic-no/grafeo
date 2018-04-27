@@ -12,7 +12,10 @@ import no.mnemonic.act.platform.service.aspects.ValidationAspect;
 import no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl;
 import no.mnemonic.act.platform.service.validators.DefaultValidatorFactory;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
+import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
+import no.mnemonic.services.triggers.pipeline.worker.InMemoryQueueWorker;
+import no.mnemonic.services.triggers.service.TriggerAdministrationServiceImpl;
 
 public class ServiceModule extends AbstractModule {
 
@@ -24,8 +27,8 @@ public class ServiceModule extends AbstractModule {
     install(new RequestContextAspect());
     install(new ValidationAspect());
     install(new TriggerContextAspect());
-    // TODO: Bind TriggerEventConsumer to a real implementation.
-    bind(TriggerEventConsumer.class).toInstance(event -> { });
+    bind(TriggerEventConsumer.class).to(InMemoryQueueWorker.class).in(Scopes.SINGLETON);
+    bind(TriggerAdministrationService.class).to(TriggerAdministrationServiceImpl.class).in(Scopes.SINGLETON);
     bind(ValidatorFactory.class).to(DefaultValidatorFactory.class).in(Scopes.SINGLETON);
     bind(ThreatIntelligenceService.class).to(ThreatIntelligenceServiceImpl.class).in(Scopes.SINGLETON);
   }

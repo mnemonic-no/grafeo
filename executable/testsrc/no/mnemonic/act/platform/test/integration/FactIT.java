@@ -6,17 +6,37 @@ import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.request.v1.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.services.triggers.action.TriggerAction;
+import no.mnemonic.services.triggers.action.exceptions.ParameterException;
+import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
+import no.mnemonic.services.triggers.action.exceptions.TriggerInitializationException;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 public class FactIT extends AbstractIT {
+
+  @Mock
+  private static TriggerAction action;
+
+  @Before
+  public void setup() {
+    super.setup();
+    initMocks(this);
+  }
 
   @Test
   public void testFetchFact() throws Exception {
@@ -107,6 +127,19 @@ public class FactIT extends AbstractIT {
   }
 
   @Test
+  public void testCreateFactTriggersAction() throws Exception {
+    // Create a Fact via the REST API ...
+    CreateFactRequest request = createCreateFactRequest();
+    Response response = request("/v1/fact", 1).post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+    UUID factID = getIdFromModel(getPayload(response));
+
+    // ... and verify that the action was called with the correct parameters.
+    verify(action).trigger(argThat(parameters -> parameters.containsKey("addedFact")
+            && Objects.equals(parameters.get("addedFact"), factID.toString())));
+  }
+
+  @Test
   public void testRetractFact() throws Exception {
     // Create a Fact in the database ...
     FactEntity factToRetract = createFact();
@@ -120,6 +153,24 @@ public class FactIT extends AbstractIT {
     assertNotNull(retractionFact);
     assertNotNull(getFactSearchManager().getFact(retractionFact.getId()));
     assertEquals(factToRetract.getId(), retractionFact.getInReferenceToID());
+  }
+
+  @Test
+  public void testRetractFactTriggersAction() throws Exception {
+    // Create a Fact in the database ...
+    FactEntity factToRetract = createFact();
+
+    // ... retract it via the REST API ...
+    Response response = request("/v1/fact/uuid/" + factToRetract.getId() + "/retract").post(Entity.json(new RetractFactRequest()));
+    assertEquals(201, response.getStatus());
+    UUID retractionFactID = getIdFromModel(getPayload(response));
+
+    // ... and verify that the action was called with the correct parameters.
+    verify(action).trigger(argThat(parameters -> parameters.containsKey("retractionFact")
+            && Objects.equals(parameters.get("retractionFact"), retractionFactID.toString())
+            && parameters.containsKey("retractedFact")
+            && Objects.equals(parameters.get("retractedFact"), factToRetract.getId().toString())
+    ));
   }
 
   @Test
@@ -282,6 +333,18 @@ public class FactIT extends AbstractIT {
                     .setObjectValue("objectValue")
                     .setDirection(Direction.BiDirectional)
             );
+  }
+
+  public static class TestTriggerAction implements TriggerAction {
+    @Override
+    public void init(Map<String, String> initParameters) throws ParameterException, TriggerInitializationException {
+      action.init(initParameters);
+    }
+
+    @Override
+    public void trigger(Map<String, String> triggerParameters) throws ParameterException, TriggerExecutionException {
+      action.trigger(triggerParameters);
+    }
   }
 
 }

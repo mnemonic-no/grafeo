@@ -1,0 +1,17 @@
+---
+id: ff665db9-a382-4a3d-add9-ae9f14d563af
+service: ThreatIntelligenceService
+name: FactAdded
+publicPermission: factAddedAllowPublicAccess
+roleBasedPermission: factAddedAllowRoleBasedAccess
+privatePermission: factAddedAllowPrivateAccess
+
+---
+id: be4631cf-e101-4a3a-b4a0-92b1f09f685e
+service: ThreatIntelligenceService
+name: FactRetracted
+publicPermission: factRetractedAllowPublicAccess
+roleBasedPermission: factRetractedAllowRoleBasedAccess
+privatePermission: factRetractedAllowPrivateAccess
+
+...
