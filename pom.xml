@@ -38,29 +38,29 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.12</mnemonic.commons.version>
-    <mnemonic.services.common.version>0.3.7</mnemonic.services.common.version>
-    <mnemonic.services.triggers.version>0.0.1</mnemonic.services.triggers.version>
+    <mnemonic.commons.version>0.2.13</mnemonic.commons.version>
+    <mnemonic.services.common.version>0.3.8</mnemonic.services.common.version>
+    <mnemonic.services.triggers.version>0.0.2</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
-    <cassandra.version>3.4.0</cassandra.version>
+    <cassandra.version>3.5.0</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
-    <elastic.search.version>5.6.7</elastic.search.version>
-    <guava.version>24.0-jre</guava.version>
-    <guice.version>4.1.0</guice.version>
-    <hibernate.validator.version>6.0.7.Final</hibernate.validator.version>
+    <elastic.search.version>5.6.9</elastic.search.version>
+    <guava.version>25.0-jre</guava.version>
+    <guice.version>4.2.0</guice.version>
+    <hibernate.validator.version>6.0.9.Final</hibernate.validator.version>
     <jackson.version>2.9.5</jackson.version>
-    <javax.el.version>3.0.1-b09</javax.el.version>
+    <javax.el.version>3.0.1-b10</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>
-    <javax.ws.rs.version>2.0.1</javax.ws.rs.version>
-    <jetty.version>9.4.8.v20171121</jetty.version>
+    <javax.ws.rs.version>2.1</javax.ws.rs.version>
+    <jetty.version>9.4.9.v20180320</jetty.version>
     <junit.version>4.12</junit.version>
     <log4j.version>2.11.0</log4j.version>
-    <mockito.version>2.15.0</mockito.version>
-    <resteasy.version>3.1.4.Final</resteasy.version>
-    <swagger.version>1.5.18</swagger.version>
-    <tinkerpop.version>3.3.1</tinkerpop.version>
+    <mockito.version>2.18.3</mockito.version>
+    <resteasy.version>3.5.1.Final</resteasy.version>
+    <swagger.version>1.5.19</swagger.version>
+    <tinkerpop.version>3.3.2</tinkerpop.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.0.0</maven.clean.version>
