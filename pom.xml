@@ -40,7 +40,7 @@
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.2.13</mnemonic.commons.version>
     <mnemonic.services.common.version>0.3.8</mnemonic.services.common.version>
-    <mnemonic.services.triggers.version>0.0.2</mnemonic.services.triggers.version>
+    <mnemonic.services.triggers.version>0.0.3</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
     <cassandra.version>3.5.0</cassandra.version>
