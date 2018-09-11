@@ -106,14 +106,6 @@
       <artifactId>log4j-slf4j-impl</artifactId>
       <version>${log4j.version}</version>
       <scope>runtime</scope>
-      <exclusions>
-        <!-- Excluded alpha (!!!) dependency due to CVE-2018-8088 and use the dependency pulled in from the libraries
-             actually using SLF4J. If no library would use SLF4J this bridge wouldn't be needed in the first place. -->
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.lmax</groupId>
@@ -132,13 +124,6 @@
       <groupId>no.mnemonic.commons</groupId>
       <artifactId>testtools</artifactId>
       <version>${mnemonic.commons.version}</version>
-      <exclusions>
-        <!-- Safe to exclude because Cassandra test utilities are not used. -->
-        <exclusion>
-          <groupId>info.archinnov</groupId>
-          <artifactId>achilles-embedded</artifactId>
-        </exclusion>
-      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>

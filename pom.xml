@@ -38,29 +38,29 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.13</mnemonic.commons.version>
-    <mnemonic.services.common.version>0.3.8</mnemonic.services.common.version>
-    <mnemonic.services.triggers.version>0.0.3</mnemonic.services.triggers.version>
+    <mnemonic.commons.version>0.2.15</mnemonic.commons.version>
+    <mnemonic.services.common.version>0.3.11</mnemonic.services.common.version>
+    <mnemonic.services.triggers.version>0.0.4</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
-    <cassandra.version>3.5.0</cassandra.version>
+    <cassandra.version>3.6.0</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
-    <elastic.search.version>5.6.9</elastic.search.version>
-    <guava.version>25.0-jre</guava.version>
+    <elastic.search.version>5.6.11</elastic.search.version>
+    <guava.version>26.0-jre</guava.version>
     <guice.version>4.2.0</guice.version>
-    <hibernate.validator.version>6.0.9.Final</hibernate.validator.version>
-    <jackson.version>2.9.5</jackson.version>
+    <hibernate.validator.version>6.0.12.Final</hibernate.validator.version>
+    <jackson.version>2.9.6</jackson.version>
     <javax.el.version>3.0.1-b10</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>
-    <javax.ws.rs.version>2.1</javax.ws.rs.version>
-    <jetty.version>9.4.9.v20180320</jetty.version>
+    <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
+    <jetty.version>9.4.12.v20180830</jetty.version>
     <junit.version>4.12</junit.version>
-    <log4j.version>2.11.0</log4j.version>
-    <mockito.version>2.18.3</mockito.version>
-    <resteasy.version>3.5.1.Final</resteasy.version>
-    <swagger.version>1.5.19</swagger.version>
-    <tinkerpop.version>3.3.2</tinkerpop.version>
+    <log4j.version>2.11.1</log4j.version>
+    <mockito.version>2.22.0</mockito.version>
+    <resteasy.version>3.6.1.Final</resteasy.version>
+    <swagger.version>1.5.21</swagger.version>
+    <tinkerpop.version>3.3.3</tinkerpop.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.0.0</maven.clean.version>
@@ -216,7 +216,7 @@
           <licenseMerges>
             <licenseMerge>Apache 2|Apache License 2.0|Apache Software License - Version 2.0|Apache License, Version 2.0|The Apache Software License, Version 2.0</licenseMerge>
             <licenseMerge>CDDL|CDDL 1.1|CDDL + GPLv2 with classpath exception</licenseMerge>
-            <licenseMerge>Eclipse|Eclipse Public License 1.0|Eclipse Public License - Version 1.0</licenseMerge>
+            <licenseMerge>Eclipse|EPL 2.0|Eclipse Public License 1.0|Eclipse Public License - Version 1.0</licenseMerge>
             <licenseMerge>MIT|The MIT License</licenseMerge>
           </licenseMerges>
         </configuration>
