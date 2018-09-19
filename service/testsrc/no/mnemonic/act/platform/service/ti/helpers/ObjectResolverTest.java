@@ -33,13 +33,21 @@ public class ObjectResolverTest {
   }
 
   @Test
+  public void testResolveObjectWithInvalidInput() throws Exception {
+    assertNull(resolver.resolveObject(null));
+    assertNull(resolver.resolveObject(""));
+    assertNull(resolver.resolveObject("   "));
+    assertNull(resolver.resolveObject("invalid"));
+  }
+
+  @Test
   public void testResolveObjectById() throws Exception {
     UUID id = UUID.randomUUID();
     ObjectEntity object = new ObjectEntity();
 
     when(objectManager.getObject(id)).thenReturn(object);
 
-    assertSame(object, resolver.resolveObject(id, "", ""));
+    assertSame(object, resolver.resolveObject(id.toString()));
 
     verify(objectManager).getObject(id);
     verifyNoMoreInteractions(objectManager);
@@ -51,11 +59,12 @@ public class ObjectResolverTest {
     String value = "ObjectValue";
     ObjectEntity object = new ObjectEntity();
 
+    when(objectManager.getObjectType(type)).thenReturn(new ObjectTypeEntity());
     when(objectManager.getObject(type, value)).thenReturn(object);
 
-    assertSame(object, resolver.resolveObject(null, type, value));
+    assertSame(object, resolver.resolveObject(String.format("%s/%s", type, value)));
 
-    verify(objectManager).getObject(null);
+    verify(objectManager).getObjectType(type);
     verify(objectManager).getObject(type, value);
     verifyNoMoreInteractions(objectManager);
   }
@@ -68,7 +77,7 @@ public class ObjectResolverTest {
 
     when(objectManager.saveObject(any())).thenAnswer(i -> i.getArgument(0));
 
-    ObjectEntity resolvedObject = resolver.resolveObject(null, type.getName(), value);
+    ObjectEntity resolvedObject = resolver.resolveObject(String.format("%s/%s", type.getName(), value));
     assertObjectEntity(resolvedObject, type.getId(), value);
 
     verify(objectManager).saveObject(argThat(e -> {
@@ -78,9 +87,9 @@ public class ObjectResolverTest {
   }
 
   @Test
-  public void testCreateMissingObjectFailsOnMissingObjectType() throws Exception {
+  public void testCreateMissingObjectFailsOnMissingObjectType() {
     try {
-      resolver.resolveObject(null, "ObjectType", "ObjectValue");
+      resolver.resolveObject("ObjectType/ObjectValue");
       fail();
     } catch (InvalidArgumentException ex) {
       assertEquals("object.type.not.exist", ex.getValidationErrors().iterator().next().getMessageTemplate());
@@ -89,12 +98,12 @@ public class ObjectResolverTest {
   }
 
   @Test
-  public void testCreateMissingObjectFailsOnObjectValidation() throws Exception {
+  public void testCreateMissingObjectFailsOnObjectValidation() {
     ObjectTypeEntity type = mockFetchObjectType();
     mockValidator(false);
 
     try {
-      resolver.resolveObject(null, type.getName(), "ObjectValue");
+      resolver.resolveObject(String.format("%s/%s", type.getName(), "ObjectValue"));
       fail();
     } catch (InvalidArgumentException ex) {
       assertEquals("object.not.valid", ex.getValidationErrors().iterator().next().getMessageTemplate());

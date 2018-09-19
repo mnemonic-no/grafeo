@@ -182,8 +182,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
   private CreateFactRequest createCreateFactRequest() {
     return new CreateFactRequest()
             .setType("type")
-            .setValue("value")
-            .addBinding(new CreateFactRequest.FactObjectBinding().setObjectID(UUID.randomUUID()).setDirection(Direction.BiDirectional));
+            .setValue("value");
   }
 
   private CreateFactCommentRequest createCreateFactCommentRequest() {

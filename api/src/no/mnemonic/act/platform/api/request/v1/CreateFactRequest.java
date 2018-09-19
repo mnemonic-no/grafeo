@@ -5,10 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,8 +19,6 @@ public class CreateFactRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Value of new Fact", example = "APT1", required = true)
   @NotBlank
   private String value;
-  @ApiModelProperty(value = "Set if new Fact should reference an existing Fact (takes Fact UUID)")
-  private UUID inReferenceTo;
   @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)")
   private UUID organization;
   @ApiModelProperty(value = "Set Source of new Fact. If not set the current user will be used as Source (takes Source UUID)")
@@ -34,9 +29,14 @@ public class CreateFactRequest implements ValidatingRequest {
   private String comment;
   @ApiModelProperty(value = "If set defines explicitly who has access to new Fact (takes Subject UUIDs)")
   private List<UUID> acl;
-  @ApiModelProperty(value = "Define to which Objects the new Fact links", required = true)
-  @NotEmpty
-  private List<@Valid FactObjectBinding> bindings;
+  @ApiModelProperty(value = "Set Object which is linked to new Fact as source (takes Object UUID or Object identified by 'type/value')",
+          example = "ThreatActorAlias/APT1")
+  private String sourceObject;
+  @ApiModelProperty(value = "Set Object which is linked to new Fact as destination (takes Object UUID or Object identified by 'type/value')",
+          example = "ThreatActorAlias/APT1")
+  private String destinationObject;
+  @ApiModelProperty(value = "If true the binding between source Object, Fact and destination Object is bidirectional (default 'false')")
+  private boolean bidirectionalBinding;
   // TODO: Add confidenceLevel once defined.
 
   public String getType() {
@@ -54,15 +54,6 @@ public class CreateFactRequest implements ValidatingRequest {
 
   public CreateFactRequest setValue(String value) {
     this.value = value;
-    return this;
-  }
-
-  public UUID getInReferenceTo() {
-    return inReferenceTo;
-  }
-
-  public CreateFactRequest setInReferenceTo(UUID inReferenceTo) {
-    this.inReferenceTo = inReferenceTo;
     return this;
   }
 
@@ -116,73 +107,31 @@ public class CreateFactRequest implements ValidatingRequest {
     return this;
   }
 
-  public List<FactObjectBinding> getBindings() {
-    return bindings;
+  public String getSourceObject() {
+    return sourceObject;
   }
 
-  public CreateFactRequest setBindings(List<FactObjectBinding> bindings) {
-    this.bindings = bindings;
+  public CreateFactRequest setSourceObject(String sourceObject) {
+    this.sourceObject = sourceObject;
     return this;
   }
 
-  public CreateFactRequest addBinding(FactObjectBinding binding) {
-    this.bindings = ListUtils.addToList(this.bindings, binding);
+  public String getDestinationObject() {
+    return destinationObject;
+  }
+
+  public CreateFactRequest setDestinationObject(String destinationObject) {
+    this.destinationObject = destinationObject;
     return this;
   }
 
-  @ApiModel(value = "FactObjectBindingRequest", description = "Define to which Objects a new Fact links")
-  public static class FactObjectBinding {
-    // Either objectID or objectType + objectValue must be set.
-    @ApiModelProperty(value = "UUID of an existing Object. Set either 'objectID' or 'objectType' plus 'objectValue'")
-    private UUID objectID;
-    @ApiModelProperty(value = "Type of an Object (takes type name)", example = "ip")
-    private String objectType;
-    @ApiModelProperty(value = "Value of an Object", example = "27.13.4.125")
-    private String objectValue;
-    @ApiModelProperty(value = "Direction of link between Fact and Object", required = true)
-    @NotNull
-    private Direction direction;
+  public boolean isBidirectionalBinding() {
+    return bidirectionalBinding;
+  }
 
-    public UUID getObjectID() {
-      return objectID;
-    }
-
-    public FactObjectBinding setObjectID(UUID objectID) {
-      this.objectID = objectID;
-      return this;
-    }
-
-    public String getObjectType() {
-      return objectType;
-    }
-
-    public FactObjectBinding setObjectType(String objectType) {
-      this.objectType = objectType;
-      return this;
-    }
-
-    public String getObjectValue() {
-      return objectValue;
-    }
-
-    public FactObjectBinding setObjectValue(String objectValue) {
-      this.objectValue = objectValue;
-      return this;
-    }
-
-    public Direction getDirection() {
-      return direction;
-    }
-
-    public FactObjectBinding setDirection(Direction direction) {
-      this.direction = direction;
-      return this;
-    }
-
-    @Override
-    public String toString() {
-      return String.format("objectID=%s;objectType=%s;objectValue=%s;direction=%s", objectID, objectType, objectValue, direction);
-    }
+  public CreateFactRequest setBidirectionalBinding(boolean bidirectionalBinding) {
+    this.bidirectionalBinding = bidirectionalBinding;
+    return this;
   }
 
 }

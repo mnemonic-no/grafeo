@@ -3,10 +3,7 @@ package no.mnemonic.act.platform.rest.mappings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.exceptions.*;
-import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
-import no.mnemonic.act.platform.api.request.v1.Direction;
-import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
-import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
+import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import no.mnemonic.act.platform.rest.api.ResultMessage;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -86,8 +83,7 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   @Test
   public void testFailedRequestValidationReturns412() throws Exception {
     CreateFactRequest request = new CreateFactRequest()
-            .setType("type")
-            .addBinding(new CreateFactRequest.FactObjectBinding().setDirection(Direction.None));
+            .setType("type");
     Response response = target("/v1/fact").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
     assertMessages(getMessages(response), "must not be blank", "{javax.validation.constraints.NotBlank.message}", "value", "NULL");
@@ -95,13 +91,14 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFailedRequestValidationNestedReturns412() throws Exception {
-    CreateFactRequest request = new CreateFactRequest()
-            .setType("type")
-            .setValue("value")
-            .addBinding(new CreateFactRequest.FactObjectBinding());
-    Response response = target("/v1/fact").request().post(Entity.json(request));
+    CreateFactTypeRequest request = new CreateFactTypeRequest()
+            .setName("name")
+            .setValidator("validator")
+            .setEntityHandler("entityHandler")
+            .addRelevantObjectBinding(new FactObjectBindingDefinition().setObjectType(UUID.randomUUID()));
+    Response response = target("/v1/factType").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "bindings[0].direction", "NULL");
+    assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "relevantObjectBindings[0].direction", "NULL");
   }
 
   @Test
@@ -135,9 +132,9 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testUnknownFieldMappingNestedReturns412() throws Exception {
-    Response response = target("/v1/fact").request().post(Entity.json("{\"bindings\" : [{\"unknown\" : \"something\"}]}"));
+    Response response = target("/v1/factType").request().post(Entity.json("{\"relevantObjectBindings\" : [{\"unknown\" : \"something\"}]}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "Unknown JSON field detected.", "unknown.json.field", "bindings[0].unknown", "");
+    assertMessages(getMessages(response), "Unknown JSON field detected.", "unknown.json.field", "relevantObjectBindings[0].unknown", "");
   }
 
   @Test
@@ -149,9 +146,9 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFieldParsingErrorWithWrongEnumReturns412() throws Exception {
-    Response response = target("/v1/fact").request().post(Entity.json("{\"bindings\" : [{\"direction\" : \"something\"}]}"));
+    Response response = target("/v1/factType").request().post(Entity.json("{\"relevantObjectBindings\" : [{\"direction\" : \"something\"}]}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "bindings[0].direction", "something");
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "relevantObjectBindings[0].direction", "something");
   }
 
   @Test
