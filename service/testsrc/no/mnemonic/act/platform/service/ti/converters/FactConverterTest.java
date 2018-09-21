@@ -12,8 +12,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class FactConverterTest {
 
@@ -25,14 +24,108 @@ public class FactConverterTest {
   private final Predicate<FactEntity> accessChecker = fact -> true;
 
   @Test
-  public void testConvertFact() {
-    FactEntity entity = createEntity();
-    assertModel(entity, createFactConverter().apply(entity));
+  public void testConvertNullReturnsNull() {
+    assertNull(createFactConverter().apply(null));
   }
 
   @Test
-  public void testConvertNullReturnsNull() {
-    assertNull(createFactConverter().apply(null));
+  public void testConvertFactWithBindingOfCardinalityTwo() {
+    FactEntity.FactObjectBinding source = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.FactIsDestination);
+    FactEntity.FactObjectBinding destination = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.FactIsSource);
+    FactEntity entity = createEntity().setBindings(ListUtils.list(source, destination));
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertFalse(model.isBidirectionalBinding());
+    assertNotNull(model.getSourceObject());
+    assertEquals(source.getObjectID(), model.getSourceObject().getId());
+    assertNotNull(model.getDestinationObject());
+    assertEquals(destination.getObjectID(), model.getDestinationObject().getId());
+  }
+
+  @Test
+  public void testConvertFactWithBindingOfCardinalityTwoBidirectional() {
+    FactEntity.FactObjectBinding source = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.BiDirectional);
+    FactEntity.FactObjectBinding destination = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.BiDirectional);
+    FactEntity entity = createEntity().setBindings(ListUtils.list(source, destination));
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertTrue(model.isBidirectionalBinding());
+    assertNotNull(model.getSourceObject());
+    assertEquals(source.getObjectID(), model.getSourceObject().getId());
+    assertNotNull(model.getDestinationObject());
+    assertEquals(destination.getObjectID(), model.getDestinationObject().getId());
+  }
+
+  @Test
+  public void testConvertFactWithBindingOfCardinalityOneFactIsSource() {
+    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.FactIsSource);
+    FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertFalse(model.isBidirectionalBinding());
+    assertNull(model.getSourceObject());
+    assertNotNull(model.getDestinationObject());
+    assertEquals(binding.getObjectID(), model.getDestinationObject().getId());
+  }
+
+  @Test
+  public void testConvertFactWithBindingOfCardinalityOneFactIsDestination() {
+    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.FactIsDestination);
+    FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertFalse(model.isBidirectionalBinding());
+    assertNull(model.getDestinationObject());
+    assertNotNull(model.getSourceObject());
+    assertEquals(binding.getObjectID(), model.getSourceObject().getId());
+  }
+
+  @Test
+  public void testConvertFactWithBindingOfCardinalityOneBiDirectional() {
+    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.BiDirectional);
+    FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertTrue(model.isBidirectionalBinding());
+    assertNotNull(model.getSourceObject());
+    assertEquals(binding.getObjectID(), model.getSourceObject().getId());
+    assertNotNull(model.getDestinationObject());
+    assertEquals(binding.getObjectID(), model.getDestinationObject().getId());
+  }
+
+  @Test
+  public void testConvertFactWithoutBinding() {
+    FactEntity entity = createEntity();
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertNull(model.getSourceObject());
+    assertNull(model.getDestinationObject());
   }
 
   @Test
@@ -139,13 +232,6 @@ public class FactConverterTest {
   }
 
   private FactEntity createEntity() {
-    FactEntity.FactObjectBinding binding1 = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.FactIsSource);
-    FactEntity.FactObjectBinding binding2 = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.FactIsDestination);
-
     return new FactEntity()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
@@ -155,11 +241,10 @@ public class FactConverterTest {
             .setSourceID(UUID.randomUUID())
             .setAccessMode(AccessMode.Explicit)
             .setTimestamp(123456789)
-            .setLastSeenTimestamp(987654321)
-            .setBindings(ListUtils.list(binding1, binding2));
+            .setLastSeenTimestamp(987654321);
   }
 
-  private void assertModel(FactEntity entity, Fact model) {
+  private void assertModelCommon(FactEntity entity, Fact model) {
     assertEquals(entity.getId(), model.getId());
     assertEquals(entity.getTypeID(), model.getType().getId());
     assertEquals(entity.getValue(), model.getValue());
@@ -169,14 +254,6 @@ public class FactConverterTest {
     assertEquals(entity.getAccessMode().name(), model.getAccessMode().name());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
     assertEquals(entity.getLastSeenTimestamp(), (long) model.getLastSeenTimestamp());
-
-    assertEquals(entity.getBindings().size(), model.getObjects().size());
-    for (int i = 0; i < entity.getBindings().size(); i++) {
-      FactEntity.FactObjectBinding entityBinding = entity.getBindings().get(i);
-      Fact.FactObjectBinding modelBinding = model.getObjects().get(i);
-      assertEquals(entityBinding.getObjectID(), modelBinding.getObject().getId());
-      assertEquals(entityBinding.getDirection().name(), modelBinding.getDirection().name());
-    }
   }
 
 }

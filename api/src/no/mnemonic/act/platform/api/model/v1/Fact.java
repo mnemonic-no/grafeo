@@ -4,15 +4,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampSerializer;
-import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 @ApiModel(description = "Facts provide additional information about an Object. " +
-        "One Fact can link two or more Objects together and thereby describes the relationship between those Objects."
+        "One Fact can link one or two Objects together and thereby describes the relationship between those Objects."
 )
 public class Fact {
 
@@ -36,12 +32,17 @@ public class Fact {
   @ApiModelProperty(value = "When the Fact was last seen", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long lastSeenTimestamp;
-  @ApiModelProperty(value = "Links the Fact to Objects")
-  private final List<FactObjectBinding> objects;
+  @ApiModelProperty(value = "Object which is linked to Fact as source")
+  private final Object.Info sourceObject;
+  @ApiModelProperty(value = "Object which is linked to Fact as destination")
+  private final Object.Info destinationObject;
+  @ApiModelProperty(value = "True if the binding between source Object, Fact and destination Object is bidirectional", required = true)
+  private final boolean bidirectionalBinding;
   // TODO: Add confidenceLevel once defined.
 
   private Fact(UUID id, FactType.Info type, String value, Info inReferenceTo, Organization.Info organization, Source.Info source,
-               AccessMode accessMode, Long timestamp, Long lastSeenTimestamp, List<FactObjectBinding> objects) {
+               AccessMode accessMode, Long timestamp, Long lastSeenTimestamp, Object.Info sourceObject, Object.Info destinationObject,
+               boolean bidirectionalBinding) {
     this.id = id;
     this.type = type;
     this.value = value;
@@ -51,7 +52,9 @@ public class Fact {
     this.accessMode = accessMode;
     this.timestamp = timestamp;
     this.lastSeenTimestamp = lastSeenTimestamp;
-    this.objects = ObjectUtils.ifNotNull(objects, Collections::unmodifiableList);
+    this.sourceObject = sourceObject;
+    this.destinationObject = destinationObject;
+    this.bidirectionalBinding = bidirectionalBinding;
   }
 
   public UUID getId() {
@@ -90,8 +93,16 @@ public class Fact {
     return lastSeenTimestamp;
   }
 
-  public List<FactObjectBinding> getObjects() {
-    return objects;
+  public Object.Info getSourceObject() {
+    return sourceObject;
+  }
+
+  public Object.Info getDestinationObject() {
+    return destinationObject;
+  }
+
+  public boolean isBidirectionalBinding() {
+    return bidirectionalBinding;
   }
 
   public Info toInfo() {
@@ -112,13 +123,16 @@ public class Fact {
     private AccessMode accessMode;
     private Long timestamp;
     private Long lastSeenTimestamp;
-    private List<FactObjectBinding> objects;
+    private Object.Info sourceObject;
+    private Object.Info destinationObject;
+    private boolean bidirectionalBinding;
 
     private Builder() {
     }
 
     public Fact build() {
-      return new Fact(id, type, value, inReferenceTo, organization, source, accessMode, timestamp, lastSeenTimestamp, objects);
+      return new Fact(id, type, value, inReferenceTo, organization, source, accessMode, timestamp, lastSeenTimestamp,
+              sourceObject, destinationObject, bidirectionalBinding);
     }
 
     public Builder setId(UUID id) {
@@ -166,35 +180,19 @@ public class Fact {
       return this;
     }
 
-    public Builder setObjects(List<FactObjectBinding> objects) {
-      this.objects = objects;
+    public Builder setSourceObject(Object.Info sourceObject) {
+      this.sourceObject = sourceObject;
       return this;
     }
 
-    public Builder addObject(FactObjectBinding object) {
-      this.objects = ListUtils.addToList(this.objects, object);
+    public Builder setDestinationObject(Object.Info destinationObject) {
+      this.destinationObject = destinationObject;
       return this;
     }
-  }
 
-  @ApiModel(value = "FactObjectBindingModel", description = "Links a Fact to Objects.")
-  public static class FactObjectBinding {
-    @ApiModelProperty(value = "Linked Object", required = true)
-    private final Object.Info object;
-    @ApiModelProperty(value = "Direction of the link", required = true)
-    private final Direction direction;
-
-    public FactObjectBinding(Object.Info object, Direction direction) {
-      this.object = object;
-      this.direction = direction;
-    }
-
-    public Object.Info getObject() {
-      return object;
-    }
-
-    public Direction getDirection() {
-      return direction;
+    public Builder setBidirectionalBinding(boolean bidirectionalBinding) {
+      this.bidirectionalBinding = bidirectionalBinding;
+      return this;
     }
   }
 
