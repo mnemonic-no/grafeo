@@ -73,7 +73,7 @@ public class FactConverter implements Converter<FactEntity, Fact> {
       return convertCardinalityOne(entity.getBindings().get(0));
     }
     if (CollectionUtils.size(entity.getBindings()) == 2) {
-      return convertCardinalityTwo(entity.getBindings().get(0), entity.getBindings().get(1));
+      return convertCardinalityTwo(entity, entity.getBindings().get(0), entity.getBindings().get(1));
     }
 
     // This should never happen as long as create Fact API only allows bindings with cardinality 1 or 2. Log it, just in case.
@@ -94,7 +94,14 @@ public class FactConverter implements Converter<FactEntity, Fact> {
     return new ConvertedObjects(objectConverter, binding.getObjectID(), binding.getObjectID(), true);
   }
 
-  private ConvertedObjects convertCardinalityTwo(FactEntity.FactObjectBinding first, FactEntity.FactObjectBinding second) {
+  private ConvertedObjects convertCardinalityTwo(FactEntity fact, FactEntity.FactObjectBinding first, FactEntity.FactObjectBinding second) {
+    if ((first.getDirection() == FactIsDestination && second.getDirection() == FactIsDestination) ||
+            (first.getDirection() == FactIsSource && second.getDirection() == FactIsSource)) {
+      // This should never happen as long as create Fact API only allows bindings with cardinality 1 or 2. Log it, just in case.
+      LOGGER.warning("Fact is bound to two Objects with the same direction (id = %s). Ignoring Objects in result.", fact.getId());
+      return null;
+    }
+
     // If 'first' has direction 'FactIsDestination' it's the source Object and 'second' the destination Object ...
     if (first.getDirection() == FactIsDestination) {
       return new ConvertedObjects(objectConverter, first.getObjectID(), second.getObjectID(), false);
@@ -180,7 +187,7 @@ public class FactConverter implements Converter<FactEntity, Fact> {
     }
   }
 
-  private static class ConvertedObjects {
+  private class ConvertedObjects {
     private final Function<UUID, Object> objectConverter;
     private final UUID sourceObjectID;
     private final UUID destinationObjectID;

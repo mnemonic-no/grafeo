@@ -129,6 +129,48 @@ public class FactConverterTest {
   }
 
   @Test
+  public void testConvertFactWithBindingOfCardinalityTwoAndSameDirectionFactIsDestination() {
+    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.FactIsDestination);
+    FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding));
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertNull(model.getSourceObject());
+    assertNull(model.getDestinationObject());
+  }
+
+  @Test
+  public void testConvertFactWithBindingOfCardinalityTwoAndSameDirectionFactIsSource() {
+    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.FactIsSource);
+    FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding));
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertNull(model.getSourceObject());
+    assertNull(model.getDestinationObject());
+  }
+
+  @Test
+  public void testConvertFactWithBindingOfCardinalityTree() {
+    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
+            .setObjectID(UUID.randomUUID())
+            .setDirection(Direction.BiDirectional);
+    FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding, binding));
+
+    Fact model = createFactConverter().apply(entity);
+
+    assertModelCommon(entity, model);
+    assertNull(model.getSourceObject());
+    assertNull(model.getDestinationObject());
+  }
+
+  @Test
   public void testConvertFactCannotResolveInReferenceToFact() {
     FactConverter converter = FactConverter.builder()
             .setFactTypeConverter(factTypeConverter)
