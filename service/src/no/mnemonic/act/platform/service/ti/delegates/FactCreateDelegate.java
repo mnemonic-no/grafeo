@@ -50,7 +50,7 @@ public class FactCreateDelegate extends AbstractDelegate {
     // Validate that requested Fact matches its FactType.
     FactTypeEntity type = factTypeResolver.resolveFactType(request.getType());
     validateFactValue(type, request.getValue());
-    validateFactObjectBindings(type, request.getBindings());
+    validateFactObjectBindings(request, type);
 
     FactEntity fact = resolveExistingFact(request, type);
     if (fact != null) {
@@ -120,27 +120,39 @@ public class FactCreateDelegate extends AbstractDelegate {
     }
   }
 
-  private void validateFactObjectBindings(FactTypeEntity type, List<CreateFactRequest.FactObjectBinding> requestedBindings)
-          throws InvalidArgumentException {
+  private void validateFactObjectBindings(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
+    // Validate that either source or destination or both are set. One field can be NULL to support bindings of cardinality 1.
+    ObjectEntity source = objectResolver.resolveObject(request.getSourceObject());
+    ObjectEntity destination = objectResolver.resolveObject(request.getDestinationObject());
+    if (source == null && destination == null) {
+      throw new InvalidArgumentException()
+              .addValidationError("Requested source Object could not be resolved.", "invalid.source.object", "sourceObject", request.getSourceObject())
+              .addValidationError("Requested destination Object could not be resolved.", "invalid.destination.object", "destinationObject", request.getDestinationObject());
+    }
+
     InvalidArgumentException ex = new InvalidArgumentException();
 
-    for (int i = 0; i < requestedBindings.size(); i++) {
-      CreateFactRequest.FactObjectBinding requested = requestedBindings.get(i);
-      ObjectEntity object = objectResolver.resolveObject(requested.getObjectID(), requested.getObjectType(), requested.getObjectValue());
-
-      // Check requested binding against all definitions.
-      boolean valid = type.getRelevantObjectBindings()
-              .stream()
-              .anyMatch(b -> Objects.equals(b.getObjectTypeID(), object.getTypeID()) && Objects.equals(b.getDirection().name(), requested.getDirection().name()));
-      if (!valid) {
-        // Requested binding is invalid, add to exception and continue to validate other bindings.
-        ex.addValidationError("Requested binding between Fact and Object is not allowed.", "invalid.fact.object.binding", "bindings." + i, requested.toString());
-      }
+    // Validate that the binding between source Object, Fact and destination Object is valid according to the FactType.
+    if (!isValidBinding(type, source, request.isBidirectionalBinding() ? Direction.BiDirectional : Direction.FactIsDestination)) {
+      ex.addValidationError("Requested binding between Fact and Object is not allowed.", "invalid.fact.object.binding", "sourceObject", request.getSourceObject());
+    }
+    if (!isValidBinding(type, destination, request.isBidirectionalBinding() ? Direction.BiDirectional : Direction.FactIsSource)) {
+      ex.addValidationError("Requested binding between Fact and Object is not allowed.", "invalid.fact.object.binding", "destinationObject", request.getDestinationObject());
     }
 
     if (!CollectionUtils.isEmpty(ex.getValidationErrors())) {
       throw ex;
     }
+  }
+
+  private boolean isValidBinding(FactTypeEntity type, ObjectEntity object, Direction direction) {
+    // Object can be null if the binding is of cardinality 1.
+    if (object == null) return true;
+
+    // Check requested binding against all definitions.
+    return type.getRelevantObjectBindings()
+            .stream()
+            .anyMatch(b -> Objects.equals(b.getObjectTypeID(), object.getTypeID()) && Objects.equals(b.getDirection(), direction));
   }
 
   private FactEntity resolveExistingFact(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
@@ -152,7 +164,7 @@ public class FactCreateDelegate extends AbstractDelegate {
             .setOrganizationID(resolveOrganization(request.getOrganization()))
             .setAccessMode(request.getAccessMode().name());
     // Need to resolve bindings in order to get the correct objectID if this isn't provided in the request.
-    for (FactEntity.FactObjectBinding binding : resolveFactObjectBindings(request.getBindings())) {
+    for (FactEntity.FactObjectBinding binding : resolveFactObjectBindings(request)) {
       criteriaBuilder.addObject(binding.getObjectID(), binding.getDirection().name());
     }
 
@@ -170,17 +182,15 @@ public class FactCreateDelegate extends AbstractDelegate {
             .orElse(null);
   }
 
-  private FactEntity saveFact(CreateFactRequest request, FactTypeEntity type)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+  private FactEntity saveFact(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
     FactEntity fact = new FactEntity()
             .setId(UUID.randomUUID())  // Need to provide client-generated ID.
             .setTypeID(type.getId())
             .setValue(request.getValue())
             .setAccessMode(AccessMode.valueOf(request.getAccessMode().name()))
-            .setInReferenceToID(resolveInReferenceTo(request.getInReferenceTo()))
             .setOrganizationID(resolveOrganization(request.getOrganization()))
             .setSourceID(resolveSource(request.getSource()))
-            .setBindings(resolveFactObjectBindings(request.getBindings()))
+            .setBindings(resolveFactObjectBindings(request))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
 
@@ -197,31 +207,23 @@ public class FactCreateDelegate extends AbstractDelegate {
     return fact;
   }
 
-  private UUID resolveInReferenceTo(UUID inReferenceToID)
-          throws InvalidArgumentException, AccessDeniedException, AuthenticationFailedException {
-    if (inReferenceToID != null) {
-      FactEntity inReferenceTo = TiRequestContext.get().getFactManager().getFact(inReferenceToID);
-      if (inReferenceTo == null) {
-        // Referenced Fact must exist.
-        throw new InvalidArgumentException()
-                .addValidationError("Referenced Fact does not exist.", "referenced.fact.not.exist", "inReferenceTo", inReferenceToID.toString());
-      }
-      // User must have access to referenced Fact.
-      TiSecurityContext.get().checkReadPermission(inReferenceTo);
-    }
-    // Everything ok, just return ID.
-    return inReferenceToID;
-  }
-
-  private List<FactEntity.FactObjectBinding> resolveFactObjectBindings(List<CreateFactRequest.FactObjectBinding> requestedBindings)
-          throws InvalidArgumentException {
+  private List<FactEntity.FactObjectBinding> resolveFactObjectBindings(CreateFactRequest request) throws InvalidArgumentException {
     List<FactEntity.FactObjectBinding> entityBindings = new ArrayList<>();
 
-    for (CreateFactRequest.FactObjectBinding requested : requestedBindings) {
-      ObjectEntity object = objectResolver.resolveObject(requested.getObjectID(), requested.getObjectType(), requested.getObjectValue());
+    ObjectEntity source = objectResolver.resolveObject(request.getSourceObject());
+    ObjectEntity destination = objectResolver.resolveObject(request.getDestinationObject());
+
+    if (source != null) {
       FactEntity.FactObjectBinding entity = new FactEntity.FactObjectBinding()
-              .setObjectID(object.getId())
-              .setDirection(Direction.valueOf(requested.getDirection().name()));
+              .setObjectID(source.getId())
+              .setDirection(request.isBidirectionalBinding() ? Direction.BiDirectional : Direction.FactIsDestination);
+      entityBindings.add(entity);
+    }
+
+    if (destination != null) {
+      FactEntity.FactObjectBinding entity = new FactEntity.FactObjectBinding()
+              .setObjectID(destination.getId())
+              .setDirection(request.isBidirectionalBinding() ? Direction.BiDirectional : Direction.FactIsSource);
       entityBindings.add(entity);
     }
 

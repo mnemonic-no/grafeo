@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.*;
-import no.mnemonic.act.platform.api.request.v1.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.services.triggers.action.TriggerAction;
 import no.mnemonic.services.triggers.action.exceptions.ParameterException;
@@ -83,7 +82,7 @@ public class FactIT extends AbstractIT {
     UUID id = getIdFromModel(getPayload(response));
     assertNotNull(getFactManager().getFact(id));
     assertNotNull(getFactSearchManager().getFact(id));
-    assertNotNull(getObjectManager().getObject(objectType.getName(), request.getBindings().get(0).getObjectValue()));
+    assertNotNull(getObjectManager().getObject(objectType.getName(), "objectValue"));
   }
 
   @Test
@@ -188,7 +187,7 @@ public class FactIT extends AbstractIT {
   }
 
   @Test
-  public void testGrantAccess() throws Exception {
+  public void testGrantAccess() {
     // Create a Fact in the database ...
     FactEntity fact = createFact();
 
@@ -218,7 +217,7 @@ public class FactIT extends AbstractIT {
   }
 
   @Test
-  public void testCreateComment() throws Exception {
+  public void testCreateComment() {
     // Create a Fact in the database ...
     FactEntity fact = createFact();
 
@@ -328,11 +327,8 @@ public class FactIT extends AbstractIT {
     return new CreateFactRequest()
             .setType(factType.getName())
             .setValue("factValue")
-            .addBinding(new CreateFactRequest.FactObjectBinding()
-                    .setObjectType(objectType.getName())
-                    .setObjectValue("objectValue")
-                    .setDirection(Direction.BiDirectional)
-            );
+            .setSourceObject(String.format("%s/%s", objectType.getName(), "objectValue"))
+            .setBidirectionalBinding(true);
   }
 
   public static class TestTriggerAction implements TriggerAction {
