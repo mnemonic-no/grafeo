@@ -26,9 +26,9 @@ public class FactTest {
     assertEquals(fact.getAccessMode().toString(), root.get("accessMode").textValue());
     assertEquals("2016-11-30T15:47:01Z", root.get("timestamp").textValue());
     assertEquals("2016-11-30T15:47:02Z", root.get("lastSeenTimestamp").textValue());
-    assertTrue(root.get("objects").isArray());
-    assertTrue(root.get("objects").get(0).get("object").isObject());
-    assertEquals(fact.getObjects().get(0).getDirection().toString(), root.get("objects").get(0).get("direction").textValue());
+    assertTrue(root.get("sourceObject").isObject());
+    assertTrue(root.get("destinationObject").isObject());
+    assertTrue(root.get("bidirectionalBinding").booleanValue());
   }
 
   @Test
@@ -51,7 +51,9 @@ public class FactTest {
             .setAccessMode(AccessMode.Explicit)
             .setTimestamp(1480520821000L)
             .setLastSeenTimestamp(1480520822000L)
-            .addObject(new Fact.FactObjectBinding(createObjectInfo(), Direction.BiDirectional))
+            .setSourceObject(createObjectInfo())
+            .setDestinationObject(createObjectInfo())
+            .setBidirectionalBinding(true)
             .build();
   }
 
