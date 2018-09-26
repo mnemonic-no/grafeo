@@ -32,7 +32,7 @@ public class FactTypeUpdateDelegate extends AbstractDelegate {
     }
 
     if (!CollectionUtils.isEmpty(request.getAddObjectBindings())) {
-      assertObjectTypesToBindExist(request.getAddObjectBindings(), "addObjectBindings.objectType");
+      assertObjectTypesToBindExist(request.getAddObjectBindings(), "addObjectBindings");
       entity.setRelevantObjectBindings(ListUtils.concatenate(entity.getRelevantObjectBindings(), convertFactObjectBindingDefinitions(request.getAddObjectBindings())));
     }
 

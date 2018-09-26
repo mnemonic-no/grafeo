@@ -25,9 +25,9 @@ public class FactTypeTest {
     assertEquals(type.getEntityHandler(), root.get("entityHandler").textValue());
     assertEquals(type.getEntityHandlerParameter(), root.get("entityHandlerParameter").textValue());
     assertTrue(root.get("relevantObjectBindings").isArray());
-    assertTrue(root.get("relevantObjectBindings").get(0).get("objectType").isObject());
-    assertEquals(type.getRelevantObjectBindings().get(0).getDirection().toString(),
-            root.get("relevantObjectBindings").get(0).get("direction").textValue());
+    assertTrue(root.get("relevantObjectBindings").get(0).get("sourceObjectType").isObject());
+    assertTrue(root.get("relevantObjectBindings").get(0).get("destinationObjectType").isObject());
+    assertTrue(root.get("relevantObjectBindings").get(0).get("bidirectionalBinding").booleanValue());
   }
 
   @Test
@@ -47,7 +47,7 @@ public class FactTypeTest {
             .setValidatorParameter("validatorParameter")
             .setEntityHandler("entityHandler")
             .setEntityHandlerParameter("entityHandlerParameter")
-            .addRelevantObjectBinding(new FactType.FactObjectBindingDefinition(createObjectType(), Direction.BiDirectional))
+            .addRelevantObjectBinding(new FactType.FactObjectBindingDefinition(createObjectType(), createObjectType(), true))
             .build();
   }
 

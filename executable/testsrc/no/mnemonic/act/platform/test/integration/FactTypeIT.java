@@ -2,7 +2,6 @@ package no.mnemonic.act.platform.test.integration;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
-import no.mnemonic.act.platform.api.request.v1.Direction;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
@@ -48,8 +47,8 @@ public class FactTypeIT extends AbstractIT {
             .setEntityHandler("IdentityHandler")
             .setValidator("TrueValidator")
             .addRelevantObjectBinding(new FactObjectBindingDefinition()
-                    .setObjectType(createObjectType().getId())
-                    .setDirection(Direction.BiDirectional)
+                    .setSourceObjectType(createObjectType().getId())
+                    .setBidirectionalBinding(true)
             );
     Response response = request("/v1/factType").post(Entity.json(request));
     assertEquals(201, response.getStatus());
@@ -59,7 +58,7 @@ public class FactTypeIT extends AbstractIT {
   }
 
   @Test
-  public void testUpdateFactType() throws Exception {
+  public void testUpdateFactType() {
     // Create a FactType in the database ...
     FactTypeEntity entity = createFactType();
 

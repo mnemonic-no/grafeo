@@ -4,9 +4,6 @@ import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
 import com.datastax.driver.mapping.annotations.Transient;
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -150,36 +147,34 @@ public class FactTypeEntity implements CassandraEntity {
 
   public static class FactObjectBindingDefinition {
 
-    private UUID objectTypeID;
-    @JsonIgnore
-    private Direction direction;
+    private UUID sourceObjectTypeID;
+    private UUID destinationObjectTypeID;
+    private boolean bidirectionalBinding;
 
-    public UUID getObjectTypeID() {
-      return objectTypeID;
+    public UUID getSourceObjectTypeID() {
+      return sourceObjectTypeID;
     }
 
-    public FactObjectBindingDefinition setObjectTypeID(UUID objectTypeID) {
-      this.objectTypeID = objectTypeID;
+    public FactObjectBindingDefinition setSourceObjectTypeID(UUID sourceObjectTypeID) {
+      this.sourceObjectTypeID = sourceObjectTypeID;
       return this;
     }
 
-    public Direction getDirection() {
-      return direction;
+    public UUID getDestinationObjectTypeID() {
+      return destinationObjectTypeID;
     }
 
-    public FactObjectBindingDefinition setDirection(Direction direction) {
-      this.direction = direction;
+    public FactObjectBindingDefinition setDestinationObjectTypeID(UUID destinationObjectTypeID) {
+      this.destinationObjectTypeID = destinationObjectTypeID;
       return this;
     }
 
-    @JsonGetter("direction")
-    public int getDirectionValue() {
-      return direction != null ? direction.value() : 0;
+    public boolean isBidirectionalBinding() {
+      return bidirectionalBinding;
     }
 
-    @JsonSetter("direction")
-    public FactObjectBindingDefinition setDirectionValue(int value) {
-      this.direction = Direction.getValueMap().getOrDefault(value, Direction.None);
+    public FactObjectBindingDefinition setBidirectionalBinding(boolean bidirectionalBinding) {
+      this.bidirectionalBinding = bidirectionalBinding;
       return this;
     }
   }

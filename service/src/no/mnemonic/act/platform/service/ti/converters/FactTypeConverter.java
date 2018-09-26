@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
-import no.mnemonic.act.platform.api.model.v1.Direction;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Namespace;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
@@ -51,8 +50,9 @@ public class FactTypeConverter implements Converter<FactTypeEntity, FactType> {
     if (bindings == null) return null;
     return bindings.stream()
             .map(e -> new FactType.FactObjectBindingDefinition(
-                    objectTypeConverter.apply(e.getObjectTypeID()).toInfo(),
-                    Direction.valueOf(e.getDirection().name())))
+                    ObjectUtils.ifNotNull(e.getSourceObjectTypeID(), id -> objectTypeConverter.apply(id).toInfo()),
+                    ObjectUtils.ifNotNull(e.getDestinationObjectTypeID(), id -> objectTypeConverter.apply(id).toInfo()),
+                    e.isBidirectionalBinding()))
             .collect(Collectors.toList());
   }
 

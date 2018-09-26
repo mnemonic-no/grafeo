@@ -52,8 +52,10 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
           .setValidator("validator")
           .setValidatorParameter("validatorParameter")
           .setRelevantObjectBindings(ListUtils.list(
-                  new FactTypeEntity.FactObjectBindingDefinition().setObjectTypeID(ipObjectType.getId()).setDirection(Direction.FactIsDestination),
-                  new FactTypeEntity.FactObjectBindingDefinition().setObjectTypeID(domainObjectType.getId()).setDirection(Direction.FactIsSource)
+                  // Allow bindings with both cardinality 1 and 2.
+                  new FactTypeEntity.FactObjectBindingDefinition().setSourceObjectTypeID(ipObjectType.getId()).setDestinationObjectTypeID(domainObjectType.getId()),
+                  new FactTypeEntity.FactObjectBindingDefinition().setSourceObjectTypeID(ipObjectType.getId()),
+                  new FactTypeEntity.FactObjectBindingDefinition().setDestinationObjectTypeID(domainObjectType.getId())
           ));
   private final ObjectEntity ip = new ObjectEntity()
           .setId(UUID.randomUUID())
@@ -144,6 +146,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   @Test
   public void testValidateBindingsFailsOnDirection() throws Exception {
     CreateFactRequest request = createRequest()
+            .setSourceObject(domain.getId().toString())
             .setDestinationObject(ip.getId().toString());
     mockCreateNewFact();
 
@@ -205,9 +208,10 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     CreateFactRequest request = createRequest()
             .setBidirectionalBinding(true);
     // Need to change type in order to pass validation.
-    resolveFactType.setRelevantObjectBindings(ListUtils.list(
-            new FactTypeEntity.FactObjectBindingDefinition().setObjectTypeID(ipObjectType.getId()).setDirection(Direction.BiDirectional),
-            new FactTypeEntity.FactObjectBindingDefinition().setObjectTypeID(domainObjectType.getId()).setDirection(Direction.BiDirectional)
+    resolveFactType.setRelevantObjectBindings(ListUtils.list(new FactTypeEntity.FactObjectBindingDefinition()
+            .setSourceObjectTypeID(ipObjectType.getId())
+            .setDestinationObjectTypeID(domainObjectType.getId())
+            .setBidirectionalBinding(true)
     ));
     mockCreateNewFact();
 

@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import no.mnemonic.act.platform.rest.api.ResultMessage;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -90,12 +91,13 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   }
 
   @Test
+  @Ignore("API doesn't have an endpoint where this can be tested. Activate test again once such an endpoint exists.")
   public void testFailedRequestValidationNestedReturns412() throws Exception {
     CreateFactTypeRequest request = new CreateFactTypeRequest()
             .setName("name")
             .setValidator("validator")
             .setEntityHandler("entityHandler")
-            .addRelevantObjectBinding(new FactObjectBindingDefinition().setObjectType(UUID.randomUUID()));
+            .addRelevantObjectBinding(new FactObjectBindingDefinition());
     Response response = target("/v1/factType").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
     assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "relevantObjectBindings[0].direction", "NULL");
@@ -146,9 +148,16 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFieldParsingErrorWithWrongEnumReturns412() throws Exception {
-    Response response = target("/v1/factType").request().post(Entity.json("{\"relevantObjectBindings\" : [{\"direction\" : \"something\"}]}"));
+    Response response = target("/v1/fact").request().post(Entity.json("{\"accessMode\" : \"something\"}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "relevantObjectBindings[0].direction", "something");
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "accessMode", "something");
+  }
+
+  @Test
+  public void testFieldParsingErrorNestedReturns412() throws Exception {
+    Response response = target("/v1/factType").request().post(Entity.json("{\"relevantObjectBindings\" : [{\"sourceObjectType\" : \"something\"}]}"));
+    assertEquals(412, response.getStatus());
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "relevantObjectBindings[0].sourceObjectType", "something");
   }
 
   @Test

@@ -19,8 +19,8 @@ public class FactTypeEntityTest {
   @Test
   public void setRelevantObjectBindingsFromObjects() throws IOException {
     List<FactTypeEntity.FactObjectBindingDefinition> bindings = Arrays.asList(
-            createFactObjectBindingDefinition(Direction.None),
-            createFactObjectBindingDefinition(Direction.BiDirectional)
+            createFactObjectBindingDefinition(false),
+            createFactObjectBindingDefinition(true)
     );
     FactTypeEntity entity = new FactTypeEntity().setRelevantObjectBindings(bindings);
 
@@ -29,16 +29,18 @@ public class FactTypeEntityTest {
 
   @Test
   public void setRelevantObjectBindingsFromString() throws IOException {
-    String bindings = "[{\"objectTypeID\":\"ad35e1ec-e42f-4509-bbc8-6516a90b66e8\",\"direction\":0},{\"objectTypeID\":\"95959968-f2fb-4913-9c0b-fc1b9144b60f\",\"direction\":3}]";
+    String bindings = "[{\"sourceObjectTypeID\":\"ad35e1ec-e42f-4509-bbc8-6516a90b66e8\",\"destinationObjectTypeID\":\"95959968-f2fb-4913-9c0b-fc1b9144b60f\",\"bidirectionalBinding\":false}," +
+            "{\"sourceObjectTypeID\":\"95959968-f2fb-4913-9c0b-fc1b9144b60f\",\"destinationObjectTypeID\":\"ad35e1ec-e42f-4509-bbc8-6516a90b66e8\",\"bidirectionalBinding\":true}]";
     FactTypeEntity entity = new FactTypeEntity().setRelevantObjectBindingsStored(bindings);
 
     assertFactObjectBindingDefinitions(entity.getRelevantObjectBindings(), bindings);
   }
 
-  private FactTypeEntity.FactObjectBindingDefinition createFactObjectBindingDefinition(Direction direction) {
+  private FactTypeEntity.FactObjectBindingDefinition createFactObjectBindingDefinition(boolean bidirectional) {
     return new FactTypeEntity.FactObjectBindingDefinition()
-            .setObjectTypeID(UUID.randomUUID())
-            .setDirection(direction);
+            .setSourceObjectTypeID(UUID.randomUUID())
+            .setDestinationObjectTypeID(UUID.randomUUID())
+            .setBidirectionalBinding(bidirectional);
   }
 
   private void assertFactObjectBindingDefinitions(List<FactTypeEntity.FactObjectBindingDefinition> bindings, String json) throws IOException {
@@ -46,8 +48,9 @@ public class FactTypeEntityTest {
 
     assertEquals(bindings.size(), node.size());
     for (int i = 0; i < node.size(); i++) {
-      assertEquals(bindings.get(i).getDirectionValue(), node.get(i).get("direction").asInt());
-      assertEquals(bindings.get(i).getObjectTypeID().toString(), node.get(i).get("objectTypeID").asText());
+      assertEquals(bindings.get(i).getSourceObjectTypeID().toString(), node.get(i).get("sourceObjectTypeID").asText());
+      assertEquals(bindings.get(i).getDestinationObjectTypeID().toString(), node.get(i).get("destinationObjectTypeID").asText());
+      assertEquals(bindings.get(i).isBidirectionalBinding(), node.get(i).get("bidirectionalBinding").asBoolean());
     }
   }
 

@@ -89,7 +89,10 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
             .setName("name")
             .setEntityHandler("handler")
             .setValidator("validator")
-            .addRelevantObjectBinding(new FactObjectBindingDefinition().setObjectType(UUID.randomUUID()).setDirection(Direction.BiDirectional));
+            .addRelevantObjectBinding(new FactObjectBindingDefinition()
+                    .setSourceObjectType(UUID.randomUUID())
+                    .setDestinationObjectType(UUID.randomUUID())
+            );
   }
 
 }

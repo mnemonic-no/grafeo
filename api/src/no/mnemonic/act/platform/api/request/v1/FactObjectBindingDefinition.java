@@ -3,34 +3,42 @@ package no.mnemonic.act.platform.api.request.v1;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @ApiModel(value = "FactObjectBindingDefinitionRequest", description = "Define to which Objects new Facts of a particular type can be linked.")
 public class FactObjectBindingDefinition {
 
-  @ApiModelProperty(value = "Type linked Objects must have (takes ObjectType UUID)", required = true)
-  @NotNull
-  private UUID objectType;
-  @ApiModelProperty(value = "Direction the link must have", required = true)
-  @NotNull
-  private Direction direction;
+  @ApiModelProperty(value = "Specify the type any Object must have when linked as source to a Fact (takes ObjectType UUID)")
+  private UUID sourceObjectType;
+  @ApiModelProperty(value = "Specify the type any Object must have when linked as destination to a Fact (takes ObjectType UUID)")
+  private UUID destinationObjectType;
+  @ApiModelProperty(value = "Specify if the binding between source Object, Fact and destination Object must be bidirectional (default 'false')")
+  private boolean bidirectionalBinding;
 
-  public UUID getObjectType() {
-    return objectType;
+  public UUID getSourceObjectType() {
+    return sourceObjectType;
   }
 
-  public FactObjectBindingDefinition setObjectType(UUID objectType) {
-    this.objectType = objectType;
+  public FactObjectBindingDefinition setSourceObjectType(UUID sourceObjectType) {
+    this.sourceObjectType = sourceObjectType;
     return this;
   }
 
-  public Direction getDirection() {
-    return direction;
+  public UUID getDestinationObjectType() {
+    return destinationObjectType;
   }
 
-  public FactObjectBindingDefinition setDirection(Direction direction) {
-    this.direction = direction;
+  public FactObjectBindingDefinition setDestinationObjectType(UUID destinationObjectType) {
+    this.destinationObjectType = destinationObjectType;
+    return this;
+  }
+
+  public boolean isBidirectionalBinding() {
+    return bidirectionalBinding;
+  }
+
+  public FactObjectBindingDefinition setBidirectionalBinding(boolean bidirectionalBinding) {
+    this.bidirectionalBinding = bidirectionalBinding;
     return this;
   }
 
