@@ -30,7 +30,7 @@ public class FactExistenceSearchCriteria {
 
   private FactExistenceSearchCriteria(String factValue, UUID factTypeID, UUID sourceID, UUID organizationID,
                                       AccessMode accessMode, Set<ObjectExistence> objects) {
-    this.factValue = ObjectUtils.notNull(factValue, "Missing required field 'factValue'.");
+    this.factValue = factValue; // Field 'factValue' is optional.
     this.factTypeID = ObjectUtils.notNull(factTypeID, "Missing required field 'factTypeID'.");
     this.sourceID = ObjectUtils.notNull(sourceID, "Missing required field 'sourceID'.");
     this.organizationID = ObjectUtils.notNull(organizationID, "Missing required field 'organizationID'.");
@@ -39,7 +39,7 @@ public class FactExistenceSearchCriteria {
   }
 
   /**
-   * Value of Fact to verify. This field is required.
+   * Value of Fact to verify. This field is optional.
    *
    * @return Value of Fact
    */

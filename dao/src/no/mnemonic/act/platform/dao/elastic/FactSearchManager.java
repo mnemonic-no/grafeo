@@ -408,16 +408,22 @@ public class FactSearchManager implements LifecycleAspect {
   }
 
   private QueryBuilder buildFactExistenceQuery(FactExistenceSearchCriteria criteria) {
-    // Fact values are stored encoded, thus, in order to match exactly the value from the criteria must be encoded as well.
-    String encodedValue = entityHandlerForTypeIdResolver.apply(criteria.getFactTypeID()).encode(criteria.getFactValue());
-
     // First, define all filters on direct Fact fields. Every field from the criteria must match.
     BoolQueryBuilder rootQuery = boolQuery()
-            .filter(termQuery("value", encodedValue))
             .filter(termQuery("typeID", criteria.getFactTypeID()))
             .filter(termQuery("sourceID", criteria.getSourceID()))
             .filter(termQuery("organizationID", criteria.getOrganizationID()))
             .filter(termQuery("accessMode", criteria.getAccessMode()));
+
+    if (criteria.getFactValue() != null) {
+      // Fact values are stored encoded, thus, in order to match exactly the value from the criteria must be encoded as well.
+      String encodedValue = entityHandlerForTypeIdResolver.apply(criteria.getFactTypeID()).encode(criteria.getFactValue());
+      // Fact values must match exactly if given.
+      rootQuery.filter(termQuery("value", encodedValue));
+    } else {
+      // If 'value' isn't given make sure that it's also not set on any existing Fact.
+      rootQuery.mustNot(existsQuery("value"));
+    }
 
     // Second, define filters on nested Objects. Also all Objects must match.
     for (FactExistenceSearchCriteria.ObjectExistence object : criteria.getObjects()) {

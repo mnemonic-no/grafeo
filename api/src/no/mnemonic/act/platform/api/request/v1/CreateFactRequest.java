@@ -16,8 +16,7 @@ public class CreateFactRequest implements ValidatingRequest {
           example = "ThreatActorAlias", required = true)
   @NotBlank
   private String type;
-  @ApiModelProperty(value = "Value of new Fact", example = "APT1", required = true)
-  @NotBlank
+  @ApiModelProperty(value = "Value of new Fact (optional)", example = "APT1")
   private String value;
   @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)")
   private UUID organization;

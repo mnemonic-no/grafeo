@@ -41,8 +41,22 @@ public class FactSearchManagerRetrieveExistingFactsTest extends AbstractManagerT
   }
 
   @Test
+  public void testRetrieveExistingFactsMatchesOnNullFactValue() {
+    FactDocument fact = indexFact(d -> d.setValue(null));
+    SearchResult<FactDocument> result = getFactSearchManager().retrieveExistingFacts(createCriteriaWithObjects(fact, b -> b.setFactValue(null)));
+    assertEquals(1, result.getCount());
+    assertEquals(1, result.getValues().size());
+    assertFactDocument(fact, result.getValues().get(0));
+  }
+
+  @Test
   public void testRetrieveExistingFactsNoMatchOnFactValue() {
     testRetrieveExistingFactsNoMatch(b -> b.setFactValue("something"));
+  }
+
+  @Test
+  public void testRetrieveExistingFactsNoMatchOnNullFactValue() {
+    testRetrieveExistingFactsNoMatch(b -> b.setFactValue(null));
   }
 
   @Test
