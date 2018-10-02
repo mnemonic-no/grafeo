@@ -82,11 +82,10 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFailedRequestValidationReturns412() throws Exception {
-    CreateFactRequest request = new CreateFactRequest()
-            .setType("type");
+    CreateFactRequest request = new CreateFactRequest();
     Response response = target("/v1/fact").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "must not be blank", "{javax.validation.constraints.NotBlank.message}", "value", "NULL");
+    assertMessages(getMessages(response), "must not be blank", "{javax.validation.constraints.NotBlank.message}", "type", "NULL");
   }
 
   @Test
