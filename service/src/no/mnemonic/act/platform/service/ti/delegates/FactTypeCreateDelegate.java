@@ -26,15 +26,12 @@ public class FactTypeCreateDelegate extends AbstractDelegate {
 
     assertFactTypeNotExists(request.getName());
     assertObjectTypesToBindExist(request.getRelevantObjectBindings(), "relevantObjectBindings");
-    assertEntityHandlerExists(request.getEntityHandler(), request.getEntityHandlerParameter());
     assertValidatorExists(request.getValidator(), request.getValidatorParameter());
 
     FactTypeEntity entity = new FactTypeEntity()
             .setId(UUID.randomUUID()) // ID needs to be provided by client.
             .setNamespaceID(GLOBAL_NAMESPACE) // For now everything will just be part of the global namespace.
             .setName(request.getName())
-            .setEntityHandler(request.getEntityHandler())
-            .setEntityHandlerParameter(request.getEntityHandlerParameter())
             .setValidator(request.getValidator())
             .setValidatorParameter(request.getValidatorParameter())
             .setRelevantObjectBindings(convertFactObjectBindingDefinitions(request.getRelevantObjectBindings()));

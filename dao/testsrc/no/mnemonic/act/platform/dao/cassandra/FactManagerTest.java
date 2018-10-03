@@ -10,8 +10,8 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class FactManagerTest extends AbstractManagerTest {
 
@@ -140,18 +140,6 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testEncodeWhenSavingFact() {
-    createAndSaveFact();
-    verify(getEntityHandler(), times(1)).encode(any());
-  }
-
-  @Test
-  public void testDecodeWhenRetrievingFact() {
-    getFactManager().getFact(createAndSaveFact().getId());
-    verify(getEntityHandler(), times(1)).decode(any());
-  }
-
-  @Test
   public void testFetchFactsById() {
     FactTypeEntity type = createAndSaveFactType();
     FactEntity expected = createAndSaveFact(type.getId(), "value");
@@ -160,14 +148,6 @@ public class FactManagerTest extends AbstractManagerTest {
     List<FactEntity> actual = ListUtils.list(getFactManager().getFacts(ListUtils.list(expected.getId())));
     assertEquals(1, actual.size());
     assertFact(expected, actual.get(0));
-  }
-
-  @Test
-  public void testFetchFactsByIdDecodeLazily() {
-    Iterator<FactEntity> result = getFactManager().getFacts(ListUtils.list(createAndSaveFact().getId()));
-    verify(getEntityHandler(), never()).decode(any());
-    ListUtils.list(result); // This will iterate the results and pull facts from Cassandra.
-    verify(getEntityHandler(), times(1)).decode(any());
   }
 
   @Test
@@ -283,9 +263,7 @@ public class FactManagerTest extends AbstractManagerTest {
             .setNamespaceID(UUID.randomUUID())
             .setName(name)
             .setValidator("validator")
-            .setValidatorParameter("validatorParameter")
-            .setEntityHandler("entityHandler")
-            .setEntityHandlerParameter("entityHandlerParameter");
+            .setValidatorParameter("validatorParameter");
   }
 
   private FactEntity createFact() {
@@ -308,13 +286,9 @@ public class FactManagerTest extends AbstractManagerTest {
             .setConfidenceLevel(0)
             .setTimestamp(1)
             .setLastSeenTimestamp(2)
-            .setBindings(Collections.singletonList(createFactObjectBinding(Direction.None)));
-  }
-
-  private FactEntity.FactObjectBinding createFactObjectBinding(Direction direction) {
-    return new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(direction);
+            .setBindings(Collections.singletonList(new FactEntity.FactObjectBinding()
+                    .setObjectID(UUID.randomUUID())
+                    .setDirection(Direction.BiDirectional)));
   }
 
   private FactAclEntity createFactAclEntry(UUID factID) {
@@ -372,8 +346,6 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getName(), actual.getName());
     assertEquals(expected.getValidator(), actual.getValidator());
     assertEquals(expected.getValidatorParameter(), actual.getValidatorParameter());
-    assertEquals(expected.getEntityHandler(), actual.getEntityHandler());
-    assertEquals(expected.getEntityHandlerParameter(), actual.getEntityHandlerParameter());
     assertEquals(expected.getRelevantObjectBindingsStored(), actual.getRelevantObjectBindingsStored());
   }
 

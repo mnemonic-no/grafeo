@@ -35,8 +35,6 @@ public class ObjectTypeConverter implements Converter<ObjectTypeEntity, ObjectTy
             .setName(entity.getName())
             .setValidator(entity.getValidator())
             .setValidatorParameter(entity.getValidatorParameter())
-            .setEntityHandler(entity.getEntityHandler())
-            .setEntityHandlerParameter(entity.getEntityHandlerParameter())
             .build();
   }
 

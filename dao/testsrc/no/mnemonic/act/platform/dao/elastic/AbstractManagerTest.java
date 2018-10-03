@@ -2,29 +2,17 @@ package no.mnemonic.act.platform.dao.elastic;
 
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.handlers.EntityHandler;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import org.junit.*;
-import org.mockito.Mock;
 
 import java.util.UUID;
-import java.util.function.Function;
 
-import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.createFactDocument;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.createFactDocument;
 
 public abstract class AbstractManagerTest {
 
   private static ClientFactory clientFactory;
   private FactSearchManager factSearchManager;
-
-  @Mock
-  private Function<UUID, EntityHandler> entityHandlerForTypeIdResolver;
-  @Mock
-  private EntityHandler entityHandler;
 
   @ClassRule
   public static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
@@ -50,13 +38,7 @@ public abstract class AbstractManagerTest {
 
   @Before
   public void initialize() {
-    initMocks(this);
-
-    when(entityHandlerForTypeIdResolver.apply(any())).thenReturn(entityHandler);
-    when(entityHandler.encode(any())).then(returnsFirstArg());
-    when(entityHandler.decode(any())).then(returnsFirstArg());
-
-    factSearchManager = new FactSearchManager(clientFactory, entityHandlerForTypeIdResolver);
+    factSearchManager = new FactSearchManager(clientFactory);
     factSearchManager.setTestEnvironment(true);
     factSearchManager.startComponent();
   }
@@ -73,10 +55,6 @@ public abstract class AbstractManagerTest {
 
   protected FactSearchManager getFactSearchManager() {
     return factSearchManager;
-  }
-
-  protected EntityHandler getEntityHandler() {
-    return entityHandler;
   }
 
   FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {

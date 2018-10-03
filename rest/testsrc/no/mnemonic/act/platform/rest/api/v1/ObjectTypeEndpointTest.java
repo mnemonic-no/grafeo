@@ -90,7 +90,6 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
   private CreateObjectTypeRequest createCreateObjectTypeRequest() {
     return new CreateObjectTypeRequest()
             .setName("name")
-            .setEntityHandler("handler")
             .setValidator("validator");
   }
 

@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -21,7 +20,6 @@ public class TiRequestContext extends RequestContext {
   private final ObjectManager objectManager;
   private final FactManager factManager;
   private final FactSearchManager factSearchManager;
-  private final EntityHandlerFactory entityHandlerFactory;
   private final ValidatorFactory validatorFactory;
   private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
   private final Function<FactTypeEntity, FactType> factTypeConverter;
@@ -31,7 +29,7 @@ public class TiRequestContext extends RequestContext {
   private final Function<FactCommentEntity, FactComment> factCommentConverter;
 
   private TiRequestContext(ObjectManager objectManager, FactManager factManager, FactSearchManager factSearchManager,
-                           EntityHandlerFactory entityHandlerFactory, ValidatorFactory validatorFactory,
+                           ValidatorFactory validatorFactory,
                            Function<ObjectTypeEntity, ObjectType> objectTypeConverter,
                            Function<FactTypeEntity, FactType> factTypeConverter,
                            Function<ObjectEntity, Object> objectConverter,
@@ -41,7 +39,6 @@ public class TiRequestContext extends RequestContext {
     this.objectManager = objectManager;
     this.factManager = factManager;
     this.factSearchManager = factSearchManager;
-    this.entityHandlerFactory = entityHandlerFactory;
     this.validatorFactory = validatorFactory;
     this.objectTypeConverter = objectTypeConverter;
     this.factTypeConverter = factTypeConverter;
@@ -65,10 +62,6 @@ public class TiRequestContext extends RequestContext {
 
   public FactSearchManager getFactSearchManager() {
     return ObjectUtils.notNull(factSearchManager, "FactSearchManager not set in RequestContext.");
-  }
-
-  public EntityHandlerFactory getEntityHandlerFactory() {
-    return ObjectUtils.notNull(entityHandlerFactory, "EntityHandlerFactory not set in RequestContext.");
   }
 
   public ValidatorFactory getValidatorFactory() {
@@ -107,7 +100,6 @@ public class TiRequestContext extends RequestContext {
     private ObjectManager objectManager;
     private FactManager factManager;
     private FactSearchManager factSearchManager;
-    private EntityHandlerFactory entityHandlerFactory;
     private ValidatorFactory validatorFactory;
     private Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
     private Function<FactTypeEntity, FactType> factTypeConverter;
@@ -120,8 +112,8 @@ public class TiRequestContext extends RequestContext {
     }
 
     public TiRequestContext build() {
-      return new TiRequestContext(objectManager, factManager, factSearchManager, entityHandlerFactory, validatorFactory,
-              objectTypeConverter, factTypeConverter, objectConverter, factConverter, aclEntryConverter, factCommentConverter);
+      return new TiRequestContext(objectManager, factManager, factSearchManager, validatorFactory, objectTypeConverter,
+              factTypeConverter, objectConverter, factConverter, aclEntryConverter, factCommentConverter);
     }
 
     public Builder setObjectManager(ObjectManager objectManager) {
@@ -136,11 +128,6 @@ public class TiRequestContext extends RequestContext {
 
     public Builder setFactSearchManager(FactSearchManager factSearchManager) {
       this.factSearchManager = factSearchManager;
-      return this;
-    }
-
-    public Builder setEntityHandlerFactory(EntityHandlerFactory entityHandlerFactory) {
-      this.entityHandlerFactory = entityHandlerFactory;
       return this;
     }
 

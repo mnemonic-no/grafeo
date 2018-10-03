@@ -95,7 +95,6 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
     CreateFactTypeRequest request = new CreateFactTypeRequest()
             .setName("name")
             .setValidator("validator")
-            .setEntityHandler("entityHandler")
             .addRelevantObjectBinding(new FactObjectBindingDefinition());
     Response response = target("/v1/factType").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());

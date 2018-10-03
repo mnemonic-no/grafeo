@@ -22,22 +22,16 @@ public class FactType {
   private final String validator;
   @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private final String validatorParameter;
-  @ApiModelProperty(value = "EntityHandler used to store new Facts of this type", example = "StringEntityHandler", required = true)
-  private final String entityHandler;
-  @ApiModelProperty(value = "Parameters used to customize EntityHandler")
-  private final String entityHandlerParameter;
   @ApiModelProperty(value = "Defines to which Objects new Facts of this type can be linked")
   private final List<FactObjectBindingDefinition> relevantObjectBindings;
 
   private FactType(UUID id, Namespace namespace, String name, String validator, String validatorParameter,
-                   String entityHandler, String entityHandlerParameter, List<FactObjectBindingDefinition> relevantObjectBindings) {
+                   List<FactObjectBindingDefinition> relevantObjectBindings) {
     this.id = id;
     this.namespace = namespace;
     this.name = name;
     this.validator = validator;
     this.validatorParameter = validatorParameter;
-    this.entityHandler = entityHandler;
-    this.entityHandlerParameter = entityHandlerParameter;
     this.relevantObjectBindings = ObjectUtils.ifNotNull(relevantObjectBindings, Collections::unmodifiableList);
   }
 
@@ -61,14 +55,6 @@ public class FactType {
     return validatorParameter;
   }
 
-  public String getEntityHandler() {
-    return entityHandler;
-  }
-
-  public String getEntityHandlerParameter() {
-    return entityHandlerParameter;
-  }
-
   public List<FactObjectBindingDefinition> getRelevantObjectBindings() {
     return relevantObjectBindings;
   }
@@ -87,15 +73,13 @@ public class FactType {
     private String name;
     private String validator;
     private String validatorParameter;
-    private String entityHandler;
-    private String entityHandlerParameter;
     private List<FactObjectBindingDefinition> relevantObjectBindings;
 
     private Builder() {
     }
 
     public FactType build() {
-      return new FactType(id, namespace, name, validator, validatorParameter, entityHandler, entityHandlerParameter, relevantObjectBindings);
+      return new FactType(id, namespace, name, validator, validatorParameter, relevantObjectBindings);
     }
 
     public Builder setId(UUID id) {
@@ -120,16 +104,6 @@ public class FactType {
 
     public Builder setValidatorParameter(String validatorParameter) {
       this.validatorParameter = validatorParameter;
-      return this;
-    }
-
-    public Builder setEntityHandler(String entityHandler) {
-      this.entityHandler = entityHandler;
-      return this;
-    }
-
-    public Builder setEntityHandlerParameter(String entityHandlerParameter) {
-      this.entityHandlerParameter = entityHandlerParameter;
       return this;
     }
 
@@ -192,5 +166,4 @@ public class FactType {
       return name;
     }
   }
-
 }

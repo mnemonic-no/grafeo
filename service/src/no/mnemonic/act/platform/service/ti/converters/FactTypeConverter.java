@@ -40,8 +40,6 @@ public class FactTypeConverter implements Converter<FactTypeEntity, FactType> {
             .setName(entity.getName())
             .setValidator(entity.getValidator())
             .setValidatorParameter(entity.getValidatorParameter())
-            .setEntityHandler(entity.getEntityHandler())
-            .setEntityHandlerParameter(entity.getEntityHandlerParameter())
             .setRelevantObjectBindings(convertBindings(entity.getRelevantObjectBindings()))
             .build();
   }

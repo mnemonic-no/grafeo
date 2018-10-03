@@ -16,7 +16,7 @@ public class Object {
   private final UUID id;
   @ApiModelProperty(value = "Type of the Object", required = true)
   private final ObjectType.Info type;
-  @ApiModelProperty(value = "Contains the actual information. Encoding depends on the used ObjectType", example = "27.13.4.125", required = true)
+  @ApiModelProperty(value = "Contains the actual information", example = "27.13.4.125", required = true)
   private final String value;
   @ApiModelProperty(value = "Contains meta data about Facts bound to the Object")
   private final List<ObjectFactsStatistic> statistics;

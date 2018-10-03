@@ -46,14 +46,6 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
-  public void testCreateFactTypeEntityHandlerNotFound() throws Exception {
-    CreateFactTypeRequest request = createRequest();
-    when(getObjectManager().getObjectType(isA(UUID.class))).thenReturn(new ObjectTypeEntity());
-    when(getEntityHandlerFactory().get(request.getEntityHandler(), request.getEntityHandlerParameter())).thenThrow(IllegalArgumentException.class);
-    expectInvalidArgumentException(() -> FactTypeCreateDelegate.create().handle(request), "entity.handler.not.exist");
-  }
-
-  @Test
   public void testCreateFactTypeValidatorNotFound() throws Exception {
     CreateFactTypeRequest request = createRequest();
     when(getObjectManager().getObjectType(isA(UUID.class))).thenReturn(new ObjectTypeEntity());
@@ -74,8 +66,6 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
       assertNotNull(entity.getId());
       assertNotNull(entity.getNamespaceID());
       assertEquals(request.getName(), entity.getName());
-      assertEquals(request.getEntityHandler(), entity.getEntityHandler());
-      assertEquals(request.getEntityHandlerParameter(), entity.getEntityHandlerParameter());
       assertEquals(request.getValidator(), entity.getValidator());
       assertEquals(request.getValidatorParameter(), entity.getValidatorParameter());
 
@@ -104,8 +94,6 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
 
     return new CreateFactTypeRequest()
             .setName("FactType")
-            .setEntityHandler("EntityHandler")
-            .setEntityHandlerParameter("EntityHandlerParameter")
             .setValidator("Validator")
             .setValidatorParameter("ValidatorParameter")
             .setRelevantObjectBindings(ListUtils.list(binding1, binding2, binding3));

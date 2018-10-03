@@ -1,12 +1,15 @@
-package no.mnemonic.act.platform.dao.elastic.document;
+package no.mnemonic.act.platform.dao.elastic;
+
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
-public class DocumentTestUtils {
+class DocumentTestUtils {
 
-  public static ObjectDocument createObjectDocument() {
+  static ObjectDocument createObjectDocument() {
     return new ObjectDocument()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
@@ -15,7 +18,7 @@ public class DocumentTestUtils {
             .setDirection(ObjectDocument.Direction.None);
   }
 
-  public static FactDocument createFactDocument() {
+  static FactDocument createFactDocument() {
     return new FactDocument()
             .setId(UUID.randomUUID())
             .setRetracted(false)
@@ -34,7 +37,7 @@ public class DocumentTestUtils {
             .addObject(createObjectDocument());
   }
 
-  public static void assertObjectDocument(ObjectDocument expected, ObjectDocument actual) {
+  static void assertObjectDocument(ObjectDocument expected, ObjectDocument actual) {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getTypeID(), actual.getTypeID());
     assertEquals(expected.getTypeName(), actual.getTypeName());
@@ -42,7 +45,7 @@ public class DocumentTestUtils {
     assertEquals(expected.getDirection(), actual.getDirection());
   }
 
-  public static void assertFactDocument(FactDocument expected, FactDocument actual) {
+  static void assertFactDocument(FactDocument expected, FactDocument actual) {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.isRetracted(), actual.isRetracted());
     assertEquals(expected.getTypeID(), actual.getTypeID());

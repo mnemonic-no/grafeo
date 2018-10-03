@@ -22,8 +22,6 @@ public class ObjectTypeTest {
     assertEquals(type.getName(), root.get("name").textValue());
     assertEquals(type.getValidator(), root.get("validator").textValue());
     assertEquals(type.getValidatorParameter(), root.get("validatorParameter").textValue());
-    assertEquals(type.getEntityHandler(), root.get("entityHandler").textValue());
-    assertEquals(type.getEntityHandlerParameter(), root.get("entityHandlerParameter").textValue());
   }
 
   @Test
@@ -41,8 +39,6 @@ public class ObjectTypeTest {
             .setName("objectType")
             .setValidator("validator")
             .setValidatorParameter("validatorParameter")
-            .setEntityHandler("entityHandler")
-            .setEntityHandlerParameter("entityHandlerParameter")
             .build();
   }
 

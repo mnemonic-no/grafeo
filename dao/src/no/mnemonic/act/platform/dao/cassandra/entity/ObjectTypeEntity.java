@@ -27,10 +27,6 @@ public class ObjectTypeEntity implements CassandraEntity {
   private String validator;
   @Column(name = "validator_parameter")
   private String validatorParameter;
-  @Column(name = "entity_handler")
-  private String entityHandler;
-  @Column(name = "entity_handler_parameter")
-  private String entityHandlerParameter;
 
   public UUID getId() {
     return id;
@@ -74,24 +70,6 @@ public class ObjectTypeEntity implements CassandraEntity {
 
   public ObjectTypeEntity setValidatorParameter(String validatorParameter) {
     this.validatorParameter = validatorParameter;
-    return this;
-  }
-
-  public String getEntityHandler() {
-    return entityHandler;
-  }
-
-  public ObjectTypeEntity setEntityHandler(String entityHandler) {
-    this.entityHandler = entityHandler;
-    return this;
-  }
-
-  public String getEntityHandlerParameter() {
-    return entityHandlerParameter;
-  }
-
-  public ObjectTypeEntity setEntityHandlerParameter(String entityHandlerParameter) {
-    this.entityHandlerParameter = entityHandlerParameter;
     return this;
   }
 

@@ -39,10 +39,6 @@ public class FactTypeEntity implements CassandraEntity {
   private String validator;
   @Column(name = "validator_parameter")
   private String validatorParameter;
-  @Column(name = "entity_handler")
-  private String entityHandler;
-  @Column(name = "entity_handler_parameter")
-  private String entityHandlerParameter;
   // In order to not create another table relevantObjectBindings are stored as a JSON string.
   @Column(name = "relevant_object_bindings")
   private String relevantObjectBindingsStored;
@@ -92,24 +88,6 @@ public class FactTypeEntity implements CassandraEntity {
 
   public FactTypeEntity setValidatorParameter(String validatorParameter) {
     this.validatorParameter = validatorParameter;
-    return this;
-  }
-
-  public String getEntityHandler() {
-    return entityHandler;
-  }
-
-  public FactTypeEntity setEntityHandler(String entityHandler) {
-    this.entityHandler = entityHandler;
-    return this;
-  }
-
-  public String getEntityHandlerParameter() {
-    return entityHandlerParameter;
-  }
-
-  public FactTypeEntity setEntityHandlerParameter(String entityHandlerParameter) {
-    this.entityHandlerParameter = entityHandlerParameter;
     return this;
   }
 

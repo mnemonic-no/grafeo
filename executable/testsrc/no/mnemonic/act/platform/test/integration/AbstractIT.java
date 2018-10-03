@@ -178,7 +178,6 @@ public abstract class AbstractIT {
     ObjectTypeEntity entity = new ObjectTypeEntity()
             .setId(UUID.randomUUID())
             .setName("ObjectType")
-            .setEntityHandler("IdentityHandler")
             .setValidator("TrueValidator");
 
     return getObjectManager().saveObjectType(entity);
@@ -196,7 +195,6 @@ public abstract class AbstractIT {
     FactTypeEntity entity = new FactTypeEntity()
             .setId(UUID.randomUUID())
             .setName("FactType")
-            .setEntityHandler("IdentityHandler")
             .setValidator("TrueValidator")
             .setRelevantObjectBindings(ListUtils.list(binding));
 

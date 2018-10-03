@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.createObjectDocument;
+import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.createObjectDocument;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

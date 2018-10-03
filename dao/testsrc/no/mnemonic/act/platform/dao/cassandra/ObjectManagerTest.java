@@ -8,11 +8,12 @@ import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationExcep
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 public class ObjectManagerTest extends AbstractManagerTest {
 
@@ -153,14 +154,6 @@ public class ObjectManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testFetchObjectsByIdDecodeLazily() {
-    Iterator<ObjectEntity> result = getObjectManager().getObjects(ListUtils.list(createAndSaveObject().getId()));
-    verify(getEntityHandler(), never()).decode(any());
-    ListUtils.list(result); // This will iterate the results and pull objects from Cassandra.
-    verify(getEntityHandler(), times(1)).decode(any());
-  }
-
-  @Test
   public void testFetchObjectsByIdWithUnknownId() {
     assertEquals(0, ListUtils.list(getObjectManager().getObjects(null)).size());
     assertEquals(0, ListUtils.list(getObjectManager().getObjects(ListUtils.list())).size());
@@ -189,26 +182,6 @@ public class ObjectManagerTest extends AbstractManagerTest {
   @Test
   public void testSaveObjectReturnsNullOnNullInput() {
     assertNull(getObjectManager().saveObject(null));
-  }
-
-  @Test
-  public void testEncodeWhenSavingObject() {
-    createAndSaveObject(createAndSaveObjectType().getId());
-
-    // Once for saving Object and once for checking for existing Object.
-    verify(getEntityHandler(), times(2)).encode(any());
-  }
-
-  @Test
-  public void testDecodeWhenRetrievingObject() {
-    ObjectTypeEntity type = createAndSaveObjectType();
-    ObjectEntity object = createAndSaveObject(type.getId());
-
-    getObjectManager().getObject(object.getId());
-    getObjectManager().getObject(type.getName(), object.getValue());
-
-    // Once for each getObject().
-    verify(getEntityHandler(), times(2)).decode(any());
   }
 
   @Test
@@ -260,9 +233,7 @@ public class ObjectManagerTest extends AbstractManagerTest {
             .setNamespaceID(UUID.randomUUID())
             .setName(name)
             .setValidator("validator")
-            .setValidatorParameter("validatorParameter")
-            .setEntityHandler("entityHandler")
-            .setEntityHandlerParameter("entityHandlerParameter");
+            .setValidatorParameter("validatorParameter");
   }
 
   private ObjectEntity createObject() {
@@ -330,8 +301,6 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertEquals(expected.getName(), actual.getName());
     assertEquals(expected.getValidator(), actual.getValidator());
     assertEquals(expected.getValidatorParameter(), actual.getValidatorParameter());
-    assertEquals(expected.getEntityHandler(), actual.getEntityHandler());
-    assertEquals(expected.getEntityHandlerParameter(), actual.getEntityHandlerParameter());
   }
 
   private void assertObjectTypes(List<ObjectTypeEntity> expected, List<ObjectTypeEntity> actual) {

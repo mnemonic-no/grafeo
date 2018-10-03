@@ -87,7 +87,6 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
   private CreateFactTypeRequest createCreateFactTypeRequest() {
     return new CreateFactTypeRequest()
             .setName("name")
-            .setEntityHandler("handler")
             .setValidator("validator")
             .addRelevantObjectBinding(new FactObjectBindingDefinition()
                     .setSourceObjectType(UUID.randomUUID())

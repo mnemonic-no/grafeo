@@ -17,11 +17,6 @@ public class CreateObjectTypeRequest implements ValidatingRequest {
   private String validator;
   @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private String validatorParameter;
-  @ApiModelProperty(value = "EntityHandler used to store new Objects of this type", example = "IpEntityHandler", required = true)
-  @NotBlank
-  private String entityHandler;
-  @ApiModelProperty(value = "Parameters used to customize EntityHandler")
-  private String entityHandlerParameter;
 
   public String getName() {
     return name;
@@ -47,24 +42,6 @@ public class CreateObjectTypeRequest implements ValidatingRequest {
 
   public CreateObjectTypeRequest setValidatorParameter(String validatorParameter) {
     this.validatorParameter = validatorParameter;
-    return this;
-  }
-
-  public String getEntityHandler() {
-    return entityHandler;
-  }
-
-  public CreateObjectTypeRequest setEntityHandler(String entityHandler) {
-    this.entityHandler = entityHandler;
-    return this;
-  }
-
-  public String getEntityHandlerParameter() {
-    return entityHandlerParameter;
-  }
-
-  public CreateObjectTypeRequest setEntityHandlerParameter(String entityHandlerParameter) {
-    this.entityHandlerParameter = entityHandlerParameter;
     return this;
   }
 

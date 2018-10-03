@@ -4,7 +4,6 @@ import com.datastax.driver.mapping.Mapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Iterators;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactAclAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactCommentAccessor;
@@ -14,8 +13,6 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
-import no.mnemonic.act.platform.dao.handlers.EntityHandler;
-import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -42,7 +39,6 @@ public class FactManager implements LifecycleAspect {
   @Dependency
   private final ClusterManager clusterManager;
 
-  private final EntityHandlerFactory entityHandlerFactory;
   private final LoadingCache<UUID, FactTypeEntity> factTypeByIdCache;
   private final LoadingCache<String, FactTypeEntity> factTypeByNameCache;
 
@@ -58,9 +54,8 @@ public class FactManager implements LifecycleAspect {
   private Clock clock = Clock.systemUTC();
 
   @Inject
-  public FactManager(ClusterManager clusterManager, EntityHandlerFactory factory) {
+  public FactManager(ClusterManager clusterManager) {
     this.clusterManager = clusterManager;
-    this.entityHandlerFactory = factory;
     this.factTypeByIdCache = createFactTypeByIdCache();
     this.factTypeByNameCache = createFactTypeByNameCache();
   }
@@ -136,25 +131,22 @@ public class FactManager implements LifecycleAspect {
 
   public FactEntity getFact(UUID id) {
     if (id == null) return null;
-    // Decode value using EntityHandler because it's stored encoded.
-    return ObjectUtils.ifNotNull(factMapper.get(id), this::decodeFactValue);
+    return factMapper.get(id);
   }
 
   public Iterator<FactEntity> getFacts(List<UUID> id) {
     if (CollectionUtils.isEmpty(id)) return Collections.emptyIterator();
-    // Need to decode values using EntityHandler because they're stored encoded.
-    // Use Iterators.transform() to do this lazily when facts are pulled from Cassandra.
-    return Iterators.transform(factAccessor.fetchByID(id).iterator(), this::decodeFactValue);
+    return factAccessor.fetchByID(id).iterator();
   }
 
   public FactEntity saveFact(FactEntity fact) {
     if (fact == null) return null;
-    if (getFact(fact.getId()) != null) throw new ImmutableViolationException("It is not allowed to update a fact");
+    if (getFactType(fact.getTypeID()) == null)
+      throw new IllegalArgumentException(String.format("FactType with id = %s does not exist.", fact.getTypeID()));
+    if (getFact(fact.getId()) != null)
+      throw new ImmutableViolationException("It is not allowed to update a Fact");
 
-    // Encode value using EntityHandler to store value in encoded format.
-    // Clone entity first in order to not change supplied fact instance.
-    factMapper.save(encodeFactValue(fact.clone()));
-
+    factMapper.save(fact);
     return fact;
   }
 
@@ -232,26 +224,6 @@ public class FactManager implements LifecycleAspect {
                 return ObjectUtils.notNull(factTypeAccessor.getByName(key), new Exception(String.format("FactType with name = %s does not exist.", key)));
               }
             });
-  }
-
-  private FactTypeEntity getFactTypeOrFail(UUID id) {
-    try {
-      return factTypeByIdCache.get(id);
-    } catch (ExecutionException e) {
-      throw new IllegalArgumentException(e.getCause());
-    }
-  }
-
-  private FactEntity encodeFactValue(FactEntity fact) {
-    FactTypeEntity type = getFactTypeOrFail(fact.getTypeID());
-    EntityHandler handler = entityHandlerFactory.get(type.getEntityHandler(), type.getEntityHandlerParameter());
-    return fact.setValue(handler.encode(fact.getValue()));
-  }
-
-  private FactEntity decodeFactValue(FactEntity fact) {
-    FactTypeEntity type = getFactTypeOrFail(fact.getTypeID());
-    EntityHandler handler = entityHandlerFactory.get(type.getEntityHandler(), type.getEntityHandlerParameter());
-    return fact.setValue(handler.decode(fact.getValue()));
   }
 
 }

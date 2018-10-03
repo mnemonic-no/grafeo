@@ -3,7 +3,6 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
@@ -30,8 +29,6 @@ abstract class AbstractDelegateTest {
   @Mock
   private FactSearchManager factSearchManager;
   @Mock
-  private EntityHandlerFactory entityHandlerFactory;
-  @Mock
   private ValidatorFactory validatorFactory;
   @Mock
   private ObjectTypeConverter objectTypeConverter;
@@ -54,7 +51,6 @@ abstract class AbstractDelegateTest {
             .setObjectManager(objectManager)
             .setFactManager(factManager)
             .setFactSearchManager(factSearchManager)
-            .setEntityHandlerFactory(entityHandlerFactory)
             .setValidatorFactory(validatorFactory)
             .setObjectTypeConverter(objectTypeConverter)
             .setObjectConverter(objectConverter)
@@ -94,10 +90,6 @@ abstract class AbstractDelegateTest {
 
   FactSearchManager getFactSearchManager() {
     return factSearchManager;
-  }
-
-  EntityHandlerFactory getEntityHandlerFactory() {
-    return entityHandlerFactory;
   }
 
   ValidatorFactory getValidatorFactory() {

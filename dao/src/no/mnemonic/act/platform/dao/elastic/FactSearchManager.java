@@ -10,7 +10,6 @@ import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
-import no.mnemonic.act.platform.dao.handlers.EntityHandler;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
@@ -95,14 +94,12 @@ public class FactSearchManager implements LifecycleAspect {
 
   @Dependency
   private final ClientFactory clientFactory;
-  private final Function<UUID, EntityHandler> entityHandlerForTypeIdResolver;
 
   private boolean isTestEnvironment = false;
 
   @Inject
-  public FactSearchManager(ClientFactory clientFactory, Function<UUID, EntityHandler> entityHandlerForTypeIdResolver) {
+  public FactSearchManager(ClientFactory clientFactory) {
     this.clientFactory = clientFactory;
-    this.entityHandlerForTypeIdResolver = entityHandlerForTypeIdResolver;
   }
 
   @Override
@@ -158,7 +155,7 @@ public class FactSearchManager implements LifecycleAspect {
     try {
       IndexRequest request = new IndexRequest(INDEX_NAME, TYPE_NAME, fact.getId().toString())
               .setRefreshPolicy(isTestEnvironment ? WriteRequest.RefreshPolicy.IMMEDIATE : WriteRequest.RefreshPolicy.NONE)
-              .source(FACT_DOCUMENT_WRITER.writeValueAsBytes(encodeValues(fact)), XContentType.JSON);
+              .source(FACT_DOCUMENT_WRITER.writeValueAsBytes(fact), XContentType.JSON);
       response = clientFactory.getHighLevelClient().index(request);
     } catch (IOException ex) {
       throw logAndExit(ex, String.format("Could not perform request to index Fact with id = %s.", fact.getId()));
@@ -416,10 +413,8 @@ public class FactSearchManager implements LifecycleAspect {
             .filter(termQuery("accessMode", criteria.getAccessMode()));
 
     if (criteria.getFactValue() != null) {
-      // Fact values are stored encoded, thus, in order to match exactly the value from the criteria must be encoded as well.
-      String encodedValue = entityHandlerForTypeIdResolver.apply(criteria.getFactTypeID()).encode(criteria.getFactValue());
       // Fact values must match exactly if given.
-      rootQuery.filter(termQuery("value", encodedValue));
+      rootQuery.filter(termQuery("value", criteria.getFactValue()));
     } else {
       // If 'value' isn't given make sure that it's also not set on any existing Fact.
       rootQuery.mustNot(existsQuery("value"));
@@ -811,7 +806,7 @@ public class FactSearchManager implements LifecycleAspect {
 
   private FactDocument decodeFactDocument(UUID factID, byte[] source) {
     try {
-      FactDocument fact = decodeValues(FACT_DOCUMENT_READER.readValue(source));
+      FactDocument fact = FACT_DOCUMENT_READER.readValue(source);
       // Need to set ID manually because it's not indexed as an own field.
       return fact.setId(factID);
     } catch (IOException ex) {
@@ -822,33 +817,11 @@ public class FactSearchManager implements LifecycleAspect {
 
   private ObjectDocument decodeObjectDocument(byte[] source) {
     try {
-      ObjectDocument object = OBJECT_DOCUMENT_READER.readValue(source);
-      // Decode Object value using EntityHandler because it's stored encoded.
-      return object.setValue(entityHandlerForTypeIdResolver.apply(object.getTypeID()).decode(object.getValue()));
+      return OBJECT_DOCUMENT_READER.readValue(source);
     } catch (IOException ex) {
       LOGGER.warning(ex, "Could not deserialize Object. Source of nested document not returned?");
       return null;
     }
-  }
-
-  private FactDocument encodeValues(FactDocument fact) {
-    // Clone document first in order to not change supplied instance.
-    FactDocument clone = fact.clone();
-    // Encode Fact value using EntityHandler to store value in encoded format.
-    clone.setValue(entityHandlerForTypeIdResolver.apply(fact.getTypeID()).encode(fact.getValue()));
-    // Also encode all Object values.
-    SetUtils.set(clone.getObjects()).forEach(o -> o.setValue(entityHandlerForTypeIdResolver.apply(o.getTypeID()).encode(o.getValue())));
-
-    return clone;
-  }
-
-  private FactDocument decodeValues(FactDocument fact) {
-    // Decode Fact value using EntityHandler because it's stored encoded.
-    fact.setValue(entityHandlerForTypeIdResolver.apply(fact.getTypeID()).decode(fact.getValue()));
-    // Also decode all Object values.
-    SetUtils.set(fact.getObjects()).forEach(o -> o.setValue(entityHandlerForTypeIdResolver.apply(o.getTypeID()).decode(o.getValue())));
-
-    return fact;
   }
 
   private RuntimeException logAndExit(Exception ex, String msg) {
