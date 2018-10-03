@@ -190,8 +190,8 @@ public abstract class AbstractIT {
 
   FactTypeEntity createFactType(UUID objectTypeID) {
     FactTypeEntity.FactObjectBindingDefinition binding = new FactTypeEntity.FactObjectBindingDefinition()
-            .setObjectTypeID(objectTypeID)
-            .setDirection(Direction.BiDirectional);
+            .setSourceObjectTypeID(objectTypeID)
+            .setBidirectionalBinding(true);
 
     FactTypeEntity entity = new FactTypeEntity()
             .setId(UUID.randomUUID())
@@ -214,7 +214,7 @@ public abstract class AbstractIT {
   FactEntity createFact(ObjectEntity object, FactTypeEntity factType, ObjectPreparation<FactEntity> preparation) {
     FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
             .setObjectID(object.getId())
-            .setDirection(factType.getRelevantObjectBindings().get(0).getDirection());
+            .setDirection(Direction.BiDirectional);
 
     FactEntity fact = new FactEntity()
             .setId(UUID.randomUUID())
@@ -230,7 +230,7 @@ public abstract class AbstractIT {
     getObjectManager().saveObjectFactBinding(new ObjectFactBindingEntity()
             .setObjectID(object.getId())
             .setFactID(fact.getId())
-            .setDirection(factType.getRelevantObjectBindings().get(0).getDirection()));
+            .setDirection(Direction.BiDirectional));
 
     fact = getFactManager().saveFact(preparation.prepare(fact));
 

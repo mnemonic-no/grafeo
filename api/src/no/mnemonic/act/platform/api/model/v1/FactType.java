@@ -146,22 +146,29 @@ public class FactType {
 
   @ApiModel(value = "FactObjectBindingDefinitionModel", description = "Defines to which Objects new Facts of a particular type can be linked.")
   public static class FactObjectBindingDefinition {
-    @ApiModelProperty(value = "Type linked Objects must have", required = true)
-    private final ObjectType.Info objectType;
-    @ApiModelProperty(value = "Direction the link must have", required = true)
-    private final Direction direction;
+    @ApiModelProperty(value = "Specifies the type any Object must have when linked as source to a Fact (can be NULL)")
+    private final ObjectType.Info sourceObjectType;
+    @ApiModelProperty(value = "Specifies the type any Object must have when linked as destination to a Fact (can be NULL)")
+    private final ObjectType.Info destinationObjectType;
+    @ApiModelProperty(value = "Specifies if the binding between source Object, Fact and destination Object must be bidirectional", required = true)
+    private final boolean bidirectionalBinding;
 
-    public FactObjectBindingDefinition(ObjectType.Info objectType, Direction direction) {
-      this.objectType = objectType;
-      this.direction = direction;
+    public FactObjectBindingDefinition(ObjectType.Info sourceObjectType, ObjectType.Info destinationObjectType, boolean bidirectionalBinding) {
+      this.sourceObjectType = sourceObjectType;
+      this.destinationObjectType = destinationObjectType;
+      this.bidirectionalBinding = bidirectionalBinding;
     }
 
-    public ObjectType.Info getObjectType() {
-      return objectType;
+    public ObjectType.Info getSourceObjectType() {
+      return sourceObjectType;
     }
 
-    public Direction getDirection() {
-      return direction;
+    public ObjectType.Info getDestinationObjectType() {
+      return destinationObjectType;
+    }
+
+    public boolean isBidirectionalBinding() {
+      return bidirectionalBinding;
     }
   }
 

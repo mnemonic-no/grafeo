@@ -25,7 +25,7 @@ public class FactTypeCreateDelegate extends AbstractDelegate {
     SecurityContext.get().checkPermission(TiFunctionConstants.addTypes);
 
     assertFactTypeNotExists(request.getName());
-    assertObjectTypesToBindExist(request.getRelevantObjectBindings(), "relevantObjectBindings.objectType");
+    assertObjectTypesToBindExist(request.getRelevantObjectBindings(), "relevantObjectBindings");
     assertEntityHandlerExists(request.getEntityHandler(), request.getEntityHandlerParameter());
     assertValidatorExists(request.getValidator(), request.getValidatorParameter());
 

@@ -58,6 +58,15 @@ public class InvalidArgumentException extends Exception {
   }
 
   /**
+   * Returns true if the exception contains validation errors.
+   *
+   * @return True if exception contains validation errors
+   */
+  public boolean hasErrors() {
+    return !errors.isEmpty();
+  }
+
+  /**
    * Add a new validation error.
    *
    * @param error    General validation error message

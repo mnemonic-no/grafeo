@@ -3,18 +3,17 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
-import no.mnemonic.act.platform.api.request.v1.Direction;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
@@ -25,35 +24,41 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
     FactTypeCreateDelegate.create().handle(createRequest());
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testCreateAlreadyExistingFactType() throws Exception {
     CreateFactTypeRequest request = createRequest();
     when(getFactManager().getFactType(request.getName())).thenReturn(new FactTypeEntity());
     when(getObjectManager().getObjectType(isA(UUID.class))).thenReturn(new ObjectTypeEntity());
-    FactTypeCreateDelegate.create().handle(request);
+    expectInvalidArgumentException(() -> FactTypeCreateDelegate.create().handle(request), "fact.type.exist");
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
+  public void testCreateFactTypeWithoutSpecifiedObjectType() throws Exception {
+    CreateFactTypeRequest request = createRequest()
+            .setRelevantObjectBindings(ListUtils.list(new FactObjectBindingDefinition()));
+    expectInvalidArgumentException(() -> FactTypeCreateDelegate.create().handle(request), "invalid.object.binding.definition");
+  }
+
+  @Test
   public void testCreateFactTypeObjectTypeNotFound() throws Exception {
     CreateFactTypeRequest request = createRequest();
-    FactTypeCreateDelegate.create().handle(request);
-    verify(getObjectManager(), times(request.getRelevantObjectBindings().size())).getObjectType(isA(UUID.class));
+    expectInvalidArgumentException(() -> FactTypeCreateDelegate.create().handle(request), "object.type.not.exist");
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testCreateFactTypeEntityHandlerNotFound() throws Exception {
     CreateFactTypeRequest request = createRequest();
     when(getObjectManager().getObjectType(isA(UUID.class))).thenReturn(new ObjectTypeEntity());
     when(getEntityHandlerFactory().get(request.getEntityHandler(), request.getEntityHandlerParameter())).thenThrow(IllegalArgumentException.class);
-    FactTypeCreateDelegate.create().handle(request);
+    expectInvalidArgumentException(() -> FactTypeCreateDelegate.create().handle(request), "entity.handler.not.exist");
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testCreateFactTypeValidatorNotFound() throws Exception {
     CreateFactTypeRequest request = createRequest();
     when(getObjectManager().getObjectType(isA(UUID.class))).thenReturn(new ObjectTypeEntity());
     when(getValidatorFactory().get(request.getValidator(), request.getValidatorParameter())).thenThrow(IllegalArgumentException.class);
-    FactTypeCreateDelegate.create().handle(request);
+    expectInvalidArgumentException(() -> FactTypeCreateDelegate.create().handle(request), "validator.not.exist");
   }
 
   @Test
@@ -79,8 +84,9 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
       for (int i = 0; i < request.getRelevantObjectBindings().size(); i++) {
         FactObjectBindingDefinition requestBinding = request.getRelevantObjectBindings().get(i);
         FactTypeEntity.FactObjectBindingDefinition entityBinding = entity.getRelevantObjectBindings().get(i);
-        assertEquals(requestBinding.getObjectType(), entityBinding.getObjectTypeID());
-        assertEquals(requestBinding.getDirection().name(), entityBinding.getDirection().name());
+        assertEquals(requestBinding.getSourceObjectType(), entityBinding.getSourceObjectTypeID());
+        assertEquals(requestBinding.getDestinationObjectType(), entityBinding.getDestinationObjectTypeID());
+        assertEquals(requestBinding.isBidirectionalBinding(), entityBinding.isBidirectionalBinding());
       }
       return true;
     }));
@@ -88,11 +94,13 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
 
   private CreateFactTypeRequest createRequest() {
     FactObjectBindingDefinition binding1 = new FactObjectBindingDefinition()
-            .setObjectType(UUID.randomUUID())
-            .setDirection(Direction.FactIsSource);
+            .setSourceObjectType(UUID.randomUUID());
     FactObjectBindingDefinition binding2 = new FactObjectBindingDefinition()
-            .setObjectType(UUID.randomUUID())
-            .setDirection(Direction.FactIsDestination);
+            .setDestinationObjectType(UUID.randomUUID());
+    FactObjectBindingDefinition binding3 = new FactObjectBindingDefinition()
+            .setSourceObjectType(UUID.randomUUID())
+            .setDestinationObjectType(UUID.randomUUID())
+            .setBidirectionalBinding(true);
 
     return new CreateFactTypeRequest()
             .setName("FactType")
@@ -100,7 +108,20 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
             .setEntityHandlerParameter("EntityHandlerParameter")
             .setValidator("Validator")
             .setValidatorParameter("ValidatorParameter")
-            .setRelevantObjectBindings(ListUtils.list(binding1, binding2));
+            .setRelevantObjectBindings(ListUtils.list(binding1, binding2, binding3));
+  }
+
+  private void expectInvalidArgumentException(InvalidArgumentExceptionTest test, String... messageTemplate) throws Exception {
+    try {
+      test.execute();
+      fail();
+    } catch (InvalidArgumentException ex) {
+      assertEquals(SetUtils.set(messageTemplate), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
+    }
+  }
+
+  private interface InvalidArgumentExceptionTest {
+    void execute() throws Exception;
   }
 
 }

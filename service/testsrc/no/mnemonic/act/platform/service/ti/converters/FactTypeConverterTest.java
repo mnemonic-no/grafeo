@@ -3,7 +3,6 @@ package no.mnemonic.act.platform.service.ti.converters;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Namespace;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
-import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
@@ -19,9 +18,29 @@ public class FactTypeConverterTest {
   private final Function<UUID, ObjectType> objectTypeConverter = id -> ObjectType.builder().setId(id).setName("ObjectType").build();
 
   @Test
-  public void testConvertFactType() throws Exception {
+  public void testConvertFactTypeWithBothSourceAndDestination() {
     FactTypeEntity entity = createEntity();
     assertModel(entity, createFactTypeConverter().apply(entity));
+  }
+
+  @Test
+  public void testConvertFactTypeWithOnlySource() {
+    FactTypeEntity entity = createEntity()
+            .setRelevantObjectBindings(ListUtils.list(new FactTypeEntity.FactObjectBindingDefinition()
+                    .setSourceObjectTypeID(UUID.randomUUID())));
+    FactType model = createFactTypeConverter().apply(entity);
+    assertNotNull(model.getRelevantObjectBindings().get(0).getSourceObjectType());
+    assertNull(model.getRelevantObjectBindings().get(0).getDestinationObjectType());
+  }
+
+  @Test
+  public void testConvertFactTypeWithOnlyDestination() {
+    FactTypeEntity entity = createEntity()
+            .setRelevantObjectBindings(ListUtils.list(new FactTypeEntity.FactObjectBindingDefinition()
+                    .setDestinationObjectTypeID(UUID.randomUUID())));
+    FactType model = createFactTypeConverter().apply(entity);
+    assertNull(model.getRelevantObjectBindings().get(0).getSourceObjectType());
+    assertNotNull(model.getRelevantObjectBindings().get(0).getDestinationObjectType());
   }
 
   @Test
@@ -46,13 +65,14 @@ public class FactTypeConverterTest {
             .build();
   }
 
-  private FactTypeEntity createEntity() throws Exception {
+  private FactTypeEntity createEntity() {
     FactTypeEntity.FactObjectBindingDefinition binding1 = new FactTypeEntity.FactObjectBindingDefinition()
-            .setObjectTypeID(UUID.randomUUID())
-            .setDirection(Direction.FactIsSource);
+            .setSourceObjectTypeID(UUID.randomUUID())
+            .setDestinationObjectTypeID(UUID.randomUUID());
     FactTypeEntity.FactObjectBindingDefinition binding2 = new FactTypeEntity.FactObjectBindingDefinition()
-            .setObjectTypeID(UUID.randomUUID())
-            .setDirection(Direction.FactIsDestination);
+            .setSourceObjectTypeID(UUID.randomUUID())
+            .setDestinationObjectTypeID(UUID.randomUUID())
+            .setBidirectionalBinding(true);
 
     return new FactTypeEntity()
             .setId(UUID.randomUUID())
@@ -82,9 +102,11 @@ public class FactTypeConverterTest {
     for (int i = 0; i < entity.getRelevantObjectBindings().size(); i++) {
       FactTypeEntity.FactObjectBindingDefinition entityBinding = entity.getRelevantObjectBindings().get(i);
       FactType.FactObjectBindingDefinition modelBinding = model.getRelevantObjectBindings().get(i);
-      assertEquals(entityBinding.getObjectTypeID(), modelBinding.getObjectType().getId());
-      assertEquals("ObjectType", modelBinding.getObjectType().getName());
-      assertEquals(entityBinding.getDirection().name(), modelBinding.getDirection().name());
+      assertEquals(entityBinding.getSourceObjectTypeID(), modelBinding.getSourceObjectType().getId());
+      assertEquals("ObjectType", modelBinding.getSourceObjectType().getName());
+      assertEquals(entityBinding.getDestinationObjectTypeID(), modelBinding.getDestinationObjectType().getId());
+      assertEquals("ObjectType", modelBinding.getDestinationObjectType().getName());
+      assertEquals(entityBinding.isBidirectionalBinding(), modelBinding.isBidirectionalBinding());
     }
   }
 

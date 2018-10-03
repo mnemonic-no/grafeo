@@ -7,7 +7,10 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
@@ -17,7 +20,6 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -123,21 +125,32 @@ abstract class AbstractDelegate {
    * @param propertyName       Property name
    * @throws InvalidArgumentException Thrown if an ObjectType part of a binding definition does not exist
    */
-  void assertObjectTypesToBindExist(Collection<FactObjectBindingDefinition> bindingDefinitions, String propertyName) throws InvalidArgumentException {
-    boolean invalid = false;
+  void assertObjectTypesToBindExist(List<FactObjectBindingDefinition> bindingDefinitions, String propertyName) throws InvalidArgumentException {
     InvalidArgumentException ex = new InvalidArgumentException();
 
-    for (FactObjectBindingDefinition definition : bindingDefinitions) {
-      if (TiRequestContext.get().getObjectManager().getObjectType(definition.getObjectType()) == null) {
-        ex.addValidationError(String.format("ObjectType with id = %s does not exist.", definition.getObjectType()),
-                "object.type.not.exist", propertyName, definition.getObjectType().toString());
-        invalid = true;
+    for (int i = 0; i < bindingDefinitions.size(); i++) {
+      UUID sourceObjectType = bindingDefinitions.get(i).getSourceObjectType();
+      UUID destinationObjectType = bindingDefinitions.get(i).getDestinationObjectType();
+
+      // At least one of 'sourceObjectType' or 'destinationObjectType' must be specified. If only one is specified
+      // the binding definition is of cardinality 1. If both are specified it's of cardinality 2.
+      if (sourceObjectType == null && destinationObjectType == null) {
+        ex.addValidationError("Object binding definition must specify at least one of 'sourceObjectType' or 'destinationObjectType'.",
+                "invalid.object.binding.definition", String.format("%s[%d]", propertyName, i), "NULL");
+      }
+
+      if (sourceObjectType != null && TiRequestContext.get().getObjectManager().getObjectType(sourceObjectType) == null) {
+        ex.addValidationError(String.format("ObjectType with id = %s does not exist.", sourceObjectType),
+                "object.type.not.exist", String.format("%s[%d].sourceObjectType", propertyName, i), sourceObjectType.toString());
+      }
+
+      if (destinationObjectType != null && TiRequestContext.get().getObjectManager().getObjectType(destinationObjectType) == null) {
+        ex.addValidationError(String.format("ObjectType with id = %s does not exist.", destinationObjectType),
+                "object.type.not.exist", String.format("%s[%d].destinationObjectType", propertyName, i), destinationObjectType.toString());
       }
     }
 
-    if (invalid) {
-      throw ex;
-    }
+    if (ex.hasErrors()) throw ex; // Fail if any binding definition is invalid.
   }
 
   /**
@@ -183,8 +196,9 @@ abstract class AbstractDelegate {
   List<FactTypeEntity.FactObjectBindingDefinition> convertFactObjectBindingDefinitions(List<FactObjectBindingDefinition> bindingDefinitions) {
     return bindingDefinitions.stream()
             .map(r -> new FactTypeEntity.FactObjectBindingDefinition()
-                    .setObjectTypeID(r.getObjectType())
-                    .setDirection(Direction.valueOf(r.getDirection().name())))
+                    .setSourceObjectTypeID(r.getSourceObjectType())
+                    .setDestinationObjectTypeID(r.getDestinationObjectType())
+                    .setBidirectionalBinding(r.isBidirectionalBinding()))
             .collect(Collectors.toList());
   }
 

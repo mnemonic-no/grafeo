@@ -21,7 +21,6 @@ import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.ArrayList;
@@ -130,29 +129,19 @@ public class FactCreateDelegate extends AbstractDelegate {
               .addValidationError("Requested destination Object could not be resolved.", "invalid.destination.object", "destinationObject", request.getDestinationObject());
     }
 
-    InvalidArgumentException ex = new InvalidArgumentException();
-
     // Validate that the binding between source Object, Fact and destination Object is valid according to the FactType.
-    if (!isValidBinding(type, source, request.isBidirectionalBinding() ? Direction.BiDirectional : Direction.FactIsDestination)) {
-      ex.addValidationError("Requested binding between Fact and Object is not allowed.", "invalid.fact.object.binding", "sourceObject", request.getSourceObject());
-    }
-    if (!isValidBinding(type, destination, request.isBidirectionalBinding() ? Direction.BiDirectional : Direction.FactIsSource)) {
-      ex.addValidationError("Requested binding between Fact and Object is not allowed.", "invalid.fact.object.binding", "destinationObject", request.getDestinationObject());
-    }
-
-    if (!CollectionUtils.isEmpty(ex.getValidationErrors())) {
-      throw ex;
-    }
-  }
-
-  private boolean isValidBinding(FactTypeEntity type, ObjectEntity object, Direction direction) {
-    // Object can be null if the binding is of cardinality 1.
-    if (object == null) return true;
-
-    // Check requested binding against all definitions.
-    return type.getRelevantObjectBindings()
+    // Both source and destination ObjectTypes must be the same plus the bidirectional binding flag must match.
+    boolean valid = type.getRelevantObjectBindings()
             .stream()
-            .anyMatch(b -> Objects.equals(b.getObjectTypeID(), object.getTypeID()) && Objects.equals(b.getDirection(), direction));
+            .anyMatch(b -> Objects.equals(b.getSourceObjectTypeID(), ObjectUtils.ifNotNull(source, ObjectEntity::getTypeID)) &&
+                    Objects.equals(b.getDestinationObjectTypeID(), ObjectUtils.ifNotNull(destination, ObjectEntity::getTypeID)) &&
+                    b.isBidirectionalBinding() == request.isBidirectionalBinding());
+    if (!valid) {
+      String invalidValue = String.format("sourceObject = %s|destinationObject = %s|bidirectionalBinding = %s", request.getSourceObject(), request.getDestinationObject(), request.isBidirectionalBinding());
+      throw new InvalidArgumentException()
+              .addValidationError(String.format("Requested binding between Fact and Object(s) is not allowed for FactType with id = %s.", type.getId()),
+                      "invalid.fact.object.binding", "sourceObject|destinationObject|bidirectionalBinding", invalidValue);
+    }
   }
 
   private FactEntity resolveExistingFact(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
