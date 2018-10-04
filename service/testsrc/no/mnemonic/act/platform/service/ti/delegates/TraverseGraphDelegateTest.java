@@ -304,7 +304,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
             new ObjectFactBindingEntity()
                     .setObjectID(object.getId())
                     .setFactID(fact.getId())
-                    .setDirection(Direction.None)
+                    .setDirection(Direction.BiDirectional)
     ));
 
     return object;
@@ -330,7 +330,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     return mockFetchFact().setBindings(
             ListUtils.list(new FactEntity.FactObjectBinding()
                     .setObjectID(object.getId())
-                    .setDirection(Direction.None))
+                    .setDirection(Direction.BiDirectional))
     );
   }
 

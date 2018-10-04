@@ -85,16 +85,6 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testEdgesWithDirectionNone() {
-    UUID objectID = mockObjectWithFact(Direction.None);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
-
-    assertTrue(vertex.edges(BOTH).hasNext());
-    assertTrue(vertex.edges(IN).hasNext());
-    assertTrue(vertex.edges(OUT).hasNext());
-  }
-
-  @Test
   public void testEdgesFilterByLabel() {
     UUID objectID = mockObjectWithFact(Direction.BiDirectional);
     Vertex vertex = new ObjectVertex(getActGraph(), objectID);
@@ -131,16 +121,6 @@ public class ObjectVertexTest extends AbstractGraphTest {
     assertTrue(vertex.vertices(BOTH).hasNext());
     assertTrue(vertex.vertices(IN).hasNext());
     assertFalse(vertex.vertices(OUT).hasNext());
-  }
-
-  @Test
-  public void testVerticesWithDirectionNone() {
-    UUID objectID = mockObjectWithFact(Direction.None);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
-
-    assertTrue(vertex.vertices(BOTH).hasNext());
-    assertTrue(vertex.vertices(IN).hasNext());
-    assertTrue(vertex.vertices(OUT).hasNext());
   }
 
   @Test
@@ -271,7 +251,6 @@ public class ObjectVertexTest extends AbstractGraphTest {
       case FactIsDestination:
         return Direction.FactIsSource;
       default:
-        // None or BiDirectional
         return direction;
     }
   }

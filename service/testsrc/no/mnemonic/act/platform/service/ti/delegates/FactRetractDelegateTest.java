@@ -150,7 +150,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     verify(getObjectManager()).saveObjectFactBinding(argThat(binding -> {
       assertNotNull(binding.getFactID());
       assertNotNull(binding.getObjectID());
-      assertEquals(Direction.None, binding.getDirection());
+      assertNotNull(binding.getDirection());
       return true;
     }));
   }
@@ -190,7 +190,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     FactEntity factToRetract = new FactEntity()
             .setId(request.getFact())
             .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased)
-            .setBindings(ListUtils.list(new FactEntity.FactObjectBinding().setObjectID(object.getId()).setDirection(Direction.None)));
+            .setBindings(ListUtils.list(new FactEntity.FactObjectBinding().setObjectID(object.getId()).setDirection(Direction.BiDirectional)));
 
     // Needed for indexing into ElasticSearch.
     when(getFactSearchManager().getFact(request.getFact())).thenReturn(new FactDocument().setId(request.getFact()));

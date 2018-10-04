@@ -229,7 +229,7 @@ public class FactEntity implements CassandraEntity {
 
     @JsonSetter("direction")
     public FactObjectBinding setDirectionValue(int value) {
-      this.direction = Direction.getValueMap().getOrDefault(value, Direction.None);
+      this.direction = Direction.getValueMap().get(value);
       return this;
     }
   }

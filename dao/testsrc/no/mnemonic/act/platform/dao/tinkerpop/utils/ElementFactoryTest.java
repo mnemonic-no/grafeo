@@ -50,7 +50,7 @@ public class ElementFactoryTest {
 
   @Test
   public void testCreateEdgesWithoutFact() {
-    ObjectFactBindingEntity binding = createInBinding(Direction.None);
+    ObjectFactBindingEntity binding = createInBinding(Direction.BiDirectional);
     assertTrue(elementFactory.createEdges(binding).isEmpty());
   }
 
@@ -63,8 +63,8 @@ public class ElementFactoryTest {
             .build();
     ElementFactory factory = ElementFactory.builder().setOwner(graph).build();
 
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.None);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.None);
+    ObjectFactBindingEntity inBinding = createInBinding(Direction.BiDirectional);
+    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.BiDirectional);
     mockObject(inBinding);
     mockObject(outBinding.getObjectID());
     mockFact(inBinding.getFactID(), outBinding);
@@ -74,7 +74,7 @@ public class ElementFactoryTest {
 
   @Test
   public void testCreateEdgesReturnsLoop() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.None);
+    ObjectFactBindingEntity inBinding = createInBinding(Direction.FactIsDestination);
     FactEntity.FactObjectBinding outBinding = new FactEntity.FactObjectBinding()
             .setObjectID(inBinding.getObjectID())
             .setDirection(inBinding.getDirection());
@@ -83,17 +83,6 @@ public class ElementFactoryTest {
 
     Edge edge = elementFactory.createEdges(inBinding).iterator().next();
     assertSame(edge.inVertex(), edge.outVertex());
-  }
-
-  @Test
-  public void testCreateEdgesWithDirectionNone() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.None);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.None);
-
-    Edge edge = mockAndRunCreateEdges(inBinding, outBinding);
-
-    assertEquals(inBinding.getObjectID(), edge.inVertex().id());
-    assertEquals(outBinding.getObjectID(), edge.outVertex().id());
   }
 
   @Test
@@ -131,8 +120,8 @@ public class ElementFactoryTest {
 
   @Test
   public void testCreateEdgesExecutedTwice() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.None);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.None);
+    ObjectFactBindingEntity inBinding = createInBinding(Direction.BiDirectional);
+    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.BiDirectional);
 
     Edge first = mockAndRunCreateEdges(inBinding, outBinding);
     Edge second = mockAndRunCreateEdges(inBinding, outBinding);
@@ -152,8 +141,8 @@ public class ElementFactoryTest {
 
   @Test
   public void testGetEdgeCached() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.None);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.None);
+    ObjectFactBindingEntity inBinding = createInBinding(Direction.BiDirectional);
+    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.BiDirectional);
 
     Edge first = mockAndRunCreateEdges(inBinding, outBinding);
     Edge second = elementFactory.getEdge((UUID) first.id());

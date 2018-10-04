@@ -1,12 +1,12 @@
 package no.mnemonic.act.platform.dao.tinkerpop.utils;
 
 import com.google.common.cache.*;
-import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
-import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
-import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
 import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
+import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
+import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -73,8 +73,7 @@ public class ElementFactory {
 
       // For all other bindings create an edge where the objectID of the binding is the outgoing vertex.
       // But only if the directions fit together!
-      if ((inBinding.getDirection() == Direction.None && outBinding.getDirection() == Direction.None) ||
-              (inBinding.getDirection() == Direction.BiDirectional && outBinding.getDirection() == Direction.BiDirectional) ||
+      if ((inBinding.getDirection() == Direction.BiDirectional && outBinding.getDirection() == Direction.BiDirectional) ||
               (inBinding.getDirection() == Direction.FactIsDestination && outBinding.getDirection() == Direction.FactIsSource)) {
         edges.add(createAndCache(inBinding.getFactID(), inBinding.getObjectID(), outBinding.getObjectID()));
       }

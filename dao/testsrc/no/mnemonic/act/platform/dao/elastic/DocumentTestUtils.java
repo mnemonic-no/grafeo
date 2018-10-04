@@ -15,7 +15,7 @@ class DocumentTestUtils {
             .setTypeID(UUID.randomUUID())
             .setTypeName("objectType")
             .setValue("objectValue")
-            .setDirection(ObjectDocument.Direction.None);
+            .setDirection(ObjectDocument.Direction.BiDirectional);
   }
 
   static FactDocument createFactDocument() {
