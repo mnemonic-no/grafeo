@@ -4,8 +4,6 @@ import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
-import no.mnemonic.act.platform.dao.handlers.DefaultEntityHandlerFactory;
-import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -40,17 +38,15 @@ public class ActGraphIT {
           .build();
 
   @BeforeClass
-  public static void initialize() throws Exception {
-    EntityHandlerFactory factory = new DefaultEntityHandlerFactory();
-
+  public static void initialize() {
     // Create managers and start them up.
     clusterManager = ClusterManager.builder()
             .setClusterName("ACT Cluster")
             .setPort(cassandra.getExposedHostPort(9042))
             .addContactPoint("127.0.0.1")
             .build();
-    objectManager = new ObjectManager(clusterManager, factory);
-    factManager = new FactManager(clusterManager, factory);
+    objectManager = new ObjectManager(clusterManager);
+    factManager = new FactManager(clusterManager);
     clusterManager.startComponent();
     objectManager.startComponent();
     factManager.startComponent();
@@ -185,16 +181,14 @@ public class ActGraphIT {
     return new ObjectTypeEntity()
             .setId(UUID.randomUUID())
             .setNamespaceID(UUID.randomUUID())
-            .setName(name)
-            .setEntityHandler("IdentityHandler");
+            .setName(name);
   }
 
   private static FactTypeEntity createFactType(String name) {
     return new FactTypeEntity()
             .setId(UUID.randomUUID())
             .setNamespaceID(UUID.randomUUID())
-            .setName(name)
-            .setEntityHandler("IdentityHandler");
+            .setName(name);
   }
 
   private static ObjectEntity createObject(UUID typeID, String value) {

@@ -80,8 +80,6 @@ public class FactTypeConverterTest {
             .setName("FactType")
             .setValidator("Validator")
             .setValidatorParameter("ValidatorParameter")
-            .setEntityHandler("EntityHandler")
-            .setEntityHandlerParameter("EntityHandlerParameter")
             .setRelevantObjectBindings(ListUtils.list(binding1, binding2));
   }
 
@@ -90,8 +88,6 @@ public class FactTypeConverterTest {
     assertEquals(entity.getName(), model.getName());
     assertEquals(entity.getValidator(), model.getValidator());
     assertEquals(entity.getValidatorParameter(), model.getValidatorParameter());
-    assertEquals(entity.getEntityHandler(), model.getEntityHandler());
-    assertEquals(entity.getEntityHandlerParameter(), model.getEntityHandlerParameter());
 
     assertNotNull(model.getNamespace());
     assertEquals(entity.getNamespaceID(), model.getNamespace().getId());

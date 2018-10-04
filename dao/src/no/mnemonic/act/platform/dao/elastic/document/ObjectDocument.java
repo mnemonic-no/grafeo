@@ -60,14 +60,4 @@ public class ObjectDocument implements ElasticDocument {
     return this;
   }
 
-  @Override
-  public ObjectDocument clone() {
-    return new ObjectDocument()
-            .setId(getId())
-            .setTypeID(getTypeID())
-            .setTypeName(getTypeName())
-            .setValue(getValue())
-            .setDirection(getDirection());
-  }
-
 }

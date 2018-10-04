@@ -39,8 +39,6 @@ CREATE TABLE IF NOT EXISTS act.object_type (
   name VARCHAR,
   validator VARCHAR,
   validator_parameter VARCHAR,
-  entity_handler VARCHAR,
-  entity_handler_parameter VARCHAR,
   PRIMARY KEY (id)
 );
 
@@ -73,8 +71,6 @@ CREATE TABLE IF NOT EXISTS act.fact_type (
   name VARCHAR,
   validator VARCHAR,
   validator_parameter VARCHAR,
-  entity_handler VARCHAR,
-  entity_handler_parameter VARCHAR,
   relevant_object_bindings VARCHAR,
   PRIMARY KEY (id)
 );

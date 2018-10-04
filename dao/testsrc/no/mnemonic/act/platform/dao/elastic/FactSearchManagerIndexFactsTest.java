@@ -5,12 +5,9 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.assertFactDocument;
-import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.createFactDocument;
+import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.assertFactDocument;
+import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.createFactDocument;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 public class FactSearchManagerIndexFactsTest extends AbstractManagerTest {
 
@@ -62,20 +59,6 @@ public class FactSearchManagerIndexFactsTest extends AbstractManagerTest {
     FactDocument indexedFact2 = getFactSearchManager().getFact(fact.getId());
     assertEquals(fact.getId(), indexedFact2.getId());
     assertEquals("updatedValue", indexedFact2.getValue());
-  }
-
-  @Test
-  public void testIndexFactEncodesValues() {
-    getFactSearchManager().indexFact(createFactDocument());
-    verify(getEntityHandler(), times(2)).encode(any());
-  }
-
-  @Test
-  public void testGetFactDecodesValues() {
-    FactDocument fact = createFactDocument();
-    getFactSearchManager().indexFact(fact);
-    getFactSearchManager().getFact(fact.getId());
-    verify(getEntityHandler(), times(2)).decode(any());
   }
 
 }

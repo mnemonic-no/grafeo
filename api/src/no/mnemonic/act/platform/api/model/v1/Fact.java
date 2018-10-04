@@ -16,7 +16,7 @@ public class Fact {
   private final UUID id;
   @ApiModelProperty(value = "Type of the Fact", required = true)
   private final FactType.Info type;
-  @ApiModelProperty(value = "Contains the actual information. Encoding depends on the used FactType", example = "APT1", required = true)
+  @ApiModelProperty(value = "Contains the actual information", example = "APT1")
   private final String value;
   @ApiModelProperty(value = "Links directly to another Fact")
   private final Fact.Info inReferenceTo;
@@ -202,7 +202,7 @@ public class Fact {
     private final UUID id;
     @ApiModelProperty(value = "Type of the Fact", required = true)
     private final FactType.Info type;
-    @ApiModelProperty(value = "Contains the actual information", example = "APT1", required = true)
+    @ApiModelProperty(value = "Contains the actual information", example = "APT1")
     private final String value;
 
     private Info(UUID id, FactType.Info type, String value) {

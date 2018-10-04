@@ -15,50 +15,41 @@ public class CreateObjectTypeRequestTest extends AbstractRequestTest {
     String json = "{" +
             "name : 'name'," +
             "validator : 'validator'," +
-            "validatorParameter : 'validatorParameter'," +
-            "entityHandler : 'entityHandler'," +
-            "entityHandlerParameter : 'entityHandlerParameter'" +
+            "validatorParameter : 'validatorParameter'" +
             "}";
 
     CreateObjectTypeRequest request = getMapper().readValue(json, CreateObjectTypeRequest.class);
     assertEquals("name", request.getName());
     assertEquals("validator", request.getValidator());
     assertEquals("validatorParameter", request.getValidatorParameter());
-    assertEquals("entityHandler", request.getEntityHandler());
-    assertEquals("entityHandlerParameter", request.getEntityHandlerParameter());
   }
 
   @Test
   public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<CreateObjectTypeRequest>> violations = getValidator().validate(new CreateObjectTypeRequest());
-    assertEquals(3, violations.size());
+    assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "name");
     assertPropertyInvalid(violations, "validator");
-    assertPropertyInvalid(violations, "entityHandler");
   }
 
   @Test
   public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<CreateObjectTypeRequest>> violations = getValidator().validate(new CreateObjectTypeRequest()
             .setName("")
-            .setValidator("")
-            .setEntityHandler(""));
-    assertEquals(3, violations.size());
+            .setValidator(""));
+    assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "name");
     assertPropertyInvalid(violations, "validator");
-    assertPropertyInvalid(violations, "entityHandler");
   }
 
   @Test
   public void testRequestValidationFailsOnBlank() {
     Set<ConstraintViolation<CreateObjectTypeRequest>> violations = getValidator().validate(new CreateObjectTypeRequest()
             .setName(" ")
-            .setValidator(" ")
-            .setEntityHandler(" "));
-    assertEquals(3, violations.size());
+            .setValidator(" "));
+    assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "name");
     assertPropertyInvalid(violations, "validator");
-    assertPropertyInvalid(violations, "entityHandler");
   }
 
   @Test
@@ -66,7 +57,6 @@ public class CreateObjectTypeRequestTest extends AbstractRequestTest {
     assertTrue(getValidator().validate(new CreateObjectTypeRequest()
             .setName("name")
             .setValidator("validator")
-            .setEntityHandler("entityHandler")
     ).isEmpty());
   }
 

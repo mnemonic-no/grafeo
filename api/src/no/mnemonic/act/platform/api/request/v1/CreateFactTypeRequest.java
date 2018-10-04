@@ -21,11 +21,6 @@ public class CreateFactTypeRequest implements ValidatingRequest {
   private String validator;
   @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private String validatorParameter;
-  @ApiModelProperty(value = "EntityHandler used to store new Facts of this type", example = "StringEntityHandler", required = true)
-  @NotBlank
-  private String entityHandler;
-  @ApiModelProperty(value = "Parameters used to customize EntityHandler")
-  private String entityHandlerParameter;
   @ApiModelProperty(value = "Define to which Objects new Facts of this type can be linked", required = true)
   @NotEmpty
   private List<@Valid FactObjectBindingDefinition> relevantObjectBindings;
@@ -54,24 +49,6 @@ public class CreateFactTypeRequest implements ValidatingRequest {
 
   public CreateFactTypeRequest setValidatorParameter(String validatorParameter) {
     this.validatorParameter = validatorParameter;
-    return this;
-  }
-
-  public String getEntityHandler() {
-    return entityHandler;
-  }
-
-  public CreateFactTypeRequest setEntityHandler(String entityHandler) {
-    this.entityHandler = entityHandler;
-    return this;
-  }
-
-  public String getEntityHandlerParameter() {
-    return entityHandlerParameter;
-  }
-
-  public CreateFactTypeRequest setEntityHandlerParameter(String entityHandlerParameter) {
-    this.entityHandlerParameter = entityHandlerParameter;
     return this;
   }
 

@@ -9,7 +9,7 @@ import java.util.UUID;
 public class FactDocument implements ElasticDocument {
 
   public enum AccessMode {
-    Public, RoleBased, Explicit;
+    Public, RoleBased, Explicit
   }
 
   @JsonIgnore // 'id' won't be indexed separately, '_id' is used instead.
@@ -172,29 +172,6 @@ public class FactDocument implements ElasticDocument {
   public FactDocument addObject(ObjectDocument object) {
     this.objects = SetUtils.addToSet(this.objects, object);
     return this;
-  }
-
-  @Override
-  public FactDocument clone() {
-    FactDocument clone = new FactDocument()
-            .setId(getId())
-            .setRetracted(isRetracted())
-            .setTypeID(getTypeID())
-            .setTypeName(getTypeName())
-            .setValue(getValue())
-            .setInReferenceTo(getInReferenceTo())
-            .setOrganizationID(getOrganizationID())
-            .setOrganizationName(getOrganizationName())
-            .setSourceID(getSourceID())
-            .setSourceName(getSourceName())
-            .setAccessMode(getAccessMode())
-            .setTimestamp(getTimestamp())
-            .setLastSeenTimestamp(getLastSeenTimestamp())
-            .setAcl(SetUtils.set(getAcl()));
-    // Also perform a deep clone of all associated Objects.
-    SetUtils.set(getObjects()).forEach(o -> clone.addObject(o.clone()));
-
-    return clone;
   }
 
 }

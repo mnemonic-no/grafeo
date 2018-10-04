@@ -43,7 +43,6 @@ public class ObjectTypeIT extends AbstractIT {
     // Create an ObjectType via the REST API ...
     CreateObjectTypeRequest request = new CreateObjectTypeRequest()
             .setName("ObjectType")
-            .setEntityHandler("IdentityHandler")
             .setValidator("TrueValidator");
     Response response = request("/v1/objectType").post(Entity.json(request));
     assertEquals(201, response.getStatus());
@@ -53,7 +52,7 @@ public class ObjectTypeIT extends AbstractIT {
   }
 
   @Test
-  public void testUpdateObjectType() throws Exception {
+  public void testUpdateObjectType() {
     // Create an ObjectType in the database ...
     ObjectTypeEntity entity = createObjectType();
 

@@ -64,7 +64,7 @@ public class FactTypeResolverTest {
   }
 
   @Test
-  public void testResolveRetractionFactType() throws Exception {
+  public void testResolveRetractionFactType() {
     FactTypeEntity retraction = new FactTypeEntity();
     when(factManager.getFactType(RETRACTION_FACT_TYPE_ID)).thenReturn(retraction);
 
@@ -75,7 +75,7 @@ public class FactTypeResolverTest {
   }
 
   @Test
-  public void testCreateRetractionFactTypeOnDemand() throws Exception {
+  public void testCreateRetractionFactTypeOnDemand() {
     when(factManager.saveFactType(any())).thenAnswer(i -> i.getArgument(0));
 
     assertRetractionFactType(resolver.resolveRetractionFactType());
@@ -87,7 +87,7 @@ public class FactTypeResolverTest {
   }
 
   @Test
-  public void testCreateRetractionFactTypeAvoidNameCollision() throws Exception {
+  public void testCreateRetractionFactTypeAvoidNameCollision() {
     when(factManager.getFactType(RETRACTION_FACT_TYPE_NAME)).thenReturn(new FactTypeEntity());
     when(factManager.saveFactType(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -103,7 +103,6 @@ public class FactTypeResolverTest {
     assertEquals(RETRACTION_FACT_TYPE_ID, retraction.getId());
     assertEquals(GLOBAL_NAMESPACE, retraction.getNamespaceID());
     assertTrue(retraction.getName().startsWith(RETRACTION_FACT_TYPE_NAME));
-    assertEquals("IdentityHandler", retraction.getEntityHandler());
     assertEquals("TrueValidator", retraction.getValidator());
   }
 

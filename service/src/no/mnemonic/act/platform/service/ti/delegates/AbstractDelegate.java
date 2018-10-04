@@ -154,23 +154,6 @@ abstract class AbstractDelegate {
   }
 
   /**
-   * Assert that an EntityHandler exists.
-   *
-   * @param entityHandler          Name of EntityHandler
-   * @param entityHandlerParameter Parameter of EntityHandler
-   * @throws InvalidArgumentException Thrown if EntityHandler does not exist
-   */
-  void assertEntityHandlerExists(String entityHandler, String entityHandlerParameter) throws InvalidArgumentException {
-    try {
-      TiRequestContext.get().getEntityHandlerFactory().get(entityHandler, entityHandlerParameter);
-    } catch (IllegalArgumentException ex) {
-      // An IllegalArgumentException will be thrown if an EntityHandler cannot be found.
-      throw new InvalidArgumentException()
-              .addValidationError(ex.getMessage(), "entity.handler.not.exist", "entityHandler", entityHandler);
-    }
-  }
-
-  /**
    * Assert that a Validator exists.
    *
    * @param validator          Name of Validator

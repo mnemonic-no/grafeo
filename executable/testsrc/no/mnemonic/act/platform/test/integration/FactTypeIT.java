@@ -44,7 +44,6 @@ public class FactTypeIT extends AbstractIT {
     // Create a FactType via the REST API ...
     CreateFactTypeRequest request = new CreateFactTypeRequest()
             .setName("FactType")
-            .setEntityHandler("IdentityHandler")
             .setValidator("TrueValidator")
             .addRelevantObjectBinding(new FactObjectBindingDefinition()
                     .setSourceObjectType(createObjectType().getId())

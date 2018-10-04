@@ -27,13 +27,6 @@ public class ObjectTypeCreateDelegateTest extends AbstractDelegateTest {
   }
 
   @Test(expected = InvalidArgumentException.class)
-  public void testCreateObjectTypeEntityHandlerNotFound() throws Exception {
-    CreateObjectTypeRequest request = createRequest();
-    when(getEntityHandlerFactory().get(request.getEntityHandler(), request.getEntityHandlerParameter())).thenThrow(IllegalArgumentException.class);
-    ObjectTypeCreateDelegate.create().handle(request);
-  }
-
-  @Test(expected = InvalidArgumentException.class)
   public void testCreateObjectTypeValidatorNotFound() throws Exception {
     CreateObjectTypeRequest request = createRequest();
     when(getValidatorFactory().get(request.getValidator(), request.getValidatorParameter())).thenThrow(IllegalArgumentException.class);
@@ -52,8 +45,6 @@ public class ObjectTypeCreateDelegateTest extends AbstractDelegateTest {
       assertNotNull(entity.getId());
       assertNotNull(entity.getNamespaceID());
       assertEquals(request.getName(), entity.getName());
-      assertEquals(request.getEntityHandler(), entity.getEntityHandler());
-      assertEquals(request.getEntityHandlerParameter(), entity.getEntityHandlerParameter());
       assertEquals(request.getValidator(), entity.getValidator());
       assertEquals(request.getValidatorParameter(), entity.getValidatorParameter());
       return true;
@@ -63,8 +54,6 @@ public class ObjectTypeCreateDelegateTest extends AbstractDelegateTest {
   private CreateObjectTypeRequest createRequest() {
     return new CreateObjectTypeRequest()
             .setName("ObjectType")
-            .setEntityHandler("EntityHandler")
-            .setEntityHandlerParameter("EntityHandlerParameter")
             .setValidator("Validator")
             .setValidatorParameter("ValidatorParameter");
   }

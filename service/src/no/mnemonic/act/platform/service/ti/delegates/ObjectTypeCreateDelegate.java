@@ -25,15 +25,12 @@ public class ObjectTypeCreateDelegate extends AbstractDelegate {
     SecurityContext.get().checkPermission(TiFunctionConstants.addTypes);
 
     assertObjectTypeNotExists(request.getName());
-    assertEntityHandlerExists(request.getEntityHandler(), request.getEntityHandlerParameter());
     assertValidatorExists(request.getValidator(), request.getValidatorParameter());
 
     ObjectTypeEntity entity = new ObjectTypeEntity()
             .setId(UUID.randomUUID()) // ID needs to be provided by client.
             .setNamespaceID(GLOBAL_NAMESPACE) // For now everything will just be part of the global namespace.
             .setName(request.getName())
-            .setEntityHandler(request.getEntityHandler())
-            .setEntityHandlerParameter(request.getEntityHandlerParameter())
             .setValidator(request.getValidator())
             .setValidatorParameter(request.getValidatorParameter());
 

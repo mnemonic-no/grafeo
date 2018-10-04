@@ -103,10 +103,9 @@ public class FactEndpoint extends AbstractEndpoint {
           value = "Create a new Fact.",
           notes = "This operation creates and returns a new Fact. The new Fact must conform to the specified FactType, " +
                   "i.e. the value must pass the FactType's Validator and the binding to Objects must respect the " +
-                  "definition by the FactType. The new Fact will be saved using the FactType's EntityHandler.\n\n" +
+                  "definition by the FactType.\n\n" +
                   "If the new Fact links to an Object which does not exist yet the missing Object will be created " +
-                  "automatically with respect to the Object's ObjectType (need to pass the ObjectType's Validator and " +
-                  "stored using the ObjectType's EntityHandler).\n\n" +
+                  "automatically with respect to the Object's ObjectType (need to pass the ObjectType's Validator).\n\n" +
                   "If a Fact with the same type, value, organization, source, accessMode, confidenceLevel and bound Objects " +
                   "already exists, no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
           response = Fact.class,

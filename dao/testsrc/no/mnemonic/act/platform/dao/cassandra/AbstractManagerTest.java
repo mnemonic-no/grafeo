@@ -1,21 +1,13 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
-import no.mnemonic.act.platform.dao.handlers.EntityHandler;
-import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import org.junit.*;
-
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public abstract class AbstractManagerTest {
 
   private static ClusterManager clusterManager;
   private FactManager factManager;
   private ObjectManager objectManager;
-  private EntityHandler entityHandler;
 
   @ClassRule
   public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
@@ -37,17 +29,11 @@ public abstract class AbstractManagerTest {
 
   @Before
   public void initialize() {
-    EntityHandlerFactory factory = mock(EntityHandlerFactory.class);
-    entityHandler = mock(EntityHandler.class);
-    factManager = new FactManager(clusterManager, factory);
-    objectManager = new ObjectManager(clusterManager, factory);
+    factManager = new FactManager(clusterManager);
+    objectManager = new ObjectManager(clusterManager);
 
     factManager.startComponent();
     objectManager.startComponent();
-
-    when(factory.get(any(), any())).thenReturn(entityHandler);
-    when(entityHandler.encode(any())).then(returnsFirstArg());
-    when(entityHandler.decode(any())).then(returnsFirstArg());
   }
 
   @After
@@ -67,10 +53,6 @@ public abstract class AbstractManagerTest {
 
   protected ObjectManager getObjectManager() {
     return objectManager;
-  }
-
-  protected EntityHandler getEntityHandler() {
-    return entityHandler;
   }
 
 }

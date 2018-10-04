@@ -9,26 +9,16 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.assertFactDocument;
-import static no.mnemonic.act.platform.dao.elastic.document.DocumentTestUtils.createObjectDocument;
+import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.assertFactDocument;
+import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.createObjectDocument;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 public class FactSearchManagerRetrieveExistingFactsTest extends AbstractManagerTest {
 
   @Test
   public void testRetrieveExistingFactsWithNoCriteria() {
     assertNotNull(getFactSearchManager().retrieveExistingFacts(null));
-  }
-
-  @Test
-  public void testRetrieveExistingFactsEncodesFactValue() {
-    FactDocument fact = indexFact(d -> d);
-    getFactSearchManager().retrieveExistingFacts(createCriteriaWithObjects(fact, b -> b));
-    // Fact value is encoded twice, when indexed and when retrieved.
-    verify(getEntityHandler(), times(2)).encode(fact.getValue());
   }
 
   @Test

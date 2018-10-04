@@ -39,9 +39,7 @@ public class ObjectTypeConverterTest {
             .setNamespaceID(UUID.randomUUID())
             .setName("ObjectType")
             .setValidator("Validator")
-            .setValidatorParameter("ValidatorParameter")
-            .setEntityHandler("EntityHandler")
-            .setEntityHandlerParameter("EntityHandlerParameter");
+            .setValidatorParameter("ValidatorParameter");
   }
 
   private void assertModel(ObjectTypeEntity entity, ObjectType model) {
@@ -49,8 +47,6 @@ public class ObjectTypeConverterTest {
     assertEquals(entity.getName(), model.getName());
     assertEquals(entity.getValidator(), model.getValidator());
     assertEquals(entity.getValidatorParameter(), model.getValidatorParameter());
-    assertEquals(entity.getEntityHandler(), model.getEntityHandler());
-    assertEquals(entity.getEntityHandlerParameter(), model.getEntityHandlerParameter());
     assertNotNull(model.getNamespace());
     assertEquals(entity.getNamespaceID(), model.getNamespace().getId());
     assertEquals("Namespace", model.getNamespace().getName());

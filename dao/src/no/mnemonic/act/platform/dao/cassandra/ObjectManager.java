@@ -4,7 +4,6 @@ import com.datastax.driver.mapping.Mapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Iterators;
 import no.mnemonic.act.platform.dao.cassandra.accessors.ObjectAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.ObjectTypeAccessor;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectByTypeValueEntity;
@@ -12,8 +11,6 @@ import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
-import no.mnemonic.act.platform.dao.handlers.EntityHandler;
-import no.mnemonic.act.platform.dao.handlers.EntityHandlerFactory;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -38,7 +35,6 @@ public class ObjectManager implements LifecycleAspect {
   @Dependency
   private final ClusterManager clusterManager;
 
-  private final EntityHandlerFactory entityHandlerFactory;
   private final LoadingCache<UUID, ObjectTypeEntity> objectTypeByIdCache;
   private final LoadingCache<String, ObjectTypeEntity> objectTypeByNameCache;
 
@@ -50,9 +46,8 @@ public class ObjectManager implements LifecycleAspect {
   private ObjectAccessor objectAccessor;
 
   @Inject
-  public ObjectManager(ClusterManager clusterManager, EntityHandlerFactory factory) {
+  public ObjectManager(ClusterManager clusterManager) {
     this.clusterManager = clusterManager;
-    this.entityHandlerFactory = factory;
     this.objectTypeByIdCache = createObjectTypeByIdCache();
     this.objectTypeByNameCache = createObjectTypeByNameCache();
   }
@@ -126,48 +121,42 @@ public class ObjectManager implements LifecycleAspect {
 
   public ObjectEntity getObject(UUID id) {
     if (id == null) return null;
-    // Decode value using EntityHandler because it's stored encoded.
-    return ObjectUtils.ifNotNull(objectMapper.get(id), this::decodeObjectValue);
+    return objectMapper.get(id);
   }
 
   public ObjectEntity getObject(String type, String value) {
     if (StringUtils.isBlank(type) || StringUtils.isBlank(value)) return null;
-    ObjectTypeEntity objectType = getObjectTypeOrFail(type);
 
-    // Encode value using EntityHandler because the mapping value is also stored encoded.
-    String encodedValue = entityHandlerFactory.get(objectType.getEntityHandler(), objectType.getEntityHandlerParameter()).encode(value);
-    ObjectByTypeValueEntity objectByTypeValue = objectAccessor.getObjectByTypeValue(objectType.getId(), encodedValue);
+    ObjectTypeEntity objectType = getObjectType(type);
+    if (objectType == null) throw new IllegalArgumentException(String.format("ObjectType with name = %s does not exist.", type));
+
+    ObjectByTypeValueEntity objectByTypeValue = objectAccessor.getObjectByTypeValue(objectType.getId(), value);
     return ObjectUtils.ifNotNull(objectByTypeValue, o -> getObject(o.getObjectID()));
   }
 
   public Iterator<ObjectEntity> getObjects(List<UUID> id) {
     if (CollectionUtils.isEmpty(id)) return Collections.emptyIterator();
-    // Need to decode values using EntityHandler because they're stored encoded.
-    // Use Iterators.transform() to do this lazily when objects are pulled from Cassandra.
-    return Iterators.transform(objectAccessor.fetchByID(id).iterator(), this::decodeObjectValue);
+    return objectAccessor.fetchByID(id).iterator();
   }
 
   public ObjectEntity saveObject(ObjectEntity object) {
     if (object == null) return null;
 
-    ObjectTypeEntity type = getObjectTypeOrFail(object.getTypeID());
+    ObjectTypeEntity type = getObjectType(object.getTypeID());
+    if (type == null) throw new IllegalArgumentException(String.format("ObjectType with id = %s does not exist.", object.getTypeID()));
 
     // It's not allowed to create the same object multiple times.
     if (getObject(type.getName(), object.getValue()) != null) {
       throw new ImmutableViolationException("Object already exists.");
     }
 
-    // Encode value using EntityHandler to store value in encoded format.
-    // Clone entity first in order to not change supplied object instance.
-    ObjectEntity persistent = encodeObjectValue(object.clone());
-
     // Also save an ObjectByTypeValue mapping.
     ObjectByTypeValueEntity objectByTypeValue = new ObjectByTypeValueEntity()
-            .setObjectTypeID(persistent.getTypeID())
-            .setObjectValue(persistent.getValue())
-            .setObjectID(persistent.getId());
+            .setObjectTypeID(object.getTypeID())
+            .setObjectValue(object.getValue())
+            .setObjectID(object.getId());
 
-    objectMapper.save(persistent);
+    objectMapper.save(object);
     objectByTypeValueMapper.save(objectByTypeValue);
 
     return object;
@@ -214,34 +203,6 @@ public class ObjectManager implements LifecycleAspect {
                 return ObjectUtils.notNull(objectTypeAccessor.getByName(key), new Exception(String.format("ObjectType with name = %s does not exist.", key)));
               }
             });
-  }
-
-  private ObjectTypeEntity getObjectTypeOrFail(UUID id) {
-    try {
-      return objectTypeByIdCache.get(id);
-    } catch (ExecutionException e) {
-      throw new IllegalArgumentException(e.getCause());
-    }
-  }
-
-  private ObjectTypeEntity getObjectTypeOrFail(String name) {
-    try {
-      return objectTypeByNameCache.get(name);
-    } catch (ExecutionException e) {
-      throw new IllegalArgumentException(e.getCause());
-    }
-  }
-
-  private ObjectEntity encodeObjectValue(ObjectEntity object) {
-    ObjectTypeEntity type = getObjectTypeOrFail(object.getTypeID());
-    EntityHandler handler = entityHandlerFactory.get(type.getEntityHandler(), type.getEntityHandlerParameter());
-    return object.setValue(handler.encode(object.getValue()));
-  }
-
-  private ObjectEntity decodeObjectValue(ObjectEntity object) {
-    ObjectTypeEntity type = getObjectTypeOrFail(object.getTypeID());
-    EntityHandler handler = entityHandlerFactory.get(type.getEntityHandler(), type.getEntityHandlerParameter());
-    return object.setValue(handler.decode(object.getValue()));
   }
 
 }
