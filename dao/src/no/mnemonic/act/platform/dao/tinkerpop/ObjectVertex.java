@@ -11,8 +11,8 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.*;
 
-import static no.mnemonic.act.platform.dao.tinkerpop.ObjectProperty.Value;
 import static no.mnemonic.act.platform.dao.cassandra.entity.Direction.*;
+import static no.mnemonic.act.platform.dao.tinkerpop.ObjectProperty.Value;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.edgeAdditionsNotSupported;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRemovalNotSupported;
 
@@ -50,7 +50,7 @@ public class ObjectVertex implements Vertex {
     Set<Edge> facts = new HashSet<>();
 
     for (ObjectFactBindingEntity binding : bindings) {
-      if (binding.getDirection() == BiDirectional || binding.getDirection() == None) {
+      if (binding.getDirection() == BiDirectional) {
         facts.addAll(graph.getElementFactory().createEdges(binding));
       }
 

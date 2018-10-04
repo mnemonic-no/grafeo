@@ -5,7 +5,7 @@ import java.util.UUID;
 public class ObjectDocument implements ElasticDocument {
 
   public enum Direction {
-    None, FactIsSource, FactIsDestination, BiDirectional
+    FactIsSource, FactIsDestination, BiDirectional
   }
 
   // 'id' is indexed as an own field because Objects aren't index separately but as part of Facts.

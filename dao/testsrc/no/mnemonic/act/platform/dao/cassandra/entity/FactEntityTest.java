@@ -21,7 +21,7 @@ public class FactEntityTest {
   @Test
   public void setBindingsFromObjects() throws IOException {
     List<FactEntity.FactObjectBinding> bindings = Arrays.asList(
-            createFactObjectBinding(Direction.None),
+            createFactObjectBinding(Direction.FactIsSource),
             createFactObjectBinding(Direction.BiDirectional)
     );
     FactEntity entity = new FactEntity().setBindings(bindings);
@@ -31,14 +31,14 @@ public class FactEntityTest {
 
   @Test
   public void setBindingsFromString() throws IOException {
-    String bindings = "[{\"objectID\":\"ad35e1ec-e42f-4509-bbc8-6516a90b66e8\",\"direction\":0},{\"objectID\":\"95959968-f2fb-4913-9c0b-fc1b9144b60f\",\"direction\":3}]";
+    String bindings = "[{\"objectID\":\"ad35e1ec-e42f-4509-bbc8-6516a90b66e8\",\"direction\":1},{\"objectID\":\"95959968-f2fb-4913-9c0b-fc1b9144b60f\",\"direction\":3}]";
     FactEntity entity = new FactEntity().setBindingsStored(bindings);
 
     assertFactObjectBindings(entity.getBindings(), bindings);
   }
 
   @Test
-  public void testCloneEntity() throws IOException {
+  public void testCloneEntity() {
     FactEntity original = createFact();
     FactEntity clone = original.clone();
 
@@ -46,7 +46,7 @@ public class FactEntityTest {
     assertFact(original, clone);
   }
 
-  private FactEntity createFact() throws IOException {
+  private FactEntity createFact() {
     return new FactEntity()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
@@ -58,7 +58,7 @@ public class FactEntityTest {
             .setConfidenceLevel(0)
             .setTimestamp(1)
             .setLastSeenTimestamp(2)
-            .setBindings(Collections.singletonList(createFactObjectBinding(Direction.None)));
+            .setBindings(Collections.singletonList(createFactObjectBinding(Direction.BiDirectional)));
   }
 
   private FactEntity.FactObjectBinding createFactObjectBinding(Direction direction) {

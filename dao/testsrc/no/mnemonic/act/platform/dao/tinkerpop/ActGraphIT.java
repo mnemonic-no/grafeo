@@ -69,7 +69,7 @@ public class ActGraphIT {
             ));
     FactEntity seen = createFact(seenType.getId(), "today")
             .setBindings(ListUtils.list(
-                    createFactObjectBinding(domain.getId(), Direction.None)
+                    createFactObjectBinding(domain.getId(), Direction.BiDirectional)
             ));
     FactEntity used = createFact(usedType.getId(), "by")
             .setBindings(ListUtils.list(
@@ -88,7 +88,7 @@ public class ActGraphIT {
     objectManager.saveObjectFactBinding(createObjectFactBinding(ip.getId(), resolve.getId(), Direction.FactIsDestination));
     objectManager.saveObjectFactBinding(createObjectFactBinding(ip.getId(), used.getId(), Direction.FactIsSource));
     objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), resolve.getId(), Direction.FactIsSource));
-    objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), seen.getId(), Direction.None));
+    objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), seen.getId(), Direction.BiDirectional));
     objectManager.saveObjectFactBinding(createObjectFactBinding(domain.getId(), used.getId(), Direction.FactIsSource));
     objectManager.saveObjectFactBinding(createObjectFactBinding(attack.getId(), used.getId(), Direction.FactIsDestination));
     factManager.saveFactType(resolveType);

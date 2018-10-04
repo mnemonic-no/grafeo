@@ -17,7 +17,7 @@ public class FactExistenceSearchCriteria {
   }
 
   public enum Direction {
-    None, FactIsSource, FactIsDestination, BiDirectional
+    FactIsSource, FactIsDestination, BiDirectional
   }
 
   private final String factValue;

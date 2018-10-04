@@ -8,7 +8,6 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
-import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
@@ -115,7 +114,7 @@ public class FactRetractDelegate extends AbstractDelegate {
       ObjectFactBindingEntity retractionFactBinding = new ObjectFactBindingEntity()
               .setFactID(retractionFact.getId())
               .setObjectID(binding.getObjectID())
-              .setDirection(Direction.None);
+              .setDirection(binding.getDirection());
       TiRequestContext.get().getObjectManager().saveObjectFactBinding(retractionFactBinding);
     }
 
