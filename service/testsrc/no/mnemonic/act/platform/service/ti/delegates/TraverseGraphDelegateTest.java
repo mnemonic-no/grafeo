@@ -239,6 +239,8 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     ResultSet<?> result = method.execute(startObject, "g.outE()");
     assertEquals(1, result.getValues().size());
     assertTrue(result.getValues().iterator().next() instanceof Fact);
+    // SecurityContext should be called twice, once during graph traversal and once when creating result.
+    verify(getSecurityContext(), times(2)).hasReadPermission(isA(FactEntity.class));
   }
 
   private void testTraverseGraphReturnVertices(TestMethod method) throws Exception {

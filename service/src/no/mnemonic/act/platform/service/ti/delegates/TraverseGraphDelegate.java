@@ -167,13 +167,19 @@ public class TraverseGraphDelegate extends AbstractDelegate {
     // Iterate result and convert values if necessary. This will perform the actual graph traversal.
     resultIterator.forEachRemaining(value -> {
       if (value instanceof ObjectVertex) {
-        // Fetch ObjectEntity and convert to Object model before adding to result.
+        // Fetch ObjectEntity and convert to Object model before adding to result. Avoid explicitly checking access to
+        // Object and rely on access control implemented in graph traversal only. Checking this would be too expensive
+        // because it requires fetching Facts for each Object. In addition, accidentally returning non-accessible
+        // Objects will only leak the information that the Object exists and will not give further access to any Facts.
         ObjectEntity object = ObjectVertex.class.cast(value).getObject();
         traversalResult.add(requestContext.getObjectConverter().apply(object));
       } else if (value instanceof FactEdge) {
         // Fetch FactEntity and convert to Fact model before adding to result.
         FactEntity fact = FactEdge.class.cast(value).getFact();
-        traversalResult.add(requestContext.getFactConverter().apply(fact));
+        // But only add it if user has access to the Fact. Skip Fact otherwise.
+        if (securityContext.hasReadPermission(fact)) {
+          traversalResult.add(requestContext.getFactConverter().apply(fact));
+        }
       } else {
         // Don't know what this is, just add its string representation to result.
         // For example, it could be a query returning a list of properties.
