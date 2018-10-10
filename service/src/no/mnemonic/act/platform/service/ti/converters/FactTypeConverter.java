@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -44,7 +45,7 @@ public class FactTypeConverter implements Converter<FactTypeEntity, FactType> {
             .build();
   }
 
-  private List<FactType.FactObjectBindingDefinition> convertBindings(List<FactTypeEntity.FactObjectBindingDefinition> bindings) {
+  private List<FactType.FactObjectBindingDefinition> convertBindings(Set<FactTypeEntity.FactObjectBindingDefinition> bindings) {
     if (bindings == null) return null;
     return bindings.stream()
             .map(e -> new FactType.FactObjectBindingDefinition(

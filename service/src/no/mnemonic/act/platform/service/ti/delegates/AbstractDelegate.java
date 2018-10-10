@@ -21,6 +21,7 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -176,13 +177,13 @@ abstract class AbstractDelegate {
    * @param bindingDefinitions Definitions as part of a request
    * @return Definitions converted to entities
    */
-  List<FactTypeEntity.FactObjectBindingDefinition> convertFactObjectBindingDefinitions(List<FactObjectBindingDefinition> bindingDefinitions) {
+  Set<FactTypeEntity.FactObjectBindingDefinition> convertFactObjectBindingDefinitions(List<FactObjectBindingDefinition> bindingDefinitions) {
     return bindingDefinitions.stream()
             .map(r -> new FactTypeEntity.FactObjectBindingDefinition()
                     .setSourceObjectTypeID(r.getSourceObjectType())
                     .setDestinationObjectTypeID(r.getDestinationObjectType())
                     .setBidirectionalBinding(r.isBidirectionalBinding()))
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
   }
 
   /**

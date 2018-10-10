@@ -24,6 +24,7 @@ import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
 import no.mnemonic.services.triggers.pipeline.worker.InMemoryQueueWorker;
@@ -196,7 +197,7 @@ public abstract class AbstractIT {
             .setId(UUID.randomUUID())
             .setName("FactType")
             .setValidator("TrueValidator")
-            .setRelevantObjectBindings(ListUtils.list(binding));
+            .setRelevantObjectBindings(SetUtils.set(binding));
 
     return getFactManager().saveFactType(entity);
   }

@@ -3,11 +3,12 @@ package no.mnemonic.act.platform.dao.cassandra.entity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -18,7 +19,7 @@ public class FactTypeEntityTest {
 
   @Test
   public void setRelevantObjectBindingsFromObjects() throws IOException {
-    List<FactTypeEntity.FactObjectBindingDefinition> bindings = Arrays.asList(
+    Set<FactTypeEntity.FactObjectBindingDefinition> bindings = SetUtils.set(
             createFactObjectBindingDefinition(false),
             createFactObjectBindingDefinition(true)
     );
@@ -43,15 +44,25 @@ public class FactTypeEntityTest {
             .setBidirectionalBinding(bidirectional);
   }
 
-  private void assertFactObjectBindingDefinitions(List<FactTypeEntity.FactObjectBindingDefinition> bindings, String json) throws IOException {
+  private void assertFactObjectBindingDefinitions(Set<FactTypeEntity.FactObjectBindingDefinition> bindings, String json) throws IOException {
     JsonNode node = reader.readTree(json);
 
     assertEquals(bindings.size(), node.size());
     for (int i = 0; i < node.size(); i++) {
-      assertEquals(bindings.get(i).getSourceObjectTypeID().toString(), node.get(i).get("sourceObjectTypeID").asText());
-      assertEquals(bindings.get(i).getDestinationObjectTypeID().toString(), node.get(i).get("destinationObjectTypeID").asText());
-      assertEquals(bindings.get(i).isBidirectionalBinding(), node.get(i).get("bidirectionalBinding").asBoolean());
+      UUID sourceObjectTypeID = UUID.fromString(node.get(i).get("sourceObjectTypeID").asText());
+      FactTypeEntity.FactObjectBindingDefinition expected = getBindingForSourceObjectTypeID(bindings, sourceObjectTypeID);
+      assertEquals(expected.getSourceObjectTypeID(), sourceObjectTypeID);
+      assertEquals(expected.getDestinationObjectTypeID().toString(), node.get(i).get("destinationObjectTypeID").asText());
+      assertEquals(expected.isBidirectionalBinding(), node.get(i).get("bidirectionalBinding").asBoolean());
     }
+  }
+
+  private FactTypeEntity.FactObjectBindingDefinition getBindingForSourceObjectTypeID(
+          Set<FactTypeEntity.FactObjectBindingDefinition> bindings, UUID sourceObjectTypeID) {
+    return bindings.stream()
+            .filter(b -> Objects.equals(b.getSourceObjectTypeID(), sourceObjectTypeID))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
   }
 
 }
