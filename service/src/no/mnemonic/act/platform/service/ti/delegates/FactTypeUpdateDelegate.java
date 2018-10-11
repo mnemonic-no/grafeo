@@ -12,7 +12,7 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 public class FactTypeUpdateDelegate extends AbstractDelegate {
 
@@ -33,7 +33,7 @@ public class FactTypeUpdateDelegate extends AbstractDelegate {
 
     if (!CollectionUtils.isEmpty(request.getAddObjectBindings())) {
       assertObjectTypesToBindExist(request.getAddObjectBindings(), "addObjectBindings");
-      entity.setRelevantObjectBindings(ListUtils.concatenate(entity.getRelevantObjectBindings(), convertFactObjectBindingDefinitions(request.getAddObjectBindings())));
+      entity.setRelevantObjectBindings(SetUtils.union(entity.getRelevantObjectBindings(), convertFactObjectBindingDefinitions(request.getAddObjectBindings())));
     }
 
     entity = TiRequestContext.get().getFactManager().saveFactType(entity);

@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.dao.cassandra;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -91,6 +92,20 @@ public class FactManagerTest extends AbstractManagerTest {
   @Test
   public void testSaveFactTypeReturnsNullOnNullInput() {
     assertNull(getFactManager().saveFactType(null));
+  }
+
+  @Test
+  public void testSaveFactTypeAvoidsDuplicateBindings() {
+    UUID sourceObjectTypeID = UUID.randomUUID();
+    UUID destinationObjectTypeID = UUID.randomUUID();
+
+    FactTypeEntity entity = createFactType();
+    entity.setRelevantObjectBindings(SetUtils.set(
+            createBindingDefinition(sourceObjectTypeID, destinationObjectTypeID),
+            createBindingDefinition(sourceObjectTypeID, destinationObjectTypeID)
+    ));
+    getFactManager().saveFactType(entity);
+    assertEquals(1, getFactManager().getFactType(entity.getId()).getRelevantObjectBindings().size());
   }
 
   @Test
@@ -264,6 +279,13 @@ public class FactManagerTest extends AbstractManagerTest {
             .setName(name)
             .setValidator("validator")
             .setValidatorParameter("validatorParameter");
+  }
+
+  private FactTypeEntity.FactObjectBindingDefinition createBindingDefinition(UUID sourceObjectTypeID, UUID destinationObjectTypeID) {
+    return new FactTypeEntity.FactObjectBindingDefinition()
+            .setSourceObjectTypeID(sourceObjectTypeID)
+            .setDestinationObjectTypeID(destinationObjectTypeID)
+            .setBidirectionalBinding(true);
   }
 
   private FactEntity createFact() {

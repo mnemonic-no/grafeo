@@ -11,7 +11,8 @@ import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
@@ -28,8 +29,8 @@ public class FactTypeEntity implements CassandraEntity {
   public static final String TABLE = "fact_type";
 
   private static final ObjectMapper mapper = new ObjectMapper();
-  private static final ObjectReader reader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBindingDefinition.class));
-  private static final ObjectWriter writer = mapper.writerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBindingDefinition.class));
+  private static final ObjectReader reader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(Set.class, FactObjectBindingDefinition.class));
+  private static final ObjectWriter writer = mapper.writerFor(mapper.getTypeFactory().constructCollectionType(Set.class, FactObjectBindingDefinition.class));
 
   @PartitionKey
   private UUID id;
@@ -44,7 +45,7 @@ public class FactTypeEntity implements CassandraEntity {
   private String relevantObjectBindingsStored;
   // But they are also available as objects.
   @Transient
-  private List<FactObjectBindingDefinition> relevantObjectBindings;
+  private Set<FactObjectBindingDefinition> relevantObjectBindings;
 
   public UUID getId() {
     return id;
@@ -107,11 +108,11 @@ public class FactTypeEntity implements CassandraEntity {
     return this;
   }
 
-  public List<FactObjectBindingDefinition> getRelevantObjectBindings() {
+  public Set<FactObjectBindingDefinition> getRelevantObjectBindings() {
     return relevantObjectBindings;
   }
 
-  public FactTypeEntity setRelevantObjectBindings(List<FactObjectBindingDefinition> relevantObjectBindings) {
+  public FactTypeEntity setRelevantObjectBindings(Set<FactObjectBindingDefinition> relevantObjectBindings) {
     this.relevantObjectBindings = relevantObjectBindings;
 
     try {
@@ -154,6 +155,21 @@ public class FactTypeEntity implements CassandraEntity {
     public FactObjectBindingDefinition setBidirectionalBinding(boolean bidirectionalBinding) {
       this.bidirectionalBinding = bidirectionalBinding;
       return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      FactObjectBindingDefinition that = (FactObjectBindingDefinition) o;
+      return bidirectionalBinding == that.bidirectionalBinding &&
+              Objects.equals(sourceObjectTypeID, that.sourceObjectTypeID) &&
+              Objects.equals(destinationObjectTypeID, that.destinationObjectTypeID);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(sourceObjectTypeID, destinationObjectTypeID, bidirectionalBinding);
     }
   }
 

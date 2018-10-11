@@ -12,6 +12,8 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -67,7 +69,8 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getAddObjectBindings().size(), entity.getRelevantObjectBindings().size());
       for (int i = 0; i < request.getAddObjectBindings().size(); i++) {
         FactObjectBindingDefinition requestBinding = request.getAddObjectBindings().get(i);
-        FactTypeEntity.FactObjectBindingDefinition entityBinding = entity.getRelevantObjectBindings().get(i);
+        FactTypeEntity.FactObjectBindingDefinition entityBinding = getBindingForSourceObjectTypeID(
+                entity.getRelevantObjectBindings(), requestBinding.getSourceObjectType());
         assertEquals(requestBinding.getSourceObjectType(), entityBinding.getSourceObjectTypeID());
         assertEquals(requestBinding.getDestinationObjectType(), entityBinding.getDestinationObjectTypeID());
         assertEquals(requestBinding.isBidirectionalBinding(), entityBinding.isBidirectionalBinding());
@@ -77,6 +80,14 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
 
     FactTypeUpdateDelegate.create().handle(request);
     verify(getFactTypeConverter()).apply(entity);
+  }
+
+  private FactTypeEntity.FactObjectBindingDefinition getBindingForSourceObjectTypeID(
+          Set<FactTypeEntity.FactObjectBindingDefinition> bindings, UUID sourceObjectTypeID) {
+    return bindings.stream()
+            .filter(b -> Objects.equals(b.getSourceObjectTypeID(), sourceObjectTypeID))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
   }
 
   private UpdateFactTypeRequest createRequest() {

@@ -51,7 +51,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
           .setName("resolve")
           .setValidator("validator")
           .setValidatorParameter("validatorParameter")
-          .setRelevantObjectBindings(ListUtils.list(
+          .setRelevantObjectBindings(SetUtils.set(
                   // Allow bindings with both cardinality 1 and 2.
                   new FactTypeEntity.FactObjectBindingDefinition().setSourceObjectTypeID(ipObjectType.getId()).setDestinationObjectTypeID(domainObjectType.getId()),
                   new FactTypeEntity.FactObjectBindingDefinition().setSourceObjectTypeID(ipObjectType.getId()),
@@ -208,7 +208,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     CreateFactRequest request = createRequest()
             .setBidirectionalBinding(true);
     // Need to change type in order to pass validation.
-    resolveFactType.setRelevantObjectBindings(ListUtils.list(new FactTypeEntity.FactObjectBindingDefinition()
+    resolveFactType.setRelevantObjectBindings(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()
             .setSourceObjectTypeID(ipObjectType.getId())
             .setDestinationObjectTypeID(domainObjectType.getId())
             .setBidirectionalBinding(true)
