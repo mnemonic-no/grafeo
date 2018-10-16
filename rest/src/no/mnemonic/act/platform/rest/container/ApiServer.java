@@ -1,7 +1,13 @@
 package no.mnemonic.act.platform.rest.container;
 
 import no.mnemonic.commons.component.LifecycleAspect;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.commons.utilities.lambda.LambdaUtils;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
@@ -11,9 +17,11 @@ import javax.inject.Named;
 
 public class ApiServer implements LifecycleAspect {
 
+  private static final Logger logger = Logging.getLogger(ApiServer.class);
+
   private final int port;
   private final GuiceResteasyBootstrapServletContextListener listener;
-  private Server server;
+  private final Server server = new Server();
 
   @Inject
   public ApiServer(@Named("api.server.port") String port, GuiceResteasyBootstrapServletContextListener listener) {
@@ -29,25 +37,25 @@ public class ApiServer implements LifecycleAspect {
     servletHandler.addEventListener(listener);
     servletHandler.addServlet(HttpServletDispatcher.class, "/*");
 
+    // Configure Jetty: Remove 'server' header from response and set listen port.
+    HttpConfiguration httpConfig = new HttpConfiguration();
+    httpConfig.setSendServerVersion(false);
+    ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory(httpConfig));
+    connector.setPort(port);
+
     // Starting up Jetty to serve the REST API.
-    server = new Server(port);
+    server.addConnector(connector);
     server.setHandler(servletHandler);
 
-    try {
-      server.start();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+    if (!LambdaUtils.tryTo(server::start, ex -> logger.error(ex, "Failed to start REST API."))) {
+      throw new IllegalStateException("Failed to start REST API.");
     }
   }
 
   @Override
   public void stopComponent() {
-    try {
-      // Stop server to free up any resources.
-      if (server != null) server.stop();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    // Stop server to free up any resources.
+    LambdaUtils.tryTo(server::stop, ex -> logger.error(ex, "Failed to cleanly shutdown REST API."));
   }
 
 }

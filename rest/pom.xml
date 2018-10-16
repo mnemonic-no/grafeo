@@ -44,6 +44,11 @@
     </dependency>
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
+      <artifactId>logging</artifactId>
+      <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
       <artifactId>utilities</artifactId>
       <version>${mnemonic.commons.version}</version>
     </dependency>
