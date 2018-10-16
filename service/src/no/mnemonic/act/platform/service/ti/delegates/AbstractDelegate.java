@@ -4,7 +4,6 @@ import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
-import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
@@ -21,7 +20,6 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -80,19 +78,6 @@ abstract class AbstractDelegate {
   }
 
   /**
-   * Assert that a FactType does not yet exist (by name).
-   *
-   * @param name Name of FactType
-   * @throws InvalidArgumentException Thrown if FactType already exists
-   */
-  void assertFactTypeNotExists(String name) throws InvalidArgumentException {
-    if (TiRequestContext.get().getFactManager().getFactType(name) != null) {
-      throw new InvalidArgumentException()
-              .addValidationError(String.format("FactType with name = %s already exists.", name), "fact.type.exist", "name", name);
-    }
-  }
-
-  /**
    * Assert that an ObjectType does not yet exist (by name).
    *
    * @param name Name of ObjectType
@@ -120,41 +105,6 @@ abstract class AbstractDelegate {
   }
 
   /**
-   * Assert that ObjectTypes exist when a binding definition between a FactType and an ObjectType should be created.
-   *
-   * @param bindingDefinitions FactType/ObjectType binding definitions
-   * @param propertyName       Property name
-   * @throws InvalidArgumentException Thrown if an ObjectType part of a binding definition does not exist
-   */
-  void assertObjectTypesToBindExist(List<FactObjectBindingDefinition> bindingDefinitions, String propertyName) throws InvalidArgumentException {
-    InvalidArgumentException ex = new InvalidArgumentException();
-
-    for (int i = 0; i < bindingDefinitions.size(); i++) {
-      UUID sourceObjectType = bindingDefinitions.get(i).getSourceObjectType();
-      UUID destinationObjectType = bindingDefinitions.get(i).getDestinationObjectType();
-
-      // At least one of 'sourceObjectType' or 'destinationObjectType' must be specified. If only one is specified
-      // the binding definition is of cardinality 1. If both are specified it's of cardinality 2.
-      if (sourceObjectType == null && destinationObjectType == null) {
-        ex.addValidationError("Object binding definition must specify at least one of 'sourceObjectType' or 'destinationObjectType'.",
-                "invalid.object.binding.definition", String.format("%s[%d]", propertyName, i), "NULL");
-      }
-
-      if (sourceObjectType != null && TiRequestContext.get().getObjectManager().getObjectType(sourceObjectType) == null) {
-        ex.addValidationError(String.format("ObjectType with id = %s does not exist.", sourceObjectType),
-                "object.type.not.exist", String.format("%s[%d].sourceObjectType", propertyName, i), sourceObjectType.toString());
-      }
-
-      if (destinationObjectType != null && TiRequestContext.get().getObjectManager().getObjectType(destinationObjectType) == null) {
-        ex.addValidationError(String.format("ObjectType with id = %s does not exist.", destinationObjectType),
-                "object.type.not.exist", String.format("%s[%d].destinationObjectType", propertyName, i), destinationObjectType.toString());
-      }
-    }
-
-    if (ex.hasErrors()) throw ex; // Fail if any binding definition is invalid.
-  }
-
-  /**
    * Assert that a Validator exists.
    *
    * @param validator          Name of Validator
@@ -169,21 +119,6 @@ abstract class AbstractDelegate {
       throw new InvalidArgumentException()
               .addValidationError(ex.getMessage(), "validator.not.exist", "validator", validator);
     }
-  }
-
-  /**
-   * Convert FactObjectBindingDefinitions from a request to entities.
-   *
-   * @param bindingDefinitions Definitions as part of a request
-   * @return Definitions converted to entities
-   */
-  Set<FactTypeEntity.FactObjectBindingDefinition> convertFactObjectBindingDefinitions(List<FactObjectBindingDefinition> bindingDefinitions) {
-    return bindingDefinitions.stream()
-            .map(r -> new FactTypeEntity.FactObjectBindingDefinition()
-                    .setSourceObjectTypeID(r.getSourceObjectType())
-                    .setDestinationObjectTypeID(r.getDestinationObjectType())
-                    .setBidirectionalBinding(r.isBidirectionalBinding()))
-            .collect(Collectors.toSet());
   }
 
   /**

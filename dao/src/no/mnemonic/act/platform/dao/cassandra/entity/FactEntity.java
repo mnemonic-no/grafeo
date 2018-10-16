@@ -10,10 +10,14 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +37,7 @@ public class FactEntity implements CassandraEntity {
   private static final ObjectMapper mapper = new ObjectMapper();
   private static final ObjectReader reader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBinding.class));
   private static final ObjectWriter writer = mapper.writerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBinding.class));
+  private static final Logger logger = Logging.getLogger(FactEntity.class);
 
   @PartitionKey
   private UUID id;
@@ -159,8 +164,8 @@ public class FactEntity implements CassandraEntity {
 
     try {
       this.bindings = !StringUtils.isBlank(bindingsStored) ? reader.readValue(bindingsStored) : null;
-    } catch (IOException e) {
-      throw new RuntimeException(String.format("Could not read 'bindings' for Fact with id = %s.", getId()));
+    } catch (IOException ex) {
+      logAndRethrow(ex, String.format("Could not read 'bindings' for Fact with id = %s.", getId()));
     }
 
     return this;
@@ -175,11 +180,21 @@ public class FactEntity implements CassandraEntity {
 
     try {
       this.bindingsStored = !CollectionUtils.isEmpty(bindings) ? writer.writeValueAsString(bindings) : null;
-    } catch (IOException e) {
-      throw new RuntimeException(String.format("Could not write 'bindings' for Fact with id = %s.", getId()));
+    } catch (IOException ex) {
+      logAndRethrow(ex, String.format("Could not write 'bindings' for Fact with id = %s.", getId()));
     }
 
     return this;
+  }
+
+  public FactEntity addBinding(FactObjectBinding binding) {
+    // Need to call setBindings() in order to store JSON blob.
+    return setBindings(ListUtils.addToList(bindings, binding));
+  }
+
+  private void logAndRethrow(IOException ex, String msg) {
+    logger.error(ex, msg);
+    throw new UncheckedIOException(msg, ex);
   }
 
   @Override

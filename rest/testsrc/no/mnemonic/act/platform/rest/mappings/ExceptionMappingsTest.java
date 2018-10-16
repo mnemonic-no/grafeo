@@ -7,7 +7,6 @@ import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import no.mnemonic.act.platform.rest.api.ResultMessage;
 import no.mnemonic.commons.utilities.collections.ListUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -90,15 +89,14 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   }
 
   @Test
-  @Ignore("API doesn't have an endpoint where this can be tested. Activate test again once such an endpoint exists.")
   public void testFailedRequestValidationNestedReturns412() throws Exception {
     CreateFactTypeRequest request = new CreateFactTypeRequest()
             .setName("name")
             .setValidator("validator")
-            .addRelevantObjectBinding(new FactObjectBindingDefinition());
+            .addRelevantFactBinding(new MetaFactBindingDefinition());
     Response response = target("/v1/factType").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "relevantObjectBindings[0].direction", "NULL");
+    assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "relevantFactBindings[0].factType", "NULL");
   }
 
   @Test

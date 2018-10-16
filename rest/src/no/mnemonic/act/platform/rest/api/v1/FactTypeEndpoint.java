@@ -76,7 +76,12 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Create a new FactType.",
-          notes = "This operation creates a new FactType with its bindings to ObjectTypes in the Namespace of the running instance.",
+          notes = "This operation creates a new FactType in the Namespace of the running instance. If bindings between " +
+                  "ObjectTypes are specified ('relevantObjectBindings' field) the new FactType describes to which Objects " +
+                  "a new Fact of this type can be linked. If bindings between FactTypes are specified ('relevantFactBindings' " +
+                  "field) the new FactType describes a meta FactType, i.e. to which Facts a new meta Fact of this type " +
+                  "can be linked. It is not allowed to specify bindings between both ObjectTypes and FactTypes for the " +
+                  "same new FactType.",
           response = FactType.class,
           code = 201
   )
@@ -101,7 +106,9 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   @ApiOperation(
           value = "Update an existing FactType.",
           notes = "This operation updates an existing FactType. It is only possible to add new bindings between the " +
-                  "FactType and other ObjectTypes. It is not allowed to remove existing bindings.",
+                  "FactType and other ObjectTypes ('addObjectBindings' field), or between the FactType and other " +
+                  "FactTypes ('addFactBindings' field). It is not allowed to specify bindings between both ObjectTypes " +
+                  "and FactTypes and it is not allowed to remove existing bindings.",
           response = FactType.class
   )
   @ApiResponses({

@@ -30,6 +30,15 @@ public class FactEntityTest {
   }
 
   @Test
+  public void addBindingFromObject() throws IOException {
+    FactEntity entity = new FactEntity()
+            .addBinding(createFactObjectBinding(Direction.FactIsSource))
+            .addBinding(createFactObjectBinding(Direction.BiDirectional));
+
+    assertFactObjectBindings(entity.getBindings(), entity.getBindingsStored());
+  }
+
+  @Test
   public void setBindingsFromString() throws IOException {
     String bindings = "[{\"objectID\":\"ad35e1ec-e42f-4509-bbc8-6516a90b66e8\",\"direction\":1},{\"objectID\":\"95959968-f2fb-4913-9c0b-fc1b9144b60f\",\"direction\":3}]";
     FactEntity entity = new FactEntity().setBindingsStored(bindings);

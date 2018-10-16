@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.test.integration;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
+import no.mnemonic.act.platform.api.request.v1.MetaFactBindingDefinition;
 import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import org.junit.Test;
@@ -48,6 +49,22 @@ public class FactTypeIT extends AbstractIT {
             .addRelevantObjectBinding(new FactObjectBindingDefinition()
                     .setSourceObjectType(createObjectType().getId())
                     .setBidirectionalBinding(true)
+            );
+    Response response = request("/v1/factType").post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+
+    // ... and check that it ends up in the database.
+    assertNotNull(getFactManager().getFactType(getIdFromModel(getPayload(response))));
+  }
+
+  @Test
+  public void testCreateMetaFactType() throws Exception {
+    // Create a FactType via the REST API ...
+    CreateFactTypeRequest request = new CreateFactTypeRequest()
+            .setName("MetaFactType")
+            .setValidator("TrueValidator")
+            .addRelevantFactBinding(new MetaFactBindingDefinition()
+                    .setFactType(createFactType().getId())
             );
     Response response = request("/v1/factType").post(Entity.json(request));
     assertEquals(201, response.getStatus());

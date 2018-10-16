@@ -4,121 +4,146 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
+import no.mnemonic.act.platform.api.request.v1.MetaFactBindingDefinition;
 import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
-import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.*;
 
 public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
 
+  @Mock
+  private FactTypeHelper factTypeHelper;
+
+  private FactTypeUpdateDelegate delegate;
+
+  @Before
+  public void setup() {
+    // initMocks() will be called by base class.
+    when(getFactManager().saveFactType(any())).then(i -> i.getArgument(0));
+    when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
+    when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
+    delegate = FactTypeUpdateDelegate.builder()
+            .setFactTypeHelper(factTypeHelper)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateDelegateWithoutFactTypeHelper() {
+    FactTypeUpdateDelegate.builder().build();
+  }
+
   @Test(expected = AccessDeniedException.class)
   public void testUpdateFactTypeWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.updateTypes);
-    FactTypeUpdateDelegate.create().handle(createRequest());
+    delegate.handle(new UpdateFactTypeRequest());
   }
 
   @Test(expected = ObjectNotFoundException.class)
   public void testUpdateFactTypeNotExisting() throws Exception {
-    UpdateFactTypeRequest request = createRequest();
-    FactTypeUpdateDelegate.create().handle(request);
+    delegate.handle(new UpdateFactTypeRequest().setId(UUID.randomUUID()));
   }
 
   @Test
-  public void testUpdateFactTypeWithExistingName() throws Exception {
-    UpdateFactTypeRequest request = createRequest().setAddObjectBindings(null);
-    when(getFactManager().getFactType(request.getId())).thenReturn(new FactTypeEntity());
-    when(getFactManager().getFactType(request.getName())).thenReturn(new FactTypeEntity());
-    expectInvalidArgumentException(() -> FactTypeUpdateDelegate.create().handle(request), "fact.type.exist");
-  }
-
-  @Test
-  public void testUpdateFactTypeWithoutSpecifiedObjectType() throws Exception {
-    UpdateFactTypeRequest request = createRequest().setAddObjectBindings(ListUtils.list(new FactObjectBindingDefinition()));
-    when(getFactManager().getFactType(request.getId())).thenReturn(new FactTypeEntity());
-    expectInvalidArgumentException(() -> FactTypeUpdateDelegate.create().handle(request), "invalid.object.binding.definition");
-  }
-
-  @Test
-  public void testUpdateFactTypeWithNonExistingObjectType() throws Exception {
-    UpdateFactTypeRequest request = createRequest().setName(null);
-    when(getFactManager().getFactType(request.getId())).thenReturn(new FactTypeEntity());
-    expectInvalidArgumentException(() -> FactTypeUpdateDelegate.create().handle(request), "object.type.not.exist");
-  }
-
-  @Test
-  public void testUpdateFactType() throws Exception {
-    UpdateFactTypeRequest request = createRequest();
-    FactTypeEntity entity = new FactTypeEntity();
-    when(getFactManager().getFactType(request.getId())).thenReturn(entity);
-    when(getObjectManager().getObjectType(isA(UUID.class))).thenReturn(new ObjectTypeEntity());
-    when(getFactManager().saveFactType(argThat(e -> {
-      assertSame(entity, e);
-      assertEquals(request.getName(), e.getName());
-
-      assertNotNull(entity.getRelevantObjectBindings());
-      assertEquals(request.getAddObjectBindings().size(), entity.getRelevantObjectBindings().size());
-      for (int i = 0; i < request.getAddObjectBindings().size(); i++) {
-        FactObjectBindingDefinition requestBinding = request.getAddObjectBindings().get(i);
-        FactTypeEntity.FactObjectBindingDefinition entityBinding = getBindingForSourceObjectTypeID(
-                entity.getRelevantObjectBindings(), requestBinding.getSourceObjectType());
-        assertEquals(requestBinding.getSourceObjectType(), entityBinding.getSourceObjectTypeID());
-        assertEquals(requestBinding.getDestinationObjectType(), entityBinding.getDestinationObjectTypeID());
-        assertEquals(requestBinding.isBidirectionalBinding(), entityBinding.isBidirectionalBinding());
-      }
-      return true;
-    }))).thenReturn(entity);
-
-    FactTypeUpdateDelegate.create().handle(request);
-    verify(getFactTypeConverter()).apply(entity);
-  }
-
-  private FactTypeEntity.FactObjectBindingDefinition getBindingForSourceObjectTypeID(
-          Set<FactTypeEntity.FactObjectBindingDefinition> bindings, UUID sourceObjectTypeID) {
-    return bindings.stream()
-            .filter(b -> Objects.equals(b.getSourceObjectTypeID(), sourceObjectTypeID))
-            .findFirst()
-            .orElseThrow(IllegalStateException::new);
-  }
-
-  private UpdateFactTypeRequest createRequest() {
-    FactObjectBindingDefinition binding1 = new FactObjectBindingDefinition()
-            .setSourceObjectType(UUID.randomUUID());
-    FactObjectBindingDefinition binding2 = new FactObjectBindingDefinition()
-            .setDestinationObjectType(UUID.randomUUID());
-    FactObjectBindingDefinition binding3 = new FactObjectBindingDefinition()
-            .setSourceObjectType(UUID.randomUUID())
-            .setDestinationObjectType(UUID.randomUUID())
-            .setBidirectionalBinding(true);
-
-    return new UpdateFactTypeRequest()
+  public void testUpdateFactTypeWithName() throws Exception {
+    UpdateFactTypeRequest request = new UpdateFactTypeRequest()
             .setId(UUID.randomUUID())
-            .setName("newName")
-            .addAddObjectBinding(binding1)
-            .addAddObjectBinding(binding2)
-            .addAddObjectBinding(binding3);
+            .setName("newName");
+    FactTypeEntity existingEntity = new FactTypeEntity();
+    when(getFactManager().getFactType(request.getId())).thenReturn(existingEntity);
+
+    delegate.handle(request);
+    verify(factTypeHelper).assertFactTypeNotExists(request.getName());
+    verify(getFactTypeConverter()).apply(existingEntity);
+    verify(getFactManager()).saveFactType(argThat(entity -> {
+      assertSame(existingEntity, entity);
+      assertEquals(request.getName(), entity.getName());
+      return true;
+    }));
   }
 
-  private void expectInvalidArgumentException(InvalidArgumentExceptionTest test, String... messageTemplate) throws Exception {
-    try {
-      test.execute();
-      fail();
-    } catch (InvalidArgumentException ex) {
-      assertEquals(SetUtils.set(messageTemplate), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
-    }
+  @Test(expected = InvalidArgumentException.class)
+  public void testUpdateFactTypeWithObjectBindingsFailsOnExistingFactBindings() throws Exception {
+    UpdateFactTypeRequest request = new UpdateFactTypeRequest()
+            .setId(UUID.randomUUID())
+            .addAddObjectBinding(new FactObjectBindingDefinition());
+    FactTypeEntity existingEntity = new FactTypeEntity()
+            .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition());
+    when(getFactManager().getFactType(request.getId())).thenReturn(existingEntity);
+
+    delegate.handle(request);
   }
 
-  private interface InvalidArgumentExceptionTest {
-    void execute() throws Exception;
+  @Test
+  public void testUpdateFactTypeWithObjectBindingsSuccess() throws Exception {
+    UpdateFactTypeRequest request = new UpdateFactTypeRequest()
+            .setId(UUID.randomUUID())
+            .addAddObjectBinding(new FactObjectBindingDefinition());
+    FactTypeEntity existingEntity = new FactTypeEntity();
+    when(getFactManager().getFactType(request.getId())).thenReturn(existingEntity);
+
+    delegate.handle(request);
+    verify(factTypeHelper).assertObjectTypesToBindExist(request.getAddObjectBindings(), "addObjectBindings");
+    verify(factTypeHelper).convertFactObjectBindingDefinitions(request.getAddObjectBindings());
+    verify(getFactTypeConverter()).apply(existingEntity);
+    verify(getFactManager()).saveFactType(argThat(entity -> {
+      assertSame(existingEntity, entity);
+      assertEquals(1, entity.getRelevantObjectBindings().size());
+      return true;
+    }));
+  }
+
+  @Test(expected = InvalidArgumentException.class)
+  public void testUpdateFactTypeWithFactBindingsFailsOnExistingObjectBindings() throws Exception {
+    UpdateFactTypeRequest request = new UpdateFactTypeRequest()
+            .setId(UUID.randomUUID())
+            .addAddFactBinding(new MetaFactBindingDefinition());
+    FactTypeEntity existingEntity = new FactTypeEntity()
+            .addRelevantObjectBinding(new FactTypeEntity.FactObjectBindingDefinition());
+    when(getFactManager().getFactType(request.getId())).thenReturn(existingEntity);
+
+    delegate.handle(request);
+  }
+
+  @Test
+  public void testUpdateFactTypeWithFactBindingsSuccess() throws Exception {
+    UpdateFactTypeRequest request = new UpdateFactTypeRequest()
+            .setId(UUID.randomUUID())
+            .addAddFactBinding(new MetaFactBindingDefinition());
+    FactTypeEntity existingEntity = new FactTypeEntity();
+    when(getFactManager().getFactType(request.getId())).thenReturn(existingEntity);
+
+    delegate.handle(request);
+    verify(factTypeHelper).assertFactTypesToBindExist(request.getAddFactBindings(), "addFactBindings");
+    verify(factTypeHelper).convertMetaFactBindingDefinitions(request.getAddFactBindings());
+    verify(getFactTypeConverter()).apply(existingEntity);
+    verify(getFactManager()).saveFactType(argThat(entity -> {
+      assertSame(existingEntity, entity);
+      assertEquals(1, entity.getRelevantFactBindings().size());
+      return true;
+    }));
+  }
+
+  @Test(expected = InvalidArgumentException.class)
+  public void testUpdateFactTypeWithBothObjectBindingsAndFactBindings() throws Exception {
+    UpdateFactTypeRequest request = new UpdateFactTypeRequest()
+            .setId(UUID.randomUUID())
+            .addAddObjectBinding(new FactObjectBindingDefinition())
+            .addAddFactBinding(new MetaFactBindingDefinition());
+    FactTypeEntity existingEntity = new FactTypeEntity();
+    when(getFactManager().getFactType(request.getId())).thenReturn(existingEntity);
+
+    delegate.handle(request);
   }
 
 }

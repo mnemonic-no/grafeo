@@ -95,7 +95,7 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testSaveFactTypeAvoidsDuplicateBindings() {
+  public void testSaveFactTypeAvoidsDuplicateRelevantObjectBindings() {
     UUID sourceObjectTypeID = UUID.randomUUID();
     UUID destinationObjectTypeID = UUID.randomUUID();
 
@@ -106,6 +106,19 @@ public class FactManagerTest extends AbstractManagerTest {
     ));
     getFactManager().saveFactType(entity);
     assertEquals(1, getFactManager().getFactType(entity.getId()).getRelevantObjectBindings().size());
+  }
+
+  @Test
+  public void testSaveFactTypeAvoidsDuplicateRelevantFactBindings() {
+    UUID factTypeID = UUID.randomUUID();
+
+    FactTypeEntity entity = createFactType();
+    entity.setRelevantFactBindings(SetUtils.set(
+            new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(factTypeID),
+            new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(factTypeID)
+    ));
+    getFactManager().saveFactType(entity);
+    assertEquals(1, getFactManager().getFactType(entity.getId()).getRelevantFactBindings().size());
   }
 
   @Test

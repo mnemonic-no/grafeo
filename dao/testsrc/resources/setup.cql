@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS act.fact_type (
   validator VARCHAR,
   validator_parameter VARCHAR,
   relevant_object_bindings VARCHAR,
+  relevant_fact_bindings VARCHAR,
   PRIMARY KEY (id)
 );
 

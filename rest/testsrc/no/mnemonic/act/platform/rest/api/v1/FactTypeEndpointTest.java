@@ -2,7 +2,10 @@ package no.mnemonic.act.platform.rest.api.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import no.mnemonic.act.platform.api.model.v1.FactType;
-import no.mnemonic.act.platform.api.request.v1.*;
+import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
+import no.mnemonic.act.platform.api.request.v1.GetFactTypeByIdRequest;
+import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
+import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import org.junit.Test;
@@ -87,11 +90,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
   private CreateFactTypeRequest createCreateFactTypeRequest() {
     return new CreateFactTypeRequest()
             .setName("name")
-            .setValidator("validator")
-            .addRelevantObjectBinding(new FactObjectBindingDefinition()
-                    .setSourceObjectType(UUID.randomUUID())
-                    .setDestinationObjectType(UUID.randomUUID())
-            );
+            .setValidator("validator");
   }
 
 }

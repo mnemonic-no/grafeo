@@ -22,6 +22,8 @@ public class UpdateFactTypeRequest implements ValidatingRequest {
   private String name;
   @ApiModelProperty(value = "If set adds additional possible links between Facts and Objects")
   private List<@Valid FactObjectBindingDefinition> addObjectBindings;
+  @ApiModelProperty(value = "If set adds additional possible links for meta Facts")
+  private List<@Valid MetaFactBindingDefinition> addFactBindings;
 
   public UUID getId() {
     return id;
@@ -52,6 +54,20 @@ public class UpdateFactTypeRequest implements ValidatingRequest {
 
   public UpdateFactTypeRequest addAddObjectBinding(FactObjectBindingDefinition addObjectBinding) {
     this.addObjectBindings = ListUtils.addToList(this.addObjectBindings, addObjectBinding);
+    return this;
+  }
+
+  public List<MetaFactBindingDefinition> getAddFactBindings() {
+    return addFactBindings;
+  }
+
+  public UpdateFactTypeRequest setAddFactBindings(List<MetaFactBindingDefinition> addFactBindings) {
+    this.addFactBindings = addFactBindings;
+    return this;
+  }
+
+  public UpdateFactTypeRequest addAddFactBinding(MetaFactBindingDefinition addFactBinding) {
+    this.addFactBindings = ListUtils.addToList(this.addFactBindings, addFactBinding);
     return this;
   }
 
