@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.api.model.v1.FactComment;
 import no.mnemonic.act.platform.api.request.v1.CreateFactCommentRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 
@@ -26,6 +27,8 @@ public class FactCreateCommentDelegate extends AbstractDelegate {
     FactEntity fact = fetchExistingFact(request.getFact());
     // Verify that user is allowed to access the Fact.
     TiSecurityContext.get().checkReadPermission(fact);
+    // Verify that user is allowed to comment on the Fact.
+    TiSecurityContext.get().checkPermission(TiFunctionConstants.addFactComments, fact.getOrganizationID());
     // Verify that the 'replyTo' comment exists.
     verifyReplyToCommentExists(fact, request);
     // Save comment and return it to the user.

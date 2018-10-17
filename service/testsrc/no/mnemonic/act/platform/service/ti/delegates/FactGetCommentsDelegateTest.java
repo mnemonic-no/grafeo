@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.api.request.v1.GetFactCommentsRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
@@ -29,6 +30,15 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
+
+    FactGetCommentsDelegate.create().handle(request);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testGetFactCommentsNoViewPermission() throws Exception {
+    GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
+    when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.viewFactComments), any());
 
     FactGetCommentsDelegate.create().handle(request);
   }

@@ -7,9 +7,12 @@ public enum TiFunctionConstants implements NamedFunction {
   updateTypes,
   viewTypes,
   addFactObjects,
-  grantFactAccess,
   traverseFactObjects,
-  viewFactObjects;
+  viewFactObjects,
+  addFactComments,
+  viewFactComments,
+  grantFactAccess,
+  viewFactAccess;
 
   @Override
   public String getName() {
