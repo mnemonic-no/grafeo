@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.api.model.v1.AclEntry;
 import no.mnemonic.act.platform.api.request.v1.GetFactAclRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 
@@ -26,6 +27,8 @@ public class FactGetAclDelegate extends AbstractDelegate {
     FactEntity fact = fetchExistingFact(request.getFact());
     // Verify that user is allowed to access the Fact.
     TiSecurityContext.get().checkReadPermission(fact);
+    // Verify that user is allowed to view the Fact's ACL.
+    TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactAccess, fact.getOrganizationID());
     // Fetch ACL for Fact.
     List<AclEntry> acl = TiRequestContext.get().getFactManager()
             .fetchFactAcl(fact.getId())

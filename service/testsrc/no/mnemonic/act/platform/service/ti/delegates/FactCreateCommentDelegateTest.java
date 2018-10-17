@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.CreateFactCommentRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
@@ -28,6 +29,15 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
     CreateFactCommentRequest request = createFactCommentRequest();
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
+
+    FactCreateCommentDelegate.create().handle(request);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCreateFactCommentNoAddPermission() throws Exception {
+    CreateFactCommentRequest request = createFactCommentRequest();
+    when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.addFactComments), any());
 
     FactCreateCommentDelegate.create().handle(request);
   }
