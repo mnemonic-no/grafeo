@@ -21,6 +21,7 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.*;
 import no.mnemonic.act.platform.service.ti.delegates.*;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
+import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -74,6 +75,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     this.factTypeConverter = FactTypeConverter.builder()
             .setNamespaceConverter(createNamespaceConverter())
             .setObjectTypeConverter(createObjectTypeByIdConverter())
+            .setFactTypeEntityResolver(factManager::getFactType)
             .build();
     this.objectConverter = ObjectConverter.builder()
             .setObjectTypeConverter(createObjectTypeByIdConverter())
@@ -166,13 +168,19 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   @Override
   public FactType createFactType(RequestHeader rh, CreateFactTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return FactTypeCreateDelegate.create().handle(request);
+    return FactTypeCreateDelegate.builder()
+            .setFactTypeHelper(new FactTypeHelper(factManager, objectManager))
+            .build()
+            .handle(request);
   }
 
   @Override
   public FactType updateFactType(RequestHeader rh, UpdateFactTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return FactTypeUpdateDelegate.create().handle(request);
+    return FactTypeUpdateDelegate.builder()
+            .setFactTypeHelper(new FactTypeHelper(factManager, objectManager))
+            .build()
+            .handle(request);
   }
 
   @Override

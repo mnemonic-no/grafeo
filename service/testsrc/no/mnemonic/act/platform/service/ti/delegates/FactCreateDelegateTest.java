@@ -135,6 +135,15 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
+  public void testValidateBindingsFailsWithoutBindingsOnFactType() throws Exception {
+    CreateFactRequest request = createRequest();
+    resolveFactType.setRelevantObjectBindings(null);
+    mockCreateNewFact();
+
+    expectInvalidArgumentException(() -> delegate.handle(request), "invalid.fact.object.binding");
+  }
+
+  @Test
   public void testValidateBindingsFailsOnType() throws Exception {
     CreateFactRequest request = createRequest()
             .setDestinationObject(threatActor.getId().toString());

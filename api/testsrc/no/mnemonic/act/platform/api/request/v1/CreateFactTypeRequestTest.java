@@ -3,7 +3,6 @@ package no.mnemonic.act.platform.api.request.v1;
 import org.junit.Test;
 
 import javax.validation.ConstraintViolation;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,12 +15,14 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
   public void testDecodeRequest() throws Exception {
     UUID sourceObjectType = UUID.randomUUID();
     UUID destinationObjectType = UUID.randomUUID();
+    UUID factType = UUID.randomUUID();
     String json = String.format("{" +
             "name : 'name'," +
             "validator : 'validator'," +
             "validatorParameter : 'validatorParameter'," +
-            "relevantObjectBindings : [{ sourceObjectType : '%s', destinationObjectType : '%s', bidirectionalBinding : true }]" +
-            "}", sourceObjectType, destinationObjectType);
+            "relevantObjectBindings : [{ sourceObjectType : '%s', destinationObjectType : '%s', bidirectionalBinding : true }]," +
+            "relevantFactBindings : [{ factType : '%s' }]" +
+            "}", sourceObjectType, destinationObjectType, factType);
 
     CreateFactTypeRequest request = getMapper().readValue(json, CreateFactTypeRequest.class);
     assertEquals("name", request.getName());
@@ -31,41 +32,46 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
     assertEquals(sourceObjectType, request.getRelevantObjectBindings().get(0).getSourceObjectType());
     assertEquals(destinationObjectType, request.getRelevantObjectBindings().get(0).getDestinationObjectType());
     assertTrue(request.getRelevantObjectBindings().get(0).isBidirectionalBinding());
+    assertEquals(1, request.getRelevantFactBindings().size());
+    assertEquals(factType, request.getRelevantFactBindings().get(0).getFactType());
   }
 
   @Test
   public void testRequestValidationFailsOnNull() {
     Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest());
-    assertEquals(3, violations.size());
+    assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "name");
     assertPropertyInvalid(violations, "validator");
-    assertPropertyInvalid(violations, "relevantObjectBindings");
   }
 
   @Test
   public void testRequestValidationFailsOnEmpty() {
     Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
             .setName("")
-            .setValidator("")
-            .setRelevantObjectBindings(new ArrayList<>()));
-    assertEquals(3, violations.size());
+            .setValidator(""));
+    assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "name");
     assertPropertyInvalid(violations, "validator");
-    assertPropertyInvalid(violations, "relevantObjectBindings");
   }
 
   @Test
   public void testRequestValidationFailsOnBlank() {
     Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
             .setName(" ")
-            .setValidator(" ")
-            .addRelevantObjectBinding(new FactObjectBindingDefinition()
-                    .setSourceObjectType(UUID.randomUUID())
-                    .setDestinationObjectType(UUID.randomUUID())
-            ));
+            .setValidator(" "));
     assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "name");
     assertPropertyInvalid(violations, "validator");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnValid() {
+    Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
+            .setName("name")
+            .setValidator("validator")
+            .addRelevantFactBinding(new MetaFactBindingDefinition()));
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "factType");
   }
 
   @Test
@@ -76,6 +82,9 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
             .addRelevantObjectBinding(new FactObjectBindingDefinition()
                     .setSourceObjectType(UUID.randomUUID())
                     .setDestinationObjectType(UUID.randomUUID())
+            )
+            .addRelevantFactBinding(new MetaFactBindingDefinition()
+                    .setFactType(UUID.randomUUID())
             )
     ).isEmpty());
   }

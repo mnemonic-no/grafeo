@@ -26,6 +26,8 @@ public class FactTypeTest {
     assertTrue(root.get("relevantObjectBindings").get(0).get("sourceObjectType").isObject());
     assertTrue(root.get("relevantObjectBindings").get(0).get("destinationObjectType").isObject());
     assertTrue(root.get("relevantObjectBindings").get(0).get("bidirectionalBinding").booleanValue());
+    assertTrue(root.get("relevantFactBindings").isArray());
+    assertTrue(root.get("relevantFactBindings").get(0).get("factType").isObject());
   }
 
   @Test
@@ -44,6 +46,7 @@ public class FactTypeTest {
             .setValidator("validator")
             .setValidatorParameter("validatorParameter")
             .addRelevantObjectBinding(new FactType.FactObjectBindingDefinition(createObjectType(), createObjectType(), true))
+            .addRelevantFactBinding(new FactType.MetaFactBindingDefinition(createFactTypeInfo()))
             .build();
   }
 
@@ -51,6 +54,14 @@ public class FactTypeTest {
     return ObjectType.builder()
             .setId(UUID.randomUUID())
             .setName("objectType")
+            .build()
+            .toInfo();
+  }
+
+  private FactType.Info createFactTypeInfo() {
+    return FactType.builder()
+            .setId(UUID.randomUUID())
+            .setName("factTypeInfo")
             .build()
             .toInfo();
   }

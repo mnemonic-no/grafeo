@@ -24,15 +24,18 @@ public class FactType {
   private final String validatorParameter;
   @ApiModelProperty(value = "Defines to which Objects new Facts of this type can be linked")
   private final List<FactObjectBindingDefinition> relevantObjectBindings;
+  @ApiModelProperty(value = "Defines to which Facts new meta Facts of this type can be linked")
+  private final List<MetaFactBindingDefinition> relevantFactBindings;
 
   private FactType(UUID id, Namespace namespace, String name, String validator, String validatorParameter,
-                   List<FactObjectBindingDefinition> relevantObjectBindings) {
+                   List<FactObjectBindingDefinition> relevantObjectBindings, List<MetaFactBindingDefinition> relevantFactBindings) {
     this.id = id;
     this.namespace = namespace;
     this.name = name;
     this.validator = validator;
     this.validatorParameter = validatorParameter;
     this.relevantObjectBindings = ObjectUtils.ifNotNull(relevantObjectBindings, Collections::unmodifiableList);
+    this.relevantFactBindings = ObjectUtils.ifNotNull(relevantFactBindings, Collections::unmodifiableList);
   }
 
   public UUID getId() {
@@ -59,6 +62,10 @@ public class FactType {
     return relevantObjectBindings;
   }
 
+  public List<MetaFactBindingDefinition> getRelevantFactBindings() {
+    return relevantFactBindings;
+  }
+
   public Info toInfo() {
     return new Info(id, name);
   }
@@ -74,12 +81,13 @@ public class FactType {
     private String validator;
     private String validatorParameter;
     private List<FactObjectBindingDefinition> relevantObjectBindings;
+    private List<MetaFactBindingDefinition> relevantFactBindings;
 
     private Builder() {
     }
 
     public FactType build() {
-      return new FactType(id, namespace, name, validator, validatorParameter, relevantObjectBindings);
+      return new FactType(id, namespace, name, validator, validatorParameter, relevantObjectBindings, relevantFactBindings);
     }
 
     public Builder setId(UUID id) {
@@ -116,6 +124,16 @@ public class FactType {
       this.relevantObjectBindings = ListUtils.addToList(this.relevantObjectBindings, relevantObjectBinding);
       return this;
     }
+
+    public Builder setRelevantFactBindings(List<MetaFactBindingDefinition> relevantFactBindings) {
+      this.relevantFactBindings = relevantFactBindings;
+      return this;
+    }
+
+    public Builder addRelevantFactBinding(MetaFactBindingDefinition relevantFactBinding) {
+      this.relevantFactBindings = ListUtils.addToList(this.relevantFactBindings, relevantFactBinding);
+      return this;
+    }
   }
 
   @ApiModel(value = "FactObjectBindingDefinitionModel", description = "Defines to which Objects new Facts of a particular type can be linked.")
@@ -143,6 +161,20 @@ public class FactType {
 
     public boolean isBidirectionalBinding() {
       return bidirectionalBinding;
+    }
+  }
+
+  @ApiModel(value = "MetaFactBindingDefinitionModel", description = "Defines to which Facts new meta Facts of a particular type can be linked.")
+  public static class MetaFactBindingDefinition {
+    @ApiModelProperty(value = "Specifies the type any Fact must have when referenced by a new meta Fact", required = true)
+    private final FactType.Info factType;
+
+    public MetaFactBindingDefinition(FactType.Info factType) {
+      this.factType = factType;
+    }
+
+    public FactType.Info getFactType() {
+      return factType;
     }
   }
 

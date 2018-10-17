@@ -21,6 +21,7 @@ import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.ArrayList;
@@ -131,7 +132,7 @@ public class FactCreateDelegate extends AbstractDelegate {
 
     // Validate that the binding between source Object, Fact and destination Object is valid according to the FactType.
     // Both source and destination ObjectTypes must be the same plus the bidirectional binding flag must match.
-    boolean valid = type.getRelevantObjectBindings()
+    boolean valid = !CollectionUtils.isEmpty(type.getRelevantObjectBindings()) && type.getRelevantObjectBindings()
             .stream()
             .anyMatch(b -> Objects.equals(b.getSourceObjectTypeID(), ObjectUtils.ifNotNull(source, ObjectEntity::getTypeID)) &&
                     Objects.equals(b.getDestinationObjectTypeID(), ObjectUtils.ifNotNull(destination, ObjectEntity::getTypeID)) &&

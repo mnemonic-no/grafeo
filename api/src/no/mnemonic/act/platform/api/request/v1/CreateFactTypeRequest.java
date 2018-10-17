@@ -7,7 +7,6 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 @ApiModel(description = "Create a new FactType.")
@@ -21,9 +20,10 @@ public class CreateFactTypeRequest implements ValidatingRequest {
   private String validator;
   @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private String validatorParameter;
-  @ApiModelProperty(value = "Define to which Objects new Facts of this type can be linked", required = true)
-  @NotEmpty
+  @ApiModelProperty(value = "Define to which Objects new Facts of this type can be linked")
   private List<@Valid FactObjectBindingDefinition> relevantObjectBindings;
+  @ApiModelProperty(value = "Define to which Facts new meta Facts of this type can be linked")
+  private List<@Valid MetaFactBindingDefinition> relevantFactBindings;
 
   public String getName() {
     return name;
@@ -63,6 +63,20 @@ public class CreateFactTypeRequest implements ValidatingRequest {
 
   public CreateFactTypeRequest addRelevantObjectBinding(FactObjectBindingDefinition relevantObjectBinding) {
     this.relevantObjectBindings = ListUtils.addToList(this.relevantObjectBindings, relevantObjectBinding);
+    return this;
+  }
+
+  public List<MetaFactBindingDefinition> getRelevantFactBindings() {
+    return relevantFactBindings;
+  }
+
+  public CreateFactTypeRequest setRelevantFactBindings(List<MetaFactBindingDefinition> relevantFactBindings) {
+    this.relevantFactBindings = relevantFactBindings;
+    return this;
+  }
+
+  public CreateFactTypeRequest addRelevantFactBinding(MetaFactBindingDefinition relevantFactBinding) {
+    this.relevantFactBindings = ListUtils.addToList(this.relevantFactBindings, relevantFactBinding);
     return this;
   }
 
