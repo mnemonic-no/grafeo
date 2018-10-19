@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.OperationTimeoutException;
+import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
@@ -31,6 +32,7 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
@@ -40,14 +42,21 @@ public class TraverseGraphDelegate extends AbstractDelegate {
   private static final long SCRIPT_EXECUTION_TIMEOUT = 120_000;
 
   private final ObjectSearchDelegate objectSearch;
+  private final Function<ObjectEntity, Object> objectConverter;
+  private final Function<FactEntity, Fact> factConverter;
   private final long scriptExecutionTimeout;
   private final TiRequestContext requestContext;
   private final TiSecurityContext securityContext;
 
   private final Collection<java.lang.Object> traversalResult = new ArrayList<>();
 
-  private TraverseGraphDelegate(ObjectSearchDelegate objectSearch, long scriptExecutionTimeout) {
+  private TraverseGraphDelegate(ObjectSearchDelegate objectSearch,
+                                Function<ObjectEntity, Object> objectConverter,
+                                Function<FactEntity, Fact> factConverter,
+                                long scriptExecutionTimeout) {
     this.objectSearch = objectSearch;
+    this.objectConverter = objectConverter;
+    this.factConverter = factConverter;
     this.scriptExecutionTimeout = scriptExecutionTimeout > 0 ? scriptExecutionTimeout : SCRIPT_EXECUTION_TIMEOUT;
     // Need to store references to the contexts. They won't be available via Context.get() when the graph traversal
     // and processing is executed in a different thread.
@@ -98,6 +107,8 @@ public class TraverseGraphDelegate extends AbstractDelegate {
 
   public static class Builder {
     private ObjectSearchDelegate objectSearch;
+    private Function<ObjectEntity, Object> objectConverter;
+    private Function<FactEntity, Fact> factConverter;
     private long scriptExecutionTimeout;
 
     private Builder() {
@@ -105,11 +116,23 @@ public class TraverseGraphDelegate extends AbstractDelegate {
 
     public TraverseGraphDelegate build() {
       ObjectUtils.notNull(objectSearch, "Cannot instantiate TraverseGraphDelegate without 'objectSearch'.");
-      return new TraverseGraphDelegate(objectSearch, scriptExecutionTimeout);
+      ObjectUtils.notNull(objectConverter, "Cannot instantiate TraverseGraphDelegate without 'objectConverter'.");
+      ObjectUtils.notNull(factConverter, "Cannot instantiate TraverseGraphDelegate without 'factConverter'.");
+      return new TraverseGraphDelegate(objectSearch, objectConverter, factConverter, scriptExecutionTimeout);
     }
 
     public Builder setObjectSearch(ObjectSearchDelegate objectSearch) {
       this.objectSearch = objectSearch;
+      return this;
+    }
+
+    public Builder setObjectConverter(Function<ObjectEntity, Object> objectConverter) {
+      this.objectConverter = objectConverter;
+      return this;
+    }
+
+    public Builder setFactConverter(Function<FactEntity, Fact> factConverter) {
+      this.factConverter = factConverter;
       return this;
     }
 
@@ -172,13 +195,13 @@ public class TraverseGraphDelegate extends AbstractDelegate {
         // because it requires fetching Facts for each Object. In addition, accidentally returning non-accessible
         // Objects will only leak the information that the Object exists and will not give further access to any Facts.
         ObjectEntity object = ObjectVertex.class.cast(value).getObject();
-        traversalResult.add(requestContext.getObjectConverter().apply(object));
+        traversalResult.add(objectConverter.apply(object));
       } else if (value instanceof FactEdge) {
         // Fetch FactEntity and convert to Fact model before adding to result.
         FactEntity fact = FactEdge.class.cast(value).getFact();
         // But only add it if user has access to the Fact. Skip Fact otherwise.
         if (securityContext.hasReadPermission(fact)) {
-          traversalResult.add(requestContext.getFactConverter().apply(fact));
+          traversalResult.add(factConverter.apply(fact));
         }
       } else {
         // Don't know what this is, just add its string representation to result.

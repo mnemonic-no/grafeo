@@ -65,13 +65,34 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     // initMocks() will be called by base class.
     delegate = TraverseGraphDelegate.builder()
             .setObjectSearch(objectSearch)
+            .setObjectConverter(getObjectConverter())
+            .setFactConverter(getFactConverter())
             .setScriptExecutionTimeout(2000)
             .build();
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateDelegateWithoutObjectSearch() {
-    TraverseGraphDelegate.builder().build();
+    TraverseGraphDelegate.builder()
+            .setObjectConverter(getObjectConverter())
+            .setFactConverter(getFactConverter())
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateDelegateWithoutObjectConverter() {
+    TraverseGraphDelegate.builder()
+            .setObjectSearch(objectSearch)
+            .setFactConverter(getFactConverter())
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateDelegateWithoutFactConverter() {
+    TraverseGraphDelegate.builder()
+            .setObjectSearch(objectSearch)
+            .setObjectConverter(getObjectConverter())
+            .build();
   }
 
   @Test(expected = AccessDeniedException.class)

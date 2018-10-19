@@ -269,6 +269,8 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
+            .setObjectConverter(objectConverter)
+            .setFactConverter(createFactConverterForGraphTraversal())
             .build()
             .handle(request);
   }
@@ -278,6 +280,8 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
+            .setObjectConverter(objectConverter)
+            .setFactConverter(createFactConverterForGraphTraversal())
             .build()
             .handle(request);
   }
@@ -287,6 +291,8 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
+            .setObjectConverter(objectConverter)
+            .setFactConverter(createFactConverterForGraphTraversal())
             .build()
             .handle(request);
   }
@@ -329,6 +335,22 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
       // ... and use those to fetch the bound Facts.
       return factManager.getFacts(factID);
     };
+  }
+
+  private FactConverter createFactConverterForGraphTraversal() {
+    // Need to re-define accessChecker of FactConverter because the lambda used for the FactConverter available from
+    // the RequestContext is calling TiSecurityContext.get() which is not available when a Gremlin query is executed
+    // in another thread. Note that this is a work-around which will be ultimately fixed when implementing service
+    // request scope.
+    TiSecurityContext securityContext = TiSecurityContext.get();
+    return FactConverter.builder()
+            .setFactTypeConverter(createFactTypeByIdConverter())
+            .setOrganizationConverter(organizationResolver::resolveOrganization)
+            .setSourceConverter(createSourceConverter())
+            .setObjectConverter(createObjectByIdConverter())
+            .setFactEntityResolver(factManager::getFact)
+            .setAccessChecker(securityContext::hasReadPermission)
+            .build();
   }
 
 }
