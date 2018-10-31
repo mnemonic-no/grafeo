@@ -8,10 +8,7 @@ import no.mnemonic.act.platform.dao.cassandra.accessors.FactAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactAclAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactCommentAccessor;
 import no.mnemonic.act.platform.dao.cassandra.accessors.FactTypeAccessor;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
@@ -46,6 +43,7 @@ public class FactManager implements LifecycleAspect {
   private Mapper<FactEntity> factMapper;
   private Mapper<FactAclEntity> factAclMapper;
   private Mapper<FactCommentEntity> factCommentMapper;
+  private Mapper<MetaFactBindingEntity> metaFactBindingMapper;
   private FactTypeAccessor factTypeAccessor;
   private FactAccessor factAccessor;
   private FactAclAccessor factAclAccessor;
@@ -66,6 +64,7 @@ public class FactManager implements LifecycleAspect {
     factMapper = clusterManager.getMapper(FactEntity.class);
     factAclMapper = clusterManager.getMapper(FactAclEntity.class);
     factCommentMapper = clusterManager.getMapper(FactCommentEntity.class);
+    metaFactBindingMapper = clusterManager.getMapper(MetaFactBindingEntity.class);
     factTypeAccessor = clusterManager.getAccessor(FactTypeAccessor.class);
     factAccessor = clusterManager.getAccessor(FactAccessor.class);
     factAclAccessor = clusterManager.getAccessor(FactAclAccessor.class);
@@ -76,6 +75,7 @@ public class FactManager implements LifecycleAspect {
     factMapper.setDefaultSaveOptions(saveNullFields(false));
     factAclMapper.setDefaultSaveOptions(saveNullFields(false));
     factCommentMapper.setDefaultSaveOptions(saveNullFields(false));
+    metaFactBindingMapper.setDefaultSaveOptions(saveNullFields(false));
   }
 
   @Override
@@ -193,6 +193,25 @@ public class FactManager implements LifecycleAspect {
     factCommentMapper.save(comment);
 
     return comment;
+  }
+
+  /* MetaFactBindingEntity-related methods */
+
+  public List<MetaFactBindingEntity> fetchMetaFactBindings(UUID id) {
+    if (id == null) return ListUtils.list();
+    return factAccessor.fetchMetaFactBindings(id).all();
+  }
+
+  public MetaFactBindingEntity saveMetaFactBinding(MetaFactBindingEntity binding) {
+    if (binding == null) return null;
+    if (getFact(binding.getFactID()) == null)
+      throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", binding.getFactID()));
+    if (metaFactBindingMapper.get(binding.getFactID(), binding.getMetaFactID()) != null)
+      throw new ImmutableViolationException("It is not allowed to update a MetaFactBinding.");
+
+    metaFactBindingMapper.save(binding);
+
+    return binding;
   }
 
   /* Setters used for unit testing */

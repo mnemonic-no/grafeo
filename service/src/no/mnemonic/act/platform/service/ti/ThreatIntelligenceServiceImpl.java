@@ -231,6 +231,16 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   }
 
   @Override
+  public Fact createMetaFact(RequestHeader rh, CreateMetaFactRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return FactCreateMetaDelegate.builder()
+            .setFactTypeResolver(new FactTypeResolver(factManager))
+            .setFactStorageHelper(new FactStorageHelper(factManager, () -> SecurityContext.get().getCurrentUserID()))
+            .build()
+            .handle(request);
+  }
+
+  @Override
   public Fact retractFact(RequestHeader rh, RetractFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return FactRetractDelegate.builder()

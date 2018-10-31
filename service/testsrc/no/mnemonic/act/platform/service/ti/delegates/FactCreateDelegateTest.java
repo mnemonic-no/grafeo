@@ -1,7 +1,6 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
-import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
@@ -489,19 +488,6 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
       return true;
     });
-  }
-
-  private void expectInvalidArgumentException(InvalidArgumentExceptionTest test, String... messageTemplate) throws Exception {
-    try {
-      test.execute();
-      fail();
-    } catch (InvalidArgumentException ex) {
-      assertEquals(SetUtils.set(messageTemplate), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
-    }
-  }
-
-  private interface InvalidArgumentExceptionTest {
-    void execute() throws Exception;
   }
 
 }

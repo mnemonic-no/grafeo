@@ -202,6 +202,16 @@ public abstract class AbstractIT {
     return getFactManager().saveFactType(entity);
   }
 
+  FactTypeEntity createMetaFactType(UUID referencedFactTypeID) {
+    FactTypeEntity entity = new FactTypeEntity()
+            .setId(UUID.randomUUID())
+            .setName("MetaFactType")
+            .setValidator("TrueValidator")
+            .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(referencedFactTypeID));
+
+    return getFactManager().saveFactType(entity);
+  }
+
   FactEntity createFact() {
     return createFact(createObject(createObjectType().getId()));
   }

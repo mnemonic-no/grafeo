@@ -64,6 +64,22 @@ public class FactEndpointTest extends AbstractEndpointTest {
   }
 
   @Test
+  public void testCreateMetaFact() throws Exception {
+    UUID oldFact = UUID.randomUUID();
+    UUID newFact = UUID.randomUUID();
+    when(getTiService().createMetaFact(any(), isA(CreateMetaFactRequest.class))).then(i -> {
+      assertEquals(oldFact, i.<CreateMetaFactRequest>getArgument(1).getFact());
+      return Fact.builder().setId(newFact).build();
+    });
+
+    Response response = target(String.format("/v1/fact/uuid/%s/meta", oldFact)).request().post(Entity.json(createCreateMetaFactRequest()));
+    assertEquals(201, response.getStatus());
+    assertEquals(newFact.toString(), getPayload(response).get("id").textValue());
+
+    verify(getTiService(), times(1)).createMetaFact(any(), isA(CreateMetaFactRequest.class));
+  }
+
+  @Test
   public void testRetractFact() throws Exception {
     UUID oldFact = UUID.randomUUID();
     UUID newFact = UUID.randomUUID();
@@ -181,6 +197,12 @@ public class FactEndpointTest extends AbstractEndpointTest {
 
   private CreateFactRequest createCreateFactRequest() {
     return new CreateFactRequest()
+            .setType("type")
+            .setValue("value");
+  }
+
+  private CreateMetaFactRequest createCreateMetaFactRequest() {
+    return new CreateMetaFactRequest()
             .setType("type")
             .setValue("value");
   }

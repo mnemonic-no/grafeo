@@ -19,7 +19,6 @@ import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
-import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -49,8 +48,8 @@ public class FactCreateDelegate extends AbstractDelegate {
 
     // Validate that requested Fact matches its FactType.
     FactTypeEntity type = factTypeResolver.resolveFactType(request.getType());
-    validateFactValue(type, request.getValue());
-    validateFactObjectBindings(request, type);
+    assertValidFactValue(type, request.getValue());
+    assertValidFactObjectBindings(request, type);
 
     FactEntity fact = resolveExistingFact(request, type);
     if (fact != null) {
@@ -112,15 +111,7 @@ public class FactCreateDelegate extends AbstractDelegate {
     }
   }
 
-  private void validateFactValue(FactTypeEntity type, String value) throws InvalidArgumentException {
-    Validator validator = TiRequestContext.get().getValidatorFactory().get(type.getValidator(), type.getValidatorParameter());
-    if (!validator.validate(value)) {
-      throw new InvalidArgumentException()
-              .addValidationError("Fact did not pass validation against FactType.", "fact.not.valid", "value", value);
-    }
-  }
-
-  private void validateFactObjectBindings(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
+  private void assertValidFactObjectBindings(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
     // Validate that either source or destination or both are set. One field can be NULL to support bindings of cardinality 1.
     ObjectEntity source = objectResolver.resolveObject(request.getSourceObject());
     ObjectEntity destination = objectResolver.resolveObject(request.getDestinationObject());

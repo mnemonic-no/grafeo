@@ -1,9 +1,9 @@
 package no.mnemonic.act.platform.dao.api;
 
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
@@ -25,17 +25,26 @@ public class FactExistenceSearchCriteria {
   private final UUID sourceID;
   private final UUID organizationID;
   private final AccessMode accessMode;
+  private final UUID inReferenceTo;
   private final Set<ObjectExistence> objects;
   // TODO: Add confidenceLevel once defined.
 
   private FactExistenceSearchCriteria(String factValue, UUID factTypeID, UUID sourceID, UUID organizationID,
-                                      AccessMode accessMode, Set<ObjectExistence> objects) {
+                                      AccessMode accessMode, UUID inReferenceTo, Set<ObjectExistence> objects) {
     this.factValue = factValue; // Field 'factValue' is optional.
     this.factTypeID = ObjectUtils.notNull(factTypeID, "Missing required field 'factTypeID'.");
     this.sourceID = ObjectUtils.notNull(sourceID, "Missing required field 'sourceID'.");
     this.organizationID = ObjectUtils.notNull(organizationID, "Missing required field 'organizationID'.");
     this.accessMode = ObjectUtils.notNull(accessMode, "Missing required field 'accessMode'.");
-    this.objects = ObjectUtils.ifNull(objects, Collections.emptySet());
+    this.inReferenceTo = inReferenceTo;
+    this.objects = objects;
+
+    if (inReferenceTo == null && CollectionUtils.isEmpty(objects)) {
+      throw new IllegalArgumentException("Either 'inReferenceTo' or 'objects' must be set.");
+    }
+    if (inReferenceTo != null && !CollectionUtils.isEmpty(objects)) {
+      throw new IllegalArgumentException("Only one of 'inReferenceTo' or 'objects' must be set.");
+    }
   }
 
   /**
@@ -84,7 +93,16 @@ public class FactExistenceSearchCriteria {
   }
 
   /**
-   * Objects bound to Fact to verify. This field is required.
+   * Referenced Fact of Fact to verify (used for meta Facts).
+   *
+   * @return UUID of referenced Fact
+   */
+  public UUID getInReferenceTo() {
+    return inReferenceTo;
+  }
+
+  /**
+   * Objects bound to Fact to verify (used for regular Facts).
    *
    * @return Bound Objects
    */
@@ -102,13 +120,14 @@ public class FactExistenceSearchCriteria {
     private UUID sourceID;
     private UUID organizationID;
     private AccessMode accessMode;
+    private UUID inReferenceTo;
     private Set<ObjectExistence> objects;
 
     private Builder() {
     }
 
     public FactExistenceSearchCriteria build() {
-      return new FactExistenceSearchCriteria(factValue, factTypeID, sourceID, organizationID, accessMode, objects);
+      return new FactExistenceSearchCriteria(factValue, factTypeID, sourceID, organizationID, accessMode, inReferenceTo, objects);
     }
 
     public Builder setFactValue(String factValue) {
@@ -133,6 +152,11 @@ public class FactExistenceSearchCriteria {
 
     public Builder setAccessMode(String accessMode) {
       this.accessMode = AccessMode.valueOf(accessMode);
+      return this;
+    }
+
+    public Builder setInReferenceTo(UUID inReferenceTo) {
+      this.inReferenceTo = inReferenceTo;
       return this;
     }
 

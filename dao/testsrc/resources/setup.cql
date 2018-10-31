@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS act.fact_type;
 DROP TABLE IF EXISTS act.fact;
 DROP TABLE IF EXISTS act.fact_comment;
 DROP TABLE IF EXISTS act.fact_acl;
+DROP TABLE IF EXISTS act.meta_fact_binding;
 DROP TABLE IF EXISTS act.evidence_submission;
 DROP TABLE IF EXISTS act.evidence_submission_acl;
 DROP TABLE IF EXISTS act.evidence;
@@ -111,6 +112,12 @@ CREATE TABLE IF NOT EXISTS act.fact_acl (
   timestamp BIGINT,
   PRIMARY KEY (fact_id, id)
 ) WITH CLUSTERING ORDER BY (id ASC);
+
+CREATE TABLE IF NOT EXISTS act.meta_fact_binding (
+  fact_id UUID,
+  meta_fact_id UUID,
+  PRIMARY KEY (fact_id, meta_fact_id)
+) WITH CLUSTERING ORDER BY (meta_fact_id ASC);
 
 CREATE TABLE IF NOT EXISTS act.evidence_submission (
   id UUID,

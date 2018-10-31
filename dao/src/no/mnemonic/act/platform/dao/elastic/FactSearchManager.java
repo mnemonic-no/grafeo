@@ -176,7 +176,8 @@ public class FactSearchManager implements LifecycleAspect {
    * Retrieve all Facts which are considered logically the same when matched against a given search criteria, i.e. the
    * following condition holds: an indexed Fact matches the search criteria and will be included in the returned result
    * if and only if the value, FactType, organization, source, access mode and all bound Objects (including direction)
-   * match exactly. If no Fact satisfies this condition an empty result container is returned.
+   * match exactly. In the case of a meta Fact the inReferenceTo must match instead of bound Objects (Objects should
+   * be omitted). If no Fact satisfies this condition an empty result container is returned.
    * <p>
    * This method can be used to determine if a Fact already logically exists in the system, e.g. before a new Fact is
    * created. No access control will be performed. This must be done by the caller.
@@ -405,7 +406,7 @@ public class FactSearchManager implements LifecycleAspect {
   }
 
   private QueryBuilder buildFactExistenceQuery(FactExistenceSearchCriteria criteria) {
-    // First, define all filters on direct Fact fields. Every field from the criteria must match.
+    // Define all filters on direct Fact fields. Every field from the criteria must match.
     BoolQueryBuilder rootQuery = boolQuery()
             .filter(termQuery("typeID", criteria.getFactTypeID()))
             .filter(termQuery("sourceID", criteria.getSourceID()))
@@ -420,20 +421,30 @@ public class FactSearchManager implements LifecycleAspect {
       rootQuery.mustNot(existsQuery("value"));
     }
 
-    // Second, define filters on nested Objects. Also all Objects must match.
-    for (FactExistenceSearchCriteria.ObjectExistence object : criteria.getObjects()) {
-      BoolQueryBuilder objectsQuery = boolQuery()
-              .filter(termQuery("objects.id", object.getObjectID()))
-              .filter(termQuery("objects.direction", object.getDirection()));
-      rootQuery.filter(nestedQuery("objects", objectsQuery, ScoreMode.None));
+    // This clause is required when searching for existing meta Facts.
+    if (criteria.getInReferenceTo() != null) {
+      rootQuery.filter(termQuery("inReferenceTo", criteria.getInReferenceTo()));
     }
 
-    // Third, also the number of bound Objects must match. It uses a script query because the number of bound Objects
-    // isn't directly available. This query should be fast because the other filters should already reduce the number of
-    // Facts to a small number. Alternatively, the number of bound Objects could be de-normalized into Fact documents.
-    String scriptCode = "params._source.objects.length == params.count";
-    Map<String, Object> scriptParameters = Collections.singletonMap("count", criteria.getObjects().size());
-    return rootQuery.filter(scriptQuery(new Script(ScriptType.INLINE, "painless", scriptCode, scriptParameters)));
+    // These clauses are required when searching for regular Facts.
+    if (!CollectionUtils.isEmpty(criteria.getObjects())) {
+      // Define filters on nested Objects. Also all Objects must match.
+      for (FactExistenceSearchCriteria.ObjectExistence object : criteria.getObjects()) {
+        BoolQueryBuilder objectsQuery = boolQuery()
+                .filter(termQuery("objects.id", object.getObjectID()))
+                .filter(termQuery("objects.direction", object.getDirection()));
+        rootQuery.filter(nestedQuery("objects", objectsQuery, ScoreMode.None));
+      }
+
+      // Also the number of bound Objects must match. It uses a script query because the number of bound Objects isn't
+      // directly available. This query should be fast because the other filters should already reduce the number of
+      // Facts to a small number. Alternatively, the number of bound Objects could be de-normalized into Fact documents.
+      String scriptCode = "params._source.objects.length == params.count";
+      Map<String, Object> scriptParameters = Collections.singletonMap("count", criteria.getObjects().size());
+      rootQuery.filter(scriptQuery(new Script(ScriptType.INLINE, "painless", scriptCode, scriptParameters)));
+    }
+
+    return rootQuery;
   }
 
   private QueryBuilder buildFactsQuery(FactSearchCriteria criteria) {

@@ -99,6 +99,23 @@ public class FactSearchManagerRetrieveExistingFactsTest extends AbstractManagerT
     testRetrieveExistingFactsNoMatch(criteria);
   }
 
+  @Test
+  public void testRetrieveExistingMetaFactsReturnsExisting() {
+    FactDocument fact = indexFact(d -> d);
+    SearchResult<FactDocument> result = getFactSearchManager().retrieveExistingFacts(
+            createCriteriaWithoutObjects(fact, b -> b.setInReferenceTo(fact.getInReferenceTo()))
+    );
+    assertEquals(1, result.getCount());
+    assertEquals(1, result.getValues().size());
+    assertFactDocument(fact, result.getValues().get(0));
+  }
+
+  @Test
+  public void testRetrieveExistingMetaFactsNoMatchOnInReferenceTo() {
+    FactDocument fact = indexFact(d -> d);
+    testRetrieveExistingFactsNoMatch(createCriteriaWithoutObjects(fact, b -> b.setInReferenceTo(UUID.randomUUID())));
+  }
+
   private void testRetrieveExistingFactsNoMatch(ObjectPreparation<FactExistenceSearchCriteria.Builder> criteriaPreparation) {
     FactDocument fact = indexFact(d -> d);
     FactExistenceSearchCriteria criteria = createCriteriaWithObjects(fact, criteriaPreparation);
