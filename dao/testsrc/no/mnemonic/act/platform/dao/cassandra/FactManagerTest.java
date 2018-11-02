@@ -281,6 +281,45 @@ public class FactManagerTest extends AbstractManagerTest {
     getFactManager().saveFactComment(comment);
   }
 
+  @Test
+  public void testSaveAndFetchMetaFactBindings() {
+    FactEntity fact = createAndSaveFact();
+    MetaFactBindingEntity binding = createAndSaveMetaFactBinding(fact.getId());
+
+    List<MetaFactBindingEntity> actual = getFactManager().fetchMetaFactBindings(fact.getId());
+    assertEquals(1, actual.size());
+    assertMetaFactBinding(binding, actual.get(0));
+  }
+
+  @Test
+  public void testFetchMetaFactBindingsWithNonExistingFact() {
+    assertEquals(0, getFactManager().fetchMetaFactBindings(null).size());
+    assertEquals(0, getFactManager().fetchMetaFactBindings(UUID.randomUUID()).size());
+  }
+
+  @Test
+  public void testSaveMetaFactBindingReturnsSameEntity() {
+    MetaFactBindingEntity binding = createMetaFactBinding(createAndSaveFact().getId());
+    assertSame(binding, getFactManager().saveMetaFactBinding(binding));
+  }
+
+  @Test
+  public void testSaveMetaFactBindingReturnsNullOnNullInput() {
+    assertNull(getFactManager().saveMetaFactBinding(null));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testSaveMetaFactBindingWithNonExistingFactThrowsException() {
+    getFactManager().saveMetaFactBinding(createMetaFactBinding(UUID.randomUUID()));
+  }
+
+  @Test(expected = ImmutableViolationException.class)
+  public void testSaveMetaFactBindingTwiceThrowsException() {
+    MetaFactBindingEntity binding = createMetaFactBinding(createAndSaveFact().getId());
+    getFactManager().saveMetaFactBinding(binding);
+    getFactManager().saveMetaFactBinding(binding);
+  }
+
   private FactTypeEntity createFactType() {
     return createFactType("factType");
   }
@@ -345,6 +384,12 @@ public class FactManagerTest extends AbstractManagerTest {
             .setTimestamp(1);
   }
 
+  private MetaFactBindingEntity createMetaFactBinding(UUID factID) {
+    return new MetaFactBindingEntity()
+            .setFactID(factID)
+            .setMetaFactID(UUID.randomUUID());
+  }
+
   private FactTypeEntity createAndSaveFactType() {
     return createAndSaveFactTypes(1).get(0);
   }
@@ -373,6 +418,10 @@ public class FactManagerTest extends AbstractManagerTest {
 
   private FactCommentEntity createAndSaveFactComment(UUID factID) {
     return getFactManager().saveFactComment(createFactComment(factID));
+  }
+
+  private MetaFactBindingEntity createAndSaveMetaFactBinding(UUID factID) {
+    return getFactManager().saveMetaFactBinding(createMetaFactBinding(factID));
   }
 
   private void assertFactType(FactTypeEntity expected, FactTypeEntity actual) {
@@ -420,6 +469,11 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getSourceID(), actual.getSourceID());
     assertEquals(expected.getComment(), actual.getComment());
     assertEquals(expected.getTimestamp(), actual.getTimestamp());
+  }
+
+  private void assertMetaFactBinding(MetaFactBindingEntity expected, MetaFactBindingEntity actual) {
+    assertEquals(expected.getFactID(), actual.getFactID());
+    assertEquals(expected.getMetaFactID(), actual.getMetaFactID());
   }
 
   private FactManager getFactManagerWithMockedClock(long timestamp) {

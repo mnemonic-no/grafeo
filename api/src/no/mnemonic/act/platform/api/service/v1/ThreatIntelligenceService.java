@@ -241,6 +241,22 @@ public interface ThreatIntelligenceService {
   }
 
   /**
+   * Create a new meta Fact.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request containing new meta Fact.
+   * @return Newly created meta Fact.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws ObjectNotFoundException       If the referenced Fact could not be found.
+   */
+  default Fact createMetaFact(RequestHeader rh, CreateMetaFactRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Retract an existing Fact.
    *
    * @param rh      Contains meta data about the request.

@@ -126,6 +126,36 @@ public class FactEndpoint extends AbstractEndpoint {
   }
 
   @POST
+  @Path("/uuid/{fact}/meta")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Create a new meta Fact.",
+          notes = "This operation creates and returns a new meta Fact, a Fact which is directly referencing another " +
+                  "existing Fact. The new meta Fact must conform to the specified FactType, i.e. the value must pass the " +
+                  "FactType's Validator and the FactType of the referenced Fact must fulfil the definition by the FactType.\n\n" +
+                  "If a meta Fact with the same type, value, organization, source, accessMode and confidenceLevel exists, " +
+                  "no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
+          response = Fact.class,
+          code = 201
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 404, message = "Referenced Fact does not exist."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
+  public Response createMetaFact(
+          @PathParam("fact") @ApiParam(value = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
+          @ApiParam(value = "Request to create meta Fact.") @NotNull @Valid CreateMetaFactRequest request
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return ResultStash.builder()
+            .setStatus(Response.Status.CREATED)
+            .setData(service.createMetaFact(getHeader(), request.setFact(fact)))
+            .buildResponse();
+  }
+
+  @POST
   @Path("/uuid/{fact}/retract")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)

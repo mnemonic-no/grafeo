@@ -1,7 +1,6 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
-import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.act.platform.api.request.v1.MetaFactBindingDefinition;
@@ -15,7 +14,8 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.*;
 
 public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
@@ -137,19 +137,6 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
     assertEquals(request.getName(), entity.getName());
     assertEquals(request.getValidator(), entity.getValidator());
     assertEquals(request.getValidatorParameter(), entity.getValidatorParameter());
-  }
-
-  private void expectInvalidArgumentException(InvalidArgumentExceptionTest test, String... messageTemplate) throws Exception {
-    try {
-      test.execute();
-      fail();
-    } catch (InvalidArgumentException ex) {
-      assertEquals(SetUtils.set(messageTemplate), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
-    }
-  }
-
-  private interface InvalidArgumentExceptionTest {
-    void execute() throws Exception;
   }
 
 }

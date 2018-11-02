@@ -6,28 +6,36 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
 /**
  * The AbstractDelegate provides common methods used by multiple delegates.
  */
 abstract class AbstractDelegate {
+
+  private static final Map<AccessMode, Integer> ACCESS_MODE_ORDER = MapUtils.map(
+          T(AccessMode.Public, 0),
+          T(AccessMode.RoleBased, 1),
+          T(AccessMode.Explicit, 2)
+  );
 
   /**
    * Fetch an existing FactType by ID.
@@ -122,6 +130,21 @@ abstract class AbstractDelegate {
   }
 
   /**
+   * Assert that a Fact value is valid according to a FactType's validator.
+   *
+   * @param type  FactType to validate against
+   * @param value Value to validate
+   * @throws InvalidArgumentException Thrown if value is not valid for the given FactType
+   */
+  void assertValidFactValue(FactTypeEntity type, String value) throws InvalidArgumentException {
+    Validator validator = TiRequestContext.get().getValidatorFactory().get(type.getValidator(), type.getValidatorParameter());
+    if (!validator.validate(value)) {
+      throw new InvalidArgumentException()
+              .addValidationError("Fact did not pass validation against FactType.", "fact.not.valid", "value", value);
+    }
+  }
+
+  /**
    * Resolve an Organization by its ID. Falls back to the current user's Organization if no 'organizationID' is provided.
    *
    * @param organizationID ID of Organization
@@ -143,6 +166,30 @@ abstract class AbstractDelegate {
     // TODO: Verify source.
     // If no source is provided use the current user as source by default.
     return ObjectUtils.ifNull(sourceID, SecurityContext.get().getCurrentUserID());
+  }
+
+  /**
+   * Resolve AccessMode from a request and verify that it's not less restrictive than the AccessMode from another Fact.
+   * Falls back to AccessMode from referenced Fact if requested AccessMode is not given.
+   *
+   * @param referencedFact      Fact to validate AccessMode against
+   * @param requestedAccessMode Requested AccessMode (might be NULL)
+   * @return Resolved AccessMode
+   * @throws InvalidArgumentException Thrown if requested AccessMode is less restrictive than AccessMode of referenced Fact
+   */
+  AccessMode resolveAccessMode(FactEntity referencedFact, no.mnemonic.act.platform.api.request.v1.AccessMode requestedAccessMode)
+          throws InvalidArgumentException {
+    // If no AccessMode provided fall back to the AccessMode from the referenced Fact.
+    AccessMode mode = ObjectUtils.ifNotNull(requestedAccessMode, m -> AccessMode.valueOf(m.name()), referencedFact.getAccessMode());
+
+    // The requested AccessMode of a new Fact should not be less restrictive than the AccessMode of the referenced Fact.
+    if (ACCESS_MODE_ORDER.get(mode) < ACCESS_MODE_ORDER.get(referencedFact.getAccessMode())) {
+      throw new InvalidArgumentException()
+              .addValidationError(String.format("Requested AccessMode cannot be less restrictive than AccessMode of Fact with id = %s.", referencedFact.getId()),
+                      "access.mode.too.wide", "accessMode", mode.name());
+    }
+
+    return mode;
   }
 
   /**
@@ -169,7 +216,7 @@ abstract class AbstractDelegate {
             .setLastSeenTimestamp(fact.getLastSeenTimestamp())
             .setAcl(SetUtils.set(acl));
 
-    for (FactEntity.FactObjectBinding objectBinding : fact.getBindings()) {
+    for (FactEntity.FactObjectBinding objectBinding : SetUtils.set(fact.getBindings())) {
       ObjectEntity object = TiRequestContext.get().getObjectManager().getObject(objectBinding.getObjectID());
       ObjectTypeEntity objectType = TiRequestContext.get().getObjectManager().getObjectType(object.getTypeID());
       document.addObject(new ObjectDocument()

@@ -139,6 +139,79 @@ public class FactIT extends AbstractIT {
   }
 
   @Test
+  public void testCreateMetaFact() throws Exception {
+    FactEntity referencedFact = createFact();
+    FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
+
+    // Create a meta Fact via the REST API ...
+    CreateMetaFactRequest request = createCreateMetaFactRequest(metaFactType);
+    Response response = request("/v1/fact/uuid/" + referencedFact.getId() + "/meta").post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+
+    // ... and check that meta Fact ends up in the database.
+    FactEntity metaFact = getFactManager().getFact(getIdFromModel(getPayload(response)));
+    assertNotNull(metaFact);
+    assertNotNull(getFactSearchManager().getFact(metaFact.getId()));
+    assertEquals(referencedFact.getId(), metaFact.getInReferenceToID());
+  }
+
+  @Test
+  public void testCreateMetaFactTwice() throws Exception {
+    FactEntity referencedFact = createFact();
+    FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
+
+    // Create the same meta Fact twice ...
+    CreateMetaFactRequest request = createCreateMetaFactRequest(metaFactType);
+    Response response1 = request("/v1/fact/uuid/" + referencedFact.getId() + "/meta").post(Entity.json(request));
+    assertEquals(201, response1.getStatus());
+    Response response2 = request("/v1/fact/uuid/" + referencedFact.getId() + "/meta").post(Entity.json(request));
+    assertEquals(201, response2.getStatus());
+
+    // ... and check that the Fact was only refreshed.
+    JsonNode payload1 = getPayload(response1);
+    JsonNode payload2 = getPayload(response2);
+    assertEquals(getIdFromModel(payload1), getIdFromModel(payload2));
+    assertEquals(payload1.get("timestamp").textValue(), payload2.get("timestamp").textValue());
+    assertTrue(Instant.parse(payload1.get("lastSeenTimestamp").textValue()).isBefore(Instant.parse(payload2.get("lastSeenTimestamp").textValue())));
+  }
+
+  @Test
+  public void testCreateMetaFactWithAclAndComment() throws Exception {
+    FactEntity referencedFact = createFact();
+    FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
+
+    // Create a meta Fact with ACL and a comment via the REST API ...
+    CreateMetaFactRequest request = createCreateMetaFactRequest(metaFactType)
+            .addAcl(UUID.randomUUID())
+            .addAcl(UUID.randomUUID())
+            .addAcl(UUID.randomUUID())
+            .setComment("Hello World!");
+    Response response = request("/v1/fact/uuid/" + referencedFact.getId() + "/meta").post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+
+    // ... and check that both ACL and the comment end up in the database.
+    UUID id = getIdFromModel(getPayload(response));
+    assertEquals(request.getAcl().size(), getFactManager().fetchFactAcl(id).size());
+    assertEquals(1, getFactManager().fetchFactComments(id).size());
+  }
+
+  @Test
+  public void testCreateMetaFactTriggersAction() throws Exception {
+    FactEntity referencedFact = createFact();
+    FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
+
+    // Create a meta Fact via the REST API ...
+    CreateMetaFactRequest request = createCreateMetaFactRequest(metaFactType);
+    Response response = request("/v1/fact/uuid/" + referencedFact.getId() + "/meta").post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+    UUID factID = getIdFromModel(getPayload(response));
+
+    // ... and verify that the action was called with the correct parameters.
+    verify(action).trigger(argThat(parameters -> parameters.containsKey("addedFact")
+            && Objects.equals(parameters.get("addedFact"), factID.toString())));
+  }
+
+  @Test
   public void testRetractFact() throws Exception {
     // Create a Fact in the database ...
     FactEntity factToRetract = createFact();
@@ -329,6 +402,12 @@ public class FactIT extends AbstractIT {
             .setValue("factValue")
             .setSourceObject(String.format("%s/%s", objectType.getName(), "objectValue"))
             .setBidirectionalBinding(true);
+  }
+
+  private CreateMetaFactRequest createCreateMetaFactRequest(FactTypeEntity factType) {
+    return new CreateMetaFactRequest()
+            .setType(factType.getName())
+            .setValue("factValue");
   }
 
   public static class TestTriggerAction implements TriggerAction {
