@@ -231,6 +231,12 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   }
 
   @Override
+  public ResultSet<Fact> searchMetaFacts(RequestHeader rh, SearchMetaFactsRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return FactSearchMetaDelegate.create().handle(request);
+  }
+
+  @Override
   public Fact createMetaFact(RequestHeader rh, CreateMetaFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return FactCreateMetaDelegate.builder()

@@ -1,7 +1,6 @@
 package no.mnemonic.act.platform.test.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
@@ -139,6 +138,29 @@ public class FactIT extends AbstractIT {
   }
 
   @Test
+  public void testFetchMetaFacts() throws Exception {
+    // Create a Fact and a related meta Fact in the database ...
+    FactEntity referencedFact = createFact();
+    FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
+    FactEntity metaFact = createMetaFact(referencedFact, metaFactType, f -> f);
+
+    // ... and check that the meta Fact can be found via the REST API.
+    fetchAndAssertList("/v1/fact/uuid/" + referencedFact.getId() + "/meta", metaFact.getId());
+  }
+
+  @Test
+  public void testFetchMetaFactsWithFiltering() throws Exception {
+    // Create a Fact and multiple related meta Facts in the database ...
+    FactEntity referencedFact = createFact();
+    FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
+    createMetaFact(referencedFact, metaFactType, f -> f.setTimestamp(111111111));
+    FactEntity metaFact = createMetaFact(referencedFact, metaFactType, f -> f.setTimestamp(333333333));
+
+    // ... and check that only one meta Fact after filtering is found via the REST API.
+    fetchAndAssertList("/v1/fact/uuid/" + referencedFact.getId() + "/meta?after=" + Instant.ofEpochMilli(222222222), metaFact.getId());
+  }
+
+  @Test
   public void testCreateMetaFact() throws Exception {
     FactEntity referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
@@ -252,11 +274,7 @@ public class FactIT extends AbstractIT {
     FactAclEntity entry = createAclEntry(fact);
 
     // ... and check that the ACL can be received via the REST API.
-    Response response = request("/v1/fact/uuid/" + fact.getId() + "/access").get();
-    assertEquals(200, response.getStatus());
-    ArrayNode data = (ArrayNode) getPayload(response);
-    assertEquals(1, data.size());
-    assertEquals(entry.getId(), getIdFromModel(data.get(0)));
+    fetchAndAssertList("/v1/fact/uuid/" + fact.getId() + "/access", entry.getId());
   }
 
   @Test
@@ -282,11 +300,7 @@ public class FactIT extends AbstractIT {
     FactCommentEntity comment = createComment(fact);
 
     // ... and check that the comment can be received via the REST API.
-    Response response = request("/v1/fact/uuid/" + fact.getId() + "/comments").get();
-    assertEquals(200, response.getStatus());
-    ArrayNode data = (ArrayNode) getPayload(response);
-    assertEquals(1, data.size());
-    assertEquals(comment.getId(), getIdFromModel(data.get(0)));
+    fetchAndAssertList("/v1/fact/uuid/" + fact.getId() + "/comments", comment.getId());
   }
 
   @Test

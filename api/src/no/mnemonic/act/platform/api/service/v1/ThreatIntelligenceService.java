@@ -241,6 +241,22 @@ public interface ThreatIntelligenceService {
   }
 
   /**
+   * Fetch meta Facts bound to another Fact.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request limiting the returned Facts.
+   * @return Meta Facts bound to a specific Fact.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws ObjectNotFoundException       If the Fact to fetch meta Facts for could not be found.
+   */
+  default ResultSet<Fact> searchMetaFacts(RequestHeader rh, SearchMetaFactsRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Create a new meta Fact.
    *
    * @param rh      Contains meta data about the request.
