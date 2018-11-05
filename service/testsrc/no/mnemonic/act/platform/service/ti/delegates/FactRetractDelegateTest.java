@@ -55,7 +55,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
   @Test(expected = ObjectNotFoundException.class)
   public void testRetractFactNotExists() throws Exception {
-    delegate.handle(crateRetractRequest());
+    delegate.handle(createRetractRequest());
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -142,15 +142,14 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
-  public void testRetractFactSaveObjectFactBinding() throws Exception {
+  public void testRetractFactSaveMetaFactBinding() throws Exception {
     RetractFactRequest request = mockRetractingFact();
 
     delegate.handle(request);
 
-    verify(getObjectManager()).saveObjectFactBinding(argThat(binding -> {
+    verify(getFactManager()).saveMetaFactBinding(argThat(binding -> {
       assertNotNull(binding.getFactID());
-      assertNotNull(binding.getObjectID());
-      assertNotNull(binding.getDirection());
+      assertNotNull(binding.getMetaFactID());
       return true;
     }));
   }
@@ -182,7 +181,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   }
 
   private RetractFactRequest mockRetractingFact() {
-    RetractFactRequest request = crateRetractRequest();
+    RetractFactRequest request = createRetractRequest();
 
     ObjectEntity object = new ObjectEntity()
             .setId(UUID.randomUUID())
@@ -215,7 +214,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     return request;
   }
 
-  private RetractFactRequest crateRetractRequest() {
+  private RetractFactRequest createRetractRequest() {
     return new RetractFactRequest()
             .setFact(UUID.randomUUID())
             .setOrganization(UUID.randomUUID())
@@ -234,12 +233,10 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
       assertNotNull(entity.getId());
       assertNotNull(entity.getTypeID());
-      assertNotNull(entity.getValue());
       assertEquals(request.getFact(), entity.getInReferenceToID());
       assertEquals(request.getOrganization(), entity.getOrganizationID());
       assertEquals(request.getSource(), entity.getSourceID());
       assertEquals(request.getAccessMode().name(), entity.getAccessMode().name());
-      assertTrue(entity.getBindings().size() > 0);
       assertTrue(entity.getTimestamp() > 0);
       assertTrue(entity.getLastSeenTimestamp() > 0);
       return true;
@@ -259,7 +256,6 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertFalse(document.isRetracted());
       assertNotNull(document.getTypeID());
       assertEquals("retractionFact", document.getTypeName());
-      assertNotNull(document.getValue());
       assertEquals(request.getFact(), document.getInReferenceTo());
       assertEquals(request.getOrganization(), document.getOrganizationID());
       assertEquals(request.getSource(), document.getSourceID());
@@ -267,7 +263,6 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertTrue(document.getTimestamp() > 0);
       assertTrue(document.getLastSeenTimestamp() > 0);
       assertTrue(document.getAcl().size() > 0);
-      assertTrue(document.getObjects().size() > 0);
       return true;
     });
   }
