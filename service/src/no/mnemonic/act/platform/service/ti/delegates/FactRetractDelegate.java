@@ -8,7 +8,7 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.MetaFactBindingEntity;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
@@ -17,7 +17,6 @@ import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -88,24 +87,19 @@ public class FactRetractDelegate extends AbstractDelegate {
     FactEntity retractionFact = new FactEntity()
             .setId(UUID.randomUUID()) // Need to provide client-generated ID.
             .setTypeID(factTypeResolver.resolveRetractionFactType().getId())
-            .setValue(String.format("Retracted Fact with id = %s.", factToRetract.getId()))
             .setInReferenceToID(factToRetract.getId())
             .setOrganizationID(resolveOrganization(request.getOrganization()))
             .setSourceID(resolveSource(request.getSource()))
             .setAccessMode(resolveAccessMode(factToRetract, request.getAccessMode()))
-            .setBindings(factToRetract.getBindings())
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
     retractionFact = TiRequestContext.get().getFactManager().saveFact(retractionFact);
 
-    // Also bind retraction Fact to each Object the retracted Fact is bound to.
-    for (FactEntity.FactObjectBinding binding : ListUtils.list(factToRetract.getBindings())) {
-      ObjectFactBindingEntity retractionFactBinding = new ObjectFactBindingEntity()
-              .setFactID(retractionFact.getId())
-              .setObjectID(binding.getObjectID())
-              .setDirection(binding.getDirection());
-      TiRequestContext.get().getObjectManager().saveObjectFactBinding(retractionFactBinding);
-    }
+    // Save retraction Fact as a meta Fact of the retracted Fact.
+    TiRequestContext.get().getFactManager().saveMetaFactBinding(new MetaFactBindingEntity()
+            .setFactID(factToRetract.getId())
+            .setMetaFactID(retractionFact.getId())
+    );
 
     return retractionFact;
   }
