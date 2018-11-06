@@ -64,6 +64,34 @@ public class FactEndpointTest extends AbstractEndpointTest {
   }
 
   @Test
+  public void testGetMetaFacts() throws Exception {
+    UUID fact = UUID.randomUUID();
+    when(getTiService().searchMetaFacts(any(), isA(SearchMetaFactsRequest.class))).then(i -> {
+      SearchMetaFactsRequest request = i.getArgument(1);
+      assertEquals(fact, request.getFact());
+      assertTrue(request.getIncludeRetracted());
+      assertEquals(1480520820000L, (long) request.getBefore());
+      assertEquals(1480520821000L, (long) request.getAfter());
+      assertEquals(25, (int) request.getLimit());
+      return ResultSet.<Fact>builder().setValues(createFacts()).build();
+    });
+
+    Response response = target(String.format("/v1/fact/uuid/%s/meta", fact))
+            .queryParam("includeRetracted", true)
+            .queryParam("before", "2016-11-30T15:47:00Z")
+            .queryParam("after", "2016-11-30T15:47:01Z")
+            .queryParam("limit", 25)
+            .request()
+            .get();
+    JsonNode payload = getPayload(response);
+    assertEquals(200, response.getStatus());
+    assertTrue(payload.isArray());
+    assertEquals(3, payload.size());
+
+    verify(getTiService(), times(1)).searchMetaFacts(any(), isA(SearchMetaFactsRequest.class));
+  }
+
+  @Test
   public void testCreateMetaFact() throws Exception {
     UUID oldFact = UUID.randomUUID();
     UUID newFact = UUID.randomUUID();

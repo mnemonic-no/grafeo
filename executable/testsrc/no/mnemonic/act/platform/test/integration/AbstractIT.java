@@ -165,6 +165,14 @@ public abstract class AbstractIT {
     assertEquals(id, getIdFromModel(getPayload(response)));
   }
 
+  void fetchAndAssertList(String url, UUID id) throws Exception {
+    Response response = request(url).get();
+    assertEquals(200, response.getStatus());
+    ArrayNode data = (ArrayNode) getPayload(response);
+    assertEquals(1, data.size());
+    assertEquals(id, getIdFromModel(data.get(0)));
+  }
+
   void fetchAndAssertList(String url, ValidatingRequest request, UUID id) throws Exception {
     Response response = request(url).post(Entity.json(request));
     assertEquals(200, response.getStatus());
@@ -265,6 +273,43 @@ public abstract class AbstractIT {
     );
 
     return fact;
+  }
+
+  FactEntity createMetaFact(FactEntity referencedFact, FactTypeEntity metaFactType, ObjectPreparation<FactEntity> preparation) {
+    FactEntity meta = new FactEntity()
+            .setId(UUID.randomUUID())
+            .setTypeID(metaFactType.getId())
+            .setValue("factValue")
+            .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+            .setSourceID(UUID.randomUUID())
+            .setAccessMode(AccessMode.RoleBased)
+            .setTimestamp(123456789)
+            .setLastSeenTimestamp(987654321)
+            .setInReferenceToID(referencedFact.getId());
+
+    getFactManager().saveMetaFactBinding(new MetaFactBindingEntity()
+            .setFactID(referencedFact.getId())
+            .setMetaFactID(meta.getId())
+    );
+
+    meta = getFactManager().saveFact(preparation.prepare(meta));
+
+    getFactSearchManager().indexFact(new FactDocument()
+            .setId(meta.getId())
+            .setTypeID(metaFactType.getId())
+            .setTypeName(metaFactType.getName())
+            .setValue(meta.getValue())
+            .setInReferenceTo(meta.getInReferenceToID())
+            .setOrganizationID(meta.getOrganizationID())
+            .setOrganizationName("organizationName")
+            .setSourceID(meta.getSourceID())
+            .setSourceName("sourceName")
+            .setAccessMode(FactDocument.AccessMode.valueOf(meta.getAccessMode().name()))
+            .setTimestamp(meta.getTimestamp())
+            .setLastSeenTimestamp(meta.getLastSeenTimestamp())
+    );
+
+    return meta;
   }
 
   ObjectEntity createObject() {

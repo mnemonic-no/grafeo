@@ -125,6 +125,38 @@ public class FactEndpoint extends AbstractEndpoint {
             .buildResponse();
   }
 
+  @GET
+  @Path("/uuid/{fact}/meta")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Retrieve a Fact's meta Facts.",
+          notes = "This operation retrieves the meta Facts bound to another Fact. The request will be rejected with " +
+                  "a 403 if a user does not have access to the Fact for which meta Facts should be retrieved.",
+          response = Fact.class,
+          responseContainer = "list"
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 404, message = "Referenced Fact does not exist."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
+  public Response getMetaFacts(
+          @PathParam("fact") @ApiParam(value = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
+          @QueryParam("includeRetracted") @ApiParam(value = "Include retracted meta Facts (default false)") Boolean includeRetracted,
+          @QueryParam("before") @ApiParam(value = "Only return meta Facts added before a specific timestamp.") String before,
+          @QueryParam("after") @ApiParam(value = "Only return meta Facts added after a specific timestamp.") String after,
+          @QueryParam("limit") @ApiParam(value = "Limit the number of returned meta Facts (default 25, 0 means all)") Integer limit
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return buildResponse(service.searchMetaFacts(getHeader(), new SearchMetaFactsRequest()
+            .setFact(fact)
+            .setIncludeRetracted(includeRetracted)
+            .setBefore(parseTimestamp("before", before))
+            .setAfter(parseTimestamp("after", after))
+            .setLimit(limit)
+    ));
+  }
+
   @POST
   @Path("/uuid/{fact}/meta")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -135,7 +167,9 @@ public class FactEndpoint extends AbstractEndpoint {
                   "existing Fact. The new meta Fact must conform to the specified FactType, i.e. the value must pass the " +
                   "FactType's Validator and the FactType of the referenced Fact must fulfil the definition by the FactType.\n\n" +
                   "If a meta Fact with the same type, value, organization, source, accessMode and confidenceLevel exists, " +
-                  "no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
+                  "no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.\n\n" +
+                  "The request will be rejected with a 403 if a user does not have access to the Fact for which the new " +
+                  "meta Fact should be created.",
           response = Fact.class,
           code = 201
   )
