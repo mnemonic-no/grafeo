@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
+import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +25,12 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
 
   @Mock
   private FactTypeHelper factTypeHelper;
+  @Mock
+  private FactTypeResolver factTypeResolver;
+
+  private final FactTypeEntity retractionFactType = new FactTypeEntity()
+          .setId(UUID.randomUUID())
+          .setName("Retraction");
 
   private FactTypeUpdateDelegate delegate;
 
@@ -33,14 +40,25 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
     when(getFactManager().saveFactType(any())).then(i -> i.getArgument(0));
     when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
     when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
+    when(factTypeResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
     delegate = FactTypeUpdateDelegate.builder()
             .setFactTypeHelper(factTypeHelper)
+            .setFactTypeResolver(factTypeResolver)
             .build();
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateDelegateWithoutFactTypeHelper() {
-    FactTypeUpdateDelegate.builder().build();
+    FactTypeUpdateDelegate.builder()
+            .setFactTypeResolver(factTypeResolver)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateDelegateWithoutFactTypeResolver() {
+    FactTypeUpdateDelegate.builder()
+            .setFactTypeHelper(factTypeHelper)
+            .build();
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -52,6 +70,12 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
   @Test(expected = ObjectNotFoundException.class)
   public void testUpdateFactTypeNotExisting() throws Exception {
     delegate.handle(new UpdateFactTypeRequest().setId(UUID.randomUUID()));
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testUpdateRetractionFactTypeNotAllowed() throws Exception {
+    when(getFactManager().getFactType(retractionFactType.getId())).thenReturn(retractionFactType);
+    delegate.handle(new UpdateFactTypeRequest().setId(retractionFactType.getId()));
   }
 
   @Test

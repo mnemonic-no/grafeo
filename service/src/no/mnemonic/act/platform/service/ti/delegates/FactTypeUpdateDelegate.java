@@ -11,17 +11,22 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
+import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import java.util.Objects;
+
 public class FactTypeUpdateDelegate extends AbstractDelegate {
 
   private final FactTypeHelper factTypeHelper;
+  private final FactTypeResolver factTypeResolver;
 
-  private FactTypeUpdateDelegate(FactTypeHelper factTypeHelper) {
+  private FactTypeUpdateDelegate(FactTypeHelper factTypeHelper, FactTypeResolver factTypeResolver) {
     this.factTypeHelper = factTypeHelper;
+    this.factTypeResolver = factTypeResolver;
   }
 
   public FactType handle(UpdateFactTypeRequest request)
@@ -29,6 +34,9 @@ public class FactTypeUpdateDelegate extends AbstractDelegate {
     SecurityContext.get().checkPermission(TiFunctionConstants.updateTypes);
 
     FactTypeEntity entity = fetchExistingFactType(request.getId());
+    if (Objects.equals(entity.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
+      throw new AccessDeniedException("Not allowed to update the system-defined Retraction FactType.");
+    }
 
     if (!StringUtils.isBlank(request.getName())) {
       factTypeHelper.assertFactTypeNotExists(request.getName());
@@ -67,17 +75,24 @@ public class FactTypeUpdateDelegate extends AbstractDelegate {
 
   public static class Builder {
     private FactTypeHelper factTypeHelper;
+    private FactTypeResolver factTypeResolver;
 
     private Builder() {
     }
 
     public FactTypeUpdateDelegate build() {
       ObjectUtils.notNull(factTypeHelper, "Cannot instantiate FactTypeUpdateDelegate without 'factTypeHelper'.");
-      return new FactTypeUpdateDelegate(factTypeHelper);
+      ObjectUtils.notNull(factTypeResolver, "Cannot instantiate FactTypeUpdateDelegate without 'factTypeResolver'.");
+      return new FactTypeUpdateDelegate(factTypeHelper, factTypeResolver);
     }
 
     public Builder setFactTypeHelper(FactTypeHelper factTypeHelper) {
       this.factTypeHelper = factTypeHelper;
+      return this;
+    }
+
+    public Builder setFactTypeResolver(FactTypeResolver factTypeResolver) {
+      this.factTypeResolver = factTypeResolver;
       return this;
     }
   }
