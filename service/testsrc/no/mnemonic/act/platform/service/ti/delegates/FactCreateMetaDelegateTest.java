@@ -39,6 +39,9 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
 
   private FactCreateMetaDelegate delegate;
 
+  private final FactTypeEntity retractionFactType = new FactTypeEntity()
+          .setId(UUID.randomUUID())
+          .setName("Retraction");
   private FactTypeEntity seenInFactType = new FactTypeEntity()
           .setId(UUID.randomUUID())
           .setName("seenIn");
@@ -100,12 +103,24 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     delegate.handle(request);
   }
 
+  @Test(expected = AccessDeniedException.class)
+  public void testCreateMetaFactWithRetractionFactTypeThrowsException() throws Exception {
+    CreateMetaFactRequest request = new CreateMetaFactRequest()
+            .setFact(seenIn.getId())
+            .setType(retractionFactType.getName());
+
+    when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
+    mockFetchingFactType();
+
+    delegate.handle(request);
+  }
+
   @Test
   public void testValidateFactValueThrowsException() throws Exception {
     CreateMetaFactRequest request = createRequest();
 
     when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
-    when(factTypeResolver.resolveFactType(observationFactType.getName())).thenReturn(observationFactType);
+    mockFetchingFactType();
     Validator validatorMock = mockValidator(false);
 
     expectInvalidArgumentException(() -> delegate.handle(request), "fact.not.valid");
@@ -119,7 +134,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     observationFactType.setRelevantFactBindings(null);
 
     when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
-    when(factTypeResolver.resolveFactType(observationFactType.getName())).thenReturn(observationFactType);
+    mockFetchingFactType();
     mockValidator(true);
 
     expectInvalidArgumentException(() -> delegate.handle(request), "invalid.meta.fact.binding");
@@ -134,7 +149,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setFact(anotherFact.getId());
 
     when(getFactManager().getFact(anotherFact.getId())).thenReturn(anotherFact);
-    when(factTypeResolver.resolveFactType(observationFactType.getName())).thenReturn(observationFactType);
+    mockFetchingFactType();
     mockValidator(true);
 
     expectInvalidArgumentException(() -> delegate.handle(request), "invalid.meta.fact.binding");
@@ -278,18 +293,23 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
   }
 
   private void mockCreateNewFact() throws Exception {
+    mockFetchingFactType();
     mockValidator(true);
     mockFactConverter();
 
     // Mock fetching of referenced Fact.
     when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
-    // Mock fetching of FactType.
-    when(factTypeResolver.resolveFactType(observationFactType.getName())).thenReturn(observationFactType);
     // Mock fetching of existing Fact.
     when(getFactSearchManager().retrieveExistingFacts(any())).thenReturn(SearchResult.<FactDocument>builder().build());
     // Mock stuff needed for saving Fact.
     when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
     when(factStorageHelper.saveInitialAclForNewFact(any(), any())).thenAnswer(i -> i.getArgument(1));
+  }
+
+  private void mockFetchingFactType() throws Exception {
+    when(factTypeResolver.resolveFactType(observationFactType.getName())).thenReturn(observationFactType);
+    when(factTypeResolver.resolveFactType(retractionFactType.getName())).thenReturn(retractionFactType);
+    when(factTypeResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
   }
 
   private Validator mockValidator(boolean valid) {

@@ -179,6 +179,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return FactTypeUpdateDelegate.builder()
             .setFactTypeHelper(new FactTypeHelper(factManager, objectManager))
+            .setFactTypeResolver(new FactTypeResolver(factManager))
             .build()
             .handle(request);
   }

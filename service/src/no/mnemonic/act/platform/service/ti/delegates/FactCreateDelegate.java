@@ -46,8 +46,12 @@ public class FactCreateDelegate extends AbstractDelegate {
     // Verify that user is allowed to add Facts for the requested organization.
     TiSecurityContext.get().checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
 
-    // Validate that requested Fact matches its FactType.
     FactTypeEntity type = factTypeResolver.resolveFactType(request.getType());
+    if (Objects.equals(type.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
+      throw new AccessDeniedException("Not allowed to manually use system-defined Retraction FactType. Use /retract endpoint instead.");
+    }
+
+    // Validate that requested Fact matches its FactType.
     assertValidFactValue(type, request.getValue());
     assertValidFactObjectBindings(request, type);
 

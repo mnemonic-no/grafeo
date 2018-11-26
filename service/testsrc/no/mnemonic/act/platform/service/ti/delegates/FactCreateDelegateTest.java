@@ -45,6 +45,9 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   private final ObjectTypeEntity domainObjectType = new ObjectTypeEntity()
           .setId(UUID.randomUUID())
           .setName("domain");
+  private final FactTypeEntity retractionFactType = new FactTypeEntity()
+          .setId(UUID.randomUUID())
+          .setName("Retraction");
   private final FactTypeEntity resolveFactType = new FactTypeEntity()
           .setId(UUID.randomUUID())
           .setName("resolve")
@@ -108,6 +111,12 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     CreateFactRequest request = createRequest();
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.addFactObjects, request.getOrganization());
     delegate.handle(request);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCreateFactWithRetractionFactTypeThrowsException() throws Exception {
+    mockFetchingFactType();
+    delegate.handle(new CreateFactRequest().setType(retractionFactType.getName()));
   }
 
   @Test
@@ -336,6 +345,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
   private void mockFetchingFactType() throws Exception {
     when(factTypeResolver.resolveFactType(resolveFactType.getName())).thenReturn(resolveFactType);
+    when(factTypeResolver.resolveFactType(retractionFactType.getName())).thenReturn(retractionFactType);
+    when(factTypeResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
   }
 
   private void mockFetchingObjects() throws Exception {
