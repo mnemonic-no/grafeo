@@ -38,8 +38,10 @@ public abstract class AbstractManagerTest {
 
   @Before
   public void initialize() {
-    factSearchManager = new FactSearchManager(clientFactory);
-    factSearchManager.setTestEnvironment(true);
+    factSearchManager = new FactSearchManager(clientFactory)
+            .setTestEnvironment(true)
+            .setSearchScrollExpiration("5s")
+            .setSearchScrollSize(1);
     factSearchManager.startComponent();
   }
 

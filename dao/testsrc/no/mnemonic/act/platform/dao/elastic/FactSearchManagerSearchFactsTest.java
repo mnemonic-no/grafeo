@@ -3,7 +3,8 @@ package no.mnemonic.act.platform.dao.elastic;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
 import java.util.List;
@@ -485,51 +486,25 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testSearchFactsLimitResults() {
-    testSearchFactsWithLimit(2, 2);
-  }
-
-  @Test
-  public void testSearchFactsLimitResultsNegativeLimit() {
-    testSearchFactsWithLimit(-1, 3);
-  }
-
-  @Test
-  public void testSearchFactsLimitResultsOverMaxResultWindowLimit() {
-    testSearchFactsWithLimit(Integer.MAX_VALUE, 3);
-  }
-
-  @Test
   public void testSearchFactsPopulateSearchResult() {
     indexFact(d -> d);
     indexFact(d -> d);
     indexFact(d -> d);
 
-    SearchResult<FactDocument> result = getFactSearchManager().searchFacts(createFactSearchCriteria(b -> b.setLimit(2)));
-    assertEquals(2, result.getLimit());
+    ScrollingSearchResult<FactDocument> result = getFactSearchManager().searchFacts(createFactSearchCriteria(b -> b));
     assertEquals(3, result.getCount());
-    assertEquals(2, result.getValues().size());
+    assertEquals(3, ListUtils.list(result).size());
   }
 
   private void testSearchFacts(FactSearchCriteria criteria, FactDocument accessibleFact) {
-    List<FactDocument> result = getFactSearchManager().searchFacts(criteria).getValues();
+    List<FactDocument> result = ListUtils.list(getFactSearchManager().searchFacts(criteria));
     assertEquals(1, result.size());
     assertFactDocument(accessibleFact, result.get(0));
   }
 
   private void testSearchFacts(FactSearchCriteria criteria, int numberOfMatches) {
-    List<FactDocument> result = getFactSearchManager().searchFacts(criteria).getValues();
+    List<FactDocument> result = ListUtils.list(getFactSearchManager().searchFacts(criteria));
     assertEquals(numberOfMatches, result.size());
-  }
-
-  private void testSearchFactsWithLimit(int limit, int numberOfExpectedResults) {
-    indexFact(d -> d);
-    indexFact(d -> d);
-    indexFact(d -> d);
-
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(limit));
-    List<FactDocument> result = getFactSearchManager().searchFacts(criteria).getValues();
-    assertEquals(numberOfExpectedResults, result.size());
   }
 
 }
