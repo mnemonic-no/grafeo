@@ -132,7 +132,7 @@ public class ScrollingSearchResult<T extends ElasticDocument> implements Iterato
    *
    * @param <T> Type of result values
    */
-  public static class ScrollingBatch<T> implements Iterator<T> {
+  public static class ScrollingBatch<T extends ElasticDocument> implements Iterator<T> {
     private final String scrollId;
     private final Iterator<T> values;
     private final boolean finished;

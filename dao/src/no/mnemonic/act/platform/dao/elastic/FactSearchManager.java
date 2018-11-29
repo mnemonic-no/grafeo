@@ -337,6 +337,8 @@ public class FactSearchManager implements LifecycleAspect {
 
   /**
    * Specify how long the search context of a scrolling search will be kept open in ElasticSearch. Defaults to 1 minute.
+   * <p>
+   * Accepts an ElasticSearch time unit: https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#time-units
    *
    * @param searchScrollExpiration Expiration time of search context
    * @return Class instance, i.e. 'this'
