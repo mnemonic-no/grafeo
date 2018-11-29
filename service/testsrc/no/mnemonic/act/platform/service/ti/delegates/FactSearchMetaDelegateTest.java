@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import org.junit.Test;
 
@@ -78,7 +78,7 @@ public class FactSearchMetaDelegateTest extends AbstractDelegateTest {
     SearchMetaFactsRequest request = new SearchMetaFactsRequest().setFact(UUID.randomUUID());
 
     mockSearchMetaFacts();
-    when(getFactSearchManager().searchFacts(any())).thenReturn(SearchResult.<FactDocument>builder().build());
+    when(getFactSearchManager().searchFacts(any())).thenReturn(ScrollingSearchResult.<FactDocument>builder().build());
     when(getFactManager().getFacts(any())).thenReturn(Collections.emptyIterator());
 
     ResultSet<Fact> result = FactSearchMetaDelegate.create().handle(request);
@@ -109,10 +109,10 @@ public class FactSearchMetaDelegateTest extends AbstractDelegateTest {
 
   private void mockSearchMetaFacts() {
     UUID factID = UUID.randomUUID();
-    SearchResult<FactDocument> result = SearchResult.<FactDocument>builder()
-            .setLimit(25)
+    ScrollingSearchResult<FactDocument> result = ScrollingSearchResult.<FactDocument>builder()
+            .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_ID",
+                    Collections.singleton(new FactDocument().setId(factID)).iterator(), true))
             .setCount(100)
-            .addValue(new FactDocument().setId(factID))
             .build();
 
     when(getFactManager().getFact(any())).thenReturn(new FactEntity());

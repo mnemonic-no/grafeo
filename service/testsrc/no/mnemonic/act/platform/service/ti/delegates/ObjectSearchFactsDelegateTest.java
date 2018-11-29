@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import org.junit.Test;
 
@@ -155,7 +155,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
   private void testSearchObjectFactsNoResult(SearchObjectFactsRequest request) throws Exception {
     mockSearchObjectFacts();
-    when(getFactSearchManager().searchFacts(any())).thenReturn(SearchResult.<FactDocument>builder().build());
+    when(getFactSearchManager().searchFacts(any())).thenReturn(ScrollingSearchResult.<FactDocument>builder().build());
     when(getFactManager().getFacts(any())).thenReturn(Collections.emptyIterator());
 
     ResultSet<Fact> result = ObjectSearchFactsDelegate.create().handle(request);
@@ -183,10 +183,10 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
   private void mockSearchObjectFacts() {
     UUID factID = UUID.randomUUID();
-    SearchResult<FactDocument> result = SearchResult.<FactDocument>builder()
-            .setLimit(25)
+    ScrollingSearchResult<FactDocument> result = ScrollingSearchResult.<FactDocument>builder()
+            .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_ID",
+                    Collections.singleton(new FactDocument().setId(factID)).iterator(), true))
             .setCount(100)
-            .addValue(new FactDocument().setId(factID))
             .build();
 
     when(getObjectManager().getObjectType(isA(String.class))).thenReturn(new ObjectTypeEntity());

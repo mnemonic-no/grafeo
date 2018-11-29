@@ -47,7 +47,7 @@
     <disruptor.version>3.4.2</disruptor.version>
     <elastic.search.version>5.6.11</elastic.search.version>
     <guava.version>26.0-jre</guava.version>
-    <guice.version>4.2.0</guice.version>
+    <guice.version>4.2.2</guice.version>
     <hibernate.validator.version>6.0.12.Final</hibernate.validator.version>
     <jackson.version>2.9.6</jackson.version>
     <javax.el.version>3.0.1-b10</javax.el.version>

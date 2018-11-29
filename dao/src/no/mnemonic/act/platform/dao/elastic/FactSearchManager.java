@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
+import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
@@ -30,6 +31,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -95,6 +97,8 @@ public class FactSearchManager implements LifecycleAspect {
   @Dependency
   private final ClientFactory clientFactory;
 
+  private String searchScrollExpiration = "1m";
+  private int searchScrollSize = 1000;
   private boolean isTestEnvironment = false;
 
   @Inject
@@ -211,7 +215,9 @@ public class FactSearchManager implements LifecycleAspect {
 
   /**
    * Search for Facts indexed in ElasticSearch by a given search criteria. Only Facts satisfying the search criteria
-   * will be returned. Returns an empty result container if no Fact satisfies the search criteria.
+   * will be returned. Returns a result container which will stream out the results from ElasticSearch. It will not
+   * limit the number of returned results. This must be done by the caller. Returns an empty result container if no
+   * Fact satisfies the search criteria.
    * <p>
    * Both 'currentUserID' (identifying the calling user) and 'availableOrganizationID' (identifying the Organizations
    * the calling user has access to) must be set in the search criteria in order to apply access control to Facts. Only
@@ -220,8 +226,8 @@ public class FactSearchManager implements LifecycleAspect {
    * @param criteria Search criteria to match against Facts
    * @return Facts satisfying search criteria wrapped inside a result container
    */
-  public SearchResult<FactDocument> searchFacts(FactSearchCriteria criteria) {
-    if (criteria == null) return SearchResult.<FactDocument>builder().build();
+  public ScrollingSearchResult<FactDocument> searchFacts(FactSearchCriteria criteria) {
+    if (criteria == null) return ScrollingSearchResult.<FactDocument>builder().build();
 
     SearchResponse response;
     try {
@@ -232,16 +238,14 @@ public class FactSearchManager implements LifecycleAspect {
 
     if (response.status() != RestStatus.OK) {
       LOGGER.warning("Could not search for Facts (response code %s).", response.status());
-      return SearchResult.<FactDocument>builder().setLimit(criteria.getLimit()).build();
+      return ScrollingSearchResult.<FactDocument>builder().build();
     }
 
-    List<FactDocument> result = retrieveFactDocuments(response);
-
-    LOGGER.info("Successfully retrieved %d Facts from a total of %d matching Facts.", result.size(), response.getHits().getTotalHits());
-    return SearchResult.<FactDocument>builder()
-            .setLimit(criteria.getLimit())
+    LOGGER.info("Successfully initiated streaming of search results. Start fetching data.");
+    return ScrollingSearchResult.<FactDocument>builder()
+            .setInitialBatch(createFactsBatch(response))
+            .setFetchNextBatch(this::fetchNextFactsBatch)
             .setCount((int) response.getHits().getTotalHits())
-            .setValues(result)
             .build();
   }
 
@@ -331,6 +335,30 @@ public class FactSearchManager implements LifecycleAspect {
     return this;
   }
 
+  /**
+   * Specify how long the search context of a scrolling search will be kept open in ElasticSearch. Defaults to 1 minute.
+   * <p>
+   * Accepts an ElasticSearch time unit: https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#time-units
+   *
+   * @param searchScrollExpiration Expiration time of search context
+   * @return Class instance, i.e. 'this'
+   */
+  public FactSearchManager setSearchScrollExpiration(String searchScrollExpiration) {
+    this.searchScrollExpiration = searchScrollExpiration;
+    return this;
+  }
+
+  /**
+   * Specify the batch size when fetching data from ElasticSearch using a scrolling search. Defaults to 1000.
+   *
+   * @param searchScrollSize Batch size
+   * @return Class instance, i.e. 'this'
+   */
+  public FactSearchManager setSearchScrollSize(int searchScrollSize) {
+    this.searchScrollSize = searchScrollSize;
+    return this;
+  }
+
   private boolean indexExists() {
     Response response;
 
@@ -365,6 +393,37 @@ public class FactSearchManager implements LifecycleAspect {
     LOGGER.info("Successfully created index '%s'.", INDEX_NAME);
   }
 
+  private ScrollingSearchResult.ScrollingBatch<FactDocument> fetchNextFactsBatch(String scrollId) {
+    SearchResponse response;
+    try {
+      response = clientFactory.getHighLevelClient().searchScroll(new SearchScrollRequest()
+              .scrollId(scrollId)
+              .scroll(searchScrollExpiration));
+    } catch (IOException ex) {
+      LOGGER.warning(ex, "Could not perform request to retrieve next batch of search results. Stop scrolling.");
+      return ScrollingSearchResult.emptyBatch();
+    }
+
+    if (response.status() != RestStatus.OK) {
+      LOGGER.warning("Could not retrieve next batch of search results (response code %s). Stop scrolling.", response.status());
+      return ScrollingSearchResult.emptyBatch();
+    }
+
+    return createFactsBatch(response);
+  }
+
+  private ScrollingSearchResult.ScrollingBatch<FactDocument> createFactsBatch(SearchResponse response) {
+    List<FactDocument> values = retrieveFactDocuments(response);
+    LOGGER.debug("Successfully retrieved next batch of search results (batch: %d, total: %d).", values.size(), response.getHits().getTotalHits());
+
+    boolean finished = values.size() < searchScrollSize;
+    if (finished) {
+      LOGGER.info("Successfully retrieved all search results. No more data available.");
+    }
+
+    return new ScrollingSearchResult.ScrollingBatch<>(response.getScrollId(), values.iterator(), finished);
+  }
+
   private SearchRequest buildFactExistenceSearchRequest(FactExistenceSearchCriteria criteria) {
     SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
             .size(MAX_RESULT_WINDOW) // Always return all matching documents, but usually this should be zero or one.
@@ -377,11 +436,12 @@ public class FactSearchManager implements LifecycleAspect {
 
   private SearchRequest buildFactsSearchRequest(FactSearchCriteria criteria) {
     SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
-            .size(calculateMaximumSize(criteria))
+            .size(searchScrollSize)
             .query(buildFactsQuery(criteria));
     return new SearchRequest()
             .indices(INDEX_NAME)
             .types(TYPE_NAME)
+            .scroll(searchScrollExpiration)
             .source(sourceBuilder);
   }
 
