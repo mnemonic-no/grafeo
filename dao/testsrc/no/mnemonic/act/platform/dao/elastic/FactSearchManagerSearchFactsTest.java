@@ -198,24 +198,6 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testSearchFactsFilterByRetractedTrue() {
-    FactDocument accessibleFact = indexFact(d -> d.setRetracted(true));
-    indexFact(d -> d.setRetracted(false));
-
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setRetracted(true));
-    testSearchFacts(criteria, accessibleFact);
-  }
-
-  @Test
-  public void testSearchFactsFilterByRetractedFalse() {
-    FactDocument accessibleFact = indexFact(d -> d.setRetracted(false));
-    indexFact(d -> d.setRetracted(true));
-
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setRetracted(false));
-    testSearchFacts(criteria, accessibleFact);
-  }
-
-  @Test
   public void testSearchFactsFilterByKeywordsDefaultSettings() {
     FactDocument accessibleFact = indexFact(d -> d.setValue("matching value"));
     indexFact(d -> d.setValue("not matching value"));

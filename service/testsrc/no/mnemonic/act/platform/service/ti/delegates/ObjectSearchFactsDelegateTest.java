@@ -5,16 +5,15 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -22,15 +21,33 @@ import static org.mockito.Mockito.*;
 
 public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
+  @Mock
+  private FactSearchHandler factSearchHandler;
+
+  private ObjectSearchFactsDelegate delegate;
+
+  @Before
+  public void setup() {
+    // initMocks() will be called by base class.
+    delegate = ObjectSearchFactsDelegate.builder()
+            .setFactSearchHandler(factSearchHandler)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateDelegateWithoutFactSearchHandler() {
+    ObjectSearchFactsDelegate.builder().build();
+  }
+
   @Test(expected = AccessDeniedException.class)
   public void testSearchObjectFactsWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
-    ObjectSearchFactsDelegate.create().handle(new SearchObjectFactsRequest());
+    delegate.handle(new SearchObjectFactsRequest());
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testSearchObjectFactsWithoutSpecifiedObject() throws Exception {
-    ObjectSearchFactsDelegate.create().handle(new SearchObjectFactsRequest());
+    delegate.handle(new SearchObjectFactsRequest());
   }
 
   @Test
@@ -38,7 +55,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
 
     try {
-      ObjectSearchFactsDelegate.create().handle(request);
+      delegate.handle(request);
       fail();
     } catch (InvalidArgumentException ignored) {
       verify(getObjectManager()).getObjectType(request.getObjectType());
@@ -52,7 +69,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
 
     try {
-      ObjectSearchFactsDelegate.create().handle(request);
+      delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
       verify(getObjectManager()).getObject(request.getObjectID());
@@ -67,7 +84,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
 
     try {
-      ObjectSearchFactsDelegate.create().handle(request);
+      delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
       verify(getObjectManager()).getObjectType(request.getObjectType());
@@ -80,7 +97,8 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   public void testSearchObjectFactsByIdPopulateCriteria() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest()
             .setObjectID(UUID.randomUUID())
-            .addFactValue("factValue");
+            .addFactValue("factValue")
+            .setIncludeRetracted(true);
     testPopulateCriteria(request);
   }
 
@@ -89,32 +107,9 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest()
             .setObjectType("type")
             .setObjectValue("value")
-            .addFactValue("factValue");
+            .addFactValue("factValue")
+            .setIncludeRetracted(true);
     testPopulateCriteria(request);
-  }
-
-  @Test
-  public void testSearchObjectFactsByIdFilterNonAccessibleFacts() throws Exception {
-    SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(UUID.randomUUID());
-    testFilterNonAccessibleFacts(request);
-  }
-
-  @Test
-  public void testSearchObjectFactsByTypeValueFilterNonAccessibleFacts() throws Exception {
-    SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
-    testFilterNonAccessibleFacts(request);
-  }
-
-  @Test
-  public void testSearchObjectFactsByIdNoResult() throws Exception {
-    SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(UUID.randomUUID());
-    testSearchObjectFactsNoResult(request);
-  }
-
-  @Test
-  public void testSearchObjectFactsByTypeValueNoResult() throws Exception {
-    SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
-    testSearchObjectFactsNoResult(request);
   }
 
   @Test
@@ -131,8 +126,8 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
   private void testPopulateCriteria(SearchObjectFactsRequest request) throws Exception {
     mockSearchObjectFacts();
-    ObjectSearchFactsDelegate.create().handle(request);
-    verify(getFactSearchManager()).searchFacts(argThat(criteria -> {
+    delegate.handle(request);
+    verify(factSearchHandler).search(argThat(criteria -> {
       assertTrue(criteria.getObjectTypeName().size() == 0);
       assertTrue(criteria.getObjectValue().size() == 0);
       assertTrue(criteria.getObjectID().size() > 0);
@@ -140,65 +135,35 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
       assertTrue(criteria.getAvailableOrganizationID().size() > 0);
       assertNotNull(criteria.getCurrentUserID());
       return true;
-    }));
-  }
-
-  private void testFilterNonAccessibleFacts(SearchObjectFactsRequest request) throws Exception {
-    mockSearchObjectFacts();
-    when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(false);
-
-    ResultSet<Fact> result = ObjectSearchFactsDelegate.create().handle(request);
-    assertEquals(25, result.getLimit());
-    assertEquals(100, result.getCount());
-    assertEquals(0, result.getValues().size());
-  }
-
-  private void testSearchObjectFactsNoResult(SearchObjectFactsRequest request) throws Exception {
-    mockSearchObjectFacts();
-    when(getFactSearchManager().searchFacts(any())).thenReturn(ScrollingSearchResult.<FactDocument>builder().build());
-    when(getFactManager().getFacts(any())).thenReturn(Collections.emptyIterator());
-
-    ResultSet<Fact> result = ObjectSearchFactsDelegate.create().handle(request);
-    assertEquals(0, result.getCount());
-    assertEquals(0, result.getValues().size());
-
-    verify(getFactSearchManager()).searchFacts(any());
-    verify(getFactManager()).getFacts(argThat(List::isEmpty));
+    }), eq(request.getIncludeRetracted()));
   }
 
   private void testSearchObjectFacts(SearchObjectFactsRequest request) throws Exception {
     mockSearchObjectFacts();
 
-    ResultSet<Fact> result = ObjectSearchFactsDelegate.create().handle(request);
+    ResultSet<Fact> result = delegate.handle(request);
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());
     assertEquals(1, result.getValues().size());
 
-    verify(getFactSearchManager()).searchFacts(any());
-    verify(getFactManager()).getFacts(any());
-    verify(getFactConverter()).apply(any());
-    verify(getSecurityContext()).hasReadPermission(isA(FactEntity.class));
+    verify(factSearchHandler).search(isNotNull(), isNull());
     verify(getSecurityContext()).checkReadPermission(isA(ObjectEntity.class));
   }
 
   private void mockSearchObjectFacts() {
-    UUID factID = UUID.randomUUID();
-    ScrollingSearchResult<FactDocument> result = ScrollingSearchResult.<FactDocument>builder()
-            .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_ID",
-                    Collections.singleton(new FactDocument().setId(factID)).iterator(), true))
-            .setCount(100)
-            .build();
-
     when(getObjectManager().getObjectType(isA(String.class))).thenReturn(new ObjectTypeEntity());
     when(getObjectManager().getObject(any())).thenReturn(new ObjectEntity().setId(UUID.randomUUID()));
     when(getObjectManager().getObject(any(), any())).thenReturn(new ObjectEntity().setId(UUID.randomUUID()));
 
     when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(getSecurityContext().getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
-    when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(true);
-    when(getFactSearchManager().searchFacts(any())).thenReturn(result);
-    when(getFactManager().getFacts(any())).thenReturn(Collections.singleton(new FactEntity().setId(factID)).iterator());
-    when(getFactConverter().apply(any())).thenReturn(Fact.builder().setId(factID).build());
+
+    when(factSearchHandler.search(any(), any())).thenReturn(ResultSet.<Fact>builder()
+            .setLimit(25)
+            .setCount(100)
+            .setValues(Collections.singleton(Fact.builder().build()))
+            .build()
+    );
   }
 
 }

@@ -49,7 +49,6 @@ public class SearchObjectFactsRequestConverter implements Converter<SearchObject
             .setOrganizationName(noneUUID(request.getOrganization()))
             .setSourceID(onlyUUID(request.getSource()))
             .setSourceName(noneUUID(request.getSource()))
-            .setRetracted(determineRetracted(request.getIncludeRetracted()))
             .setStartTimestamp(request.getAfter())
             .setEndTimestamp(request.getBefore())
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.timestamp)
@@ -57,14 +56,6 @@ public class SearchObjectFactsRequestConverter implements Converter<SearchObject
             .setCurrentUserID(currentUserIdSupplier.get())
             .setAvailableOrganizationID(availableOrganizationIdSupplier.get())
             .build();
-  }
-
-  private Boolean determineRetracted(Boolean includeRetracted) {
-    // By default don't return retracted Facts, i.e. filter Facts where 'retracted' flag is set to false.
-    if (includeRetracted == null || !includeRetracted) return false;
-    // Don't filter on 'retracted' flag in order to also include retracted Facts.
-    // If this would return true only retracted Facts would be returned.
-    return null;
   }
 
   public static Builder builder() {

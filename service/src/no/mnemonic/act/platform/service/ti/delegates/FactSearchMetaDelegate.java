@@ -11,11 +11,15 @@ import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;
+import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
+import no.mnemonic.commons.utilities.ObjectUtils;
 
 public class FactSearchMetaDelegate extends AbstractDelegate {
 
-  public static FactSearchMetaDelegate create() {
-    return new FactSearchMetaDelegate();
+  private final FactSearchHandler factSearchHandler;
+
+  private FactSearchMetaDelegate(FactSearchHandler factSearchHandler) {
+    this.factSearchHandler = factSearchHandler;
   }
 
   public ResultSet<Fact> handle(SearchMetaFactsRequest request)
@@ -25,7 +29,7 @@ public class FactSearchMetaDelegate extends AbstractDelegate {
     // Fetch referenced Fact, verify that it exists and that user is allowed to access the Fact.
     TiSecurityContext.get().checkReadPermission(fetchExistingFact(request.getFact()));
     // Search for meta Facts bound to the referenced Fact.
-    return searchForFacts(toCriteria(request));
+    return factSearchHandler.search(toCriteria(request), request.getIncludeRetracted());
   }
 
   private FactSearchCriteria toCriteria(SearchMetaFactsRequest request) {
@@ -36,4 +40,24 @@ public class FactSearchMetaDelegate extends AbstractDelegate {
             .apply(request);
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+    private FactSearchHandler factSearchHandler;
+
+    private Builder() {
+    }
+
+    public FactSearchMetaDelegate build() {
+      ObjectUtils.notNull(factSearchHandler, "Cannot instantiate FactSearchMetaDelegate without 'factSearchHandler'.");
+      return new FactSearchMetaDelegate(factSearchHandler);
+    }
+
+    public Builder setFactSearchHandler(FactSearchHandler factSearchHandler) {
+      this.factSearchHandler = factSearchHandler;
+      return this;
+    }
+  }
 }

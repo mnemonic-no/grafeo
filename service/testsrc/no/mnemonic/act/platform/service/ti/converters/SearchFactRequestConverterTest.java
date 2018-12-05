@@ -38,7 +38,6 @@ public class SearchFactRequestConverterTest {
   @Test
   public void testConvertEmptyRequest() {
     FactSearchCriteria criteria = converter.apply(new SearchFactRequest());
-    assertFalse(criteria.getRetracted());
     assertEquals(25, criteria.getLimit());
     assertNotNull(criteria.getCurrentUserID());
     assertNotNull(criteria.getAvailableOrganizationID());
@@ -110,18 +109,6 @@ public class SearchFactRequestConverterTest {
     );
     assertEquals(SetUtils.set(id), criteria.getSourceID());
     assertEquals(SetUtils.set(name), criteria.getSourceName());
-  }
-
-  @Test
-  public void testConvertRequestIncludeRetracted() {
-    FactSearchCriteria criteria = converter.apply(new SearchFactRequest().setIncludeRetracted(true));
-    assertNull(criteria.getRetracted());
-  }
-
-  @Test
-  public void testConvertRequestExcludeRetracted() {
-    FactSearchCriteria criteria = converter.apply(new SearchFactRequest().setIncludeRetracted(false));
-    assertFalse(criteria.getRetracted());
   }
 
   @Test

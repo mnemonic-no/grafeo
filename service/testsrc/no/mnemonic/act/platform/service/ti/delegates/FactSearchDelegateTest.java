@@ -4,15 +4,13 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
 import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -23,74 +21,58 @@ import static org.mockito.Mockito.*;
 
 public class FactSearchDelegateTest extends AbstractDelegateTest {
 
+  @Mock
+  private FactSearchHandler factSearchHandler;
+
+  private FactSearchDelegate delegate;
+
   @Before
   public void setup() {
-    UUID factID = UUID.randomUUID();
     when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(getSecurityContext().getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
-    when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(true);
-    when(getFactSearchManager().searchFacts(any())).thenReturn(createSearchResult(factID));
-    when(getFactManager().getFacts(any())).thenReturn(Collections.singleton(new FactEntity().setId(factID)).iterator());
-    when(getFactConverter().apply(any())).thenReturn(Fact.builder().setId(factID).build());
+    when(factSearchHandler.search(any(), any())).thenReturn(ResultSet.<Fact>builder()
+            .setLimit(25)
+            .setCount(100)
+            .setValues(Collections.singleton(Fact.builder().build()))
+            .build()
+    );
+
+    // initMocks() will be called by base class.
+    delegate = FactSearchDelegate.builder()
+            .setFactSearchHandler(factSearchHandler)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateDelegateWithoutFactSearchHandler() {
+    FactSearchDelegate.builder().build();
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testSearchFactsWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
-    FactSearchDelegate.create().handle(new SearchFactRequest());
+    delegate.handle(new SearchFactRequest());
   }
 
   @Test
   public void testSearchFactsPopulateCriteria() throws Exception {
-    FactSearchDelegate.create().handle(new SearchFactRequest().addFactValue("value"));
-    verify(getFactSearchManager()).searchFacts(argThat(criteria -> {
+    delegate.handle(new SearchFactRequest().addFactValue("value").setIncludeRetracted(true));
+    verify(factSearchHandler).search(argThat(criteria -> {
       assertNotNull(criteria.getCurrentUserID());
       assertNotNull(criteria.getAvailableOrganizationID());
       assertNotNull(criteria.getFactValue());
       return true;
-    }));
-  }
-
-  @Test
-  public void testSearchFactsFilterNonAccessibleFacts() throws Exception {
-    when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(false);
-    ResultSet<Fact> result = FactSearchDelegate.create().handle(new SearchFactRequest());
-    assertEquals(25, result.getLimit());
-    assertEquals(100, result.getCount());
-    assertEquals(0, result.getValues().size());
-  }
-
-  @Test
-  public void testSearchFactsNoResult() throws Exception {
-    when(getFactSearchManager().searchFacts(any())).thenReturn(ScrollingSearchResult.<FactDocument>builder().build());
-    when(getFactManager().getFacts(any())).thenReturn(Collections.emptyIterator());
-    ResultSet<Fact> result = FactSearchDelegate.create().handle(new SearchFactRequest());
-    assertEquals(0, result.getCount());
-    assertEquals(0, result.getValues().size());
-
-    verify(getFactSearchManager()).searchFacts(any());
-    verify(getFactManager()).getFacts(argThat(List::isEmpty));
+    }), eq(true));
   }
 
   @Test
   public void testSearchFacts() throws Exception {
-    ResultSet<Fact> result = FactSearchDelegate.create().handle(new SearchFactRequest());
+    ResultSet<Fact> result = delegate.handle(new SearchFactRequest());
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());
     assertEquals(1, result.getValues().size());
 
-    verify(getFactSearchManager()).searchFacts(any());
-    verify(getFactManager()).getFacts(any());
-    verify(getFactConverter()).apply(any());
-    verify(getSecurityContext()).hasReadPermission(isA(FactEntity.class));
-  }
-
-  private ScrollingSearchResult<FactDocument> createSearchResult(UUID factID) {
-    return ScrollingSearchResult.<FactDocument>builder()
-            .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_ID",
-                    Collections.singleton(new FactDocument().setId(factID)).iterator(), true))
-            .setCount(100)
-            .build();
+    verify(factSearchHandler).search(isNotNull(), isNull());
   }
 
 }
