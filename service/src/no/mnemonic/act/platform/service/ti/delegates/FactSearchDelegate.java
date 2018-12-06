@@ -10,17 +10,21 @@ import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchFactRequestConverter;
+import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
+import no.mnemonic.commons.utilities.ObjectUtils;
 
 public class FactSearchDelegate extends AbstractDelegate {
 
-  public static FactSearchDelegate create() {
-    return new FactSearchDelegate();
+  private final FactSearchHandler factSearchHandler;
+
+  private FactSearchDelegate(FactSearchHandler factSearchHandler) {
+    this.factSearchHandler = factSearchHandler;
   }
 
   public ResultSet<Fact> handle(SearchFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactObjects);
-    return searchForFacts(toCriteria(request));
+    return factSearchHandler.search(toCriteria(request), request.getIncludeRetracted());
   }
 
   private FactSearchCriteria toCriteria(SearchFactRequest request) {
@@ -31,4 +35,24 @@ public class FactSearchDelegate extends AbstractDelegate {
             .apply(request);
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+    private FactSearchHandler factSearchHandler;
+
+    private Builder() {
+    }
+
+    public FactSearchDelegate build() {
+      ObjectUtils.notNull(factSearchHandler, "Cannot instantiate FactSearchDelegate without 'factSearchHandler'.");
+      return new FactSearchDelegate(factSearchHandler);
+    }
+
+    public Builder setFactSearchHandler(FactSearchHandler factSearchHandler) {
+      this.factSearchHandler = factSearchHandler;
+      return this;
+    }
+  }
 }

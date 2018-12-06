@@ -12,12 +12,16 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
+import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 
 public class ObjectSearchFactsDelegate extends AbstractDelegate {
 
-  public static ObjectSearchFactsDelegate create() {
-    return new ObjectSearchFactsDelegate();
+  private final FactSearchHandler factSearchHandler;
+
+  private ObjectSearchFactsDelegate(FactSearchHandler factSearchHandler) {
+    this.factSearchHandler = factSearchHandler;
   }
 
   public ResultSet<Fact> handle(SearchObjectFactsRequest request)
@@ -29,7 +33,7 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
     // Check access to Object. This will throw an AccessDeniedException if Object doesn't exist.
     TiSecurityContext.get().checkReadPermission(object);
     // Search for Facts bound to the resolved Object.
-    return searchForFacts(toCriteria(request, object));
+    return factSearchHandler.search(toCriteria(request, object), request.getIncludeRetracted());
   }
 
   private void assertRequest(SearchObjectFactsRequest request) throws InvalidArgumentException {
@@ -69,4 +73,24 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
             .apply(request);
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+    private FactSearchHandler factSearchHandler;
+
+    private Builder() {
+    }
+
+    public ObjectSearchFactsDelegate build() {
+      ObjectUtils.notNull(factSearchHandler, "Cannot instantiate ObjectSearchFactsDelegate without 'factSearchHandler'.");
+      return new ObjectSearchFactsDelegate(factSearchHandler);
+    }
+
+    public Builder setFactSearchHandler(FactSearchHandler factSearchHandler) {
+      this.factSearchHandler = factSearchHandler;
+      return this;
+    }
+  }
 }

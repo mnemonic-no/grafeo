@@ -20,6 +20,7 @@ import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.*;
 import no.mnemonic.act.platform.service.ti.delegates.*;
+import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
@@ -199,7 +200,10 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   @Override
   public ResultSet<Fact> searchObjectFacts(RequestHeader rh, SearchObjectFactsRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return ObjectSearchFactsDelegate.create().handle(request);
+    return ObjectSearchFactsDelegate.builder()
+            .setFactSearchHandler(createFactSearchHandler())
+            .build()
+            .handle(request);
   }
 
   @Override
@@ -217,7 +221,10 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   @Override
   public ResultSet<Fact> searchFacts(RequestHeader rh, SearchFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return FactSearchDelegate.create().handle(request);
+    return FactSearchDelegate.builder()
+            .setFactSearchHandler(createFactSearchHandler())
+            .build()
+            .handle(request);
   }
 
   @Override
@@ -234,7 +241,10 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   @Override
   public ResultSet<Fact> searchMetaFacts(RequestHeader rh, SearchMetaFactsRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return FactSearchMetaDelegate.create().handle(request);
+    return FactSearchMetaDelegate.builder()
+            .setFactSearchHandler(createFactSearchHandler())
+            .build()
+            .handle(request);
   }
 
   @Override
@@ -367,6 +377,16 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setObjectConverter(createObjectByIdConverter())
             .setFactEntityResolver(factManager::getFact)
             .setAccessChecker(securityContext::hasReadPermission)
+            .build();
+  }
+
+  private FactSearchHandler createFactSearchHandler() {
+    return FactSearchHandler.builder()
+            .setFactTypeResolver(new FactTypeResolver(factManager))
+            .setFactSearchManager(factSearchManager)
+            .setFactManager(factManager)
+            .setSecurityContext(TiSecurityContext.get())
+            .setFactConverter(factConverter)
             .build();
   }
 

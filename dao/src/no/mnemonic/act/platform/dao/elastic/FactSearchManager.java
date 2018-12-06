@@ -24,14 +24,13 @@ import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -419,9 +418,34 @@ public class FactSearchManager implements LifecycleAspect {
     boolean finished = values.size() < searchScrollSize;
     if (finished) {
       LOGGER.info("Successfully retrieved all search results. No more data available.");
+      // Close search context when all results have been fetched. If the client doesn't consume all results the context
+      // will be kept open until ElasticSearch cleans it up automatically after the expiration time elapsed.
+      closeSearchContext(response.getScrollId());
     }
 
     return new ScrollingSearchResult.ScrollingBatch<>(response.getScrollId(), values.iterator(), finished);
+  }
+
+  private void closeSearchContext(String scrollId) {
+    ClearScrollRequest request = new ClearScrollRequest();
+    request.addScrollId(scrollId);
+
+    // Perform this clean-up asynchronously because the client doesn't require the result.
+    clientFactory.getHighLevelClient().clearScrollAsync(request, new ActionListener<ClearScrollResponse>() {
+      @Override
+      public void onResponse(ClearScrollResponse response) {
+        if (!response.isSucceeded()) {
+          LOGGER.warning("Could not close search context (response code %s).", response.status());
+        } else {
+          LOGGER.debug("Successfully closed search context.");
+        }
+      }
+
+      @Override
+      public void onFailure(Exception ex) {
+        LOGGER.warning(ex, "Could not close search context.");
+      }
+    });
   }
 
   private SearchRequest buildFactExistenceSearchRequest(FactExistenceSearchCriteria criteria) {
@@ -568,10 +592,6 @@ public class FactSearchManager implements LifecycleAspect {
 
     if (!CollectionUtils.isEmpty(criteria.getObjectValue())) {
       rootQuery.filter(nestedQuery("objects", termsQuery("objects.value", criteria.getObjectValue()), ScoreMode.None));
-    }
-
-    if (criteria.getRetracted() != null) {
-      rootQuery.filter(termQuery("retracted", (boolean) criteria.getRetracted()));
     }
   }
 

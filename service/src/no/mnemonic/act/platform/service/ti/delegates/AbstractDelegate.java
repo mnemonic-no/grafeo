@@ -1,18 +1,12 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
-import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
-import no.mnemonic.act.platform.api.model.v1.Fact;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
-import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
@@ -22,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
@@ -31,7 +24,6 @@ import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
  */
 abstract class AbstractDelegate {
 
-  private static final int MAXIMUM_SEARCH_LIMIT = 10_000;
   private static final Map<AccessMode, Integer> ACCESS_MODE_ORDER = MapUtils.map(
           T(AccessMode.Public, 0),
           T(AccessMode.RoleBased, 1),
@@ -242,39 +234,6 @@ abstract class AbstractDelegate {
     FactDocument document = TiRequestContext.get().getFactSearchManager().getFact(factID);
     // 'document' should usually not be NULL. In this case skip updating Fact because it isn't indexed.
     ObjectUtils.ifNotNullDo(document, d -> TiRequestContext.get().getFactSearchManager().indexFact(documentUpdater.apply(d)));
-  }
-
-  /**
-   * Search for Facts based on a given FactSearchCriteria. It searches for Facts in ElasticSearch, fetches the authoritative
-   * data from Cassandra, and makes sure that only Facts the user has access to are returned.
-   *
-   * @param criteria Criteria to search for Facts
-   * @return Facts wrapped inside a ResultSet
-   */
-  ResultSet<Fact> searchForFacts(FactSearchCriteria criteria) {
-    // Restrict the number of results returned from ElasticSearch. Right now everything above MAXIMUM_SEARCH_LIMIT will
-    // put too much load onto the application and will be very slow. Implements same logic as previously done in ElasticSearch.
-    int limit = criteria.getLimit() > 0 && criteria.getLimit() < MAXIMUM_SEARCH_LIMIT ? criteria.getLimit() : MAXIMUM_SEARCH_LIMIT;
-
-    // Search for Facts in ElasticSearch and pick out all Fact IDs.
-    ScrollingSearchResult<FactDocument> searchResult = TiRequestContext.get().getFactSearchManager().searchFacts(criteria);
-    List<UUID> factID = Streams.stream(searchResult)
-            .map(FactDocument::getId)
-            .limit(limit)
-            .collect(Collectors.toList());
-
-    // Use the Fact IDs to look up the authoritative data in Cassandra,
-    // and make sure that a user has access to all returned Facts.
-    List<Fact> facts = Streams.stream(TiRequestContext.get().getFactManager().getFacts(factID))
-            .filter(fact -> TiSecurityContext.get().hasReadPermission(fact))
-            .map(TiRequestContext.get().getFactConverter())
-            .collect(Collectors.toList());
-
-    return ResultSet.<Fact>builder()
-            .setCount(searchResult.getCount())
-            .setLimit(limit)
-            .setValues(facts)
-            .build();
   }
 
 }

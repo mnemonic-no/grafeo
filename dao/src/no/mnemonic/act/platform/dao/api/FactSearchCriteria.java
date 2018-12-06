@@ -72,7 +72,6 @@ public class FactSearchCriteria {
   private final Set<UUID> objectTypeID;
   private final Set<String> objectTypeName;
   private final Set<String> objectValue;
-  private final Boolean retracted;
 
   // Keywords search.
   private final String keywords;
@@ -95,11 +94,10 @@ public class FactSearchCriteria {
   private FactSearchCriteria(Set<UUID> factID, Set<UUID> factTypeID, Set<String> factTypeName, Set<String> factValue,
                              Set<UUID> inReferenceTo, Set<UUID> organizationID, Set<String> organizationName,
                              Set<UUID> sourceID, Set<String> sourceName, Set<UUID> objectID, Set<UUID> objectTypeID,
-                             Set<String> objectTypeName, Set<String> objectValue, Boolean retracted,
-                             String keywords, Set<KeywordFieldStrategy> keywordFieldStrategy,
-                             MatchStrategy keywordMatchStrategy, Long startTimestamp, Long endTimestamp,
-                             Set<TimeFieldStrategy> timeFieldStrategy, MatchStrategy timeMatchStrategy,
-                             int limit, UUID currentUserID, Set<UUID> availableOrganizationID) {
+                             Set<String> objectTypeName, Set<String> objectValue, String keywords,
+                             Set<KeywordFieldStrategy> keywordFieldStrategy, MatchStrategy keywordMatchStrategy,
+                             Long startTimestamp, Long endTimestamp, Set<TimeFieldStrategy> timeFieldStrategy,
+                             MatchStrategy timeMatchStrategy, int limit, UUID currentUserID, Set<UUID> availableOrganizationID) {
     if (currentUserID == null) throw new IllegalArgumentException("Missing required field 'currentUserID'.");
     if (CollectionUtils.isEmpty(availableOrganizationID))
       throw new IllegalArgumentException("Missing required field 'availableOrganizationID'.");
@@ -117,7 +115,6 @@ public class FactSearchCriteria {
     this.objectTypeID = objectTypeID;
     this.objectTypeName = objectTypeName;
     this.objectValue = objectValue;
-    this.retracted = retracted;
     this.keywords = keywords;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
@@ -252,15 +249,6 @@ public class FactSearchCriteria {
   }
 
   /**
-   * Filter Facts by their 'retracted' flag.
-   *
-   * @return 'retracted' flag (true/false)
-   */
-  public Boolean getRetracted() {
-    return retracted;
-  }
-
-  /**
    * Filter Facts by a keyword search string (using ElasticSearches simple query string).
    *
    * @return Keyword search string
@@ -375,7 +363,6 @@ public class FactSearchCriteria {
     private Set<UUID> objectTypeID;
     private Set<String> objectTypeName;
     private Set<String> objectValue;
-    private Boolean retracted;
 
     // Keywords search.
     private String keywords;
@@ -400,9 +387,9 @@ public class FactSearchCriteria {
 
     public FactSearchCriteria build() {
       return new FactSearchCriteria(factID, factTypeID, factTypeName, factValue, inReferenceTo, organizationID, organizationName,
-              sourceID, sourceName, objectID, objectTypeID, objectTypeName, objectValue, retracted, keywords,
-              keywordFieldStrategy, keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy, timeMatchStrategy,
-              limit, currentUserID, availableOrganizationID);
+              sourceID, sourceName, objectID, objectTypeID, objectTypeName, objectValue, keywords, keywordFieldStrategy,
+              keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy, timeMatchStrategy, limit, currentUserID,
+              availableOrganizationID);
     }
 
     public Builder setFactID(Set<UUID> factID) {
@@ -532,11 +519,6 @@ public class FactSearchCriteria {
 
     public Builder addObjectValue(String objectValue) {
       this.objectValue = SetUtils.addToSet(this.objectValue, objectValue);
-      return this;
-    }
-
-    public Builder setRetracted(Boolean retracted) {
-      this.retracted = retracted;
       return this;
     }
 
