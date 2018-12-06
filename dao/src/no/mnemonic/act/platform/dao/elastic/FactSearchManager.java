@@ -434,7 +434,7 @@ public class FactSearchManager implements LifecycleAspect {
     clientFactory.getHighLevelClient().clearScrollAsync(request, new ActionListener<ClearScrollResponse>() {
       @Override
       public void onResponse(ClearScrollResponse response) {
-        if (response.status() != RestStatus.OK) {
+        if (!response.isSucceeded()) {
           LOGGER.warning("Could not close search context (response code %s).", response.status());
         } else {
           LOGGER.debug("Successfully closed search context.");

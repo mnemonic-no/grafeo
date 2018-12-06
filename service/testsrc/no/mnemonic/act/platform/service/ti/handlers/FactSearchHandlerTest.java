@@ -312,16 +312,18 @@ public class FactSearchHandlerTest {
     FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
     FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
     FactDocument retraction3 = new FactDocument().setId(UUID.randomUUID());
+    FactDocument retraction4 = new FactDocument().setId(UUID.randomUUID());
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
 
     // factDocument ---> retraction1 ---> retraction2
     //     |-----------> retraction3
-    // retraction2 cancels out retraction1, thus, factDocument is retracted because of retraction3.
+    //     |-----------> retraction4
+    // retraction2 cancels out retraction1, thus, factDocument is retracted because of retraction3/retraction4.
     when(factSearchManager.searchFacts(criteria))
             .thenReturn(createSearchResult(factDocument));
     when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(factDocument.getId()))))
-            .thenReturn(createSearchResult(retraction1, retraction3));
+            .thenReturn(createSearchResult(retraction1, retraction3, retraction4));
     when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(retraction1.getId()))))
             .thenReturn(createSearchResult(retraction2));
     when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());

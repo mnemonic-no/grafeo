@@ -179,7 +179,7 @@ public class FactSearchHandler {
    * Iterator which consumes a stream of Fact UUIDs and uses those UUIDs to fetch Facts from Cassandra.
    * Data is fetched batch-wise from Cassandra while iterating over the input stream.
    */
-  private static class FactsFetchingIterator implements Iterator<FactEntity> {
+  private class FactsFetchingIterator implements Iterator<FactEntity> {
     private final FactManager factManager;
     private final Iterator<UUID> input;
     private Iterator<FactEntity> output;
