@@ -16,11 +16,13 @@ public class CreateFactRequest implements ValidatingRequest {
           example = "ThreatActorAlias", required = true)
   @NotBlank
   private String type;
-  @ApiModelProperty(value = "Value of new Fact (optional)", example = "APT1")
+  @ApiModelProperty(value = "Value of new Fact (can be empty if allowed by FactType)", example = "APT28")
   private String value;
-  @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)")
+  @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)",
+          example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID organization;
-  @ApiModelProperty(value = "Set Source of new Fact. If not set the current user will be used as Source (takes Source UUID)")
+  @ApiModelProperty(value = "Set Source of new Fact. If not set the current user will be used as Source (takes Source UUID)",
+          example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID source;
   @ApiModelProperty(value = "Set access mode of new Fact (default 'RoleBased')")
   private AccessMode accessMode = AccessMode.RoleBased;
@@ -29,10 +31,10 @@ public class CreateFactRequest implements ValidatingRequest {
   @ApiModelProperty(value = "If set defines explicitly who has access to new Fact (takes Subject UUIDs)")
   private List<UUID> acl;
   @ApiModelProperty(value = "Set Object which is linked to new Fact as source (takes Object UUID or Object identified by 'type/value')",
-          example = "ThreatActorAlias/APT1")
+          example = "ThreatActor/Sofacy")
   private String sourceObject;
   @ApiModelProperty(value = "Set Object which is linked to new Fact as destination (takes Object UUID or Object identified by 'type/value')",
-          example = "ThreatActorAlias/APT1")
+          example = "ThreatActor/FancyBear")
   private String destinationObject;
   @ApiModelProperty(value = "If true the binding between source Object, Fact and destination Object is bidirectional (default 'false')")
   private boolean bidirectionalBinding;

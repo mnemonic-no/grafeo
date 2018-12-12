@@ -18,7 +18,7 @@ public class TraverseByObjectTypeValueRequest implements ValidatingRequest {
   @ServiceNotNull
   private String value;
 
-  @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()")
+  @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()", required = true)
   @NotBlank
   private String query;
 

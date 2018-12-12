@@ -18,7 +18,7 @@ public class CreateFactTypeRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Validator used to validate new Facts of this type", example = "RegexValidator", required = true)
   @NotBlank
   private String validator;
-  @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
+  @ApiModelProperty(value = "Parameters used to customize Validator", example = "[^ ]+")
   private String validatorParameter;
   @ApiModelProperty(value = "Define to which Objects new Facts of this type can be linked")
   private List<@Valid FactObjectBindingDefinition> relevantObjectBindings;

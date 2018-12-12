@@ -8,7 +8,7 @@ import javax.validation.constraints.NotBlank;
 @ApiModel(description = "Traverse the Object/Fact graph starting at the Objects returned from an Object search.")
 public class TraverseByObjectSearchRequest extends SearchObjectRequest {
 
-  @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()")
+  @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()", required = true)
   @NotBlank
   private String query;
 

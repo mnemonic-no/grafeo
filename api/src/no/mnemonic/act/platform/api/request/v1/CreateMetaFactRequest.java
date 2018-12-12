@@ -20,11 +20,13 @@ public class CreateMetaFactRequest implements ValidatingRequest {
           example = "Observation", required = true)
   @NotBlank
   private String type;
-  @ApiModelProperty(value = "Value of new meta Fact (optional)", example = "2016-09-28T21:26:22Z")
+  @ApiModelProperty(value = "Value of new meta Fact (can be empty if allowed by FactType)", example = "2016-09-28T21:26:22Z")
   private String value;
-  @ApiModelProperty(value = "Set owner of new meta Fact. If not set the current user's organization will be used (takes Organization UUID)")
+  @ApiModelProperty(value = "Set owner of new meta Fact. If not set the current user's organization will be used (takes Organization UUID)",
+          example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID organization;
-  @ApiModelProperty(value = "Set Source of new meta Fact. If not set the current user will be used as Source (takes Source UUID)")
+  @ApiModelProperty(value = "Set Source of new meta Fact. If not set the current user will be used as Source (takes Source UUID)",
+          example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID source;
   @ApiModelProperty(value = "Set access mode of new meta Fact. If not set the access mode from the referenced Fact will be used")
   private AccessMode accessMode;

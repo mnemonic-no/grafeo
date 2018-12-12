@@ -41,12 +41,11 @@ public class FactEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Retrieve a Fact by its UUID.",
-          notes = "This operation returns a Fact identified by its UUID. The result includes the Objects directly " +
-                  "linked to the requested Fact. The request will be rejected with a 403 if a user does not have " +
-                  "access to the requested Fact.\n\n" +
-                  "If the accessMode is 'Public' the Fact will be available to everyone. If the accessMode is " +
-                  "'Explicit' only users in the Fact's ACL will have access to the Fact. If the accessMode is " +
-                  "'RoleBased' (the default mode) a user must be either in the Fact's ACL or have general role-based " +
+          notes = "This operation returns a Fact identified by its UUID. The request will be rejected with a 403 if a " +
+                  "user does not have access to the requested Fact.\n\n" +
+                  "If the access mode is Public the Fact will be available to everyone. If the access mode is Explicit " +
+                  "only users in the Fact's access control list will have access to the Fact. If the access mode is " +
+                  "RoleBased (the default mode) a user must be either in the Fact's ACL or have general role-based " +
                   "access to the Organization owning the Fact. A user who created a Fact will always have access to it.",
           response = Fact.class
   )
@@ -81,6 +80,13 @@ public class FactEndpoint extends AbstractEndpoint {
                   "Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search " +
                   "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
                   "'factType' or 'objectType' in addition.\n\n" +
+                  "In contrast to the fuzzy search above other filter parameters such as 'objectValue' and 'factValue' " +
+                  "require an exact match. When searching on 'objectType', 'factType', 'organization' or 'source' it is " +
+                  "possible to either specify the name or UUID of the referenced entity. Retracted Facts are excluded by " +
+                  "default from the search result but they are always included in the returned 'count' value (the total " +
+                  "number of Facts matching the search parameters). It is allowed to request an unlimited search result " +
+                  "(i.e. 'limit' parameter set to 0), however, the API will enforce a maximum upper limit in order to protect " +
+                  "system resources. In this case the search should be narrowed down using additional search parameters.\n\n" +
                   "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
           response = Fact.class,
           responseContainer = "list"
@@ -101,13 +107,19 @@ public class FactEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Create a new Fact.",
-          notes = "This operation creates and returns a new Fact. The new Fact must conform to the specified FactType, " +
-                  "i.e. the value must pass the FactType's Validator and the binding to Objects must respect the " +
-                  "definition by the FactType.\n\n" +
+          notes = "This operation creates and returns a new Fact which is bound to one or two Objects. The new Fact must " +
+                  "conform to the specified FactType, i.e. the value must pass the FactType's Validator and the binding " +
+                  "to Objects must respect the definition by the FactType.\n\n" +
+                  "Access to the new Fact can be controlled with the 'accessMode' and 'acl' parameters in the request body. " +
+                  "The 'accessMode' parameter can take one of these values:\n\n" +
+                  "* Public: Fact will be publicly available to all users.\n" +
+                  "* RoleBased: Fact will be accessible to users which have access to the owning organization of the Fact, " +
+                  "or if explicitly added to the Fact's ACL.\n" +
+                  "* Explicit: Only users given explict access to the Fact can view it, in addition to the user creating it.\n\n" +
                   "If the new Fact links to an Object which does not exist yet the missing Object will be created " +
                   "automatically with respect to the Object's ObjectType (need to pass the ObjectType's Validator).\n\n" +
-                  "If a Fact with the same type, value, organization, source, accessMode, confidenceLevel and bound Objects " +
-                  "already exists, no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
+                  "If a Fact with the same type, value, organization, source, access mode and bound Objects already " +
+                  "exists, no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
           response = Fact.class,
           code = 201
   )
@@ -165,9 +177,13 @@ public class FactEndpoint extends AbstractEndpoint {
           value = "Create a new meta Fact.",
           notes = "This operation creates and returns a new meta Fact, a Fact which is directly referencing another " +
                   "existing Fact. The new meta Fact must conform to the specified FactType, i.e. the value must pass the " +
-                  "FactType's Validator and the FactType of the referenced Fact must fulfil the definition by the FactType.\n\n" +
-                  "If a meta Fact with the same type, value, organization, source, accessMode and confidenceLevel exists, " +
-                  "no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.\n\n" +
+                  "FactType's Validator and the FactType of the referenced Fact must fulfil the definition by the FactType " +
+                  "of the new meta Fact.\n\n" +
+                  "The access mode of a meta Fact can be more restricted than the access mode of the referenced Fact, " +
+                  "but never less restricted (Public < RoleBased < Explicit). If not specified the access mode of the " +
+                  "referenced Fact will be used.\n\n" +
+                  "If a meta Fact with the same type, value, organization, source and access mode exists, no new Fact " +
+                  "will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.\n\n" +
                   "The request will be rejected with a 403 if a user does not have access to the Fact for which the new " +
                   "meta Fact should be created.",
           response = Fact.class,
@@ -195,9 +211,13 @@ public class FactEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Retract an existing Fact.",
-          notes = "This operation retracts an already existing Fact. It creates a new Fact with a special 'retract' " +
-                  "FactType which references the retracted Fact. The request will be rejected with a 403 if a user does " +
-                  "not have access to the Fact to retract.",
+          notes = "This operation retracts an already existing Fact. It creates a new meta Fact with a special 'Retraction' " +
+                  "FactType which references the retracted Fact. Except of using a special FactType the new Fact is treated " +
+                  "the same as every other meta Fact.\n\n" +
+                  "The access mode of the retraction Fact can be more restricted than the access mode of the retracted Fact, " +
+                  "but never less restricted (Public < RoleBased < Explicit). If not specified the access mode of the " +
+                  "retracted Fact will be used.\n\n" +
+                  "The request will be rejected with a 403 if a user does not have access to the Fact to retract.",
           response = Fact.class,
           code = 201
   )
@@ -222,8 +242,9 @@ public class FactEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Retrieve a Fact's ACL.",
-          notes = "This operation retrieves the Access Control List of a Fact, i.e. the list of who has access to a " +
-                  "Fact. The request will be rejected with a 403 if a user does not have access to the Fact.",
+          notes = "This operation retrieves the access control list of a Fact, i.e. the list of users who were given " +
+                  "explicit access to a Fact. The request will be rejected with a 403 if a user does not have access " +
+                  "to the Fact.",
           response = AclEntry.class,
           responseContainer = "list"
   )
@@ -245,8 +266,8 @@ public class FactEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Grant a Subject access to a Fact.",
-          notes = "This operation grants a Subject access to a Fact. The request will be rejected with a 403 " +
-                  "if a user does not have access to the Fact.",
+          notes = "This operation grants a Subject explicit access to a non-public Fact. The request will be rejected " +
+                  "with a 403 if a user does not have access to the Fact or is not allowed to grant further access.",
           response = AclEntry.class,
           code = 201
   )

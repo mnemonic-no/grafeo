@@ -17,7 +17,8 @@ public class CreateFactCommentRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Content of comment", example = "Hello World!", required = true)
   @NotBlank
   private String comment;
-  @ApiModelProperty(value = "Set if new comment is a reply to an existing comment (takes comment UUID)")
+  @ApiModelProperty(value = "Set if new comment is a reply to an existing comment (takes comment UUID)",
+          example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID replyTo;
 
   public UUID getFact() {

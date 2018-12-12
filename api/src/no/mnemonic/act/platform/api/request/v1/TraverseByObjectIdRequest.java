@@ -15,7 +15,7 @@ public class TraverseByObjectIdRequest implements ValidatingRequest {
   @ServiceNotNull
   private UUID id;
 
-  @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()")
+  @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()", required = true)
   @NotBlank
   private String query;
 

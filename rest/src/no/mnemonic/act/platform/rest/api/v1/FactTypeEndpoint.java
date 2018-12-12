@@ -76,12 +76,20 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Create a new FactType.",
-          notes = "This operation creates a new FactType in the Namespace of the running instance. If bindings between " +
-                  "ObjectTypes are specified ('relevantObjectBindings' field) the new FactType describes to which Objects " +
-                  "a new Fact of this type can be linked. If bindings between FactTypes are specified ('relevantFactBindings' " +
-                  "field) the new FactType describes a meta FactType, i.e. to which Facts a new meta Fact of this type " +
-                  "can be linked. It is not allowed to specify bindings between both ObjectTypes and FactTypes for the " +
-                  "same new FactType.",
+          notes = "This operation creates a new FactType in the Namespace of the running instance.\n\n" +
+                  "A FactType defines what kind of Facts can be created and specifies either that a Fact links to Objects " +
+                  "or that a Fact directly references another Fact (i.e. a meta Fact). The first kind of FactType is " +
+                  "defined using the 'relevantObjectBindings' field whereas the second kind of FactType using the " +
+                  "'relevantFactBindings' field. It is not permitted to create a FactType which allows bindings between " +
+                  "both Objects and Facts for the same FactType.\n\n" +
+                  "Whenever a new Fact is created the system verifies that the Fact satisfies the FactType definition by " +
+                  "checking that the Fact's value passes the FactType's Validator and that the Fact binds to Objects or " +
+                  "Facts of the correct type.\n\n" +
+                  "The following Validators exist:\n\n" +
+                  "* TrueValidator: It accepts a value without any validation. Use carefully as the Validator cannot be " +
+                  "changed after the FactType has been created!\n" +
+                  "* RegexValidator: It matches a value against a regular expression. The regular expression must be " +
+                  "provided using the 'validatorParameter' field.",
           response = FactType.class,
           code = 201
   )
@@ -105,10 +113,12 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Update an existing FactType.",
-          notes = "This operation updates an existing FactType. It is only possible to add new bindings between the " +
-                  "FactType and other ObjectTypes ('addObjectBindings' field), or between the FactType and other " +
-                  "FactTypes ('addFactBindings' field). It is not allowed to specify bindings between both ObjectTypes " +
-                  "and FactTypes and it is not allowed to remove existing bindings.",
+          notes = "This operation updates an existing FactType.\n\n" +
+                  "It is only possible to add more allowed bindings between a Fact and Objects ('addObjectBindings' field), " +
+                  "or between a Fact and other Facts ('addFactBindings' field). It is not allowed to specify bindings " +
+                  "between both Objects and Facts for the same FactType and it is not possible to remove existing bindings. " +
+                  "This means that a FactType can be opened up by allowing more bindings but that it cannot become more " +
+                  "restrictive (removing previously allowed bindings).",
           response = FactType.class
   )
   @ApiResponses({

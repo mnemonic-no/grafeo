@@ -86,16 +86,8 @@ public class ObjectEndpoint extends AbstractEndpoint {
                   "With the request body the user can specify which Facts will be included in the result. Only the " +
                   "Facts a user has access to will be returned. The request will be rejected with a 403 if a user " +
                   "does not have access to any Facts linked to the requested Object.\n\n" +
-                  "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
-                  "Fact organization, Fact source and Fact value. The 'keywords' parameter must match one " +
-                  "of those fields. The following search features are available when using this parameter.\n\n" +
-                  "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
-                  "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
-                  "* A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.\n\n" +
-                  "Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search " +
-                  "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
-                  "'factType' in addition.\n\n" +
-                  "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
+                  "This endpoint implements a similar Fact search than '/v1/fact/search' and provides mostly the same " +
+                  "search options. See the '/v1/fact/search' endpoint for more details.",
           response = Fact.class,
           responseContainer = "list"
   )
@@ -121,16 +113,8 @@ public class ObjectEndpoint extends AbstractEndpoint {
                   "and its value. With the request body the user can specify which Facts will be included in the result. " +
                   "Only the Facts a user has access to will be returned. The request will be rejected with a 403 if " +
                   "a user does not have access to any Facts linked to the requested Object.\n\n" +
-                  "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
-                  "Fact organization, Fact source and Fact value. The 'keywords' parameter must match one " +
-                  "of those fields. The following search features are available when using this parameter.\n\n" +
-                  "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
-                  "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
-                  "* A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.\n\n" +
-                  "Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search " +
-                  "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
-                  "'factType' in addition.\n\n" +
-                  "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
+                  "This endpoint implements a similar Fact search than '/v1/fact/search' and provides mostly the same " +
+                  "search options. See the '/v1/fact/search' endpoint for more details.",
           response = Fact.class,
           responseContainer = "list"
   )
@@ -152,20 +136,20 @@ public class ObjectEndpoint extends AbstractEndpoint {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
-          value = "Traverse the Object/Fact graph starting at an Object identified by its UUID.",
+          value = "Traverse the Object/Fact graph starting at a specific Object.",
           notes = "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal. " +
-                  "Objects are represented as graph vertices and Facts as graph edges. If a Fact binds together multiple " +
-                  "Objects the graph will contain an edge between each Object pair (considering the binding directions). " +
-                  "The labels of vertices and edges are the names of the corresponding ObjectTypes and FactTypes, " +
-                  "respectively.\n\n" +
-                  "The traversal query contained in the request must be a valid Gremlin query. Inside the query the graph " +
-                  "is referenced as 'g' and the starting point of the traversal is set to the Object specified in the " +
+                  "Objects are represented as graph vertices and Facts as graph edges. The labels of vertices and edges " +
+                  "are the names of the corresponding ObjectTypes and FactTypes, respectively.\n\n" +
+                  "The traversal query contained in the request must be a valid Gremlin query [0,1]. Inside the query the " +
+                  "graph is referenced as 'g' and the starting point of the traversal is set to the Object specified in the " +
                   "request. Therefore, it is not necessary to either instantiate a graph instance or to set the starting " +
                   "point of the traversal by using V() or E(). For example, a query to fetch all outgoing edges from the " +
                   "starting Object would simply be 'g.outE()'.\n\n" +
-                  "If the result of the graph traversal are edges the response will contain the Facts belonging to the " +
+                  "If the result of the graph traversal are edges the response will contain the Facts belonging to those " +
                   "edges. If the result are vertices the response will contain Objects. In all other cases the result " +
-                  "of the traversal is returned as-is, for instance, when the result is a list of vertex or edge properties.",
+                  "of the traversal is returned as-is, for instance, when the result is a list of vertex or edge properties.\n\n" +
+                  "[0] Tutorial: https://tinkerpop.apache.org/docs/current/tutorials/getting-started/\n\n" +
+                  "[1] Reference documentation: https://tinkerpop.apache.org/docs/current/reference/",
           response = ResultStash.class
   )
   @ApiResponses({
@@ -186,20 +170,20 @@ public class ObjectEndpoint extends AbstractEndpoint {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
-          value = "Traverse the Object/Fact graph starting at an Object identified by its type and value.",
+          value = "Traverse the Object/Fact graph starting at a specific Object.",
           notes = "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal. " +
-                  "Objects are represented as graph vertices and Facts as graph edges. If a Fact binds together multiple " +
-                  "Objects the graph will contain an edge between each Object pair (considering the binding directions). " +
-                  "The labels of vertices and edges are the names of the corresponding ObjectTypes and FactTypes, " +
-                  "respectively.\n\n" +
-                  "The traversal query contained in the request must be a valid Gremlin query. Inside the query the graph " +
-                  "is referenced as 'g' and the starting point of the traversal is set to the Object specified in the " +
+                  "Objects are represented as graph vertices and Facts as graph edges. The labels of vertices and edges " +
+                  "are the names of the corresponding ObjectTypes and FactTypes, respectively.\n\n" +
+                  "The traversal query contained in the request must be a valid Gremlin query [0,1]. Inside the query the " +
+                  "graph is referenced as 'g' and the starting point of the traversal is set to the Object specified in the " +
                   "request. Therefore, it is not necessary to either instantiate a graph instance or to set the starting " +
                   "point of the traversal by using V() or E(). For example, a query to fetch all outgoing edges from the " +
                   "starting Object would simply be 'g.outE()'.\n\n" +
-                  "If the result of the graph traversal are edges the response will contain the Facts belonging to the " +
+                  "If the result of the graph traversal are edges the response will contain the Facts belonging to those " +
                   "edges. If the result are vertices the response will contain Objects. In all other cases the result " +
-                  "of the traversal is returned as-is, for instance, when the result is a list of vertex or edge properties.",
+                  "of the traversal is returned as-is, for instance, when the result is a list of vertex or edge properties.\n\n" +
+                  "[0] Tutorial: https://tinkerpop.apache.org/docs/current/tutorials/getting-started/\n\n" +
+                  "[1] Reference documentation: https://tinkerpop.apache.org/docs/current/reference/",
           response = ResultStash.class
   )
   @ApiResponses({
@@ -237,6 +221,12 @@ public class ObjectEndpoint extends AbstractEndpoint {
                   "Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search " +
                   "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
                   "'factType' or 'objectType' in addition.\n\n" +
+                  "In contrast to the fuzzy search above other filter parameters such as 'objectValue' and 'factValue' " +
+                  "require an exact match. When searching on 'objectType', 'factType', 'organization' or 'source' it is " +
+                  "possible to either specify the name or UUID of the referenced entity. It is allowed to request an " +
+                  "unlimited search result (i.e. 'limit' parameter set to 0), however, the API will enforce a maximum " +
+                  "upper limit in order to protect system resources. In this case the search should be narrowed down " +
+                  "using additional search parameters.\n\n" +
                   "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
           response = Object.class,
           responseContainer = "list"
