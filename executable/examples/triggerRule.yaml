@@ -20,10 +20,11 @@ triggerParameters:
   method: POST
   contentType: text/plain
   body: |
-    $$ for(var binding : AddedFact.objects) {
-    $$   if (binding.object.type.name == "ip") {
-    ${binding.object.value}
-    $$   }
+    $$ if (AddedFact.sourceObject.type.name == "ip") {
+    ${AddedFact.sourceObject.value}
+    $$ }
+    $$ if (AddedFact.destinationObject.type.name == "ip") {
+    ${AddedFact.destinationObject.value}
     $$ }
 
 ...

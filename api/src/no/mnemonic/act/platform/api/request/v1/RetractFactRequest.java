@@ -15,11 +15,13 @@ public class RetractFactRequest implements ValidatingRequest {
   @ApiModelProperty(hidden = true)
   @ServiceNotNull
   private UUID fact;
-  @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)")
+  @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)",
+          example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID organization;
-  @ApiModelProperty(value = "Set Source of new Fact. If not set the current user will be used as Source (takes Source UUID)")
+  @ApiModelProperty(value = "Set Source of new Fact. If not set the current user will be used as Source (takes Source UUID)",
+          example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID source;
-  @ApiModelProperty(value = "Set access mode of new Fact. If not set the accessMode from the retracted Fact will be used")
+  @ApiModelProperty(value = "Set access mode of new Fact. If not set the access mode from the retracted Fact will be used")
   private AccessMode accessMode;
   @ApiModelProperty(value = "If set adds a comment to new Fact", example = "Hello World!")
   private String comment;

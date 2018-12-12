@@ -76,7 +76,16 @@ public class ObjectTypeEndpoint extends AbstractEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Create a new ObjectType.",
-          notes = "This operation creates a new ObjectType in the Namespace of the running instance.",
+          notes = "This operation creates a new ObjectType in the Namespace of the running instance.\n\n" +
+                  "An ObjectType defines what kind of Objects can exist in the system and Facts can only link to those " +
+                  "Objects. Objects are automatically created when Facts referencing them are added to the system. The " +
+                  "system verifies that a new Object satisfies the ObjectType definition by checking that the Object's " +
+                  "value passes the ObjectType's Validator.\n\n" +
+                  "The following Validators exist:\n\n" +
+                  "* TrueValidator: It accepts a value without any validation. Use carefully as the Validator cannot be " +
+                  "changed after the ObjectType has been created!\n" +
+                  "* RegexValidator: It matches a value against a regular expression. The regular expression must be " +
+                  "provided using the 'validatorParameter' field.",
           response = ObjectType.class,
           code = 201
   )
