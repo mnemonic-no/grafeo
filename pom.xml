@@ -52,7 +52,7 @@
     <guava.version>26.0-jre</guava.version>
     <guice.version>4.2.2</guice.version>
     <hibernate.validator.version>6.0.12.Final</hibernate.validator.version>
-    <jackson.version>2.9.6</jackson.version>
+    <jackson.version>2.9.8</jackson.version>
     <javax.el.version>3.0.1-b10</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>
@@ -63,7 +63,7 @@
     <mockito.version>2.22.0</mockito.version>
     <resteasy.version>3.6.1.Final</resteasy.version>
     <swagger.version>1.5.21</swagger.version>
-    <tinkerpop.version>3.3.3</tinkerpop.version>
+    <tinkerpop.version>3.4.0</tinkerpop.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.0.0</maven.clean.version>
