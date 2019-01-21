@@ -37,6 +37,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <!-- By default fail build when any vulnerable dependency is discovered. Override this with -DfailBuildOnAnyVulnerability=false. -->
+    <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
+
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.2.15</mnemonic.commons.version>
     <mnemonic.services.common.version>0.3.11</mnemonic.services.common.version>
@@ -236,7 +239,7 @@
         <configuration>
           <!-- The assembly analyzer is triggered but fails on Linux because it requires mono. Deactivate it because this is Java and not .NET. -->
           <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
-          <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
+          <failBuildOnAnyVulnerability>${failBuildOnAnyVulnerability}</failBuildOnAnyVulnerability>
           <suppressionFiles>
             <suppressionFile>buildConfig/vulnerability-suppression.xml</suppressionFile>
           </suppressionFiles>
