@@ -21,6 +21,7 @@ import no.mnemonic.act.platform.rest.RestModule;
 import no.mnemonic.act.platform.rest.container.ApiServer;
 import no.mnemonic.act.platform.service.ServiceModule;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
+import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -61,6 +62,7 @@ public abstract class AbstractIT {
   @ClassRule
   public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
           .setImageName("cassandra")
+          .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
           .setSetupScript("setup.cql")
           .setTruncateScript("truncate.cql")
@@ -71,6 +73,7 @@ public abstract class AbstractIT {
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
           .setImageName("elasticsearch/elasticsearch:5.6.14")
+          .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
           .addEnvironmentVariable("xpack.security.enabled", "false")
           .addEnvironmentVariable("xpack.monitoring.enabled", "false")
@@ -343,9 +346,9 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("access.controller.read.interval")).toInstance("60000");
       bind(String.class).annotatedWith(Names.named("trigger.administration.service.configuration.directory")).toInstance(RESOURCES_FOLDER);
       bind(String.class).annotatedWith(Names.named("cassandra.cluster.name")).toInstance("ActIntegrationTest");
-      bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance("localhost");
+      bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance(DockerTestUtils.getDockerHost());
       bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
-      bind(String.class).annotatedWith(Names.named("elasticsearch.contact.points")).toInstance("localhost");
+      bind(String.class).annotatedWith(Names.named("elasticsearch.contact.points")).toInstance(DockerTestUtils.getDockerHost());
       bind(String.class).annotatedWith(Names.named("elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
       bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
     }

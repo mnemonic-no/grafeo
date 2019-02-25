@@ -41,7 +41,7 @@
     <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.15</mnemonic.commons.version>
+    <mnemonic.commons.version>0.2.18</mnemonic.commons.version>
     <mnemonic.services.common.version>0.3.11</mnemonic.services.common.version>
     <mnemonic.services.triggers.version>0.0.4</mnemonic.services.triggers.version>
 
