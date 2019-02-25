@@ -68,7 +68,7 @@
     <!-- build dependencies -->
     <maven.clean.version>3.0.0</maven.clean.version>
     <maven.compile.version>3.6.1</maven.compile.version>
-    <maven.dependencyCheck.version>3.0.2</maven.dependencyCheck.version>
+    <maven.dependencyCheck.version>4.0.2</maven.dependencyCheck.version>
     <maven.deploy.version>2.8.2</maven.deploy.version>
     <maven.install.version>2.5.2</maven.install.version>
     <maven.jar.version>3.0.2</maven.jar.version>
