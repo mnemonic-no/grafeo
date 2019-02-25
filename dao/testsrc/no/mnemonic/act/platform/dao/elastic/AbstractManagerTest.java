@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.dao.elastic;
 
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import org.junit.*;
 
@@ -19,6 +20,7 @@ public abstract class AbstractManagerTest {
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
           .setImageName("elasticsearch/elasticsearch:5.6.14")
+          .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
           .addEnvironmentVariable("xpack.security.enabled", "false")
           .addEnvironmentVariable("xpack.monitoring.enabled", "false")
@@ -31,7 +33,7 @@ public abstract class AbstractManagerTest {
   public static void setup() {
     clientFactory = ClientFactory.builder()
             .setPort(elastic.getExposedHostPort(9200))
-            .addContactPoint("127.0.0.1")
+            .addContactPoint(DockerTestUtils.getDockerHost())
             .build();
     clientFactory.startComponent();
   }
