@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class AbstractEndpointTest {
+public abstract class AbstractEndpointTest {
 
   private final static ObjectMapper mapper = new ObjectMapper();
   private final static int port = AvailablePortFinder.getAvailablePort(9000);
@@ -69,6 +69,7 @@ public class AbstractEndpointTest {
       install(new RestModule());
       bind(ThreatIntelligenceService.class).toInstance(tiService);
       bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(port));
+      bind(String.class).annotatedWith(Names.named("cors.allowed.origins")).toInstance("http://www.example.org");
     }
 
   }

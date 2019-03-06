@@ -19,11 +19,13 @@ import java.lang.annotation.Annotation;
 public class RestModule extends AbstractModule {
 
   private static final String API_PACKAGE = "no.mnemonic.act.platform.rest.api";
+  private static final String FEATURES_PACKAGE = "no.mnemonic.act.platform.rest.features";
   private static final String MAPPINGS_PACKAGE = "no.mnemonic.act.platform.rest.mappings";
 
   @Override
   protected void configure() {
     bindAnnotatedClasses(API_PACKAGE, Path.class);
+    bindAnnotatedClasses(FEATURES_PACKAGE, Provider.class);
     bindAnnotatedClasses(MAPPINGS_PACKAGE, Provider.class);
     bindSwagger();
     bind(ApiServer.class).in(Scopes.SINGLETON);
@@ -37,8 +39,8 @@ public class RestModule extends AbstractModule {
               .map(ClassPath.ClassInfo::load)
               .filter(c -> c.getAnnotation(annotationClass) != null)
               .forEach(this::bind);
-    } catch (IOException e) {
-      throw new RuntimeException("Could not read classes with SystemClassLoader.", e);
+    } catch (IOException ex) {
+      throw new IllegalStateException("Could not read classes with SystemClassLoader.", ex);
     }
   }
 

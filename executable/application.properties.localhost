@@ -12,6 +12,10 @@ elasticsearch.contact.points=localhost
 # Configure listening port of REST API.
 api.server.port=8888
 
+# Configure which origins are allowed to make cross-origin requests.
+# It can be a comma-separated list of origins (protocol + domain + port).
+cors.allowed.origins=http://localhost:3000
+
 # Configure where the ACL file is located and how often it will be read (interval in ms).
 access.controller.properties.file=./acl.properties.localhost
 access.controller.read.interval=60000
