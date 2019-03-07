@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.rest.api.ResultMessage;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -31,6 +32,13 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
     Response response = executeRequest(new AccessDeniedException("message"));
     assertEquals(403, response.getStatus());
     assertMessages(getMessages(response), "message", "access.denied");
+  }
+
+  @Test
+  public void testForbiddenMapperReturns403() throws Exception {
+    Response response = executeRequest(new ForbiddenException());
+    assertEquals(403, response.getStatus());
+    assertMessages(getMessages(response), "Access denied to requested URL.", "access.denied");
   }
 
   @Test
