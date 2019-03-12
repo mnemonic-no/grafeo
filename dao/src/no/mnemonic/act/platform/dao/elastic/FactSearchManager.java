@@ -38,8 +38,6 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.SimpleQueryStringBuilder;
 import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -56,7 +54,10 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -512,6 +513,9 @@ public class FactSearchManager implements LifecycleAspect {
 
     // These clauses are required when searching for regular Facts.
     if (!CollectionUtils.isEmpty(criteria.getObjects())) {
+      // The number of bound Objects must match (stored as a de-normalized field).
+      rootQuery.filter(termQuery("objectCount", criteria.getObjects().size()));
+
       // Define filters on nested Objects. Also all Objects must match.
       for (FactExistenceSearchCriteria.ObjectExistence object : criteria.getObjects()) {
         BoolQueryBuilder objectsQuery = boolQuery()
@@ -519,13 +523,6 @@ public class FactSearchManager implements LifecycleAspect {
                 .filter(termQuery("objects.direction", object.getDirection()));
         rootQuery.filter(nestedQuery("objects", objectsQuery, ScoreMode.None));
       }
-
-      // Also the number of bound Objects must match. It uses a script query because the number of bound Objects isn't
-      // directly available. This query should be fast because the other filters should already reduce the number of
-      // Facts to a small number. Alternatively, the number of bound Objects could be de-normalized into Fact documents.
-      String scriptCode = "params._source.objects.length == params.count";
-      Map<String, Object> scriptParameters = Collections.singletonMap("count", criteria.getObjects().size());
-      rootQuery.filter(scriptQuery(new Script(ScriptType.INLINE, "painless", scriptCode, scriptParameters)));
     }
 
     return rootQuery;

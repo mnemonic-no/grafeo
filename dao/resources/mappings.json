@@ -1,8 +1,10 @@
 {
   "settings": {
-    "index.mapper.dynamic": false,
-    "index.mapping.single_type": true,
-    "index.max_result_window": 10000,
+    "index": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "max_result_window": 10000
+    },
     "analysis": {
       "tokenizer": {
         "domain_tokenizer": {
@@ -27,6 +29,7 @@
   },
   "mappings": {
     "fact": {
+      "dynamic": false,
       "properties": {
         "retracted": {
           "type": "boolean"
@@ -90,6 +93,9 @@
         },
         "acl": {
           "type": "keyword"
+        },
+        "objectCount": {
+          "type": "byte"
         },
         "objects": {
           "type": "nested",

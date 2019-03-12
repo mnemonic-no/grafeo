@@ -1,6 +1,8 @@
 package no.mnemonic.act.platform.dao.elastic.document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Set;
@@ -158,6 +160,13 @@ public class FactDocument implements ElasticDocument {
   public FactDocument addAclEntry(UUID entry) {
     this.acl = SetUtils.addToSet(this.acl, entry);
     return this;
+  }
+
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  public int getObjectCount() {
+    // This field is only required when storing the document into ElasticSearch in
+    // order to have 'objectCount' available as a de-normalized field during search.
+    return CollectionUtils.size(objects);
   }
 
   public Set<ObjectDocument> getObjects() {
