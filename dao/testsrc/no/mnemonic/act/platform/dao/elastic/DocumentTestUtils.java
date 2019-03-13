@@ -60,6 +60,7 @@ class DocumentTestUtils {
     assertEquals(expected.getTimestamp(), actual.getTimestamp());
     assertEquals(expected.getLastSeenTimestamp(), actual.getLastSeenTimestamp());
     assertEquals(expected.getAcl(), actual.getAcl());
+    assertEquals(expected.getObjectCount(), actual.getObjectCount());
 
     assertObjectDocument(expected.getObjects().iterator().next(), actual.getObjects().iterator().next());
   }
