@@ -14,8 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Class managing the connections to an ElasticSearch cluster using ElasticSearch's Java REST clients. Exposes both the
- * low-level REST client and the high-level REST client which can be utilized to communicate with the cluster.
+ * Class managing the connections to an ElasticSearch cluster using ElasticSearch's Java high-level REST client.
  */
 public class ClientFactory implements LifecycleAspect {
 
@@ -24,8 +23,7 @@ public class ClientFactory implements LifecycleAspect {
   private final int port;
   private final Set<String> contactPoints;
 
-  private RestClient lowLevelClient;
-  private RestHighLevelClient highLevelClient;
+  private RestHighLevelClient client;
 
   private ClientFactory(int port, Set<String> contactPoints) {
     if (port <= 0) throw new IllegalArgumentException("'port' is required!");
@@ -37,15 +35,13 @@ public class ClientFactory implements LifecycleAspect {
 
   @Override
   public void startComponent() {
-    if (lowLevelClient == null) {
+    if (client == null) {
       // Create a connection for each contact point.
       Set<HttpHost> hosts = contactPoints.stream()
               .map(s -> new HttpHost(s, port))
               .collect(Collectors.toSet());
-      // Initialize the low-level REST client managing the underlying connections to ElasticSearch.
-      lowLevelClient = RestClient.builder(hosts.toArray(new HttpHost[contactPoints.size()])).build();
       // Initialize the high-level REST client which sends the actual requests to ElasticSearch.
-      highLevelClient = new RestHighLevelClient(lowLevelClient);
+      client = new RestHighLevelClient(RestClient.builder(hosts.toArray(new HttpHost[contactPoints.size()])));
 
       LOGGER.info("Initialized connections to ElasticSearch: %s (port %d)", String.join(",", contactPoints), port);
     }
@@ -54,17 +50,13 @@ public class ClientFactory implements LifecycleAspect {
   @Override
   public void stopComponent() {
     // Release any connection to ElasticSearch.
-    if (lowLevelClient != null) {
-      LambdaUtils.tryTo(() -> lowLevelClient.close(), ex -> LOGGER.warning(ex, "Error while closing connections to ElasticSearch."));
+    if (client != null) {
+      LambdaUtils.tryTo(() -> client.close(), ex -> LOGGER.warning(ex, "Error while closing connections to ElasticSearch."));
     }
   }
 
-  public RestClient getLowLevelClient() {
-    return lowLevelClient;
-  }
-
-  public RestHighLevelClient getHighLevelClient() {
-    return highLevelClient;
+  public RestHighLevelClient getClient() {
+    return client;
   }
 
   public static Builder builder() {

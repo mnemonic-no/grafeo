@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.dao.elastic;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.io.CharStreams;
 import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
@@ -15,24 +16,25 @@ import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.InputStreamEntity;
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -54,7 +56,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -131,8 +133,8 @@ public class FactSearchManager implements LifecycleAspect {
 
     try {
       GetRequest request = new GetRequest(INDEX_NAME, TYPE_NAME, id.toString());
-      response = clientFactory.getHighLevelClient().get(request);
-    } catch (IOException ex) {
+      response = clientFactory.getClient().get(request, RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, String.format("Could not perform request to fetch Fact with id = %s.", id));
     }
 
@@ -160,8 +162,8 @@ public class FactSearchManager implements LifecycleAspect {
       IndexRequest request = new IndexRequest(INDEX_NAME, TYPE_NAME, fact.getId().toString())
               .setRefreshPolicy(isTestEnvironment ? WriteRequest.RefreshPolicy.IMMEDIATE : WriteRequest.RefreshPolicy.NONE)
               .source(FACT_DOCUMENT_WRITER.writeValueAsBytes(fact), XContentType.JSON);
-      response = clientFactory.getHighLevelClient().index(request);
-    } catch (IOException ex) {
+      response = clientFactory.getClient().index(request, RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, String.format("Could not perform request to index Fact with id = %s.", fact.getId()));
     }
 
@@ -194,8 +196,8 @@ public class FactSearchManager implements LifecycleAspect {
 
     SearchResponse response;
     try {
-      response = clientFactory.getHighLevelClient().search(buildFactExistenceSearchRequest(criteria));
-    } catch (IOException ex) {
+      response = clientFactory.getClient().search(buildFactExistenceSearchRequest(criteria), RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to search for existing Facts.");
     }
 
@@ -231,8 +233,8 @@ public class FactSearchManager implements LifecycleAspect {
 
     SearchResponse response;
     try {
-      response = clientFactory.getHighLevelClient().search(buildFactsSearchRequest(criteria));
-    } catch (IOException ex) {
+      response = clientFactory.getClient().search(buildFactsSearchRequest(criteria), RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to search for Facts.");
     }
 
@@ -268,8 +270,8 @@ public class FactSearchManager implements LifecycleAspect {
 
     SearchResponse response;
     try {
-      response = clientFactory.getHighLevelClient().search(buildObjectsSearchRequest(criteria));
-    } catch (IOException ex) {
+      response = clientFactory.getClient().search(buildObjectsSearchRequest(criteria), RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to search for Objects.");
     }
 
@@ -307,8 +309,8 @@ public class FactSearchManager implements LifecycleAspect {
 
     SearchResponse response;
     try {
-      response = clientFactory.getHighLevelClient().search(buildObjectStatisticsSearchRequest(criteria));
-    } catch (IOException ex) {
+      response = clientFactory.getClient().search(buildObjectStatisticsSearchRequest(criteria), RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to calculate Object statistics.");
     }
 
@@ -360,31 +362,27 @@ public class FactSearchManager implements LifecycleAspect {
   }
 
   private boolean indexExists() {
-    Response response;
-
     try {
-      // Need to use low-level client here because the Index API is not yet supported by the high-level client.
-      response = clientFactory.getLowLevelClient().performRequest("HEAD", INDEX_NAME);
-    } catch (IOException ex) {
+      GetIndexRequest request = new GetIndexRequest().indices(INDEX_NAME);
+      return clientFactory.getClient().indices().exists(request, RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to verify if index exists.");
     }
-
-    // Index exists if request returns with status code 200.
-    return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
   }
 
   private void createIndex() {
-    Response response;
+    CreateIndexResponse response;
 
-    try (InputStream payload = FactSearchManager.class.getClassLoader().getResourceAsStream(MAPPINGS_JSON)) {
-      // Need to use low-level client here because the Index API is not yet supported by the high-level client.
-      HttpEntity body = new InputStreamEntity(payload, ContentType.APPLICATION_JSON);
-      response = clientFactory.getLowLevelClient().performRequest("PUT", INDEX_NAME, Collections.emptyMap(), body);
-    } catch (IOException ex) {
+    try (InputStream payload = FactSearchManager.class.getClassLoader().getResourceAsStream(MAPPINGS_JSON);
+         InputStreamReader reader = new InputStreamReader(payload)) {
+      CreateIndexRequest request = new CreateIndexRequest(INDEX_NAME)
+              .source(CharStreams.toString(reader), XContentType.JSON);
+      response = clientFactory.getClient().indices().create(request, RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to create index.");
     }
 
-    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+    if (!response.isAcknowledged()) {
       String msg = String.format("Could not create index '%s'.", INDEX_NAME);
       LOGGER.error(msg);
       throw new IllegalStateException(msg);
@@ -396,10 +394,11 @@ public class FactSearchManager implements LifecycleAspect {
   private ScrollingSearchResult.ScrollingBatch<FactDocument> fetchNextFactsBatch(String scrollId) {
     SearchResponse response;
     try {
-      response = clientFactory.getHighLevelClient().searchScroll(new SearchScrollRequest()
+      SearchScrollRequest request = new SearchScrollRequest()
               .scrollId(scrollId)
-              .scroll(searchScrollExpiration));
-    } catch (IOException ex) {
+              .scroll(searchScrollExpiration);
+      response = clientFactory.getClient().scroll(request, RequestOptions.DEFAULT);
+    } catch (ElasticsearchException | IOException ex) {
       LOGGER.warning(ex, "Could not perform request to retrieve next batch of search results. Stop scrolling.");
       return ScrollingSearchResult.emptyBatch();
     }
@@ -432,7 +431,7 @@ public class FactSearchManager implements LifecycleAspect {
     request.addScrollId(scrollId);
 
     // Perform this clean-up asynchronously because the client doesn't require the result.
-    clientFactory.getHighLevelClient().clearScrollAsync(request, new ActionListener<ClearScrollResponse>() {
+    clientFactory.getClient().clearScrollAsync(request, RequestOptions.DEFAULT, new ActionListener<ClearScrollResponse>() {
       @Override
       public void onResponse(ClearScrollResponse response) {
         if (!response.isSucceeded()) {
@@ -493,10 +492,10 @@ public class FactSearchManager implements LifecycleAspect {
   private QueryBuilder buildFactExistenceQuery(FactExistenceSearchCriteria criteria) {
     // Define all filters on direct Fact fields. Every field from the criteria must match.
     BoolQueryBuilder rootQuery = boolQuery()
-            .filter(termQuery("typeID", criteria.getFactTypeID()))
-            .filter(termQuery("sourceID", criteria.getSourceID()))
-            .filter(termQuery("organizationID", criteria.getOrganizationID()))
-            .filter(termQuery("accessMode", criteria.getAccessMode()));
+            .filter(termQuery("typeID", toString(criteria.getFactTypeID())))
+            .filter(termQuery("sourceID", toString(criteria.getSourceID())))
+            .filter(termQuery("organizationID", toString(criteria.getOrganizationID())))
+            .filter(termQuery("accessMode", toString(criteria.getAccessMode())));
 
     if (criteria.getFactValue() != null) {
       // Fact values must match exactly if given.
@@ -508,7 +507,7 @@ public class FactSearchManager implements LifecycleAspect {
 
     // This clause is required when searching for existing meta Facts.
     if (criteria.getInReferenceTo() != null) {
-      rootQuery.filter(termQuery("inReferenceTo", criteria.getInReferenceTo()));
+      rootQuery.filter(termQuery("inReferenceTo", toString(criteria.getInReferenceTo())));
     }
 
     // These clauses are required when searching for regular Facts.
@@ -519,8 +518,8 @@ public class FactSearchManager implements LifecycleAspect {
       // Define filters on nested Objects. Also all Objects must match.
       for (FactExistenceSearchCriteria.ObjectExistence object : criteria.getObjects()) {
         BoolQueryBuilder objectsQuery = boolQuery()
-                .filter(termQuery("objects.id", object.getObjectID()))
-                .filter(termQuery("objects.direction", object.getDirection()));
+                .filter(termQuery("objects.id", toString(object.getObjectID())))
+                .filter(termQuery("objects.direction", toString(object.getDirection())));
         rootQuery.filter(nestedQuery("objects", objectsQuery, ScoreMode.None));
       }
     }
@@ -540,11 +539,11 @@ public class FactSearchManager implements LifecycleAspect {
 
   private void applySimpleFilterQueries(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
     if (!CollectionUtils.isEmpty(criteria.getFactID())) {
-      rootQuery.filter(termsQuery("_id", criteria.getFactID()));
+      rootQuery.filter(termsQuery("_id", toString(criteria.getFactID())));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getFactTypeID())) {
-      rootQuery.filter(termsQuery("typeID", criteria.getFactTypeID()));
+      rootQuery.filter(termsQuery("typeID", toString(criteria.getFactTypeID())));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getFactTypeName())) {
@@ -556,11 +555,11 @@ public class FactSearchManager implements LifecycleAspect {
     }
 
     if (!CollectionUtils.isEmpty(criteria.getInReferenceTo())) {
-      rootQuery.filter(termsQuery("inReferenceTo", criteria.getInReferenceTo()));
+      rootQuery.filter(termsQuery("inReferenceTo", toString(criteria.getInReferenceTo())));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getOrganizationID())) {
-      rootQuery.filter(termsQuery("organizationID", criteria.getOrganizationID()));
+      rootQuery.filter(termsQuery("organizationID", toString(criteria.getOrganizationID())));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getOrganizationName())) {
@@ -568,7 +567,7 @@ public class FactSearchManager implements LifecycleAspect {
     }
 
     if (!CollectionUtils.isEmpty(criteria.getSourceID())) {
-      rootQuery.filter(termsQuery("sourceID", criteria.getSourceID()));
+      rootQuery.filter(termsQuery("sourceID", toString(criteria.getSourceID())));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getSourceName())) {
@@ -576,11 +575,11 @@ public class FactSearchManager implements LifecycleAspect {
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectID())) {
-      rootQuery.filter(nestedQuery("objects", termsQuery("objects.id", criteria.getObjectID()), ScoreMode.None));
+      rootQuery.filter(nestedQuery("objects", termsQuery("objects.id", toString(criteria.getObjectID())), ScoreMode.None));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectTypeID())) {
-      rootQuery.filter(nestedQuery("objects", termsQuery("objects.typeID", criteria.getObjectTypeID()), ScoreMode.None));
+      rootQuery.filter(nestedQuery("objects", termsQuery("objects.typeID", toString(criteria.getObjectTypeID())), ScoreMode.None));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectTypeName())) {
@@ -646,18 +645,18 @@ public class FactSearchManager implements LifecycleAspect {
     // Query to verify that user has access to Fact ...
     return boolQuery()
             // ... if Fact is public.
-            .should(termQuery("accessMode", FactDocument.AccessMode.Public))
+            .should(termQuery("accessMode", toString(FactDocument.AccessMode.Public)))
             // ... if AccessMode == Explicit user must be in ACL.
             .should(boolQuery()
-                    .filter(termQuery("accessMode", FactDocument.AccessMode.Explicit))
-                    .filter(termQuery("acl", currentUserID))
+                    .filter(termQuery("accessMode", toString(FactDocument.AccessMode.Explicit)))
+                    .filter(termQuery("acl", toString(currentUserID)))
             )
             // ... if AccessMode == RoleBased user must be in ACL or have access to the owning Organization.
             .should(boolQuery()
-                    .filter(termQuery("accessMode", FactDocument.AccessMode.RoleBased))
+                    .filter(termQuery("accessMode", toString(FactDocument.AccessMode.RoleBased)))
                     .filter(boolQuery()
-                            .should(termQuery("acl", currentUserID))
-                            .should(termsQuery("organizationID", availableOrganizationID))
+                            .should(termQuery("acl", toString(currentUserID)))
+                            .should(termsQuery("organizationID", toString(availableOrganizationID)))
                     )
             );
   }
@@ -697,11 +696,11 @@ public class FactSearchManager implements LifecycleAspect {
     // Apply all simple filter queries on Objects. It's not necessary to wrap them inside a nested query because the
     // query is executed inside a nested aggregation which has direct access to the nested documents.
     if (!CollectionUtils.isEmpty(criteria.getObjectID())) {
-      rootQuery.filter(termsQuery("objects.id", criteria.getObjectID()));
+      rootQuery.filter(termsQuery("objects.id", toString(criteria.getObjectID())));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectTypeID())) {
-      rootQuery.filter(termsQuery("objects.typeID", criteria.getObjectTypeID()));
+      rootQuery.filter(termsQuery("objects.typeID", toString(criteria.getObjectTypeID())));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectTypeName())) {
@@ -730,7 +729,7 @@ public class FactSearchManager implements LifecycleAspect {
 
   private AggregationBuilder buildObjectStatisticsAggregation(ObjectStatisticsCriteria criteria) {
     QueryBuilder accessControlQuery = createAccessControlQuery(criteria.getCurrentUserID(), criteria.getAvailableOrganizationID());
-    QueryBuilder objectsQuery = termsQuery("objects.id", criteria.getObjectID());
+    QueryBuilder objectsQuery = termsQuery("objects.id", toString(criteria.getObjectID()));
 
     // 1. Reduce to only the Facts the user has access to. Non-accessible Facts won't be available in sub aggregations!
     return filter(FILTER_FACTS_AGGREGATION_NAME, accessControlQuery)
@@ -912,9 +911,17 @@ public class FactSearchManager implements LifecycleAspect {
     }
   }
 
+  private String toString(Object object) {
+    return ObjectUtils.ifNotNull(object, Object::toString);
+  }
+
+  private Set<String> toString(Set<?> collection) {
+    return SetUtils.set(collection, Object::toString);
+  }
+
   private RuntimeException logAndExit(Exception ex, String msg) {
     LOGGER.error(ex, msg);
-    return new RuntimeException(msg, ex);
+    return new IllegalStateException(msg, ex);
   }
 
 }
