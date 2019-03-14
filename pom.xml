@@ -48,7 +48,7 @@
     <!-- external dependencies -->
     <cassandra.version>3.7.0</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
-    <elastic.search.version>5.6.15</elastic.search.version>
+    <elastic.search.version>6.6.1</elastic.search.version>
     <guava.version>27.0.1-jre</guava.version>
     <guice.version>4.2.2</guice.version>
     <hibernate.validator.version>6.0.15.Final</hibernate.validator.version>
