@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampDeserializer;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.validation.constraints.Min;
@@ -86,7 +87,7 @@ public class SearchObjectFactsRequest implements ValidatingRequest {
   }
 
   public SearchObjectFactsRequest setFactType(Set<String> factType) {
-    this.factType = factType;
+    this.factType = ObjectUtils.ifNotNull(factType, SetUtils::set);
     return this;
   }
 
@@ -100,7 +101,7 @@ public class SearchObjectFactsRequest implements ValidatingRequest {
   }
 
   public SearchObjectFactsRequest setFactValue(Set<String> factValue) {
-    this.factValue = factValue;
+    this.factValue = ObjectUtils.ifNotNull(factValue, SetUtils::set);
     return this;
   }
 
@@ -114,7 +115,7 @@ public class SearchObjectFactsRequest implements ValidatingRequest {
   }
 
   public SearchObjectFactsRequest setOrganization(Set<String> organization) {
-    this.organization = organization;
+    this.organization = ObjectUtils.ifNotNull(organization, SetUtils::set);
     return this;
   }
 
@@ -128,7 +129,7 @@ public class SearchObjectFactsRequest implements ValidatingRequest {
   }
 
   public SearchObjectFactsRequest setSource(Set<String> source) {
-    this.source = source;
+    this.source = ObjectUtils.ifNotNull(source, SetUtils::set);
     return this;
   }
 

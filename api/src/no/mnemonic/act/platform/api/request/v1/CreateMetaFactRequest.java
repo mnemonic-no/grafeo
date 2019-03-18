@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.constraints.NotBlank;
@@ -104,7 +105,7 @@ public class CreateMetaFactRequest implements ValidatingRequest {
   }
 
   public CreateMetaFactRequest setAcl(List<UUID> acl) {
-    this.acl = acl;
+    this.acl = ObjectUtils.ifNotNull(acl, ListUtils::list);
     return this;
   }
 
