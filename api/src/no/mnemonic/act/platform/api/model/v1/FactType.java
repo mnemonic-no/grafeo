@@ -116,7 +116,7 @@ public class FactType {
     }
 
     public Builder setRelevantObjectBindings(List<FactObjectBindingDefinition> relevantObjectBindings) {
-      this.relevantObjectBindings = relevantObjectBindings;
+      this.relevantObjectBindings = ObjectUtils.ifNotNull(relevantObjectBindings, ListUtils::list);
       return this;
     }
 
@@ -126,7 +126,7 @@ public class FactType {
     }
 
     public Builder setRelevantFactBindings(List<MetaFactBindingDefinition> relevantFactBindings) {
-      this.relevantFactBindings = relevantFactBindings;
+      this.relevantFactBindings = ObjectUtils.ifNotNull(relevantFactBindings, ListUtils::list);
       return this;
     }
 

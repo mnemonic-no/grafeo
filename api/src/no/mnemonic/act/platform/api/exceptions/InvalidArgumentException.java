@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.api.exceptions;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -96,7 +97,10 @@ public class InvalidArgumentException extends Exception {
   /**
    * Wrapper for one validation error.
    */
-  public class ValidationError {
+  public class ValidationError implements Serializable {
+
+    private static final long serialVersionUID = 1431679392151341085L;
+
     private final String message;
     private final String messageTemplate;
     private final String property;

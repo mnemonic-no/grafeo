@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.api.request.v1;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.constraints.NotBlank;
@@ -99,7 +100,7 @@ public class CreateFactRequest implements ValidatingRequest {
   }
 
   public CreateFactRequest setAcl(List<UUID> acl) {
-    this.acl = acl;
+    this.acl = ObjectUtils.ifNotNull(acl, ListUtils::list);
     return this;
   }
 

@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.api.request.v1;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
@@ -57,7 +58,7 @@ public class CreateFactTypeRequest implements ValidatingRequest {
   }
 
   public CreateFactTypeRequest setRelevantObjectBindings(List<FactObjectBindingDefinition> relevantObjectBindings) {
-    this.relevantObjectBindings = relevantObjectBindings;
+    this.relevantObjectBindings = ObjectUtils.ifNotNull(relevantObjectBindings, ListUtils::list);
     return this;
   }
 
@@ -71,7 +72,7 @@ public class CreateFactTypeRequest implements ValidatingRequest {
   }
 
   public CreateFactTypeRequest setRelevantFactBindings(List<MetaFactBindingDefinition> relevantFactBindings) {
-    this.relevantFactBindings = relevantFactBindings;
+    this.relevantFactBindings = ObjectUtils.ifNotNull(relevantFactBindings, ListUtils::list);
     return this;
   }
 

@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
@@ -48,7 +49,7 @@ public class UpdateFactTypeRequest implements ValidatingRequest {
   }
 
   public UpdateFactTypeRequest setAddObjectBindings(List<FactObjectBindingDefinition> addObjectBindings) {
-    this.addObjectBindings = addObjectBindings;
+    this.addObjectBindings = ObjectUtils.ifNotNull(addObjectBindings, ListUtils::list);
     return this;
   }
 
@@ -62,7 +63,7 @@ public class UpdateFactTypeRequest implements ValidatingRequest {
   }
 
   public UpdateFactTypeRequest setAddFactBindings(List<MetaFactBindingDefinition> addFactBindings) {
-    this.addFactBindings = addFactBindings;
+    this.addFactBindings = ObjectUtils.ifNotNull(addFactBindings, ListUtils::list);
     return this;
   }
 

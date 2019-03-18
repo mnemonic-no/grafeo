@@ -81,7 +81,7 @@ public class Object {
     }
 
     public Builder setStatistics(List<ObjectFactsStatistic> statistics) {
-      this.statistics = statistics;
+      this.statistics = ObjectUtils.ifNotNull(statistics, ListUtils::list);
       return this;
     }
 
