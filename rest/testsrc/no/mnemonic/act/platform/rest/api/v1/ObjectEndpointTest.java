@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.*;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     UUID id = UUID.randomUUID();
     when(getTiService().searchObjectFacts(any(), isA(SearchObjectFactsRequest.class))).then(i -> {
       assertEquals(id, i.<SearchObjectFactsRequest>getArgument(1).getObjectID());
-      return ResultSet.<Fact>builder().setValues(createFacts()).build();
+      return StreamingResultSet.<Fact>builder().setValues(createFacts()).build();
     });
 
     Response response = target(String.format("/v1/object/uuid/%s/facts", id)).request().post(Entity.json(new SearchObjectFactsRequest()));
@@ -82,7 +82,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
       SearchObjectFactsRequest request = i.getArgument(1);
       assertEquals(type, request.getObjectType());
       assertEquals(value, request.getObjectValue());
-      return ResultSet.<Fact>builder().setValues(createFacts()).build();
+      return StreamingResultSet.<Fact>builder().setValues(createFacts()).build();
     });
 
     Response response = target(String.format("/v1/object/%s/%s/facts", type, value)).request().post(Entity.json(new SearchObjectFactsRequest()));
@@ -99,7 +99,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     UUID id = UUID.randomUUID();
     when(getTiService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class))).then(i -> {
       assertEquals(id, i.<TraverseByObjectIdRequest>getArgument(1).getId());
-      return ResultSet.builder().setValues(ListUtils.list("something")).build();
+      return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
     });
 
     TraverseByObjectIdRequest request = new TraverseByObjectIdRequest()
@@ -122,7 +122,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
       TraverseByObjectTypeValueRequest request = i.getArgument(1);
       assertEquals(type, request.getType());
       assertEquals(value, request.getValue());
-      return ResultSet.builder().setValues(ListUtils.list("something")).build();
+      return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
     });
 
     TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest()
@@ -139,7 +139,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
 
   @Test
   public void testSearchObjects() throws Exception {
-    when(getTiService().searchObjects(any(), isA(SearchObjectRequest.class))).then(i -> ResultSet.<Object>builder().setValues(createObjects()).build());
+    when(getTiService().searchObjects(any(), isA(SearchObjectRequest.class))).then(i -> StreamingResultSet.<Object>builder().setValues(createObjects()).build());
 
     Response response = target("/v1/object/search").request().post(Entity.json(new SearchObjectRequest()));
     JsonNode payload = getPayload(response);
@@ -153,7 +153,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
   @Test
   public void testTraverseByObjectSearch() throws Exception {
     when(getTiService().traverseGraph(any(), isA(TraverseByObjectSearchRequest.class)))
-            .then(i -> ResultSet.builder().setValues(ListUtils.list("something")).build());
+            .then(i -> StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build());
 
     TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest()
             .setQuery("g.values('value')");

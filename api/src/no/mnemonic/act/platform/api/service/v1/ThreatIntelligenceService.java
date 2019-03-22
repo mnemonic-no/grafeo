@@ -1,14 +1,16 @@
 package no.mnemonic.act.platform.api.service.v1;
 
 import no.mnemonic.act.platform.api.exceptions.*;
-import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
+import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.request.v1.*;
+import no.mnemonic.services.common.api.ResultSet;
+import no.mnemonic.services.common.api.Service;
 
 /**
  * Service handling all Threat Intelligence data - i.e. Facts, Objects and related data - stored inside the ACT platform.
  */
-public interface ThreatIntelligenceService {
+public interface ThreatIntelligenceService extends Service {
 
   /**
    * Fetch an ObjectType by its id.

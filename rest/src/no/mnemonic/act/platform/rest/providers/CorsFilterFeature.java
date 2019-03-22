@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.rest.features;
+package no.mnemonic.act.platform.rest.providers;
 
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.jboss.resteasy.plugins.interceptors.CorsFilter;
@@ -12,12 +12,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Provider
-public class CorsFeature implements Feature {
+public class CorsFilterFeature implements Feature {
 
   private final Set<String> allowedOrigins;
 
   @Inject
-  public CorsFeature(@Named("cors.allowed.origins") String allowedOrigins) {
+  public CorsFilterFeature(@Named("cors.allowed.origins") String allowedOrigins) {
     this.allowedOrigins = SetUtils.set(allowedOrigins.split(","));
   }
 

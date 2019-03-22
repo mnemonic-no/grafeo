@@ -6,11 +6,12 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.FactComment;
 import no.mnemonic.act.platform.api.request.v1.GetFactCommentsRequest;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.services.common.api.ResultSet;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,7 +39,7 @@ public class FactGetCommentsDelegate extends AbstractDelegate {
             .map(TiRequestContext.get().getFactCommentConverter())
             .collect(Collectors.toList());
 
-    return ResultSet.<FactComment>builder()
+    return StreamingResultSet.<FactComment>builder()
             .setCount(comments.size())
             .setLimit(0)
             .setValues(comments)

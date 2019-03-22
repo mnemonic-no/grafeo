@@ -6,7 +6,7 @@ import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.GetFactTypeByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
 
   @Test
   public void testSearchFactTypes() throws Exception {
-    when(getTiService().searchFactTypes(any(), isA(SearchFactTypeRequest.class))).then(i -> ResultSet.<FactType>builder().setValues(createFactTypes()).build());
+    when(getTiService().searchFactTypes(any(), isA(SearchFactTypeRequest.class))).then(i -> StreamingResultSet.<FactType>builder().setValues(createFactTypes()).build());
 
     Response response = target("/v1/factType").request().get();
     JsonNode payload = getPayload(response);

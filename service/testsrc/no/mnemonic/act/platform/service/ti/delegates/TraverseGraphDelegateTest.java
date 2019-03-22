@@ -8,15 +8,17 @@ import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -55,7 +57,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   private final TestMethod byObjectSearchHandle = (object, query) -> {
     TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest().setQuery(query);
     Set<Object> searchResult = Collections.singleton(Object.builder().setId(object.getId()).build());
-    when(objectSearch.handle(request)).thenReturn(ResultSet.<Object>builder().setValues(searchResult).build());
+    when(objectSearch.handle(request)).thenReturn(StreamingResultSet.<Object>builder().setValues(searchResult).build());
 
     return delegate.handle(request);
   };
@@ -219,10 +221,10 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   @Test
   public void testTraverseGraphByObjectSearchWithoutSearchResult() throws Exception {
     TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest();
-    when(objectSearch.handle(request)).thenReturn(ResultSet.<Object>builder().build());
+    when(objectSearch.handle(request)).thenReturn(StreamingResultSet.<Object>builder().build());
 
     ResultSet<?> result = delegate.handle(request);
-    assertTrue(result.getValues().isEmpty());
+    assertFalse(result.iterator().hasNext());
   }
 
   @Test
@@ -257,25 +259,25 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
 
   private void testTraverseGraphReturnEdges(TestMethod method) throws Exception {
     ObjectEntity startObject = mockFullTraversal();
-    ResultSet<?> result = method.execute(startObject, "g.outE()");
-    assertEquals(1, result.getValues().size());
-    assertTrue(result.getValues().iterator().next() instanceof Fact);
+    List<?> result = ListUtils.list(method.execute(startObject, "g.outE()").iterator());
+    assertEquals(1, result.size());
+    assertTrue(result.get(0) instanceof Fact);
     // SecurityContext should be called twice, once during graph traversal and once when creating result.
     verify(getSecurityContext(), times(2)).hasReadPermission(isA(FactEntity.class));
   }
 
   private void testTraverseGraphReturnVertices(TestMethod method) throws Exception {
     ObjectEntity startObject = mockFullTraversal();
-    ResultSet<?> result = method.execute(startObject, "g.out()");
-    assertEquals(1, result.getValues().size());
-    assertTrue(result.getValues().iterator().next() instanceof Object);
+    List<?> result = ListUtils.list(method.execute(startObject, "g.out()").iterator());
+    assertEquals(1, result.size());
+    assertTrue(result.get(0) instanceof Object);
   }
 
   private void testTraverseGraphReturnValue(TestMethod method) throws Exception {
     ObjectEntity startObject = mockFullTraversal();
-    ResultSet<?> result = method.execute(startObject, "g.values('value')");
-    assertEquals(1, result.getValues().size());
-    assertEquals(startObject.getValue(), result.getValues().iterator().next());
+    List<?> result = ListUtils.list(method.execute(startObject, "g.values('value')").iterator());
+    assertEquals(1, result.size());
+    assertEquals(startObject.getValue(), result.get(0));
   }
 
   private void testTraverseGraphReturnError(TestMethod method) throws Exception {

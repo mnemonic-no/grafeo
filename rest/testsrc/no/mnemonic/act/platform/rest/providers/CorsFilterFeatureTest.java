@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.rest.features;
+package no.mnemonic.act.platform.rest.providers;
 
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 /**
  * Test CORS with one specific endpoint, however, it should work with every endpoint.
  */
-public class CorsFeatureTest extends AbstractEndpointTest {
+public class CorsFilterFeatureTest extends AbstractEndpointTest {
 
   private static final String allowedOrigin = "http://www.example.org";
 

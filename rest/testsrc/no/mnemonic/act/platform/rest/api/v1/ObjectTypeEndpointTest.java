@@ -6,7 +6,7 @@ import no.mnemonic.act.platform.api.request.v1.CreateObjectTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.GetObjectTypeByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.UpdateObjectTypeRequest;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
 
   @Test
   public void testSearchObjectTypes() throws Exception {
-    when(getTiService().searchObjectTypes(any(), isA(SearchObjectTypeRequest.class))).then(i -> ResultSet.<ObjectType>builder().setValues(createObjectTypes()).build());
+    when(getTiService().searchObjectTypes(any(), isA(SearchObjectTypeRequest.class))).then(i -> StreamingResultSet.<ObjectType>builder().setValues(createObjectTypes()).build());
 
     Response response = target("/v1/objectType").request().get();
     JsonNode payload = getPayload(response);
