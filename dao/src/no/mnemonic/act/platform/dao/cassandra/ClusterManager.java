@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.dao.cassandra;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.DefaultRetryPolicy;
+import com.datastax.driver.core.policies.LoggingRetryPolicy;
 import com.datastax.driver.core.policies.TokenAwarePolicy;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
@@ -38,10 +39,12 @@ public class ClusterManager implements LifecycleAspect {
       cluster = Cluster.builder()
               .withClusterName(clusterName)
               .withPort(port)
-              .withRetryPolicy(DefaultRetryPolicy.INSTANCE)
-              // TokenAware requires query has routing info (e.g. BoundStatement with all PK value bound).
+              // Wrap default retry policy in LoggingRetryPolicy in order to log retry decisions.
+              .withRetryPolicy(new LoggingRetryPolicy(DefaultRetryPolicy.INSTANCE))
+              // Wrap DCAwareRoundRobinPolicy which selects local data center nodes in TokenAwarePolicy
+              // which in addition prioritizes nodes based on routing information embedded in queries.
               .withLoadBalancingPolicy(new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder().build()))
-              .addContactPoints(contactPoints.toArray(new String[contactPoints.size()]))
+              .addContactPoints(contactPoints.toArray(new String[0]))
               .build();
 
       // Register any codecs.
