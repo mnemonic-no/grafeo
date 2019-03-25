@@ -46,7 +46,7 @@
     <mnemonic.services.triggers.version>0.0.5</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
-    <cassandra.version>3.7.0</cassandra.version>
+    <cassandra.version>3.7.1</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
     <elastic.search.version>6.6.1</elastic.search.version>
     <guava.version>27.0.1-jre</guava.version>
