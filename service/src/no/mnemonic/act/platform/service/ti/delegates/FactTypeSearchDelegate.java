@@ -5,10 +5,11 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
+import no.mnemonic.services.common.api.ResultSet;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ public class FactTypeSearchDelegate {
             .map(TiRequestContext.get().getFactTypeConverter())
             .collect(Collectors.toList());
 
-    return ResultSet.<FactType>builder()
+    return StreamingResultSet.<FactType>builder()
             .setCount(types.size())
             .setLimit(0)
             .setValues(types)

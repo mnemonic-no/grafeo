@@ -5,7 +5,6 @@ import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
@@ -13,6 +12,7 @@ import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -72,7 +72,7 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
     when(getFactSearchManager().searchObjects(any())).thenReturn(SearchResult.<ObjectDocument>builder().build());
     ResultSet<Object> result = ObjectSearchDelegate.create().handle(new SearchObjectRequest());
     assertEquals(0, result.getCount());
-    assertEquals(0, result.getValues().size());
+    assertEquals(0, ListUtils.list(result.iterator()).size());
 
     verify(getFactSearchManager()).searchObjects(any());
     verifyNoMoreInteractions(getFactSearchManager());
@@ -84,7 +84,7 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
     ResultSet<Object> result = ObjectSearchDelegate.create().handle(new SearchObjectRequest());
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());
-    assertEquals(1, result.getValues().size());
+    assertEquals(1, ListUtils.list(result.iterator()).size());
 
     verify(getFactSearchManager()).searchObjects(any());
     verify(getFactSearchManager()).calculateObjectStatistics(any());

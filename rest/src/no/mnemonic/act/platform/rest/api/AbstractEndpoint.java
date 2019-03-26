@@ -1,15 +1,13 @@
 package no.mnemonic.act.platform.rest.api;
 
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.auth.properties.model.SubjectCredentials;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
+import no.mnemonic.services.common.api.ResultSet;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import java.util.Collection;
 
 public abstract class AbstractEndpoint {
 
@@ -34,8 +32,7 @@ public abstract class AbstractEndpoint {
     return ResultStash.builder()
             .setLimit(result.getLimit())
             .setCount(result.getCount())
-            .setSize(ObjectUtils.ifNotNull(result.getValues(), Collection::size, 0))
-            .setData(result.getValues())
+            .setData(result)
             .buildResponse();
   }
 

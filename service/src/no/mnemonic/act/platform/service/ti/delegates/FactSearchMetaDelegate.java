@@ -6,13 +6,13 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.services.common.api.ResultSet;
 
 public class FactSearchMetaDelegate extends AbstractDelegate {
 

@@ -1,11 +1,10 @@
 package no.mnemonic.act.platform.service.ti;
 
 import no.mnemonic.act.platform.api.exceptions.*;
-import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
+import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
@@ -27,6 +26,7 @@ import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.services.common.api.ResultSet;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 
@@ -297,7 +297,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
             .setObjectConverter(objectConverter)
-            .setFactConverter(createFactConverterForGraphTraversal())
+            .setFactConverter(createFactConverter())
             .build()
             .handle(request);
   }
@@ -308,7 +308,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
             .setObjectConverter(objectConverter)
-            .setFactConverter(createFactConverterForGraphTraversal())
+            .setFactConverter(createFactConverter())
             .build()
             .handle(request);
   }
@@ -319,7 +319,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return TraverseGraphDelegate.builder()
             .setObjectSearch(ObjectSearchDelegate.create())
             .setObjectConverter(objectConverter)
-            .setFactConverter(createFactConverterForGraphTraversal())
+            .setFactConverter(createFactConverter())
             .build()
             .handle(request);
   }
@@ -364,11 +364,11 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     };
   }
 
-  private FactConverter createFactConverterForGraphTraversal() {
+  private FactConverter createFactConverter() {
     // Need to re-define accessChecker of FactConverter because the lambda used for the FactConverter available from
     // the RequestContext is calling TiSecurityContext.get() which is not available when a Gremlin query is executed
-    // in another thread. Note that this is a work-around which will be ultimately fixed when implementing service
-    // request scope.
+    // in another thread or when search results are streamed to the REST layer. Note that this is a work-around which
+    // will be ultimately fixed when implementing service request scope.
     TiSecurityContext securityContext = TiSecurityContext.get();
     return FactConverter.builder()
             .setFactTypeConverter(createFactTypeByIdConverter())
@@ -386,7 +386,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setFactSearchManager(factSearchManager)
             .setFactManager(factManager)
             .setSecurityContext(TiSecurityContext.get())
-            .setFactConverter(factConverter)
+            .setFactConverter(createFactConverter())
             .build();
   }
 

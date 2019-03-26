@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
@@ -22,6 +22,7 @@ import no.mnemonic.act.platform.service.ti.helpers.GremlinSandboxExtension;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import no.mnemonic.services.common.api.ResultSet;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.GroovyCompilerGremlinPlugin;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -86,16 +87,16 @@ public class TraverseGraphDelegate extends AbstractDelegate {
     // Search for Objects and use the result as starting points for the graph traversal.
     // The search will only return Objects the current user has access to, thus, there is no need to check
     // Object access here (in contrast to the traversal with a single starting Object).
-    Collection<UUID> startingObjects = SetUtils.set(objectSearch.handle(request).getValues(), Object::getId);
+    Collection<UUID> startingObjects = SetUtils.set(objectSearch.handle(request).iterator(), Object::getId);
     if (startingObjects.isEmpty()) {
       // Search returned no results, just return empty traversal result as well.
-      return ResultSet.builder().build();
+      return StreamingResultSet.builder().build();
     }
 
     // Execute traversal and process results.
     executeTraversal(startingObjects, request.getQuery());
 
-    return ResultSet.builder()
+    return StreamingResultSet.builder()
             .setCount(traversalResult.size())
             .setValues(traversalResult)
             .build();
@@ -149,7 +150,7 @@ public class TraverseGraphDelegate extends AbstractDelegate {
     // Execute traversal and process results.
     executeTraversal(Collections.singleton(startingObject.getId()), query);
 
-    return ResultSet.builder()
+    return StreamingResultSet.builder()
             .setCount(traversalResult.size())
             .setValues(traversalResult)
             .build();
@@ -180,7 +181,7 @@ public class TraverseGraphDelegate extends AbstractDelegate {
               .addValidationError(cause.getMessage(), "graph.traversal.failure", "query", query);
     } catch (Exception ex) {
       // Something bad happened, abort method.
-      throw new RuntimeException(ex);
+      throw new IllegalStateException("Could not perform graph traversal.", ex);
     }
   }
 

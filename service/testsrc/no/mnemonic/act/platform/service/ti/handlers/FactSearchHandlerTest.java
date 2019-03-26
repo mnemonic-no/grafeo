@@ -2,7 +2,6 @@ package no.mnemonic.act.platform.service.ti.handlers;
 
 import com.google.common.collect.Iterators;
 import no.mnemonic.act.platform.api.model.v1.Fact;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
@@ -13,6 +12,7 @@ import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -23,9 +23,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -128,7 +126,7 @@ public class FactSearchHandlerTest {
 
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());
-    assertEquals(1, result.getValues().size());
+    assertEquals(1, ListUtils.list(result.iterator()).size());
   }
 
   @Test
@@ -140,7 +138,7 @@ public class FactSearchHandlerTest {
 
     assertEquals(10000, result.getLimit());
     assertEquals(100, result.getCount());
-    assertEquals(1, result.getValues().size());
+    assertEquals(1, ListUtils.list(result.iterator()).size());
   }
 
   @Test
@@ -152,7 +150,7 @@ public class FactSearchHandlerTest {
 
     assertEquals(10000, result.getLimit());
     assertEquals(100, result.getCount());
-    assertEquals(1, result.getValues().size());
+    assertEquals(1, ListUtils.list(result.iterator()).size());
   }
 
   @Test
@@ -165,10 +163,10 @@ public class FactSearchHandlerTest {
 
     assertEquals(25, result.getLimit());
     assertEquals(0, result.getCount());
-    assertEquals(0, result.getValues().size());
+    assertEquals(0, ListUtils.list(result.iterator()).size());
 
     verify(factSearchManager).searchFacts(criteria);
-    verify(factManager).getFacts(argThat(List::isEmpty));
+    verify(factManager, atLeastOnce()).getFacts(argThat(List::isEmpty));
   }
 
   @Test
@@ -182,7 +180,7 @@ public class FactSearchHandlerTest {
 
     assertEquals(25, result.getLimit());
     assertEquals(3, result.getCount());
-    assertEquals(2, result.getValues().size());
+    assertEquals(2, ListUtils.list(result.iterator()).size());
 
     verify(factSearchManager).searchFacts(criteria);
     verify(factManager).getFacts(argThat(i -> i.size() == 3));
@@ -204,7 +202,7 @@ public class FactSearchHandlerTest {
 
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());
-    assertEquals(25, result.getValues().size());
+    assertEquals(25, ListUtils.list(result.iterator()).size());
 
     verify(factSearchManager).searchFacts(criteria);
     verify(factManager, times(5)).getFacts(argThat(i -> i.contains(factID)));
@@ -217,7 +215,7 @@ public class FactSearchHandlerTest {
     factDocument.setRetracted(true);
 
     FactSearchCriteria criteria = mockSearchWithRetraction();
-    handler.search(criteria, true);
+    ListUtils.list(handler.search(criteria, true).iterator());
 
     verify(factManager).getFacts(argThat(i -> i.contains(factDocument.getId())));
     verify(factSearchManager).searchFacts(criteria);
@@ -229,7 +227,7 @@ public class FactSearchHandlerTest {
     factDocument.setRetracted(false);
 
     FactSearchCriteria criteria = mockSearchWithRetraction();
-    handler.search(criteria, false);
+    ListUtils.list(handler.search(criteria, false).iterator());
 
     verify(factManager).getFacts(argThat(i -> i.contains(factDocument.getId())));
     verify(factSearchManager).searchFacts(criteria);
@@ -241,9 +239,9 @@ public class FactSearchHandlerTest {
     factDocument.setRetracted(true);
 
     FactSearchCriteria criteria = mockSearchWithRetraction();
-    handler.search(criteria, false);
+    ListUtils.list(handler.search(criteria, false).iterator());
 
-    verify(factManager).getFacts(argThat(i -> !i.contains(factDocument.getId())));
+    verify(factManager, atLeastOnce()).getFacts(argThat(i -> !i.contains(factDocument.getId())));
     verify(factSearchManager, times(3)).searchFacts(argThat(i -> {
       // Called once for the actual Fact search.
       if (i == criteria) return true;
@@ -275,7 +273,7 @@ public class FactSearchHandlerTest {
             .thenReturn(createSearchResult(retraction2));
     when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());
 
-    handler.search(criteria, false);
+    ListUtils.list(handler.search(criteria, false).iterator());
 
     verify(factManager).getFacts(argThat(i -> i.contains(factDocument.getId())));
   }
@@ -301,9 +299,9 @@ public class FactSearchHandlerTest {
             .thenReturn(createSearchResult(retraction3));
     when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());
 
-    handler.search(criteria, false);
+    ListUtils.list(handler.search(criteria, false).iterator());
 
-    verify(factManager).getFacts(argThat(i -> !i.contains(factDocument.getId())));
+    verify(factManager, atLeastOnce()).getFacts(argThat(i -> !i.contains(factDocument.getId())));
   }
 
   @Test
@@ -328,9 +326,9 @@ public class FactSearchHandlerTest {
             .thenReturn(createSearchResult(retraction2));
     when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());
 
-    handler.search(criteria, false);
+    ListUtils.list(handler.search(criteria, false).iterator());
 
-    verify(factManager).getFacts(argThat(i -> !i.contains(factDocument.getId())));
+    verify(factManager, atLeastOnce()).getFacts(argThat(i -> !i.contains(factDocument.getId())));
   }
 
   private void mockSimpleSearch() {

@@ -2,7 +2,7 @@ package no.mnemonic.act.platform.service.ti.handlers;
 
 import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.model.v1.Fact;
-import no.mnemonic.act.platform.api.service.v1.ResultSet;
+import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
@@ -16,13 +16,13 @@ import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.services.common.api.ResultSet;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Handler class implementing search for Facts.
@@ -54,7 +54,7 @@ public class FactSearchHandler {
 
   /**
    * Search for Facts based on the given {@link FactSearchCriteria}. It will make sure that only Facts a user has
-   * access to will be returned.
+   * access to will be returned. Facts are streamed out from the database while the returned ResultSet is consumed.
    *
    * @param criteria         Search criteria matched against existing Facts
    * @param includeRetracted Whether retracted Facts should be included in the result (false by default)
@@ -75,16 +75,16 @@ public class FactSearchHandler {
 
     // Use the Fact IDs to look up the authoritative data in Cassandra, and make sure that user has access to all
     // returned Facts. Facts are fetched batch-wise from Cassandra while iterating over the result from ElasticSearch.
-    List<Fact> facts = Streams.stream(new FactsFetchingIterator(factManager, factID))
+    Iterator<Fact> facts = Streams.stream(new FactsFetchingIterator(factManager, factID))
             .filter(securityContext::hasReadPermission)
             .map(factConverter)
             .limit(limit)
-            .collect(Collectors.toList());
+            .iterator();
 
     // Note that 'count' might be slightly off when retracted Facts are excluded from the result, because retracted
     // Facts are included in the count from ElasticSearch and are only removed when streaming out the results.
     // However, 'size' will always be correct.
-    return ResultSet.<Fact>builder()
+    return StreamingResultSet.<Fact>builder()
             .setCount(searchResult.getCount())
             .setLimit(limit)
             .setValues(facts)

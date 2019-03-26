@@ -19,14 +19,14 @@ import java.lang.annotation.Annotation;
 public class RestModule extends AbstractModule {
 
   private static final String API_PACKAGE = "no.mnemonic.act.platform.rest.api";
-  private static final String FEATURES_PACKAGE = "no.mnemonic.act.platform.rest.features";
   private static final String MAPPINGS_PACKAGE = "no.mnemonic.act.platform.rest.mappings";
+  private static final String PROVIDERS_PACKAGE = "no.mnemonic.act.platform.rest.providers";
 
   @Override
   protected void configure() {
     bindAnnotatedClasses(API_PACKAGE, Path.class);
-    bindAnnotatedClasses(FEATURES_PACKAGE, Provider.class);
     bindAnnotatedClasses(MAPPINGS_PACKAGE, Provider.class);
+    bindAnnotatedClasses(PROVIDERS_PACKAGE, Provider.class);
     bindSwagger();
     bind(ApiServer.class).in(Scopes.SINGLETON);
   }
