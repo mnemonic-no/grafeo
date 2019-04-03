@@ -4,34 +4,32 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.name.Names;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
-import no.mnemonic.act.platform.auth.properties.PropertiesBasedAccessController;
-import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
-import no.mnemonic.act.platform.dao.elastic.ClientFactory;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.rest.RestModule;
-import no.mnemonic.act.platform.rest.container.ApiServer;
-import no.mnemonic.act.platform.service.ServiceModule;
+import no.mnemonic.act.platform.rest.modules.TiClientModule;
+import no.mnemonic.act.platform.rest.modules.TiRestModule;
+import no.mnemonic.act.platform.service.modules.TiServerModule;
+import no.mnemonic.act.platform.service.modules.TiServiceModule;
+import no.mnemonic.commons.container.ComponentContainer;
+import no.mnemonic.commons.container.providers.GuiceBeanProvider;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
+import no.mnemonic.commons.junit.docker.DockerResource;
 import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
-import no.mnemonic.services.common.auth.AccessController;
-import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
-import no.mnemonic.services.triggers.pipeline.worker.InMemoryQueueWorker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -48,19 +46,15 @@ public abstract class AbstractIT {
   private static final String RESOURCES_FOLDER = ClassLoader.getSystemResource("").getPath();
   private static final int API_SERVER_PORT = AvailablePortFinder.getAvailablePort(8000);
 
-  private final static ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = new ObjectMapper();
 
-  private static PropertiesBasedAccessController accessController;
-  private static InMemoryQueueWorker triggerEventConsumer;
-  private static ClusterManager clusterManager;
-  private static ObjectManager objectManager;
-  private static FactManager factManager;
-  private static ClientFactory clientFactory;
-  private static FactSearchManager factSearchManager;
-  private static ApiServer apiServer;
+  private ComponentContainer serviceContainer;
+  private ComponentContainer restContainer;
+  private ObjectManager objectManager;
+  private FactManager factManager;
+  private FactSearchManager factSearchManager;
 
-  @ClassRule
-  public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
+  private static CassandraDockerResource cassandra = CassandraDockerResource.builder()
           .setImageName("cassandra")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
@@ -68,8 +62,7 @@ public abstract class AbstractIT {
           .setTruncateScript("truncate.cql")
           .build();
 
-  @ClassRule
-  public static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
+  private static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
           .setImageName("elasticsearch/elasticsearch:6.6.1")
@@ -82,42 +75,41 @@ public abstract class AbstractIT {
           .addEnvironmentVariable("xpack.watcher.enabled", "false")
           .build();
 
+  private static DockerResource activemq = DockerResource.builder()
+          .setImageName("webcenter/activemq")
+          .setExposedPortsRange("15000-25000")
+          .addApplicationPort(61616)
+          .addEnvironmentVariable("ACTIVEMQ_CONFIG_QUEUES_ACT", "Service.ACT")
+          .build();
+
+  @ClassRule
+  // Chain resources in order to allow ActiveMQ to start up properly while Cassandra and ElasticSearch are initializing.
+  public static TestRule chain = RuleChain.outerRule(activemq).around(cassandra).around(elastic);
+
   @Before
   public void setup() {
-    Injector injector = Guice.createInjector(new ModuleIT());
-    accessController = (PropertiesBasedAccessController) injector.getInstance(AccessController.class);
-    triggerEventConsumer = (InMemoryQueueWorker) injector.getInstance(TriggerEventConsumer.class);
-    clusterManager = injector.getInstance(ClusterManager.class);
-    objectManager = injector.getInstance(ObjectManager.class);
-    factManager = injector.getInstance(FactManager.class);
-    clientFactory = injector.getInstance(ClientFactory.class);
-    factSearchManager = injector.getInstance(FactSearchManager.class);
-    apiServer = injector.getInstance(ApiServer.class);
+    // Start up service layer.
+    GuiceBeanProvider serviceBeanProvider = new GuiceBeanProvider(new ServiceModuleIT());
+    serviceContainer = ComponentContainer.create(serviceBeanProvider);
+    serviceContainer.initialize();
 
+    // Start up REST layer.
+    GuiceBeanProvider restBeanProvider = new GuiceBeanProvider(new RestModuleIT());
+    restContainer = ComponentContainer.create(restBeanProvider);
+    restContainer.initialize();
+
+    // Store references to managers used by tests.
+    objectManager = serviceBeanProvider.getBean(ObjectManager.class).orElseThrow(IllegalStateException::new);
+    factManager = serviceBeanProvider.getBean(FactManager.class).orElseThrow(IllegalStateException::new);
+    factSearchManager = serviceBeanProvider.getBean(FactSearchManager.class).orElseThrow(IllegalStateException::new);
     factSearchManager.setTestEnvironment(true);
-
-    // Start up everything in correct order.
-    accessController.startComponent();
-    triggerEventConsumer.startComponent();
-    clusterManager.startComponent();
-    objectManager.startComponent();
-    factManager.startComponent();
-    clientFactory.startComponent();
-    factSearchManager.startComponent();
-    apiServer.startComponent();
   }
 
   @After
   public void teardown() {
-    // Stop everything in correct order.
-    apiServer.stopComponent();
-    factSearchManager.stopComponent();
-    clientFactory.stopComponent();
-    factManager.stopComponent();
-    objectManager.stopComponent();
-    clusterManager.stopComponent();
-    triggerEventConsumer.stopComponent();
-    accessController.stopComponent();
+    restContainer.destroy();
+    serviceContainer.destroy();
+
     // Truncate database.
     cassandra.truncate();
     // Truncate indices.
@@ -336,12 +328,13 @@ public abstract class AbstractIT {
     T prepare(T e);
   }
 
-  private static class ModuleIT extends AbstractModule {
+  private class ServiceModuleIT extends AbstractModule {
     @Override
     protected void configure() {
-      install(new ServiceModule());
-      install(new RestModule());
+      install(new TiServiceModule());
+      install(new TiServerModule());
       // Configuration
+      String smbServerUrl = "tcp://" + DockerTestUtils.getDockerHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("access.controller.properties.file")).toInstance(ACL_FILE);
       bind(String.class).annotatedWith(Names.named("access.controller.read.interval")).toInstance("60000");
       bind(String.class).annotatedWith(Names.named("trigger.administration.service.configuration.directory")).toInstance(RESOURCES_FOLDER);
@@ -350,9 +343,26 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
       bind(String.class).annotatedWith(Names.named("elasticsearch.contact.points")).toInstance(DockerTestUtils.getDockerHost());
       bind(String.class).annotatedWith(Names.named("elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
-      bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
-      bind(String.class).annotatedWith(Names.named("cors.allowed.origins")).toInstance("http://www.example.org");
+      bind(String.class).annotatedWith(Names.named("smb.queue.name")).toInstance("Service.ACT");
+      bind(String.class).annotatedWith(Names.named("smb.server.url")).toInstance(smbServerUrl);
+      bind(String.class).annotatedWith(Names.named("smb.server.username")).toInstance("admin");
+      bind(String.class).annotatedWith(Names.named("smb.server.password")).toInstance("admin");
     }
   }
 
+  private class RestModuleIT extends AbstractModule {
+    @Override
+    protected void configure() {
+      install(new TiRestModule());
+      install(new TiClientModule());
+      // Configuration
+      String smbClientUrl = "tcp://" + DockerTestUtils.getDockerHost() + ":" + activemq.getExposedHostPort(61616);
+      bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
+      bind(String.class).annotatedWith(Names.named("cors.allowed.origins")).toInstance("http://www.example.org");
+      bind(String.class).annotatedWith(Names.named("smb.queue.name")).toInstance("Service.ACT");
+      bind(String.class).annotatedWith(Names.named("smb.client.url")).toInstance(smbClientUrl);
+      bind(String.class).annotatedWith(Names.named("smb.client.username")).toInstance("admin");
+      bind(String.class).annotatedWith(Names.named("smb.client.password")).toInstance("admin");
+    }
+  }
 }

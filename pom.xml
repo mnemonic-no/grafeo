@@ -42,10 +42,12 @@
 
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.2.19</mnemonic.commons.version>
+    <mnemonic.messaging.version>1.2.10</mnemonic.messaging.version>
     <mnemonic.services.common.version>0.3.12</mnemonic.services.common.version>
     <mnemonic.services.triggers.version>0.0.5</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
+    <activemq.version>5.15.9</activemq.version>
     <cassandra.version>3.7.1</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
     <elastic.search.version>6.6.1</elastic.search.version>
