@@ -179,7 +179,7 @@ public class FactType {
   }
 
   @ApiModel(value = "FactTypeInfo", description = "Short summary of a FactType.")
-  public class Info {
+  public static class Info {
     @ApiModelProperty(value = "Uniquely identifies the FactType", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
     private final UUID id;
     @ApiModelProperty(value = "Name of the FactType", example = "ThreatActorAlias", required = true)

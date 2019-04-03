@@ -57,7 +57,7 @@ public class Subject {
   }
 
   @ApiModel(value = "SubjectInfo", description = "Short summary of a Subject.")
-  public class Info {
+  public static class Info {
     @ApiModelProperty(value = "Uniquely identifies the Subject", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
     private final UUID id;
     @ApiModelProperty(value = "Name of the Subject", example = "John Doe", required = true)
