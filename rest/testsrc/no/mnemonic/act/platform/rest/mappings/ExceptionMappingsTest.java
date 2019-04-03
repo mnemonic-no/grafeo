@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import no.mnemonic.act.platform.rest.api.ResultMessage;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.services.common.api.ServiceTimeOutException;
 import org.junit.Test;
 
 import javax.ws.rs.ForbiddenException;
@@ -86,6 +87,13 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
     Response response = target(String.format("/v1/object/uuid/%s/traverse", UUID.randomUUID())).request().post(Entity.json(request));
     assertEquals(408, response.getStatus());
     assertMessages(getMessages(response), "message", "template");
+  }
+
+  @Test
+  public void testServiceTimeoutMapperReturns503() throws Exception {
+    Response response = executeRequest(new ServiceTimeOutException());
+    assertEquals(503, response.getStatus());
+    assertMessages(getMessages(response), "Request timed out, service may be overloaded or unavailable. Please try again later.", "service.timeout");
   }
 
   @Test
