@@ -92,7 +92,7 @@ public class Object {
   }
 
   @ApiModel(value = "ObjectInfo", description = "Short summary of an Object.")
-  public class Info {
+  public static class Info {
     @ApiModelProperty(value = "Uniquely identifies the Object", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
     private final UUID id;
     @ApiModelProperty(value = "Type of the Object", required = true)

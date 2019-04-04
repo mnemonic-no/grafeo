@@ -97,7 +97,7 @@ public class InvalidArgumentException extends Exception {
   /**
    * Wrapper for one validation error.
    */
-  public class ValidationError implements Serializable {
+  public static class ValidationError implements Serializable {
 
     private static final long serialVersionUID = 1431679392151341085L;
 

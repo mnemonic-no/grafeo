@@ -96,7 +96,7 @@ public class ObjectType {
   }
 
   @ApiModel(value = "ObjectTypeInfo", description = "Short summary of an ObjectType.")
-  public class Info {
+  public static class Info {
     @ApiModelProperty(value = "Uniquely identifies the ObjectType", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
     private final UUID id;
     @ApiModelProperty(value = "Name of the ObjectType", example = "IP", required = true)

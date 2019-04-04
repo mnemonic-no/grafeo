@@ -197,7 +197,7 @@ public class Fact {
   }
 
   @ApiModel(value = "FactInfo", description = "Short summary of a Fact.")
-  public class Info {
+  public static class Info {
     @ApiModelProperty(value = "Uniquely identifies the Fact", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
     private final UUID id;
     @ApiModelProperty(value = "Type of the Fact", required = true)
