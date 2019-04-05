@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.rest;
+package no.mnemonic.act.platform.rest.modules;
 
 import com.google.common.reflect.ClassPath;
 import com.google.inject.AbstractModule;
@@ -16,7 +16,10 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 
-public class RestModule extends AbstractModule {
+/**
+ * Module which configures the REST API including Swagger documentation of the ThreatIntelligenceService.
+ */
+public class TiRestModule extends AbstractModule {
 
   private static final String API_PACKAGE = "no.mnemonic.act.platform.rest.api";
   private static final String MAPPINGS_PACKAGE = "no.mnemonic.act.platform.rest.mappings";
@@ -58,5 +61,4 @@ public class RestModule extends AbstractModule {
     bind(SwaggerSerializers.class).in(Scopes.SINGLETON);
     bind(SwaggerModelTransformer.class).toInstance(transformer);
   }
-
 }

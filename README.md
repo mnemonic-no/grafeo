@@ -40,7 +40,7 @@ Make sure that your application configuration points to this properties file as 
 * After all steps above executing the application is just a matter of running this command:
 
 ```
-java -Dapplication.properties.file=$PROPERTIES -jar $EXECUTABLE guice module=no.mnemonic.act.platform.rest.RestModule module=no.mnemonic.act.platform.service.ServiceModule
+java -Dapplication.properties.file=$PROPERTIES -jar $EXECUTABLE guice module=no.mnemonic.act.platform.rest.modules.TiRestModule module=no.mnemonic.act.platform.service.modules.TiServiceModule
 ```
 
 * Point $PROPERTIES and $EXECUTABLE to your configuration file and compiled JAR bundle, respectively.

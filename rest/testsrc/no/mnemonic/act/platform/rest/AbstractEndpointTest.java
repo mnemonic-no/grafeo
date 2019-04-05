@@ -9,6 +9,7 @@ import com.google.inject.Injector;
 import com.google.inject.name.Names;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.container.ApiServer;
+import no.mnemonic.act.platform.rest.modules.TiRestModule;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import org.junit.After;
 import org.junit.Before;
@@ -66,7 +67,7 @@ public abstract class AbstractEndpointTest {
 
     @Override
     protected void configure() {
-      install(new RestModule());
+      install(new TiRestModule());
       bind(ThreatIntelligenceService.class).toInstance(tiService);
       bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(port));
       bind(String.class).annotatedWith(Names.named("cors.allowed.origins")).toInstance("http://www.example.org");

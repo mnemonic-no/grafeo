@@ -94,6 +94,13 @@
       <version>${mnemonic.commons.version}</version>
       <scope>runtime</scope>
     </dependency>
+    <!-- Dependencies required for SMB. -->
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-client</artifactId>
+      <version>${activemq.version}</version>
+      <scope>runtime</scope>
+    </dependency>
     <!-- Dependencies required for logging. -->
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
