@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>rest</artifactId>
+  <artifactId>act-platform-rest</artifactId>
   <packaging>jar</packaging>
 
   <name>ACT platform - rest</name>
@@ -29,12 +29,12 @@
     <!-- runtime dependencies -->
     <dependency>
       <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>api</artifactId>
+      <artifactId>act-platform-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>auth</artifactId>
+      <artifactId>act-platform-auth</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

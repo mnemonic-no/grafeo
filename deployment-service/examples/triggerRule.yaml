@@ -1,0 +1,30 @@
+--- # Rule triggering a no-operation action for public events.
+id: 4fc0f31f-2974-4564-8325-dee34c509113
+service: ThreatIntelligenceService
+events: [ FactAdded, FactRetracted ]
+organizations: [ 00000000-0000-0000-0000-000000000001, 00000000-0000-0000-0000-000000000002, 00000000-0000-0000-0000-000000000003 ]
+accessMode: Public
+expression: 2 + 2 == 4
+triggerAction: NoopAction
+
+--- # Rule triggering for newly created Facts for a specific organization and posting IP addresses to a Web hook.
+id: 49acd4ad-8c1b-4b93-99ef-b1a9e1cddbf2
+service: ThreatIntelligenceService
+events: [ FactAdded ]
+organizations: [ 00000000-0000-0000-0000-000000000001 ]
+accessMode: Private
+expression: AddedFact.type.name == "resolve"
+triggerAction: InternalWebHookAction
+triggerParameters:
+  url: http://hook.example.org?id=${AddedFact.id}
+  method: POST
+  contentType: text/plain
+  body: |
+    $$ if (AddedFact.sourceObject.type.name == "ip") {
+    ${AddedFact.sourceObject.value}
+    $$ }
+    $$ if (AddedFact.destinationObject.type.name == "ip") {
+    ${AddedFact.destinationObject.value}
+    $$ }
+
+...

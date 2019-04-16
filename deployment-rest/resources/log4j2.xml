@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+  <Properties>
+    <Property name="baseDir">logs</Property>
+  </Properties>
+  <Appenders>
+    <RollingRandomAccessFile name="ServiceLogs"
+                             immediateFlush="false"
+                             fileName="${baseDir}/service.log"
+                             filePattern="${baseDir}/service-%d{yyyy-MM-dd}.log.gz">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+      <!-- Create a log file per day by rolling over at midnight each day. -->
+      <CronTriggeringPolicy schedule="0 0 0 * * ?" evaluateOnStartup="true"/>
+      <!-- Delete log files older than 30 days. -->
+      <DefaultRolloverStrategy>
+        <Delete basePath="${baseDir}">
+          <IfFileName glob="service-*.log.gz"/>
+          <IfLastModified age="30d"/>
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingRandomAccessFile>
+  </Appenders>
+  <Loggers>
+    <!-- Everything goes into the service logs. -->
+    <AsyncRoot level="info">
+      <AppenderRef ref="ServiceLogs"/>
+    </AsyncRoot>
+  </Loggers>
+</Configuration>
