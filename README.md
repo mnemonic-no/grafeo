@@ -19,33 +19,25 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 
 * A running installation of [Apache Cassandra](https://cassandra.apache.org/). Any version of Apache Cassandra 3.x is support.
 * A running installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch). Version 6.6 of Elasticsearch is required.
-* Import the Cassandra database schema from `executable/testsrc/resources/setup.cql`.
-
-##### Compilation
-
-At this early stage of the project no compiled bundles are published, thus, you have to compile the platform yourself.
-Just execute `mvn clean install -DskipTests` from the repository's root folder.
-This will create an executable JAR bundle under `executable/target` containing all dependencies.
+* Import the Cassandra database schema from `deployment-combined/resources/cassandra.cql`.
 
 ##### Configuration
 
-* The application is configured with a properties file. See `executable/application.properties.localhost` as an example.
+* The application is configured using a properties file. See `deployment-combined/examples/application.properties` as an example.
 This configuration needs to point to your Cassandra and Elasticsearch installations.
 * Access control including users and organizations is defined in another properties file.
-See `executable/acl.properties.localhost` as an example and the [specification](https://github.com/mnemonic-no/act-platform/wiki/Role-Based-Access-Control) for more details.
+See `deployment-combined/examples/acl.properties` as an example and the [specification](https://github.com/mnemonic-no/act-platform/wiki/Role-Based-Access-Control) for more details.
 Make sure that your application configuration points to this properties file as well.
+* The default configuration should work as long as Cassandra and Elasticsearch are installed on localhost and listen on their default ports.
 
 ##### Execution
 
-* After all steps above executing the application is just a matter of running this command:
-
-```
-java -Dapplication.properties.file=$PROPERTIES -jar $EXECUTABLE guice module=no.mnemonic.act.platform.rest.modules.TiRestModule module=no.mnemonic.act.platform.service.modules.TiServiceModule
-```
-
-* Point $PROPERTIES and $EXECUTABLE to your configuration file and compiled JAR bundle, respectively.
-* Alternatively, you can adapt `executable/init.sh` for your needs instead of executing the JAR bundle manually.
-* If everything is configured correctly running the command above will start up the whole application stack and the API server will start listening for requests on the port specified in the configuration file.
+At this early stage of the project no pre-build bundles are published, thus, you have to compile the platform yourself. Just execute `mvn clean install -DskipTests` from the repository's root folder.
+This will create a tarball under `deployment-combined/target` containing everything needed to run the platform.
+Extract this tarball and execute `init.sh start` to start the platform. Stop the platform again with `init.sh stop`.
+On first start-up the example configuration files from the `examples` folder will be copied into the `conf` folder. Adjust the configuration to your needs.
+If everything is configured correctly running the init script will start up the whole application stack and the API server will start listening for requests on the port specified in the configuration.
+Check the log files under the `logs` folder for any error messages. Make sure that Cassandra and Elasticsearch are running and that the configuration points to them correctly.
 
 ##### Testing
 

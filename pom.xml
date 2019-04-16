@@ -68,6 +68,7 @@
     <tinkerpop.version>3.4.0</tinkerpop.version>
 
     <!-- build dependencies -->
+    <maven.assembly.version>3.1.1</maven.assembly.version>
     <maven.clean.version>3.1.0</maven.clean.version>
     <maven.compile.version>3.8.0</maven.compile.version>
     <maven.dependencyCheck.version>4.0.2</maven.dependencyCheck.version>
@@ -75,9 +76,8 @@
     <maven.install.version>2.5.2</maven.install.version>
     <maven.jar.version>3.1.1</maven.jar.version>
     <maven.javadoc.version>3.0.1</maven.javadoc.version>
-    <maven.license.version>1.18</maven.license.version>
+    <maven.license.version>1.19</maven.license.version>
     <maven.resources.version>3.1.0</maven.resources.version>
-    <maven.shade.version>3.2.1</maven.shade.version>
     <maven.source.version>3.0.1</maven.source.version>
     <maven.surefire.version>2.22.1</maven.surefire.version>
   </properties>
@@ -86,9 +86,12 @@
     <module>api</module>
     <module>auth</module>
     <module>dao</module>
-    <module>executable</module>
     <module>rest</module>
     <module>service</module>
+    <module>integration-test</module>
+    <module>deployment-combined</module>
+    <module>deployment-rest</module>
+    <module>deployment-service</module>
   </modules>
 
   <scm>
@@ -211,19 +214,65 @@
           </execution>
         </executions>
         <configuration>
-          <!-- Trust that the developers of dependencies have done their homework. -->
-          <includeTransitiveDependencies>false</includeTransitiveDependencies>
+          <!-- Execute plugin while building deployment packages. -->
+          <acceptPomPackaging>true</acceptPomPackaging>
+          <!-- Create THIRD-PARTY file listing all dependencies. -->
+          <outputDirectory>${project.build.directory}</outputDirectory>
+          <thirdPartyFilename>THIRD-PARTY</thirdPartyFilename>
+          <!-- File used to specify licenses for dependencies which don't state their license in the pom.xml. -->
+          <missingFile>../buildConfig/missing-licenses.properties</missingFile>
+          <!-- Check transitive dependencies in order to include them in THIRD-PARTY file. -->
+          <includeTransitiveDependencies>true</includeTransitiveDependencies>
           <!-- Fail the build if a detected license is not in the white list. -->
           <failIfWarning>true</failIfWarning>
-          <!-- Only allow licenses which are in this list. -->
-          <includedLicenses>Apache 2|CDDL|Eclipse|ISC|MIT</includedLicenses>
-          <!-- Consolidate license names. -->
-          <licenseMerges>
-            <licenseMerge>Apache 2|Apache License 2.0|Apache Software License - Version 2.0|Apache License, Version 2.0|The Apache Software License, Version 2.0</licenseMerge>
-            <licenseMerge>CDDL|CDDL 1.1|CDDL + GPLv2 with classpath exception</licenseMerge>
-            <licenseMerge>Eclipse|EPL 2.0|Eclipse Public License 1.0|Eclipse Public License - Version 1.0</licenseMerge>
-            <licenseMerge>MIT|The MIT License</licenseMerge>
-          </licenseMerges>
+          <!-- Only allow licenses which are in this list (with all the different ways to name them). -->
+          <includedLicenses>
+            <!-- Apache 2.0 -->
+            <includedLicense>ASF 2.0</includedLicense>
+            <includedLicense>Apache 2</includedLicense>
+            <includedLicense>Apache 2.0</includedLicense>
+            <includedLicense>Apache License 2.0</includedLicense>
+            <includedLicense>Apache License Version 2.0</includedLicense>
+            <includedLicense>Apache License, version 2.0</includedLicense>
+            <includedLicense>Apache License, Version 2.0</includedLicense>
+            <includedLicense>Apache Software License, version 2.0</includedLicense>
+            <includedLicense>Apache Software License - Version 2.0</includedLicense>
+            <includedLicense>The Apache Software License, version 2.0</includedLicense>
+            <includedLicense>The Apache Software License, Version 2.0</includedLicense>
+            <!-- BSD and variants -->
+            <includedLicense>BSD</includedLicense>
+            <includedLicense>BSD style</includedLicense>
+            <includedLicense>New BSD License</includedLicense>
+            <includedLicense>The BSD License</includedLicense>
+            <!-- CDDL and dual-licensed CDDL -->
+            <includedLicense>CDDL 1.1</includedLicense>
+            <includedLicense>CDDL License</includedLicense>
+            <includedLicense>Common Development and Distribution License 1.0</includedLicense>
+            <includedLicense>Common Development And Distribution License 1.1</includedLicense>
+            <includedLicense>Common Development and Distribution License (CDDL) v1.0</includedLicense>
+            <includedLicense>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</includedLicense>
+            <includedLicense>CDDL+GPL License</includedLicense>
+            <includedLicense>CDDL or GPLv2 with exceptions</includedLicense>
+            <includedLicense>CDDL + GPLv2 with classpath exception</includedLicense>
+            <!-- Eclipse and variants -->
+            <includedLicense>Common Public License - v 1.0</includedLicense>
+            <includedLicense>EPL 2.0</includedLicense>
+            <includedLicense>Eclipse Public License 1.0</includedLicense>
+            <includedLicense>Eclipse Public License - Version 1.0</includedLicense>
+            <!-- MIT and variants-->
+            <includedLicense>Bouncy Castle Licence</includedLicense>
+            <includedLicense>ISC</includedLicense>
+            <includedLicense>MIT license</includedLicense>
+            <includedLicense>MIT License</includedLicense>
+            <includedLicense>The MIT License</includedLicense>
+            <!-- Others -->
+            <includedLicense>CC BY 2.5</includedLicense>
+            <includedLicense>WTFPL</includedLicense>
+            <!-- Public domain -->
+            <includedLicense>CC0</includedLicense>
+            <includedLicense>Public Domain</includedLicense>
+            <includedLicense>Public Domain, per Creative Commons CC0</includedLicense>
+          </includedLicenses>
         </configuration>
       </plugin>
       <plugin>

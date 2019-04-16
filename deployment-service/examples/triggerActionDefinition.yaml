@@ -1,0 +1,54 @@
+---
+id: 2773b21e-f04b-4886-af94-e7a5599cb71c
+name: NoopAction
+description: No-operation action doing nothing
+triggerActionClass: no.mnemonic.services.triggers.action.NoopTriggerAction
+requiredPermission: allowNoopAction
+
+---
+id: abbdde08-7e77-48a3-acc6-d5525f831f07
+name: ExternalWebHookAction
+description: Action calling an external Web hook via a proxy server
+triggerActionClass: no.mnemonic.services.triggers.action.HttpClientAction
+requiredPermission: allowExternalWebHookAction
+initParameters:
+  proxy: http://proxy.example.org
+triggerParameters:
+  url:
+    description: URL of the Web hook to call
+    required: true
+  method:
+    description: HTTP method to be used when making requests
+    required: false
+    defaultValue: GET
+  body:
+    description: Body send in request
+    required: false
+  contentType:
+    description: Media type of body data
+    required: false
+    defaultValue: text/plain
+
+---
+id: 446cdc29-a19e-467b-a77f-9f092aeea7d9
+name: InternalWebHookAction
+description: Action calling an internal Web hook directly
+triggerActionClass: no.mnemonic.services.triggers.action.HttpClientAction
+requiredPermission: allowInternalWebHookAction
+triggerParameters:
+  url:
+    description: URL of the Web hook to call
+    required: true
+  method:
+    description: HTTP method to be used when making requests
+    required: false
+    defaultValue: GET
+  body:
+    description: Body send in request
+    required: false
+  contentType:
+    description: Media type of body data
+    required: false
+    defaultValue: text/plain
+
+...
