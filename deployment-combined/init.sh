@@ -1,11 +1,15 @@
 #!/bin/sh
 
-CONFDIR="conf"
+# Set ACT_PLATFORM_* environment variables to override default directories.
+CONFDIR="${ACT_PLATFORM_CONFDIR:-conf}"
+LOGDIR="${ACT_PLATFORM_LOGDIR:-logs}"
+
+# Define directories which are part of the deployment package.
 EXAMPLESDIR="examples"
 LIBDIR="libraries"
-LOGDIR="logs"
 RESOURCESDIR="resources"
 
+# Define parameters for executing the application.
 PROPERTIES="$CONFDIR/application.properties"
 MAINCLASS="no.mnemonic.commons.container.BootStrap"
 ARGS="guice module=no.mnemonic.act.platform.rest.modules.TiRestModule module=no.mnemonic.act.platform.service.modules.TiServiceModule"
@@ -26,13 +30,13 @@ usage() {
 setup() {
   # Copy example configuration to configuration folder on first execution.
   if [ ! -d $CONFDIR ] && [ -d $EXAMPLESDIR ]; then
-    mkdir $CONFDIR
+    mkdir -p $CONFDIR
     cp $EXAMPLESDIR/* $CONFDIR
   fi
 
   # Ensure that log directory exists.
   if [ ! -d $LOGDIR ]; then
-    mkdir $LOGDIR
+    mkdir -p $LOGDIR
   fi
 
   # Check that library directory exists.
