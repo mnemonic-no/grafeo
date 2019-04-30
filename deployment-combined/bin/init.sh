@@ -4,6 +4,9 @@
 CONFDIR="${ACT_PLATFORM_CONFDIR:-conf}"
 LOGDIR="${ACT_PLATFORM_LOGDIR:-logs}"
 
+# Set ACT_PLATFORM_JAVA_OPTS environment variable to override default options.
+JAVA_OPTS="${ACT_PLATFORM_JAVA_OPTS:--XX:-OmitStackTraceInFastThrow}"
+
 # Define base directories which are part of the deployment package.
 EXAMPLESDIR="examples"
 LIBDIR="libraries"
@@ -12,8 +15,7 @@ RESOURCESDIR="resources"
 # Define parameters for executing the application.
 PROPERTIES="$CONFDIR/application.properties"
 MAINCLASS="no.mnemonic.commons.container.BootStrap"
-ARGS="guice module=no.mnemonic.act.platform.rest.modules.TiRestModule module=no.mnemonic.act.platform.rest.modules.TiClientModule"
-JAVA_OPTS="-XX:-OmitStackTraceInFastThrow"
+ARGS="guice module=no.mnemonic.act.platform.rest.modules.TiRestModule module=no.mnemonic.act.platform.service.modules.TiServiceModule"
 
 STDOUT_FILE="$LOGDIR/stdout.log"
 STDERR_FILE="$LOGDIR/stderr.log"
@@ -115,8 +117,8 @@ status() {
   fi
 }
 
-# Change into the directory of this script (for correct relative paths).
-cd `dirname $0`
+# Change into the parent directory of this script (for correct relative paths).
+cd `dirname $0`/..
 
 # Execute setup() first.
 setup
