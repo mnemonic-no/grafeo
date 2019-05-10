@@ -75,17 +75,17 @@
     </dependency>
     <dependency>
       <groupId>no.mnemonic.services.triggers</groupId>
-      <artifactId>pipeline-api</artifactId>
+      <artifactId>triggers-pipeline-api</artifactId>
       <version>${mnemonic.services.triggers.version}</version>
     </dependency>
     <dependency>
       <groupId>no.mnemonic.services.triggers</groupId>
-      <artifactId>pipeline-worker</artifactId>
+      <artifactId>triggers-pipeline-worker</artifactId>
       <version>${mnemonic.services.triggers.version}</version>
     </dependency>
     <dependency>
       <groupId>no.mnemonic.services.triggers</groupId>
-      <artifactId>service</artifactId>
+      <artifactId>triggers-service</artifactId>
       <version>${mnemonic.services.triggers.version}</version>
     </dependency>
     <dependency>
