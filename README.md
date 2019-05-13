@@ -34,7 +34,7 @@ Make sure that your application configuration points to this properties file as 
 
 At this early stage of the project no pre-build bundles are published, thus, you have to compile the platform yourself. Just execute `mvn clean install -DskipTests` from the repository's root folder.
 This will create a tarball under `deployment-combined/target` containing everything needed to run the platform.
-Extract this tarball and execute `init.sh start` to start the platform. Stop the platform again with `init.sh stop`.
+Extract this tarball and execute `bin/init.sh start` to start the platform. Stop the platform again with `bin/init.sh stop`.
 On first start-up the example configuration files from the `examples` folder will be copied into the `conf` folder. Adjust the configuration to your needs.
 If everything is configured correctly running the init script will start up the whole application stack and the API server will start listening for requests on the port specified in the configuration.
 Check the log files under the `logs` folder for any error messages. Make sure that Cassandra and Elasticsearch are running and that the configuration points to them correctly.
@@ -43,7 +43,7 @@ Check the log files under the `logs` folder for any error messages. Make sure th
 
 * For running the integration tests install [Docker](https://www.docker.com/).
 * Download a Cassandra image by `docker pull cassandra`.
-* Download an Elasticsearch image by `docker pull docker.elastic.co/elasticsearch/elasticsearch:6.6.1`.
+* Download an Elasticsearch image by `docker pull docker.elastic.co/elasticsearch/elasticsearch:6.6.2`.
 * By default the integration tests will try to connect to Docker on localhost and port 2375. You can set the $DOCKER_HOST environment variable to override this behaviour.
 * Execute `mvn clean install` for running all tests including integration tests.
 * Execute `mvn clean install -DskipSlowTests` for skipping the integration tests.
