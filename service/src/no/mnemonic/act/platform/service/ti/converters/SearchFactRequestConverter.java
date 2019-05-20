@@ -35,6 +35,8 @@ public class SearchFactRequestConverter implements Converter<SearchFactRequest, 
     if (request == null) return null;
     return FactSearchCriteria.builder()
             .setKeywords(request.getKeywords())
+            .setObjectID(request.getObjectID())
+            .setFactID(request.getFactID())
             .setObjectTypeID(onlyUUID(request.getObjectType()))
             .setObjectTypeName(noneUUID(request.getObjectType()))
             .setFactTypeID(onlyUUID(request.getFactType()))

@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import javax.validation.ConstraintViolation;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -13,8 +14,13 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
 
   @Test
   public void testDecodeRequest() throws Exception {
-    String json = "{" +
+    UUID objectID = UUID.randomUUID();
+    UUID factID = UUID.randomUUID();
+
+    String json = String.format("{" +
             "keywords : 'keyword'," +
+            "objectID : ['%s']," +
+            "factID : ['%s']," +
             "objectType : ['objectType']," +
             "factType : ['factType']," +
             "objectValue : ['objectValue']," +
@@ -24,10 +30,12 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
             "before : '2016-11-30T15:47:00Z'," +
             "after : '2016-11-30T15:47:01Z'," +
             "limit : 25" +
-            "}";
+            "}", objectID, factID);
 
     SearchObjectRequest request = getMapper().readValue(json, SearchObjectRequest.class);
     assertEquals("keyword", request.getKeywords());
+    assertEquals(SetUtils.set(objectID), request.getObjectID());
+    assertEquals(SetUtils.set(factID), request.getFactID());
     assertEquals(SetUtils.set("objectType"), request.getObjectType());
     assertEquals(SetUtils.set("factType"), request.getFactType());
     assertEquals(SetUtils.set("objectValue"), request.getObjectValue());

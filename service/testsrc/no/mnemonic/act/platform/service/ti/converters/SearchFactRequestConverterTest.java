@@ -52,6 +52,20 @@ public class SearchFactRequestConverterTest {
   }
 
   @Test
+  public void testConvertRequestFilterOnObjectID() {
+    UUID id = UUID.randomUUID();
+    FactSearchCriteria criteria = converter.apply(new SearchFactRequest().addObjectID(id));
+    assertEquals(SetUtils.set(id), criteria.getObjectID());
+  }
+
+  @Test
+  public void testConvertRequestFilterOnFactID() {
+    UUID id = UUID.randomUUID();
+    FactSearchCriteria criteria = converter.apply(new SearchFactRequest().addFactID(id));
+    assertEquals(SetUtils.set(id), criteria.getFactID());
+  }
+
+  @Test
   public void testConvertRequestFilterOnObjectType() {
     UUID id = UUID.randomUUID();
     String name = "name";
