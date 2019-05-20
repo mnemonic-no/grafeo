@@ -10,12 +10,17 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.validation.constraints.Min;
 import java.util.Set;
+import java.util.UUID;
 
 @ApiModel(description = "Search for Facts.")
 public class SearchFactRequest implements ValidatingRequest {
 
   @ApiModelProperty(value = "Only return Facts matching a keyword query")
   private String keywords;
+  @ApiModelProperty(value = "Only return Facts bound to specific Objects")
+  private Set<UUID> objectID;
+  @ApiModelProperty(value = "Only return Facts identified by their UUID")
+  private Set<UUID> factID;
   @ApiModelProperty(value = "Only return Facts with Objects having a specific ObjectType")
   private Set<String> objectType;
   @ApiModelProperty(value = "Only return Facts having a specific FactType")
@@ -45,6 +50,34 @@ public class SearchFactRequest implements ValidatingRequest {
 
   public String getKeywords() {
     return keywords;
+  }
+
+  public Set<UUID> getObjectID() {
+    return objectID;
+  }
+
+  public SearchFactRequest setObjectID(Set<UUID> objectID) {
+    this.objectID = ObjectUtils.ifNotNull(objectID, SetUtils::set);
+    return this;
+  }
+
+  public SearchFactRequest addObjectID(UUID objectID) {
+    this.objectID = SetUtils.addToSet(this.objectID, objectID);
+    return this;
+  }
+
+  public Set<UUID> getFactID() {
+    return factID;
+  }
+
+  public SearchFactRequest setFactID(Set<UUID> factID) {
+    this.factID = ObjectUtils.ifNotNull(factID, SetUtils::set);
+    return this;
+  }
+
+  public SearchFactRequest addFactID(UUID factID) {
+    this.factID = SetUtils.addToSet(this.factID, factID);
+    return this;
   }
 
   public SearchFactRequest setKeywords(String keywords) {
