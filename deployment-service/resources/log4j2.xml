@@ -36,8 +36,8 @@
     </RollingRandomAccessFile>
   </Appenders>
   <Loggers>
-    <!-- Write everything related to ActionTriggers in an own log file (and be verbose right now). -->
-    <AsyncLogger name="no.mnemonic.services.triggers" level="debug" additivity="false">
+    <!-- Write everything related to ActionTriggers in an own log file. -->
+    <AsyncLogger name="no.mnemonic.services.triggers" level="info" additivity="false">
       <AppenderRef ref="ActionTriggersLogs"/>
     </AsyncLogger>
     <!-- Everything else goes into the service logs. -->
