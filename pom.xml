@@ -37,6 +37,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <!-- JDK compile target -->
+    <jdk.version>1.8</jdk.version>
+
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.2.20</mnemonic.commons.version>
     <mnemonic.messaging.version>1.2.12</mnemonic.messaging.version>
@@ -136,9 +139,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven.compiler.version}</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-          <encoding>UTF-8</encoding>
+          <source>${jdk.version}</source>
+          <target>${jdk.version}</target>
           <compilerArgs>
             <!-- Needed to get real parameter names during reflection instead of 'argN' (JEP 118). -->
             <arg>-parameters</arg>
@@ -194,6 +196,9 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>${maven.javadoc.version}</version>
+        <configuration>
+          <source>${jdk.version}</source>
+        </configuration>
         <executions>
           <execution>
             <id>attach-javadocs</id>

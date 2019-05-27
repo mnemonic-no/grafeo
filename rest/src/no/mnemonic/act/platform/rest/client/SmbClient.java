@@ -107,6 +107,8 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
             .addAllowedClass(UUID.class)
             .addAllowedClass(Set.class)
             .addAllowedClass(List.class)
+            .addAllowedClass("java.util.Collections\\$EmptySet")
+            .addAllowedClass("java.util.Collections\\$EmptyList")
             .addAllowedClass("java.util.Collections\\$UnmodifiableSet")
             .addAllowedClass("java.util.Collections\\$UnmodifiableList")
             // Classes required for transporting exceptions (including stacktrace).
