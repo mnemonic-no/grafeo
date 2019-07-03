@@ -28,6 +28,65 @@ usage() {
   echo "       $0 status      - Print application status"
 }
 
+ensure_cassandra_running() {
+   CASSANDRA_HOSTS=$(grep -Eo 'cassandra.contact.points=[^,]+' $PROPERTIES | sed 's/.*=//' | sed -E 's/,\s*/ /g')
+   CASSANDRA_PORT=$(grep -Eo 'cassandra.port=.+' $PROPERTIES | sed 's/.*=//')
+   MAX_RETRIES=30
+   retry=0
+
+   # Return if netcat is not found
+   which nc > /dev/null 2> /dev/null || return
+
+   while [ $retry -lt $MAX_RETRIES ]
+   do
+       for CASSANDRA_HOST in $CASSANDRA_HOSTS
+       do
+           nc -z $CASSANDRA_HOST $CASSANDRA_PORT
+           if [ $? = 0 ]
+           then
+               echo "Cassandra is running at $CASSANDRA_HOST:$CASSANDRA_PORT"
+               return
+           fi
+           echo "Cassandra is not available at $CASSANDRA_HOST:$CASSANDRA_PORT, will retry..."
+           sleep 5
+       done
+   done
+   echo "Cassandra is not available" 2> /dev/null
+   exit 1
+}
+
+ensure_elasticsearch_running() {
+   # Return if curl is not found. Check will not be executed.
+   which curl > /dev/null 2> /dev/null || return
+
+   ES_HOSTS=$(grep -Eo 'elasticsearch.contact.points=[^,]+' $PROPERTIES | sed 's/.*=//' | sed -E 's/,\s*/ /g')
+   ES_PORT=$(grep -Eo 'elasticsearch.port=.+' $PROPERTIES | sed 's/.*=//')
+
+   MAX_RETRIES=30
+   retry=0
+   while [ $retry -lt $MAX_RETRIES ]
+   do
+       for ES_HOST in $ES_HOSTS
+       do
+           curl --silent \
+               "http://$ES_HOST:$ES_PORT/_cluster/health?wait_for_status=yellow&timeout=5s" \
+               | fgrep '"timed_out":false' \
+               > /dev/null
+           if [ $? = 0 ]
+           then
+               # Elasticsearch is available and cluster is yellow or green
+               echo "Elasticsearch is running at $ES_HOST:$ES_PORT"
+               return
+           fi
+           echo "Elasticsearch at $ES_HOST:$ES_PORT is not up or cluster is red. Will retry..."
+       done
+       sleep 5
+       retry=$(expr $retry + 1)
+   done
+   echo "Elasticsearch is not available" 2> /dev/null
+   exit 2
+}
+
 # Set up everything this script needs.
 setup() {
   # Copy example configuration to configuration folder on first execution.
@@ -79,6 +138,10 @@ start() {
   for jar in `ls $LIBDIR/*.jar`; do
     CLASSPATH="$CLASSPATH:$jar"
   done
+
+  # Make sure elasticsearch and cassndra is running
+  ensure_cassandra_running
+  ensure_elasticsearch_running
 
   # Start application and pipe output into log files.
   java $JAVA_OPTS -Dapplication.properties.file=$PROPERTIES -cp $CLASSPATH $MAINCLASS $ARGS 1>> $STDOUT_FILE 2>> $STDERR_FILE &
