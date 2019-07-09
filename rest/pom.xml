@@ -114,15 +114,8 @@
     </dependency>
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
-      <artifactId>resteasy-validator-provider-11</artifactId>
+      <artifactId>resteasy-validator-provider</artifactId>
       <version>${resteasy.version}</version>
-      <exclusions>
-        <!-- Force usage of Hibernate Validator 6 as included below. -->
-        <exclusion>
-          <groupId>org.hibernate</groupId>
-          <artifactId>hibernate-validator</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <!-- Need a javax.validation and javax.el implementation for request validation. -->
     <dependency>
