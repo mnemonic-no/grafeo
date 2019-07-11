@@ -1,17 +1,14 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.EvidenceEntity.TABLE;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class EvidenceEntity implements CassandraEntity {
 
   public static final String TABLE = "evidence";

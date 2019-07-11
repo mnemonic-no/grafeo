@@ -1,46 +1,55 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.core.ProtocolVersion;
-import com.datastax.driver.core.TypeCodec;
-import com.datastax.driver.core.exceptions.InvalidTypeException;
+import com.datastax.oss.driver.api.core.ProtocolVersion;
+import com.datastax.oss.driver.api.core.type.DataType;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
+import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
+import com.datastax.oss.driver.api.core.type.reflect.GenericType;
+import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-public class CassandraEnumCodec<E extends Enum<E> & CassandraEnum> extends TypeCodec<E> {
+public class CassandraEnumCodec<E extends Enum<E> & CassandraEnum> implements TypeCodec<E> {
 
+  private static final TypeCodec<Integer> innerCodec = TypeCodecs.INT;
+
+  private final Class<E> enumClass;
   private final Map<Integer, E> enumValueMap;
-  private final TypeCodec<Integer> innerCodec;
 
   public CassandraEnumCodec(Class<E> enumClass, Map<Integer, E> enumValueMap) {
-    this(TypeCodec.cint(), enumClass, enumValueMap);
-  }
-
-  public CassandraEnumCodec(TypeCodec<Integer> innerCodec, Class<E> enumClass, Map<Integer, E> enumValueMap) {
-    super(innerCodec.getCqlType(), enumClass);
-    this.enumValueMap = enumValueMap;
-    this.innerCodec = innerCodec;
+    this.enumClass = ObjectUtils.notNull(enumClass, "'enumClass' cannot be null!");
+    this.enumValueMap = ObjectUtils.notNull(enumValueMap, "'enumValueMap' cannot be null!");
   }
 
   @Override
-  public ByteBuffer serialize(E value, ProtocolVersion protocolVersion) throws InvalidTypeException {
-    return innerCodec.serialize(value == null ? null : value.value(), protocolVersion);
+  public GenericType<E> getJavaType() {
+    return GenericType.of(enumClass);
   }
 
   @Override
-  public E deserialize(ByteBuffer bytes, ProtocolVersion protocolVersion) throws InvalidTypeException {
-    Integer value = innerCodec.deserialize(bytes, protocolVersion);
-    return value == null ? null : enumValueMap.get(value);
+  public DataType getCqlType() {
+    return DataTypes.INT;
   }
 
   @Override
-  public E parse(String value) throws InvalidTypeException {
-    return value == null || value.isEmpty() || value.equalsIgnoreCase("NULL") ? null : enumValueMap.get(Integer.parseInt(value));
+  public ByteBuffer encode(E value, ProtocolVersion protocolVersion) {
+    return innerCodec.encode(value != null ? value.value() : null, protocolVersion);
   }
 
   @Override
-  public String format(E value) throws InvalidTypeException {
-    return value == null ? "NULL" : Integer.toString(value.value());
+  public E decode(ByteBuffer bytes, ProtocolVersion protocolVersion) {
+    return ObjectUtils.ifNotNull(innerCodec.decode(bytes, protocolVersion), enumValueMap::get);
   }
 
+  @Override
+  public String format(E value) {
+    return innerCodec.format(value != null ? value.value() : null);
+  }
+
+  @Override
+  public E parse(String value) {
+    return ObjectUtils.ifNotNull(innerCodec.parse(value), enumValueMap::get);
+  }
 }

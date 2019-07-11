@@ -1,9 +1,9 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
-import com.datastax.driver.mapping.annotations.Transient;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
+import com.datastax.oss.driver.api.mapper.annotations.Transient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -19,15 +19,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity.TABLE;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class FactTypeEntity implements CassandraEntity {
 
   public static final String TABLE = "fact_type";
@@ -41,20 +37,20 @@ public class FactTypeEntity implements CassandraEntity {
 
   @PartitionKey
   private UUID id;
-  @Column(name = "namespace_id")
+  @CqlName("namespace_id")
   private UUID namespaceID;
   private String name;
   private String validator;
-  @Column(name = "validator_parameter")
+  @CqlName("validator_parameter")
   private String validatorParameter;
   // In order to not create another table relevantObjectBindings are stored as a JSON string.
-  @Column(name = "relevant_object_bindings")
+  @CqlName("relevant_object_bindings")
   private String relevantObjectBindingsStored;
   // But they are also available as objects.
   @Transient
   private Set<FactObjectBindingDefinition> relevantObjectBindings;
   // In order to not create another table relevantFactBindings are stored as a JSON string.
-  @Column(name = "relevant_fact_bindings")
+  @CqlName("relevant_fact_bindings")
   private String relevantFactBindingsStored;
   // But they are also available as objects.
   @Transient

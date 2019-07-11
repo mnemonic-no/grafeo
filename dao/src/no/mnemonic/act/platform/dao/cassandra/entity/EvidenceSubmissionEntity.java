@@ -1,20 +1,16 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.EvidenceSubmissionEntity.TABLE;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class EvidenceSubmissionEntity implements CassandraEntity {
 
   public static final String TABLE = "evidence_submission";
@@ -22,17 +18,17 @@ public class EvidenceSubmissionEntity implements CassandraEntity {
   @PartitionKey
   private UUID id;
   private String name;
-  @Column(name = "data_type")
+  @CqlName("data_type")
   private String dataType;
-  @Column(name = "media_type")
+  @CqlName("media_type")
   private String mediaType;
   private long length;
   private long timestamp;
-  @Column(name = "observation_timestamp")
+  @CqlName("observation_timestamp")
   private long observationTimestamp;
-  @Column(name = "source_id")
+  @CqlName("source_id")
   private UUID sourceID;
-  @Column(name = "access_mode")
+  @CqlName("access_mode")
   private AccessMode accessMode;
   private String checksum;
 

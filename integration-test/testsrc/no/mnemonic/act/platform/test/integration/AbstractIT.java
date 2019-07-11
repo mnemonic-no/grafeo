@@ -338,7 +338,7 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("access.controller.properties.file")).toInstance(ACL_FILE);
       bind(String.class).annotatedWith(Names.named("access.controller.read.interval")).toInstance("60000");
       bind(String.class).annotatedWith(Names.named("trigger.administration.service.configuration.directory")).toInstance(RESOURCES_FOLDER);
-      bind(String.class).annotatedWith(Names.named("cassandra.cluster.name")).toInstance("ActIntegrationTest");
+      bind(String.class).annotatedWith(Names.named("cassandra.data.center")).toInstance("datacenter1");
       bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance(DockerTestUtils.getDockerHost());
       bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
       bind(String.class).annotatedWith(Names.named("elasticsearch.contact.points")).toInstance(DockerTestUtils.getDockerHost());

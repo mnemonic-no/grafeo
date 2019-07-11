@@ -1,33 +1,29 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.ClusteringColumn;
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
+import com.datastax.oss.driver.api.mapper.annotations.ClusteringColumn;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.EvidenceSubmissionAclEntity.TABLE;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class EvidenceSubmissionAclEntity implements CassandraEntity {
 
   public static final String TABLE = "evidence_submission_acl";
 
   @PartitionKey
-  @Column(name = "submission_id")
+  @CqlName("submission_id")
   private UUID submissionID;
   @ClusteringColumn
   private UUID id;
-  @Column(name = "subject_id")
+  @CqlName("subject_id")
   private UUID subjectID;
-  @Column(name = "source_id")
+  @CqlName("source_id")
   private UUID sourceID;
   private long timestamp;
 

@@ -1,31 +1,27 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity.TABLE;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class ObjectTypeEntity implements CassandraEntity {
 
   public static final String TABLE = "object_type";
 
   @PartitionKey
   private UUID id;
-  @Column(name = "namespace_id")
+  @CqlName("namespace_id")
   private UUID namespaceID;
   private String name;
   private String validator;
-  @Column(name = "validator_parameter")
+  @CqlName("validator_parameter")
   private String validatorParameter;
 
   public UUID getId() {

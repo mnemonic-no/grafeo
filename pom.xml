@@ -48,7 +48,7 @@
 
     <!-- external dependencies -->
     <activemq.version>5.15.9</activemq.version>
-    <cassandra.version>3.7.1</cassandra.version>
+    <cassandra.version>4.1.0</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
     <elastic.search.version>6.6.2</elastic.search.version>
     <guava.version>28.0-jre</guava.version>
@@ -146,6 +146,14 @@
             <!-- Needed to get real parameter names during reflection instead of 'argN' (JEP 118). -->
             <arg>-parameters</arg>
           </compilerArgs>
+          <annotationProcessorPaths>
+            <path>
+              <!-- Needed to process annotations from the driver's object mapper. -->
+              <groupId>com.datastax.oss</groupId>
+              <artifactId>java-driver-mapper-processor</artifactId>
+              <version>${cassandra.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
       <plugin>
@@ -285,6 +293,7 @@
             <includedLicense>EPL 2.0</includedLicense>
             <includedLicense>Eclipse Public License 1.0</includedLicense>
             <includedLicense>Eclipse Public License - Version 1.0</includedLicense>
+            <includedLicense>Eclipse Public License - v 2.0</includedLicense>
             <!-- MIT and variants-->
             <includedLicense>Bouncy Castle Licence</includedLicense>
             <includedLicense>ISC</includedLicense>

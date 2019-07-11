@@ -22,7 +22,7 @@ public abstract class AbstractManagerTest {
   @BeforeClass
   public static void setup() {
     clusterManager = ClusterManager.builder()
-            .setClusterName("ACT Cluster")
+            .setDataCenter("datacenter1")
             .setPort(cassandra.getExposedHostPort(9042))
             .addContactPoint(DockerTestUtils.getDockerHost())
             .build();
