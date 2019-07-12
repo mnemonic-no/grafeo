@@ -1,9 +1,9 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
-import com.datastax.driver.mapping.annotations.Transient;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
+import com.datastax.oss.driver.api.mapper.annotations.Transient;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -21,15 +21,11 @@ import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.FactEntity.TABLE;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class FactEntity implements CassandraEntity {
 
   public static final String TABLE = "fact";
@@ -41,25 +37,25 @@ public class FactEntity implements CassandraEntity {
 
   @PartitionKey
   private UUID id;
-  @Column(name = "type_id")
+  @CqlName("type_id")
   private UUID typeID;
   private String value;
-  @Column(name = "in_reference_to_id")
+  @CqlName("in_reference_to_id")
   private UUID inReferenceToID;
-  @Column(name = "organization_id")
+  @CqlName("organization_id")
   private UUID organizationID;
-  @Column(name = "source_id")
+  @CqlName("source_id")
   private UUID sourceID;
-  @Column(name = "access_mode")
+  @CqlName("access_mode")
   private AccessMode accessMode;
   // TODO: Change to enum after we have defined confidence levels.
-  @Column(name = "confidence_level")
+  @CqlName("confidence_level")
   private int confidenceLevel;
   private long timestamp;
-  @Column(name = "last_seen_timestamp")
+  @CqlName("last_seen_timestamp")
   private long lastSeenTimestamp;
   // In order to not create another table bindings are stored as a JSON string.
-  @Column(name = "bindings")
+  @CqlName("bindings")
   private String bindingsStored;
   // But they are also available as objects.
   @Transient

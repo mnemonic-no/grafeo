@@ -1,33 +1,29 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.ClusteringColumn;
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
+import com.datastax.oss.driver.api.mapper.annotations.ClusteringColumn;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity.TABLE;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class FactCommentEntity implements CassandraEntity {
 
   public static final String TABLE = "fact_comment";
 
   @PartitionKey
-  @Column(name = "fact_id")
+  @CqlName("fact_id")
   private UUID factID;
   @ClusteringColumn
   private UUID id;
-  @Column(name = "reply_to_id")
+  @CqlName("reply_to_id")
   private UUID replyToID;
-  @Column(name = "source_id")
+  @CqlName("source_id")
   private UUID sourceID;
   private String comment;
   private long timestamp;

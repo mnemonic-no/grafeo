@@ -1,24 +1,20 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
 import java.util.Map;
 import java.util.UUID;
 
 import static java.util.Collections.unmodifiableMap;
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.SourceEntity.TABLE;
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 import static no.mnemonic.commons.utilities.collections.MapUtils.map;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class SourceEntity implements CassandraEntity {
 
   public static final String TABLE = "source";
@@ -45,14 +41,14 @@ public class SourceEntity implements CassandraEntity {
 
   @PartitionKey
   private UUID id;
-  @Column(name = "namespace_id")
+  @CqlName("namespace_id")
   private UUID namespaceID;
-  @Column(name = "organization_id")
+  @CqlName("organization_id")
   private UUID organizationID;
   private String name;
   private Type type;
   // TODO: Change to enum after we have defined trust levels.
-  @Column(name = "trust_level")
+  @CqlName("trust_level")
   private int trustLevel;
 
   public UUID getId() {

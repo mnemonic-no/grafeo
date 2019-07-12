@@ -9,8 +9,8 @@ import javax.inject.Provider;
 public class ClusterManagerProvider implements Provider<ClusterManager> {
 
   @Inject
-  @Named("cassandra.cluster.name")
-  private String clusterName;
+  @Named("cassandra.data.center")
+  private String dataCenter;
   @Inject
   @Named("cassandra.port")
   private String port;
@@ -21,7 +21,7 @@ public class ClusterManagerProvider implements Provider<ClusterManager> {
   @Override
   public ClusterManager get() {
     return ClusterManager.builder()
-            .setClusterName(clusterName)
+            .setDataCenter(dataCenter)
             .setPort(Integer.parseInt(port))
             .setContactPoints(SetUtils.set(contactPoints.split(",")))
             .build();

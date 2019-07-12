@@ -1,76 +1,60 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
-import com.datastax.driver.core.policies.DefaultRetryPolicy;
-import com.datastax.driver.core.policies.LoggingRetryPolicy;
-import com.datastax.driver.core.policies.TokenAwarePolicy;
-import com.datastax.driver.mapping.Mapper;
-import com.datastax.driver.mapping.MappingManager;
+import com.datastax.oss.driver.api.core.CqlSession;
 import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.CassandraEnumCodec;
 import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.SourceEntity;
+import no.mnemonic.act.platform.dao.cassandra.mapper.CassandraMapper;
 import no.mnemonic.commons.component.LifecycleAspect;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import java.net.InetSocketAddress;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ClusterManager implements LifecycleAspect {
 
-  private Cluster cluster;
-  private MappingManager manager;
+  private CqlSession session;
+  private CassandraMapper cassandraMapper;
 
-  private final String clusterName;
+  private final String dataCenter;
   private final int port;
   private final Set<String> contactPoints;
 
-  private ClusterManager(String clusterName, int port, Set<String> contactPoints) {
-    this.clusterName = clusterName;
+  private ClusterManager(String dataCenter, int port, Set<String> contactPoints) {
+    this.dataCenter = dataCenter;
     this.port = port;
     this.contactPoints = contactPoints;
   }
 
   @Override
   public void startComponent() {
-    if (cluster == null) {
-      // Configure and build up the Cassandra cluster.
-      cluster = Cluster.builder()
-              .withClusterName(clusterName)
-              .withPort(port)
-              // Wrap default retry policy in LoggingRetryPolicy in order to log retry decisions.
-              .withRetryPolicy(new LoggingRetryPolicy(DefaultRetryPolicy.INSTANCE))
-              // Wrap DCAwareRoundRobinPolicy which selects local data center nodes in TokenAwarePolicy
-              // which in addition prioritizes nodes based on routing information embedded in queries.
-              .withLoadBalancingPolicy(new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder().build()))
-              .addContactPoints(contactPoints.toArray(new String[0]))
+    if (session == null) {
+      // Configure and create a session connecting to Cassandra.
+      session = CqlSession.builder()
+              .withLocalDatacenter(dataCenter)
+              .addContactPoints(contactPoints.stream()
+                      .map(cp -> new InetSocketAddress(cp, port))
+                      .collect(Collectors.toSet()))
+              // Register any custom type codecs.
+              .addTypeCodecs(new CassandraEnumCodec<>(AccessMode.class, AccessMode.getValueMap()))
+              .addTypeCodecs(new CassandraEnumCodec<>(Direction.class, Direction.getValueMap()))
+              .addTypeCodecs(new CassandraEnumCodec<>(SourceEntity.Type.class, SourceEntity.Type.getValueMap()))
               .build();
 
-      // Register any codecs.
-      cluster.getConfiguration().getCodecRegistry()
-              .register(new CassandraEnumCodec<>(AccessMode.class, AccessMode.getValueMap()))
-              .register(new CassandraEnumCodec<>(Direction.class, Direction.getValueMap()))
-              .register(new CassandraEnumCodec<>(SourceEntity.Type.class, SourceEntity.Type.getValueMap()));
-
-      // Create a session.
-      manager = new MappingManager(cluster.connect());
+      cassandraMapper = CassandraMapper.builder(session).build();
     }
   }
 
   @Override
   public void stopComponent() {
-    // Close session and cluster to free up any resources.
-    if (manager != null) manager.getSession().close();
-    if (cluster != null) cluster.close();
+    // Close session to free up any resources.
+    if (session != null) session.close();
   }
 
-  public <T> Mapper<T> getMapper(Class<T> clazz) {
-    return ObjectUtils.ifNotNull(manager, m -> m.mapper(clazz));
-  }
-
-  public <T> T getAccessor(Class<T> clazz) {
-    return ObjectUtils.ifNotNull(manager, m -> m.createAccessor(clazz));
+  public CassandraMapper getCassandraMapper() {
+    return cassandraMapper;
   }
 
   public static Builder builder() {
@@ -78,7 +62,7 @@ public class ClusterManager implements LifecycleAspect {
   }
 
   public static class Builder {
-    private String clusterName;
+    private String dataCenter;
     private int port;
     private Set<String> contactPoints;
 
@@ -86,11 +70,11 @@ public class ClusterManager implements LifecycleAspect {
     }
 
     public ClusterManager build() {
-      return new ClusterManager(clusterName, port, contactPoints);
+      return new ClusterManager(dataCenter, port, contactPoints);
     }
 
-    public Builder setClusterName(String clusterName) {
-      this.clusterName = clusterName;
+    public Builder setDataCenter(String dataCenter) {
+      this.dataCenter = dataCenter;
       return this;
     }
 

@@ -1,31 +1,27 @@
 package no.mnemonic.act.platform.dao.cassandra.entity;
 
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.*;
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.ObjectByTypeValueEntity.TABLE;
 
-@Table(
-        keyspace = KEY_SPACE,
-        name = TABLE,
-        readConsistency = READ_CONSISTENCY,
-        writeConsistency = WRITE_CONSISTENCY
-)
+@Entity(defaultKeyspace = KEY_SPACE)
+@CqlName(TABLE)
 public class ObjectByTypeValueEntity implements CassandraEntity {
 
   public static final String TABLE = "object_by_type_value";
 
   @PartitionKey(0)
-  @Column(name = "object_type_id")
+  @CqlName("object_type_id")
   private UUID objectTypeID;
   @PartitionKey(1)
-  @Column(name = "object_value")
+  @CqlName("object_value")
   private String objectValue;
-  @Column(name = "object_id")
+  @CqlName("object_id")
   private UUID objectID;
 
   public UUID getObjectTypeID() {

@@ -43,7 +43,7 @@ public class ActGraphIT {
   public static void initialize() {
     // Create managers and start them up.
     clusterManager = ClusterManager.builder()
-            .setClusterName("ACT Cluster")
+            .setDataCenter("datacenter1")
             .setPort(cassandra.getExposedHostPort(9042))
             .addContactPoint(DockerTestUtils.getDockerHost())
             .build();
