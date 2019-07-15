@@ -25,9 +25,6 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -35,6 +32,9 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -74,7 +74,7 @@ import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 public class FactSearchManager implements LifecycleAspect {
 
   private static final String INDEX_NAME = "act";
-  private static final String TYPE_NAME = "fact";
+  private static final String TYPE_NAME = "_doc";
   private static final String MAPPINGS_JSON = "mappings.json";
   private static final int MAX_RESULT_WINDOW = 10_000; // Must be the same value as specified in mappings.json.
 
@@ -363,7 +363,7 @@ public class FactSearchManager implements LifecycleAspect {
 
   private boolean indexExists() {
     try {
-      GetIndexRequest request = new GetIndexRequest().indices(INDEX_NAME);
+      GetIndexRequest request = new GetIndexRequest(INDEX_NAME);
       return clientFactory.getClient().indices().exists(request, RequestOptions.DEFAULT);
     } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to verify if index exists.");

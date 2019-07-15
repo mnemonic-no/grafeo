@@ -28,107 +28,105 @@
     }
   },
   "mappings": {
-    "fact": {
-      "dynamic": false,
-      "properties": {
-        "retracted": {
-          "type": "boolean"
-        },
-        "typeID": {
-          "type": "keyword"
-        },
-        "typeName": {
-          "type": "keyword"
-        },
-        "value": {
-          "type": "keyword",
-          "fields": {
-            "text": {
-              "type": "text"
-            },
-            "ip": {
-              "type": "ip",
-              "ignore_malformed": true
-            },
-            "domain": {
-              "type": "text",
-              "analyzer": "domain_analyzer",
-              "search_analyzer": "domain_search_analyzer"
-            }
+    "dynamic": false,
+    "properties": {
+      "retracted": {
+        "type": "boolean"
+      },
+      "typeID": {
+        "type": "keyword"
+      },
+      "typeName": {
+        "type": "keyword"
+      },
+      "value": {
+        "type": "keyword",
+        "fields": {
+          "text": {
+            "type": "text"
+          },
+          "ip": {
+            "type": "ip",
+            "ignore_malformed": true
+          },
+          "domain": {
+            "type": "text",
+            "analyzer": "domain_analyzer",
+            "search_analyzer": "domain_search_analyzer"
           }
-        },
-        "inReferenceTo": {
-          "type": "keyword"
-        },
-        "organizationID": {
-          "type": "keyword"
-        },
-        "organizationName": {
-          "type": "keyword",
-          "fields": {
-            "text": {
-              "type": "text"
-            }
+        }
+      },
+      "inReferenceTo": {
+        "type": "keyword"
+      },
+      "organizationID": {
+        "type": "keyword"
+      },
+      "organizationName": {
+        "type": "keyword",
+        "fields": {
+          "text": {
+            "type": "text"
           }
-        },
-        "sourceID": {
-          "type": "keyword"
-        },
-        "sourceName": {
-          "type": "keyword",
-          "fields": {
-            "text": {
-              "type": "text"
-            }
+        }
+      },
+      "sourceID": {
+        "type": "keyword"
+      },
+      "sourceName": {
+        "type": "keyword",
+        "fields": {
+          "text": {
+            "type": "text"
           }
-        },
-        "accessMode": {
-          "type": "keyword"
-        },
-        "timestamp": {
-          "type": "date"
-        },
-        "lastSeenTimestamp": {
-          "type": "date"
-        },
-        "acl": {
-          "type": "keyword"
-        },
-        "objectCount": {
-          "type": "byte"
-        },
-        "objects": {
-          "type": "nested",
-          "properties": {
-            "id": {
-              "type": "keyword"
-            },
-            "typeID": {
-              "type": "keyword"
-            },
-            "typeName": {
-              "type": "keyword"
-            },
-            "value": {
-              "type": "keyword",
-              "fields": {
-                "text": {
-                  "type": "text"
-                },
-                "ip": {
-                  "type": "ip",
-                  "ignore_malformed": true
-                },
-                "domain": {
-                  "type": "text",
-                  "analyzer": "domain_analyzer",
-                  "search_analyzer": "domain_search_analyzer"
-                }
+        }
+      },
+      "accessMode": {
+        "type": "keyword"
+      },
+      "timestamp": {
+        "type": "date"
+      },
+      "lastSeenTimestamp": {
+        "type": "date"
+      },
+      "acl": {
+        "type": "keyword"
+      },
+      "objectCount": {
+        "type": "byte"
+      },
+      "objects": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "typeID": {
+            "type": "keyword"
+          },
+          "typeName": {
+            "type": "keyword"
+          },
+          "value": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text"
+              },
+              "ip": {
+                "type": "ip",
+                "ignore_malformed": true
+              },
+              "domain": {
+                "type": "text",
+                "analyzer": "domain_analyzer",
+                "search_analyzer": "domain_search_analyzer"
               }
-            },
-            "direction": {
-              "type": "keyword"
             }
+          },
+          "direction": {
+            "type": "keyword"
           }
         }
       }
