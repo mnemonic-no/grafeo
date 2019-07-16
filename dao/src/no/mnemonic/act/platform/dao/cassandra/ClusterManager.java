@@ -6,14 +6,24 @@ import no.mnemonic.act.platform.dao.cassandra.entity.CassandraEnumCodec;
 import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.SourceEntity;
 import no.mnemonic.act.platform.dao.cassandra.mapper.CassandraMapper;
+import no.mnemonic.commons.component.ComponentException;
 import no.mnemonic.commons.component.LifecycleAspect;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class ClusterManager implements LifecycleAspect {
+
+  private static final long INITIALIZATION_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
+  private static final Logger LOGGER = Logging.getLogger(ClusterManager.class);
 
   private CqlSession session;
   private CassandraMapper cassandraMapper;
@@ -32,7 +42,7 @@ public class ClusterManager implements LifecycleAspect {
   public void startComponent() {
     if (session == null) {
       // Configure and create a session connecting to Cassandra.
-      session = CqlSession.builder()
+      CompletableFuture<CqlSession> future = CqlSession.builder()
               .withLocalDatacenter(dataCenter)
               .addContactPoints(contactPoints.stream()
                       .map(cp -> new InetSocketAddress(cp, port))
@@ -41,10 +51,32 @@ public class ClusterManager implements LifecycleAspect {
               .addTypeCodecs(new CassandraEnumCodec<>(AccessMode.class, AccessMode.getValueMap()))
               .addTypeCodecs(new CassandraEnumCodec<>(Direction.class, Direction.getValueMap()))
               .addTypeCodecs(new CassandraEnumCodec<>(SourceEntity.Type.class, SourceEntity.Type.getValueMap()))
-              .build();
+              .buildAsync()
+              .toCompletableFuture();
 
-      cassandraMapper = CassandraMapper.builder(session).build();
+      try {
+        // Need to use asynchronous builder to be able to abort connection attempt. With synchronous builder and
+        // 'advanced.reconnect-on-init = true' the driver would never stop trying to connect to Cassandra which
+        // would block startComponent() forever.
+        session = future.get(INITIALIZATION_TIMEOUT, TimeUnit.MILLISECONDS);
+        cassandraMapper = CassandraMapper.builder(session).build();
+      } catch (ExecutionException | TimeoutException ex) {
+        // Abort connection attempt and shut down the component.
+        future.cancel(true);
+        failComponentOnStart(ex);
+      } catch (InterruptedException ex) {
+        // Re-interrupt thread and shut down the component.
+        Thread.currentThread().interrupt();
+        failComponentOnStart(ex);
+      }
+
+      LOGGER.info("Initialized connections to Cassandra: %s (port %d)", String.join(",", contactPoints), port);
     }
+  }
+
+  private void failComponentOnStart(Exception ex) {
+    LOGGER.warning(ex, "Could not connect to Cassandra. Shutting down component.");
+    throw new ComponentException("Could not connect to Cassandra. Shutting down component.", ex);
   }
 
   @Override
