@@ -9,9 +9,13 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.commons.utilities.lambda.LambdaUtils;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.rest.RestStatus;
 
 import java.io.IOException;
 import java.util.Set;
@@ -72,10 +76,12 @@ public class ClientFactory implements LifecycleAspect {
     long timeout = System.currentTimeMillis() + INITIALIZATION_TIMEOUT;
     while (System.currentTimeMillis() < timeout) {
       try {
-        // If ElasticSearch is reachable return immediately.
-        if (client.ping(RequestOptions.DEFAULT)) return true;
+        ClusterHealthResponse response = client.cluster().health(new ClusterHealthRequest(), RequestOptions.DEFAULT);
+        LOGGER.debug("ElasticSearch cluster (%s) status is %s.", response.getClusterName(), response.getStatus());
+        // If ElasticSearch is reachable and its status is at least 'yellow' return immediately.
+        if (response.status() == RestStatus.OK && response.getStatus() != ClusterHealthStatus.RED) return true;
       } catch (ElasticsearchException | IOException ex) {
-        LOGGER.debug(ex, "Could not ping ElasticSearch cluster.");
+        LOGGER.debug(ex, "Could not fetch ElasticSearch cluster health information.");
       }
 
       try {
