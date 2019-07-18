@@ -5,12 +5,10 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -22,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -30,7 +28,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactSearchHandlerTest {
 
   @Mock
-  private FactTypeResolver factTypeResolver;
+  private FactRetractionHandler retractionHandler;
   @Mock
   private FactSearchManager factSearchManager;
   @Mock
@@ -52,14 +50,13 @@ public class FactSearchHandlerTest {
     initMocks(this);
 
     // Common mocks used by most tests.
-    when(factTypeResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()));
     when(securityContext.hasReadPermission(isA(FactEntity.class))).thenReturn(true);
     when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
     when(factConverter.apply(any())).thenReturn(factModel);
 
     handler = FactSearchHandler.builder()
-            .setFactTypeResolver(factTypeResolver)
+            .setRetractionHandler(retractionHandler)
             .setFactSearchManager(factSearchManager)
             .setFactManager(factManager)
             .setSecurityContext(securityContext)
@@ -68,7 +65,7 @@ public class FactSearchHandlerTest {
   }
 
   @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutFactTypeResolver() {
+  public void testCreateHandlerWithoutRetractionHandler() {
     FactSearchHandler.builder()
             .setFactSearchManager(factSearchManager)
             .setFactManager(factManager)
@@ -80,7 +77,7 @@ public class FactSearchHandlerTest {
   @Test(expected = RuntimeException.class)
   public void testCreateHandlerWithoutFactSearchManager() {
     FactSearchHandler.builder()
-            .setFactTypeResolver(factTypeResolver)
+            .setRetractionHandler(retractionHandler)
             .setFactManager(factManager)
             .setSecurityContext(securityContext)
             .setFactConverter(factConverter)
@@ -90,7 +87,7 @@ public class FactSearchHandlerTest {
   @Test(expected = RuntimeException.class)
   public void testCreateHandlerWithoutFactManager() {
     FactSearchHandler.builder()
-            .setFactTypeResolver(factTypeResolver)
+            .setRetractionHandler(retractionHandler)
             .setFactSearchManager(factSearchManager)
             .setSecurityContext(securityContext)
             .setFactConverter(factConverter)
@@ -100,7 +97,7 @@ public class FactSearchHandlerTest {
   @Test(expected = RuntimeException.class)
   public void testCreateHandlerWithoutSecurityContext() {
     FactSearchHandler.builder()
-            .setFactTypeResolver(factTypeResolver)
+            .setRetractionHandler(retractionHandler)
             .setFactSearchManager(factSearchManager)
             .setFactManager(factManager)
             .setFactConverter(factConverter)
@@ -110,7 +107,7 @@ public class FactSearchHandlerTest {
   @Test(expected = RuntimeException.class)
   public void testCreateHandlerWithoutFactConverter() {
     FactSearchHandler.builder()
-            .setFactTypeResolver(factTypeResolver)
+            .setRetractionHandler(retractionHandler)
             .setFactSearchManager(factSearchManager)
             .setFactManager(factManager)
             .setSecurityContext(securityContext)
@@ -214,121 +211,42 @@ public class FactSearchHandlerTest {
   public void testSearchFactsIncludeRetracted() {
     factDocument.setRetracted(true);
 
-    FactSearchCriteria criteria = mockSearchWithRetraction();
+    mockSimpleSearch();
+    when(retractionHandler.isRetracted(factID, true)).thenReturn(true);
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
     ListUtils.list(handler.search(criteria, true).iterator());
 
     verify(factManager).getFacts(argThat(i -> i.contains(factDocument.getId())));
-    verify(factSearchManager).searchFacts(criteria);
-    verifyNoMoreInteractions(factSearchManager);
+    verify(retractionHandler).isRetracted(factID, true);
   }
 
   @Test
   public void testSearchFactsExcludeRetractedNotRetracted() {
     factDocument.setRetracted(false);
 
-    FactSearchCriteria criteria = mockSearchWithRetraction();
+    mockSimpleSearch();
+    when(retractionHandler.isRetracted(factID, false)).thenReturn(false);
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
     ListUtils.list(handler.search(criteria, false).iterator());
 
     verify(factManager).getFacts(argThat(i -> i.contains(factDocument.getId())));
-    verify(factSearchManager).searchFacts(criteria);
-    verifyNoMoreInteractions(factSearchManager);
+    verify(retractionHandler).isRetracted(factID, false);
   }
 
   @Test
   public void testSearchFactsExcludeRetracted() {
     factDocument.setRetracted(true);
 
-    FactSearchCriteria criteria = mockSearchWithRetraction();
+    mockSimpleSearch();
+    when(retractionHandler.isRetracted(factID, true)).thenReturn(true);
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
     ListUtils.list(handler.search(criteria, false).iterator());
 
     verify(factManager, atLeastOnce()).getFacts(argThat(i -> !i.contains(factDocument.getId())));
-    verify(factSearchManager, times(3)).searchFacts(argThat(i -> {
-      // Called once for the actual Fact search.
-      if (i == criteria) return true;
-
-      // Called twice for checking retractions.
-      assertFalse(i.getInReferenceTo().isEmpty());
-      assertFalse(i.getFactTypeID().isEmpty());
-      assertFalse(i.getAvailableOrganizationID().isEmpty());
-      assertNotNull(i.getCurrentUserID());
-      return true;
-    }));
-  }
-
-  @Test
-  public void testSearchFactsExcludeRetractedWithRetractedRetraction() {
-    factDocument.setRetracted(true);
-    FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
-
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
-
-    // factDocument ---> retraction1 ---> retraction2
-    // retraction2 cancels out retraction1, thus, factDocument in not retracted.
-    when(factSearchManager.searchFacts(criteria))
-            .thenReturn(createSearchResult(factDocument));
-    when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(factDocument.getId()))))
-            .thenReturn(createSearchResult(retraction1));
-    when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(retraction1.getId()))))
-            .thenReturn(createSearchResult(retraction2));
-    when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());
-
-    ListUtils.list(handler.search(criteria, false).iterator());
-
-    verify(factManager).getFacts(argThat(i -> i.contains(factDocument.getId())));
-  }
-
-  @Test
-  public void testSearchFactsExcludeRetractedWithRetractedRetractionTwoLevels() {
-    factDocument.setRetracted(true);
-    FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction3 = new FactDocument().setId(UUID.randomUUID());
-
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
-
-    // factDocument ---> retraction1 ---> retraction2 ---> retraction3
-    // retraction3 cancels out retraction2, thus, factDocument is retracted because retraction1 holds.
-    when(factSearchManager.searchFacts(criteria))
-            .thenReturn(createSearchResult(factDocument));
-    when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(factDocument.getId()))))
-            .thenReturn(createSearchResult(retraction1));
-    when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(retraction1.getId()))))
-            .thenReturn(createSearchResult(retraction2));
-    when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(retraction2.getId()))))
-            .thenReturn(createSearchResult(retraction3));
-    when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());
-
-    ListUtils.list(handler.search(criteria, false).iterator());
-
-    verify(factManager, atLeastOnce()).getFacts(argThat(i -> !i.contains(factDocument.getId())));
-  }
-
-  @Test
-  public void testSearchFactsExcludeRetractedWithRetractedRetractionComplexTree() {
-    factDocument.setRetracted(true);
-    FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction3 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction4 = new FactDocument().setId(UUID.randomUUID());
-
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
-
-    // factDocument ---> retraction1 ---> retraction2
-    //     |-----------> retraction3
-    //     |-----------> retraction4
-    // retraction2 cancels out retraction1, thus, factDocument is retracted because of retraction3/retraction4.
-    when(factSearchManager.searchFacts(criteria))
-            .thenReturn(createSearchResult(factDocument));
-    when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(factDocument.getId()))))
-            .thenReturn(createSearchResult(retraction1, retraction3, retraction4));
-    when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(retraction1.getId()))))
-            .thenReturn(createSearchResult(retraction2));
-    when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());
-
-    ListUtils.list(handler.search(criteria, false).iterator());
-
-    verify(factManager, atLeastOnce()).getFacts(argThat(i -> !i.contains(factDocument.getId())));
+    verify(retractionHandler).isRetracted(factID, true);
   }
 
   private void mockSimpleSearch() {
@@ -338,19 +256,6 @@ public class FactSearchHandlerTest {
             .setCount(100)
             .build());
     when(factManager.getFacts(any())).thenReturn(Collections.singleton(factEntity).iterator());
-  }
-
-  private FactSearchCriteria mockSearchWithRetraction() {
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
-    FactDocument retraction = new FactDocument().setId(UUID.randomUUID());
-
-    when(factSearchManager.searchFacts(criteria))
-            .thenReturn(createSearchResult(factDocument));
-    when(factSearchManager.searchFacts(argThat(i -> i != null && i.getInReferenceTo() != null && i.getInReferenceTo().contains(factDocument.getId()))))
-            .thenReturn(createSearchResult(retraction));
-    when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());
-
-    return criteria;
   }
 
   private ScrollingSearchResult<FactDocument> createSearchResult(FactDocument... fact) {

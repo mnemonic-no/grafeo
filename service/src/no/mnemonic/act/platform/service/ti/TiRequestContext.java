@@ -1,12 +1,13 @@
 package no.mnemonic.act.platform.service.ti;
 
-import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
+import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
+import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -20,6 +21,7 @@ public class TiRequestContext extends RequestContext {
   private final ObjectManager objectManager;
   private final FactManager factManager;
   private final FactSearchManager factSearchManager;
+  private final FactRetractionHandler retractionHandler;
   private final ValidatorFactory validatorFactory;
   private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
   private final Function<FactTypeEntity, FactType> factTypeConverter;
@@ -28,7 +30,10 @@ public class TiRequestContext extends RequestContext {
   private final Function<FactAclEntity, AclEntry> aclEntryConverter;
   private final Function<FactCommentEntity, FactComment> factCommentConverter;
 
-  private TiRequestContext(ObjectManager objectManager, FactManager factManager, FactSearchManager factSearchManager,
+  private TiRequestContext(ObjectManager objectManager,
+                           FactManager factManager,
+                           FactSearchManager factSearchManager,
+                           FactRetractionHandler retractionHandler,
                            ValidatorFactory validatorFactory,
                            Function<ObjectTypeEntity, ObjectType> objectTypeConverter,
                            Function<FactTypeEntity, FactType> factTypeConverter,
@@ -39,6 +44,7 @@ public class TiRequestContext extends RequestContext {
     this.objectManager = objectManager;
     this.factManager = factManager;
     this.factSearchManager = factSearchManager;
+    this.retractionHandler = retractionHandler;
     this.validatorFactory = validatorFactory;
     this.objectTypeConverter = objectTypeConverter;
     this.factTypeConverter = factTypeConverter;
@@ -62,6 +68,10 @@ public class TiRequestContext extends RequestContext {
 
   public FactSearchManager getFactSearchManager() {
     return ObjectUtils.notNull(factSearchManager, "FactSearchManager not set in RequestContext.");
+  }
+
+  public FactRetractionHandler getRetractionHandler() {
+    return ObjectUtils.notNull(retractionHandler, "FactRetractionHandler not set in RequestContext.");
   }
 
   public ValidatorFactory getValidatorFactory() {
@@ -100,6 +110,7 @@ public class TiRequestContext extends RequestContext {
     private ObjectManager objectManager;
     private FactManager factManager;
     private FactSearchManager factSearchManager;
+    private FactRetractionHandler retractionHandler;
     private ValidatorFactory validatorFactory;
     private Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
     private Function<FactTypeEntity, FactType> factTypeConverter;
@@ -112,8 +123,8 @@ public class TiRequestContext extends RequestContext {
     }
 
     public TiRequestContext build() {
-      return new TiRequestContext(objectManager, factManager, factSearchManager, validatorFactory, objectTypeConverter,
-              factTypeConverter, objectConverter, factConverter, aclEntryConverter, factCommentConverter);
+      return new TiRequestContext(objectManager, factManager, factSearchManager, retractionHandler, validatorFactory,
+              objectTypeConverter, factTypeConverter, objectConverter, factConverter, aclEntryConverter, factCommentConverter);
     }
 
     public Builder setObjectManager(ObjectManager objectManager) {
@@ -128,6 +139,11 @@ public class TiRequestContext extends RequestContext {
 
     public Builder setFactSearchManager(FactSearchManager factSearchManager) {
       this.factSearchManager = factSearchManager;
+      return this;
+    }
+
+    public Builder setRetractionHandler(FactRetractionHandler retractionHandler) {
+      this.retractionHandler = retractionHandler;
       return this;
     }
 

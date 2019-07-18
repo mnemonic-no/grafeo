@@ -1,12 +1,13 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
-import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
+import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.UUID;
 import java.util.function.Function;
@@ -25,16 +26,22 @@ public class FactConverter implements Converter<FactEntity, Fact> {
   private final Function<UUID, Object> objectConverter;
   private final Function<UUID, FactEntity> factEntityResolver;
   private final Predicate<FactEntity> accessChecker;
+  private final Predicate<FactEntity> retractionChecker;
 
-  private FactConverter(Function<UUID, FactType> factTypeConverter, Function<UUID, Organization> organizationConverter,
-                        Function<UUID, Source> sourceConverter, Function<UUID, Object> objectConverter,
-                        Function<UUID, FactEntity> factEntityResolver, Predicate<FactEntity> accessChecker) {
+  private FactConverter(Function<UUID, FactType> factTypeConverter,
+                        Function<UUID, Organization> organizationConverter,
+                        Function<UUID, Source> sourceConverter,
+                        Function<UUID, Object> objectConverter,
+                        Function<UUID, FactEntity> factEntityResolver,
+                        Predicate<FactEntity> accessChecker,
+                        Predicate<FactEntity> retractionChecker) {
     this.factTypeConverter = factTypeConverter;
     this.organizationConverter = organizationConverter;
     this.sourceConverter = sourceConverter;
     this.objectConverter = objectConverter;
     this.factEntityResolver = factEntityResolver;
     this.accessChecker = accessChecker;
+    this.retractionChecker = retractionChecker;
   }
 
   @Override
@@ -64,6 +71,7 @@ public class FactConverter implements Converter<FactEntity, Fact> {
             .setSourceObject(ObjectUtils.ifNotNull(objects, ConvertedObjects::getSourceObject))
             .setDestinationObject(ObjectUtils.ifNotNull(objects, ConvertedObjects::getDestinationObject))
             .setBidirectionalBinding(ObjectUtils.ifNotNull(objects, ConvertedObjects::isBidirectionalBinding, false))
+            .setFlags(retractionChecker.test(entity) ? SetUtils.set(Fact.Flag.Retracted) : SetUtils.set())
             .build();
   }
 
@@ -142,6 +150,7 @@ public class FactConverter implements Converter<FactEntity, Fact> {
     private Function<UUID, Object> objectConverter;
     private Function<UUID, FactEntity> factEntityResolver;
     private Predicate<FactEntity> accessChecker;
+    private Predicate<FactEntity> retractionChecker;
 
     private Builder() {
     }
@@ -153,7 +162,9 @@ public class FactConverter implements Converter<FactEntity, Fact> {
       ObjectUtils.notNull(objectConverter, "Cannot instantiate FactConverter without 'objectConverter'.");
       ObjectUtils.notNull(factEntityResolver, "Cannot instantiate FactConverter without 'factEntityResolver'.");
       ObjectUtils.notNull(accessChecker, "Cannot instantiate FactConverter without 'accessChecker'.");
-      return new FactConverter(factTypeConverter, organizationConverter, sourceConverter, objectConverter, factEntityResolver, accessChecker);
+      ObjectUtils.notNull(retractionChecker, "Cannot instantiate FactConverter without 'retractionChecker'.");
+      return new FactConverter(factTypeConverter, organizationConverter, sourceConverter, objectConverter, factEntityResolver,
+              accessChecker, retractionChecker);
     }
 
     public Builder setFactTypeConverter(Function<UUID, FactType> factTypeConverter) {
@@ -183,6 +194,11 @@ public class FactConverter implements Converter<FactEntity, Fact> {
 
     public Builder setAccessChecker(Predicate<FactEntity> accessChecker) {
       this.accessChecker = accessChecker;
+      return this;
+    }
+
+    public Builder setRetractionChecker(Predicate<FactEntity> retractionChecker) {
+      this.retractionChecker = retractionChecker;
       return this;
     }
   }

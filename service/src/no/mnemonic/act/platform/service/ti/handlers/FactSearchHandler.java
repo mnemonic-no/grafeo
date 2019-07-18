@@ -10,12 +10,9 @@ import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import java.util.ArrayList;
@@ -34,18 +31,18 @@ public class FactSearchHandler {
 
   private static final Logger LOGGER = Logging.getLogger(FactSearchHandler.class);
 
-  private final FactTypeResolver factTypeResolver;
+  private final FactRetractionHandler retractionHandler;
   private final FactSearchManager factSearchManager;
   private final FactManager factManager;
   private final TiSecurityContext securityContext;
   private final Function<FactEntity, Fact> factConverter;
 
-  private FactSearchHandler(FactTypeResolver factTypeResolver,
+  private FactSearchHandler(FactRetractionHandler retractionHandler,
                             FactSearchManager factSearchManager,
                             FactManager factManager,
                             TiSecurityContext securityContext,
                             Function<FactEntity, Fact> factConverter) {
-    this.factTypeResolver = factTypeResolver;
+    this.retractionHandler = retractionHandler;
     this.factSearchManager = factSearchManager;
     this.factManager = factManager;
     this.securityContext = securityContext;
@@ -96,7 +93,7 @@ public class FactSearchHandler {
   }
 
   public static class Builder {
-    private FactTypeResolver factTypeResolver;
+    private FactRetractionHandler retractionHandler;
     private FactSearchManager factSearchManager;
     private FactManager factManager;
     private TiSecurityContext securityContext;
@@ -106,16 +103,16 @@ public class FactSearchHandler {
     }
 
     public FactSearchHandler build() {
-      ObjectUtils.notNull(factTypeResolver, "Cannot instantiate FactSearchHandler without 'factTypeResolver'.");
+      ObjectUtils.notNull(retractionHandler, "Cannot instantiate FactSearchHandler without 'retractionHandler'.");
       ObjectUtils.notNull(factSearchManager, "Cannot instantiate FactSearchHandler without 'factSearchManager'.");
       ObjectUtils.notNull(factManager, "Cannot instantiate FactSearchHandler without 'factManager'.");
       ObjectUtils.notNull(securityContext, "Cannot instantiate FactSearchHandler without 'securityContext'.");
       ObjectUtils.notNull(factConverter, "Cannot instantiate FactSearchHandler without 'factConverter'.");
-      return new FactSearchHandler(factTypeResolver, factSearchManager, factManager, securityContext, factConverter);
+      return new FactSearchHandler(retractionHandler, factSearchManager, factManager, securityContext, factConverter);
     }
 
-    public Builder setFactTypeResolver(FactTypeResolver factTypeResolver) {
-      this.factTypeResolver = factTypeResolver;
+    public Builder setRetractionHandler(FactRetractionHandler retractionHandler) {
+      this.retractionHandler = retractionHandler;
       return this;
     }
 
@@ -141,38 +138,12 @@ public class FactSearchHandler {
   }
 
   private boolean includeRetracted(FactDocument fact, Boolean includeRetracted) {
-    // If the document isn't marked as retracted the Fact has never been retracted and should be included in the result.
-    if (ObjectUtils.ifNull(includeRetracted, false) || !fact.isRetracted()) {
-      return true;
-    }
-
-    // Otherwise need to check if the Fact is actually retracted from the user's perspective.
-    return !isRetracted(fact);
-  }
-
-  private boolean isRetracted(FactDocument fact) {
-    List<FactDocument> retractions = fetchRetractions(fact);
-    if (CollectionUtils.isEmpty(retractions)) {
-      // No accessible retractions, thus, the Fact isn't retracted.
-      return false;
-    }
-
-    // The Fact is only retracted if not all of the retractions themselves are retracted.
-    return !retractions.stream().allMatch(this::isRetracted);
-  }
-
-  private List<FactDocument> fetchRetractions(FactDocument fact) {
-    // Create criteria to fetch all Retraction Facts for a given Fact. Only return retractions which a user has access
-    // to. No access to retractions means that from the user's perspective the referenced Fact isn't retracted.
-    FactSearchCriteria retractionsCriteria = FactSearchCriteria.builder()
-            .addInReferenceTo(fact.getId())
-            .addFactTypeID(factTypeResolver.resolveRetractionFactType().getId())
-            .setCurrentUserID(securityContext.getCurrentUserID())
-            .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
-            .build();
-
-    // The number of retractions will be very small (typically one), thus, it's no problem to consume all results at once.
-    return ListUtils.list(factSearchManager.searchFacts(retractionsCriteria));
+    // Call FactRetractionHandler for every Fact in order to populate the cache which is re-used by the FactConverter.
+    // On FactDocument it's stored whether a Fact has ever been retracted. Populating the cache with this information
+    // here saves a lot of calls to ElasticSearch by the FactConverter which doesn't have the same information (as it's
+    // not stored on FactEntity).
+    boolean isRetracted = retractionHandler.isRetracted(fact.getId(), fact.isRetracted());
+    return ObjectUtils.ifNull(includeRetracted, false) || !isRetracted;
   }
 
   /**

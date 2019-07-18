@@ -19,6 +19,7 @@ import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.*;
 import no.mnemonic.act.platform.service.ti.delegates.*;
+import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
@@ -91,6 +92,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setObjectConverter(createObjectByIdConverter())
             .setFactEntityResolver(factManager::getFact)
             .setAccessChecker(fact -> TiSecurityContext.get().hasReadPermission(fact))
+            .setRetractionChecker(fact -> TiRequestContext.get().getRetractionHandler().isRetracted(fact.getId()))
             .build();
     this.aclEntryConverter = AclEntryConverter.builder()
             .setSourceConverter(createSourceConverter())
@@ -116,10 +118,20 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
 
   @Override
   public RequestContext createRequestContext() {
+    // Create FactRetractionHandler once for every request. This will cache the information for one request but not
+    // across multiple request from different users. Note that SecurityContext will be set here because it's created
+    // before the RequestContext (AuthenticationAspect is called before RequestContextAspect).
+    FactRetractionHandler retractionHandler = FactRetractionHandler.builder()
+            .setFactSearchManager(factSearchManager)
+            .setFactTypeResolver(new FactTypeResolver(factManager))
+            .setSecurityContext(TiSecurityContext.get())
+            .build();
+
     return TiRequestContext.builder()
             .setFactManager(factManager)
             .setObjectManager(objectManager)
             .setFactSearchManager(factSearchManager)
+            .setRetractionHandler(retractionHandler)
             .setValidatorFactory(validatorFactory)
             .setObjectTypeConverter(objectTypeConverter)
             .setFactTypeConverter(factTypeConverter)
@@ -370,6 +382,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     // in another thread or when search results are streamed to the REST layer. Note that this is a work-around which
     // will be ultimately fixed when implementing service request scope.
     TiSecurityContext securityContext = TiSecurityContext.get();
+    TiRequestContext requestContext = TiRequestContext.get();
     return FactConverter.builder()
             .setFactTypeConverter(createFactTypeByIdConverter())
             .setOrganizationConverter(organizationResolver::resolveOrganization)
@@ -377,12 +390,13 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setObjectConverter(createObjectByIdConverter())
             .setFactEntityResolver(factManager::getFact)
             .setAccessChecker(securityContext::hasReadPermission)
+            .setRetractionChecker(fact -> requestContext.getRetractionHandler().isRetracted(fact.getId()))
             .build();
   }
 
   private FactSearchHandler createFactSearchHandler() {
     return FactSearchHandler.builder()
-            .setFactTypeResolver(new FactTypeResolver(factManager))
+            .setRetractionHandler(TiRequestContext.get().getRetractionHandler())
             .setFactSearchManager(factSearchManager)
             .setFactManager(factManager)
             .setSecurityContext(TiSecurityContext.get())
