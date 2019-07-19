@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
-import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
+import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 
 public class FactConverterTest {
@@ -22,6 +23,7 @@ public class FactConverterTest {
   private final Function<UUID, Object> objectConverter = id -> Object.builder().setId(id).build();
   private final Function<UUID, FactEntity> factEntityResolver = id -> createEntity().setId(id);
   private final Predicate<FactEntity> accessChecker = fact -> true;
+  private final Predicate<FactEntity> retractionChecker = fact -> false;
 
   @Test
   public void testConvertNullReturnsNull() {
@@ -179,6 +181,7 @@ public class FactConverterTest {
             .setObjectConverter(objectConverter)
             .setFactEntityResolver(id -> null)
             .setAccessChecker(accessChecker)
+            .setRetractionChecker(retractionChecker)
             .build();
     assertNull(converter.apply(createEntity()).getInReferenceTo());
   }
@@ -192,8 +195,23 @@ public class FactConverterTest {
             .setObjectConverter(objectConverter)
             .setFactEntityResolver(factEntityResolver)
             .setAccessChecker(fact -> false)
+            .setRetractionChecker(retractionChecker)
             .build();
     assertNull(converter.apply(createEntity()).getInReferenceTo());
+  }
+
+  @Test
+  public void testConvertRetractedFact() {
+    FactConverter converter = FactConverter.builder()
+            .setFactTypeConverter(factTypeConverter)
+            .setOrganizationConverter(organizationConverter)
+            .setSourceConverter(sourceConverter)
+            .setObjectConverter(objectConverter)
+            .setFactEntityResolver(factEntityResolver)
+            .setAccessChecker(accessChecker)
+            .setRetractionChecker(fact -> true)
+            .build();
+    assertEquals(set(Fact.Flag.Retracted), converter.apply(createEntity()).getFlags());
   }
 
   @Test(expected = RuntimeException.class)
@@ -204,6 +222,7 @@ public class FactConverterTest {
             .setObjectConverter(objectConverter)
             .setFactEntityResolver(factEntityResolver)
             .setAccessChecker(accessChecker)
+            .setRetractionChecker(retractionChecker)
             .build();
   }
 
@@ -215,6 +234,7 @@ public class FactConverterTest {
             .setObjectConverter(objectConverter)
             .setFactEntityResolver(factEntityResolver)
             .setAccessChecker(accessChecker)
+            .setRetractionChecker(retractionChecker)
             .build();
   }
 
@@ -226,6 +246,7 @@ public class FactConverterTest {
             .setObjectConverter(objectConverter)
             .setFactEntityResolver(factEntityResolver)
             .setAccessChecker(accessChecker)
+            .setRetractionChecker(retractionChecker)
             .build();
   }
 
@@ -237,6 +258,7 @@ public class FactConverterTest {
             .setSourceConverter(sourceConverter)
             .setFactEntityResolver(factEntityResolver)
             .setAccessChecker(accessChecker)
+            .setRetractionChecker(retractionChecker)
             .build();
   }
 
@@ -248,6 +270,7 @@ public class FactConverterTest {
             .setSourceConverter(sourceConverter)
             .setObjectConverter(objectConverter)
             .setAccessChecker(accessChecker)
+            .setRetractionChecker(retractionChecker)
             .build();
   }
 
@@ -259,6 +282,19 @@ public class FactConverterTest {
             .setSourceConverter(sourceConverter)
             .setObjectConverter(objectConverter)
             .setFactEntityResolver(factEntityResolver)
+            .setRetractionChecker(retractionChecker)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateConverterWithoutRetractionCheckerThrowsException() {
+    FactConverter.builder()
+            .setFactTypeConverter(factTypeConverter)
+            .setOrganizationConverter(organizationConverter)
+            .setSourceConverter(sourceConverter)
+            .setObjectConverter(objectConverter)
+            .setFactEntityResolver(factEntityResolver)
+            .setAccessChecker(accessChecker)
             .build();
   }
 
@@ -270,6 +306,7 @@ public class FactConverterTest {
             .setObjectConverter(objectConverter)
             .setFactEntityResolver(factEntityResolver)
             .setAccessChecker(accessChecker)
+            .setRetractionChecker(retractionChecker)
             .build();
   }
 
@@ -296,6 +333,7 @@ public class FactConverterTest {
     assertEquals(entity.getAccessMode().name(), model.getAccessMode().name());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
     assertEquals(entity.getLastSeenTimestamp(), (long) model.getLastSeenTimestamp());
+    assertEquals(set(), model.getFlags());
   }
 
 }

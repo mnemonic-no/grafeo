@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
@@ -52,19 +53,22 @@ public class ThreatIntelligenceServiceImplTest {
   }
 
   @Test
-  public void testCreateRequestContext() {
-    TiRequestContext context = (TiRequestContext) service.createRequestContext();
-    assertNotNull(context);
-    assertNotNull(context.getObjectTypeConverter());
-    assertNotNull(context.getFactTypeConverter());
-    assertNotNull(context.getObjectConverter());
-    assertNotNull(context.getFactConverter());
-    assertNotNull(context.getAclEntryConverter());
-    assertNotNull(context.getFactCommentConverter());
-    assertSame(factManager, context.getFactManager());
-    assertSame(objectManager, context.getObjectManager());
-    assertSame(factSearchManager, context.getFactSearchManager());
-    assertSame(validatorFactory, context.getValidatorFactory());
+  public void testCreateRequestContext() throws Exception {
+    try (SecurityContext ignored = SecurityContext.set(service.createSecurityContext(credentials))) {
+      TiRequestContext context = (TiRequestContext) service.createRequestContext();
+      assertNotNull(context);
+      assertNotNull(context.getRetractionHandler());
+      assertNotNull(context.getObjectTypeConverter());
+      assertNotNull(context.getFactTypeConverter());
+      assertNotNull(context.getObjectConverter());
+      assertNotNull(context.getFactConverter());
+      assertNotNull(context.getAclEntryConverter());
+      assertNotNull(context.getFactCommentConverter());
+      assertSame(factManager, context.getFactManager());
+      assertSame(objectManager, context.getObjectManager());
+      assertSame(factSearchManager, context.getFactSearchManager());
+      assertSame(validatorFactory, context.getValidatorFactory());
+    }
   }
 
 }

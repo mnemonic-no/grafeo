@@ -20,6 +20,11 @@ public class TiRequestContextTest {
   }
 
   @Test(expected = RuntimeException.class)
+  public void testRetractionHandlerNotSetInContextThrowsException() {
+    TiRequestContext.builder().build().getRetractionHandler();
+  }
+
+  @Test(expected = RuntimeException.class)
   public void testValidatorFactoryNotSetInContextThrowsException() {
     TiRequestContext.builder().build().getValidatorFactory();
   }

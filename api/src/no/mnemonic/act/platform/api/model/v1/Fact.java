@@ -4,13 +4,21 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampSerializer;
+import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 
 @ApiModel(description = "Facts provide additional information about an Object. " +
         "One Fact can link one or two Objects together and thereby describes the relationship between those Objects."
 )
 public class Fact {
+
+  public enum Flag {
+    Retracted
+  }
 
   @ApiModelProperty(value = "Uniquely identifies the Fact", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
   private final UUID id;
@@ -38,11 +46,13 @@ public class Fact {
   private final Object.Info destinationObject;
   @ApiModelProperty(value = "True if the binding between source Object, Fact and destination Object is bidirectional", required = true)
   private final boolean bidirectionalBinding;
+  @ApiModelProperty(value = "Contains any flags set on the Fact")
+  private final Set<Flag> flags;
   // TODO: Add confidenceLevel once defined.
 
   private Fact(UUID id, FactType.Info type, String value, Info inReferenceTo, Organization.Info organization, Source.Info source,
                AccessMode accessMode, Long timestamp, Long lastSeenTimestamp, Object.Info sourceObject, Object.Info destinationObject,
-               boolean bidirectionalBinding) {
+               boolean bidirectionalBinding, Set<Flag> flags) {
     this.id = id;
     this.type = type;
     this.value = value;
@@ -55,6 +65,7 @@ public class Fact {
     this.sourceObject = sourceObject;
     this.destinationObject = destinationObject;
     this.bidirectionalBinding = bidirectionalBinding;
+    this.flags = ObjectUtils.ifNotNull(flags, Collections::unmodifiableSet);
   }
 
   public UUID getId() {
@@ -105,6 +116,10 @@ public class Fact {
     return bidirectionalBinding;
   }
 
+  public Set<Flag> getFlags() {
+    return flags;
+  }
+
   public Info toInfo() {
     return new Info(id, type, value);
   }
@@ -126,13 +141,14 @@ public class Fact {
     private Object.Info sourceObject;
     private Object.Info destinationObject;
     private boolean bidirectionalBinding;
+    private Set<Flag> flags;
 
     private Builder() {
     }
 
     public Fact build() {
       return new Fact(id, type, value, inReferenceTo, organization, source, accessMode, timestamp, lastSeenTimestamp,
-              sourceObject, destinationObject, bidirectionalBinding);
+              sourceObject, destinationObject, bidirectionalBinding, flags);
     }
 
     public Builder setId(UUID id) {
@@ -192,6 +208,16 @@ public class Fact {
 
     public Builder setBidirectionalBinding(boolean bidirectionalBinding) {
       this.bidirectionalBinding = bidirectionalBinding;
+      return this;
+    }
+
+    public Builder setFlags(Set<Flag> flags) {
+      this.flags = ObjectUtils.ifNotNull(flags, SetUtils::set);
+      return this;
+    }
+
+    public Builder addFlag(Flag flag) {
+      this.flags = SetUtils.addToSet(this.flags, flag);
       return this;
     }
   }

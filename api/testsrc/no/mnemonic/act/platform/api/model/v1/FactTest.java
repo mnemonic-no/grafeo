@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -29,6 +30,7 @@ public class FactTest {
     assertTrue(root.get("sourceObject").isObject());
     assertTrue(root.get("destinationObject").isObject());
     assertTrue(root.get("bidirectionalBinding").booleanValue());
+    assertEquals(set(fact.getFlags(), Enum::name), set(root.get("flags").iterator(), JsonNode::textValue));
   }
 
   @Test
@@ -54,6 +56,7 @@ public class FactTest {
             .setSourceObject(createObjectInfo())
             .setDestinationObject(createObjectInfo())
             .setBidirectionalBinding(true)
+            .addFlag(Fact.Flag.Retracted)
             .build();
   }
 
