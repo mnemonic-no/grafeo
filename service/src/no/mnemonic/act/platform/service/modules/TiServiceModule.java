@@ -5,10 +5,7 @@ import com.google.inject.Scopes;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.auth.properties.module.PropertiesBasedAccessControllerModule;
 import no.mnemonic.act.platform.dao.DaoModule;
-import no.mnemonic.act.platform.service.aspects.AuthenticationAspect;
-import no.mnemonic.act.platform.service.aspects.RequestContextAspect;
-import no.mnemonic.act.platform.service.aspects.TriggerContextAspect;
-import no.mnemonic.act.platform.service.aspects.ValidationAspect;
+import no.mnemonic.act.platform.service.aspects.*;
 import no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl;
 import no.mnemonic.act.platform.service.validators.DefaultValidatorFactory;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -31,6 +28,7 @@ public class TiServiceModule extends AbstractModule {
     install(new RequestContextAspect());
     install(new ValidationAspect());
     install(new TriggerContextAspect());
+    install(new ServiceRequestScopeAspect());
 
     // Configure the ActionTriggers' pipeline worker and administration service.
     bind(TriggerEventConsumer.class).to(InMemoryQueueWorker.class).in(Scopes.SINGLETON);
