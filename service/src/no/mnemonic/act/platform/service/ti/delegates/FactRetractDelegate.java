@@ -7,28 +7,44 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.MetaFactBindingEntity;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
-public class FactRetractDelegate extends AbstractDelegate {
+public class FactRetractDelegate extends AbstractDelegate implements Delegate {
 
+  private final TiSecurityContext securityContext;
+  private final TriggerContext triggerContext;
+  private final FactManager factManager;
   private final FactTypeResolver factTypeResolver;
   private final FactStorageHelper factStorageHelper;
+  private final Function<FactEntity, Fact> factConverter;
 
-  private FactRetractDelegate(FactTypeResolver factTypeResolver, FactStorageHelper factStorageHelper) {
+  @Inject
+  public FactRetractDelegate(TiSecurityContext securityContext,
+                             TriggerContext triggerContext,
+                             FactManager factManager,
+                             FactTypeResolver factTypeResolver,
+                             FactStorageHelper factStorageHelper,
+                             Function<FactEntity, Fact> factConverter) {
+    this.securityContext = securityContext;
+    this.triggerContext = triggerContext;
+    this.factManager = factManager;
     this.factTypeResolver = factTypeResolver;
     this.factStorageHelper = factStorageHelper;
+    this.factConverter = factConverter;
   }
 
   public Fact handle(RetractFactRequest request)
@@ -36,9 +52,9 @@ public class FactRetractDelegate extends AbstractDelegate {
     // Fetch Fact to retract and verify that it exists.
     FactEntity factToRetract = fetchExistingFact(request.getFact());
     // Verify that user is allowed to access the Fact to retract.
-    TiSecurityContext.get().checkReadPermission(factToRetract);
+    securityContext.checkReadPermission(factToRetract);
     // Verify that user is allowed to add Facts for the requested organization.
-    TiSecurityContext.get().checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
+    securityContext.checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
     // Save everything in database.
     FactEntity retractionFact = saveRetractionFact(request, factToRetract);
     List<UUID> subjectsAddedToAcl = factStorageHelper.saveInitialAclForNewFact(retractionFact, request.getAcl());
@@ -48,39 +64,11 @@ public class FactRetractDelegate extends AbstractDelegate {
     reindexExistingFact(factToRetract.getId(), d -> d.setRetracted(true));
 
     // Register TriggerEvent before returning Retraction Fact.
-    Fact retractionFactParameter = TiRequestContext.get().getFactConverter().apply(retractionFact);
-    Fact retractedFactParameter = TiRequestContext.get().getFactConverter().apply(factToRetract);
+    Fact retractionFactParameter = factConverter.apply(retractionFact);
+    Fact retractedFactParameter = factConverter.apply(factToRetract);
     registerTriggerEvent(retractionFactParameter, retractedFactParameter);
 
     return retractionFactParameter;
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactTypeResolver factTypeResolver;
-    private FactStorageHelper factStorageHelper;
-
-    private Builder() {
-    }
-
-    public FactRetractDelegate build() {
-      ObjectUtils.notNull(factTypeResolver, "Cannot instantiate FactRetractDelegate without 'factTypeResolver'.");
-      ObjectUtils.notNull(factStorageHelper, "Cannot instantiate FactRetractDelegate without 'factStorageHelper'.");
-      return new FactRetractDelegate(factTypeResolver, factStorageHelper);
-    }
-
-    public Builder setFactTypeResolver(FactTypeResolver factTypeResolver) {
-      this.factTypeResolver = factTypeResolver;
-      return this;
-    }
-
-    public Builder setFactStorageHelper(FactStorageHelper factStorageHelper) {
-      this.factStorageHelper = factStorageHelper;
-      return this;
-    }
   }
 
   private FactEntity saveRetractionFact(RetractFactRequest request, FactEntity factToRetract) throws InvalidArgumentException {
@@ -93,10 +81,10 @@ public class FactRetractDelegate extends AbstractDelegate {
             .setAccessMode(resolveAccessMode(factToRetract, request.getAccessMode()))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
-    retractionFact = TiRequestContext.get().getFactManager().saveFact(retractionFact);
+    retractionFact = factManager.saveFact(retractionFact);
 
     // Save retraction Fact as a meta Fact of the retracted Fact.
-    TiRequestContext.get().getFactManager().saveMetaFactBinding(new MetaFactBindingEntity()
+    factManager.saveMetaFactBinding(new MetaFactBindingEntity()
             .setFactID(factToRetract.getId())
             .setMetaFactID(retractionFact.getId())
     );
@@ -114,7 +102,6 @@ public class FactRetractDelegate extends AbstractDelegate {
             .addContextParameter(TiServiceEvent.ContextParameter.RetractionFact.name(), retractionFact)
             .addContextParameter(TiServiceEvent.ContextParameter.RetractedFact.name(), retractedFact)
             .build();
-    TriggerContext.get().registerTriggerEvent(event);
+    triggerContext.registerTriggerEvent(event);
   }
-
 }

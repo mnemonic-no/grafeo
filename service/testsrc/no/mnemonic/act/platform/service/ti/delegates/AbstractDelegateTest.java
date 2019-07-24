@@ -56,12 +56,6 @@ abstract class AbstractDelegateTest {
             .setFactManager(factManager)
             .setFactSearchManager(factSearchManager)
             .setValidatorFactory(validatorFactory)
-            .setObjectTypeConverter(objectTypeConverter)
-            .setObjectConverter(objectConverter)
-            .setFactTypeConverter(factTypeConverter)
-            .setFactConverter(factConverter)
-            .setAclEntryConverter(aclEntryConverter)
-            .setFactCommentConverter(factCommentConverter)
             .build();
 
     SecurityContext.set(securityContext);

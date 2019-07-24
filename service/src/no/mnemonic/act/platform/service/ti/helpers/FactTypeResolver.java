@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 
+import javax.inject.Inject;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
@@ -15,6 +16,7 @@ public class FactTypeResolver {
 
   private final FactManager factManager;
 
+  @Inject
   public FactTypeResolver(FactManager factManager) {
     this.factManager = factManager;
   }

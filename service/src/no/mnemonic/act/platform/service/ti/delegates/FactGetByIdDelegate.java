@@ -8,21 +8,27 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 
-public class FactGetByIdDelegate extends AbstractDelegate {
+import javax.inject.Inject;
+import java.util.function.Function;
 
-  public static FactGetByIdDelegate create() {
-    return new FactGetByIdDelegate();
+public class FactGetByIdDelegate extends AbstractDelegate implements Delegate {
+
+  private final TiSecurityContext securityContext;
+  private final Function<FactEntity, Fact> factConverter;
+
+  @Inject
+  public FactGetByIdDelegate(TiSecurityContext securityContext, Function<FactEntity, Fact> factConverter) {
+    this.securityContext = securityContext;
+    this.factConverter = factConverter;
   }
 
   public Fact handle(GetFactByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
     FactEntity entity = fetchExistingFact(request.getId());
-    TiSecurityContext.get().checkReadPermission(entity);
-    return TiRequestContext.get().getFactConverter().apply(entity);
+    securityContext.checkReadPermission(entity);
+    return factConverter.apply(entity);
   }
-
 }

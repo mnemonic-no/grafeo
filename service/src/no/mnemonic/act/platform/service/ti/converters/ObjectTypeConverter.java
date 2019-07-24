@@ -3,8 +3,8 @@ package no.mnemonic.act.platform.service.ti.converters;
 import no.mnemonic.act.platform.api.model.v1.Namespace;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
-import no.mnemonic.commons.utilities.ObjectUtils;
 
+import javax.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -12,7 +12,8 @@ public class ObjectTypeConverter implements Converter<ObjectTypeEntity, ObjectTy
 
   private final Function<UUID, Namespace> namespaceConverter;
 
-  private ObjectTypeConverter(Function<UUID, Namespace> namespaceConverter) {
+  @Inject
+  public ObjectTypeConverter(Function<UUID, Namespace> namespaceConverter) {
     this.namespaceConverter = namespaceConverter;
   }
 
@@ -37,26 +38,4 @@ public class ObjectTypeConverter implements Converter<ObjectTypeEntity, ObjectTy
             .setValidatorParameter(entity.getValidatorParameter())
             .build();
   }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private Function<UUID, Namespace> namespaceConverter;
-
-    private Builder() {
-    }
-
-    public ObjectTypeConverter build() {
-      ObjectUtils.notNull(namespaceConverter, "Cannot instantiate ObjectTypeConverter without 'namespaceConverter'.");
-      return new ObjectTypeConverter(namespaceConverter);
-    }
-
-    public Builder setNamespaceConverter(Function<UUID, Namespace> namespaceConverter) {
-      this.namespaceConverter = namespaceConverter;
-      return this;
-    }
-  }
-
 }

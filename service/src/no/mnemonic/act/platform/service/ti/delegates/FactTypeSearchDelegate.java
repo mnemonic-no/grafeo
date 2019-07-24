@@ -6,29 +6,41 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
-import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.services.common.api.ResultSet;
 
+import javax.inject.Inject;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class FactTypeSearchDelegate {
+public class FactTypeSearchDelegate implements Delegate {
 
-  public static FactTypeSearchDelegate create() {
-    return new FactTypeSearchDelegate();
+  private final TiSecurityContext securityContext;
+  private final FactManager factManager;
+  private final Function<FactTypeEntity, FactType> factTypeConverter;
+
+  @Inject
+  public FactTypeSearchDelegate(TiSecurityContext securityContext,
+                                FactManager factManager,
+                                Function<FactTypeEntity, FactType> factTypeConverter) {
+    this.securityContext = securityContext;
+    this.factManager = factManager;
+    this.factTypeConverter = factTypeConverter;
   }
 
   public ResultSet<FactType> handle(SearchFactTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    SecurityContext.get().checkPermission(TiFunctionConstants.viewTypes);
+    securityContext.checkPermission(TiFunctionConstants.viewTypes);
 
     // No filtering is defined in SearchFactTypeRequest yet, just fetch all FactTypes.
-    List<FactType> types = TiRequestContext.get().getFactManager()
+    List<FactType> types = factManager
             .fetchFactTypes()
             .stream()
-            .map(TiRequestContext.get().getFactTypeConverter())
+            .map(factTypeConverter)
             .collect(Collectors.toList());
 
     return StreamingResultSet.<FactType>builder()
@@ -37,5 +49,4 @@ public class FactTypeSearchDelegate {
             .setValues(types)
             .build();
   }
-
 }

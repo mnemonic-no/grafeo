@@ -40,35 +40,7 @@ public class FactRetractionHandlerTest {
     when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
 
-    handler = FactRetractionHandler.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .setFactSearchManager(factSearchManager)
-            .setSecurityContext(securityContext)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutFactTypeResolver() {
-    FactRetractionHandler.builder()
-            .setFactSearchManager(factSearchManager)
-            .setSecurityContext(securityContext)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutFactSearchManager() {
-    FactRetractionHandler.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .setSecurityContext(securityContext)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutSecurityContext() {
-    FactRetractionHandler.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .setFactSearchManager(factSearchManager)
-            .build();
+    handler = new FactRetractionHandler(factTypeResolver, factSearchManager, securityContext);
   }
 
   @Test

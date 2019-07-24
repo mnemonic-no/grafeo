@@ -3,12 +3,15 @@ package no.mnemonic.act.platform.service.ti.converters;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.service.bindings.AccessChecker;
+import no.mnemonic.act.platform.service.bindings.RetractionChecker;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import javax.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -28,13 +31,14 @@ public class FactConverter implements Converter<FactEntity, Fact> {
   private final Predicate<FactEntity> accessChecker;
   private final Predicate<FactEntity> retractionChecker;
 
-  private FactConverter(Function<UUID, FactType> factTypeConverter,
-                        Function<UUID, Organization> organizationConverter,
-                        Function<UUID, Source> sourceConverter,
-                        Function<UUID, Object> objectConverter,
-                        Function<UUID, FactEntity> factEntityResolver,
-                        Predicate<FactEntity> accessChecker,
-                        Predicate<FactEntity> retractionChecker) {
+  @Inject
+  public FactConverter(Function<UUID, FactType> factTypeConverter,
+                       Function<UUID, Organization> organizationConverter,
+                       Function<UUID, Source> sourceConverter,
+                       Function<UUID, Object> objectConverter,
+                       Function<UUID, FactEntity> factEntityResolver,
+                       @AccessChecker Predicate<FactEntity> accessChecker,
+                       @RetractionChecker Predicate<FactEntity> retractionChecker) {
     this.factTypeConverter = factTypeConverter;
     this.organizationConverter = organizationConverter;
     this.sourceConverter = sourceConverter;
@@ -139,70 +143,6 @@ public class FactConverter implements Converter<FactEntity, Fact> {
     return apply(inReferenceTo.clone().setInReferenceToID(null));
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private Function<UUID, FactType> factTypeConverter;
-    private Function<UUID, Organization> organizationConverter;
-    private Function<UUID, Source> sourceConverter;
-    private Function<UUID, Object> objectConverter;
-    private Function<UUID, FactEntity> factEntityResolver;
-    private Predicate<FactEntity> accessChecker;
-    private Predicate<FactEntity> retractionChecker;
-
-    private Builder() {
-    }
-
-    public FactConverter build() {
-      ObjectUtils.notNull(factTypeConverter, "Cannot instantiate FactConverter without 'factTypeConverter'.");
-      ObjectUtils.notNull(organizationConverter, "Cannot instantiate FactConverter without 'organizationConverter'.");
-      ObjectUtils.notNull(sourceConverter, "Cannot instantiate FactConverter without 'sourceConverter'.");
-      ObjectUtils.notNull(objectConverter, "Cannot instantiate FactConverter without 'objectConverter'.");
-      ObjectUtils.notNull(factEntityResolver, "Cannot instantiate FactConverter without 'factEntityResolver'.");
-      ObjectUtils.notNull(accessChecker, "Cannot instantiate FactConverter without 'accessChecker'.");
-      ObjectUtils.notNull(retractionChecker, "Cannot instantiate FactConverter without 'retractionChecker'.");
-      return new FactConverter(factTypeConverter, organizationConverter, sourceConverter, objectConverter, factEntityResolver,
-              accessChecker, retractionChecker);
-    }
-
-    public Builder setFactTypeConverter(Function<UUID, FactType> factTypeConverter) {
-      this.factTypeConverter = factTypeConverter;
-      return this;
-    }
-
-    public Builder setOrganizationConverter(Function<UUID, Organization> organizationConverter) {
-      this.organizationConverter = organizationConverter;
-      return this;
-    }
-
-    public Builder setSourceConverter(Function<UUID, Source> sourceConverter) {
-      this.sourceConverter = sourceConverter;
-      return this;
-    }
-
-    public Builder setObjectConverter(Function<UUID, Object> objectConverter) {
-      this.objectConverter = objectConverter;
-      return this;
-    }
-
-    public Builder setFactEntityResolver(Function<UUID, FactEntity> factEntityResolver) {
-      this.factEntityResolver = factEntityResolver;
-      return this;
-    }
-
-    public Builder setAccessChecker(Predicate<FactEntity> accessChecker) {
-      this.accessChecker = accessChecker;
-      return this;
-    }
-
-    public Builder setRetractionChecker(Predicate<FactEntity> retractionChecker) {
-      this.retractionChecker = retractionChecker;
-      return this;
-    }
-  }
-
   private class ConvertedObjects {
     private final Function<UUID, Object> objectConverter;
     private final UUID sourceObjectID;
@@ -230,5 +170,4 @@ public class FactConverter implements Converter<FactEntity, Fact> {
       return bidirectionalBinding;
     }
   }
-
 }

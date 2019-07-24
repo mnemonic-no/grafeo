@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -21,6 +22,7 @@ public class FactTypeHelper {
   private final FactManager factManager;
   private final ObjectManager objectManager;
 
+  @Inject
   public FactTypeHelper(FactManager factManager, ObjectManager objectManager) {
     this.factManager = factManager;
     this.objectManager = objectManager;

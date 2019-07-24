@@ -9,14 +9,15 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.CreateMetaFactRequest;
 import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.MetaFactBindingEntity;
+import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
@@ -25,19 +26,38 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class FactCreateMetaDelegate extends AbstractDelegate {
+public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate {
 
+  private final TiSecurityContext securityContext;
+  private final TriggerContext triggerContext;
+  private final FactManager factManager;
+  private final FactSearchManager factSearchManager;
   private final FactTypeResolver factTypeResolver;
   private final FactStorageHelper factStorageHelper;
+  private final Function<FactEntity, Fact> factConverter;
 
-  private FactCreateMetaDelegate(FactTypeResolver factTypeResolver, FactStorageHelper factStorageHelper) {
+  @Inject
+  public FactCreateMetaDelegate(TiSecurityContext securityContext,
+                                TriggerContext triggerContext,
+                                FactManager factManager,
+                                FactSearchManager factSearchManager,
+                                FactTypeResolver factTypeResolver,
+                                FactStorageHelper factStorageHelper,
+                                Function<FactEntity, Fact> factConverter) {
+    this.securityContext = securityContext;
+    this.triggerContext = triggerContext;
+    this.factManager = factManager;
+    this.factSearchManager = factSearchManager;
     this.factTypeResolver = factTypeResolver;
     this.factStorageHelper = factStorageHelper;
+    this.factConverter = factConverter;
   }
 
   public Fact handle(CreateMetaFactRequest request)
@@ -45,9 +65,9 @@ public class FactCreateMetaDelegate extends AbstractDelegate {
     // Fetch referenced Fact and verify that it exists.
     FactEntity referencedFact = fetchExistingFact(request.getFact());
     // Verify that user is allowed to access the referenced Fact.
-    TiSecurityContext.get().checkReadPermission(referencedFact);
+    securityContext.checkReadPermission(referencedFact);
     // Verify that user is allowed to add Facts for the requested organization.
-    TiSecurityContext.get().checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
+    securityContext.checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
 
     FactTypeEntity type = factTypeResolver.resolveFactType(request.getType());
     if (Objects.equals(type.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
@@ -61,7 +81,7 @@ public class FactCreateMetaDelegate extends AbstractDelegate {
     FactEntity metaFact = resolveExistingFact(request, type, referencedFact);
     if (metaFact != null) {
       // Refresh an existing Fact.
-      metaFact = TiRequestContext.get().getFactManager().refreshFact(metaFact.getId());
+      metaFact = factManager.refreshFact(metaFact.getId());
       List<UUID> subjectsAddedToAcl = factStorageHelper.saveAdditionalAclForFact(metaFact, request.getAcl());
       // Reindex existing Fact in ElasticSearch.
       reindexExistingFact(metaFact, subjectsAddedToAcl);
@@ -77,38 +97,10 @@ public class FactCreateMetaDelegate extends AbstractDelegate {
     factStorageHelper.saveCommentForFact(metaFact, request.getComment());
 
     // Register TriggerEvent before returning added Fact.
-    Fact addedFact = TiRequestContext.get().getFactConverter().apply(metaFact);
+    Fact addedFact = factConverter.apply(metaFact);
     registerTriggerEvent(addedFact);
 
     return addedFact;
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactTypeResolver factTypeResolver;
-    private FactStorageHelper factStorageHelper;
-
-    private Builder() {
-    }
-
-    public FactCreateMetaDelegate build() {
-      ObjectUtils.notNull(factTypeResolver, "Cannot instantiate FactCreateMetaDelegate without 'factTypeResolver'.");
-      ObjectUtils.notNull(factStorageHelper, "Cannot instantiate FactCreateMetaDelegate without 'factStorageHelper'.");
-      return new FactCreateMetaDelegate(factTypeResolver, factStorageHelper);
-    }
-
-    public Builder setFactTypeResolver(FactTypeResolver factTypeResolver) {
-      this.factTypeResolver = factTypeResolver;
-      return this;
-    }
-
-    public Builder setFactStorageHelper(FactStorageHelper factStorageHelper) {
-      this.factStorageHelper = factStorageHelper;
-      return this;
-    }
   }
 
   private void assertValidFactBinding(CreateMetaFactRequest request, FactTypeEntity type, FactEntity referencedFact) throws InvalidArgumentException {
@@ -135,15 +127,15 @@ public class FactCreateMetaDelegate extends AbstractDelegate {
             .build();
 
     // Try to fetch any existing Facts from ElasticSearch.
-    SearchResult<FactDocument> result = TiRequestContext.get().getFactSearchManager().retrieveExistingFacts(criteria);
+    SearchResult<FactDocument> result = factSearchManager.retrieveExistingFacts(criteria);
     if (result.getCount() <= 0) {
       return null; // No results, need to create new Fact.
     }
 
     // Fetch the authorative data from Cassandra, apply permission check and return existing Fact if accessible.
     List<UUID> factID = result.getValues().stream().map(FactDocument::getId).collect(Collectors.toList());
-    return Streams.stream(TiRequestContext.get().getFactManager().getFacts(factID))
-            .filter(fact -> TiSecurityContext.get().hasReadPermission(fact))
+    return Streams.stream(factManager.getFacts(factID))
+            .filter(securityContext::hasReadPermission)
             .findFirst()
             .orElse(null);
   }
@@ -160,9 +152,9 @@ public class FactCreateMetaDelegate extends AbstractDelegate {
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
 
-    metaFact = TiRequestContext.get().getFactManager().saveFact(metaFact);
+    metaFact = factManager.saveFact(metaFact);
     // Also save binding between referenced Fact and new meta Fact.
-    TiRequestContext.get().getFactManager().saveMetaFactBinding(new MetaFactBindingEntity()
+    factManager.saveMetaFactBinding(new MetaFactBindingEntity()
             .setFactID(referencedFact.getId())
             .setMetaFactID(metaFact.getId())
     );
@@ -185,7 +177,6 @@ public class FactCreateMetaDelegate extends AbstractDelegate {
             .setAccessMode(addedFact.getAccessMode())
             .addContextParameter(TiServiceEvent.ContextParameter.AddedFact.name(), addedFact)
             .build();
-    TriggerContext.get().registerTriggerEvent(event);
+    triggerContext.registerTriggerEvent(event);
   }
-
 }

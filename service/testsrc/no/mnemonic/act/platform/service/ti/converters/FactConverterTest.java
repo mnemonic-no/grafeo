@@ -24,10 +24,12 @@ public class FactConverterTest {
   private final Function<UUID, FactEntity> factEntityResolver = id -> createEntity().setId(id);
   private final Predicate<FactEntity> accessChecker = fact -> true;
   private final Predicate<FactEntity> retractionChecker = fact -> false;
+  private final FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, sourceConverter,
+          objectConverter, factEntityResolver, accessChecker, retractionChecker);
 
   @Test
   public void testConvertNullReturnsNull() {
-    assertNull(createFactConverter().apply(null));
+    assertNull(converter.apply(null));
   }
 
   @Test
@@ -40,7 +42,7 @@ public class FactConverterTest {
             .setDirection(Direction.FactIsSource);
     FactEntity entity = createEntity().setBindings(ListUtils.list(source, destination));
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertFalse(model.isBidirectionalBinding());
@@ -60,7 +62,7 @@ public class FactConverterTest {
             .setDirection(Direction.BiDirectional);
     FactEntity entity = createEntity().setBindings(ListUtils.list(source, destination));
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertTrue(model.isBidirectionalBinding());
@@ -77,7 +79,7 @@ public class FactConverterTest {
             .setDirection(Direction.FactIsSource);
     FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertFalse(model.isBidirectionalBinding());
@@ -93,7 +95,7 @@ public class FactConverterTest {
             .setDirection(Direction.FactIsDestination);
     FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertFalse(model.isBidirectionalBinding());
@@ -109,7 +111,7 @@ public class FactConverterTest {
             .setDirection(Direction.BiDirectional);
     FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertTrue(model.isBidirectionalBinding());
@@ -123,7 +125,7 @@ public class FactConverterTest {
   public void testConvertFactWithoutBinding() {
     FactEntity entity = createEntity();
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertNull(model.getSourceObject());
@@ -137,7 +139,7 @@ public class FactConverterTest {
             .setDirection(Direction.FactIsDestination);
     FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding));
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertNull(model.getSourceObject());
@@ -151,7 +153,7 @@ public class FactConverterTest {
             .setDirection(Direction.FactIsSource);
     FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding));
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertNull(model.getSourceObject());
@@ -165,7 +167,7 @@ public class FactConverterTest {
             .setDirection(Direction.BiDirectional);
     FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding, binding));
 
-    Fact model = createFactConverter().apply(entity);
+    Fact model = converter.apply(entity);
 
     assertModelCommon(entity, model);
     assertNull(model.getSourceObject());
@@ -174,140 +176,23 @@ public class FactConverterTest {
 
   @Test
   public void testConvertFactCannotResolveInReferenceToFact() {
-    FactConverter converter = FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(id -> null)
-            .setAccessChecker(accessChecker)
-            .setRetractionChecker(retractionChecker)
-            .build();
+    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, sourceConverter,
+            objectConverter, id -> null, accessChecker, retractionChecker);
     assertNull(converter.apply(createEntity()).getInReferenceTo());
   }
 
   @Test
   public void testConvertFactNoAccessToInReferenceToFact() {
-    FactConverter converter = FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setAccessChecker(fact -> false)
-            .setRetractionChecker(retractionChecker)
-            .build();
+    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, sourceConverter,
+            objectConverter, factEntityResolver, fact -> false, retractionChecker);
     assertNull(converter.apply(createEntity()).getInReferenceTo());
   }
 
   @Test
   public void testConvertRetractedFact() {
-    FactConverter converter = FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setAccessChecker(accessChecker)
-            .setRetractionChecker(fact -> true)
-            .build();
+    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, sourceConverter,
+            objectConverter, factEntityResolver, accessChecker, fact -> true);
     assertEquals(set(Fact.Flag.Retracted), converter.apply(createEntity()).getFlags());
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutFactTypeConverterThrowsException() {
-    FactConverter.builder()
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setAccessChecker(accessChecker)
-            .setRetractionChecker(retractionChecker)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutOrganizationConverterThrowsException() {
-    FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setAccessChecker(accessChecker)
-            .setRetractionChecker(retractionChecker)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutSourceConverterThrowsException() {
-    FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setAccessChecker(accessChecker)
-            .setRetractionChecker(retractionChecker)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutObjectConverterThrowsException() {
-    FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setAccessChecker(accessChecker)
-            .setRetractionChecker(retractionChecker)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutFactEntityResolverThrowsException() {
-    FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setAccessChecker(accessChecker)
-            .setRetractionChecker(retractionChecker)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutAccessCheckerThrowsException() {
-    FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setRetractionChecker(retractionChecker)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutRetractionCheckerThrowsException() {
-    FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setAccessChecker(accessChecker)
-            .build();
-  }
-
-  private FactConverter createFactConverter() {
-    return FactConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setOrganizationConverter(organizationConverter)
-            .setSourceConverter(sourceConverter)
-            .setObjectConverter(objectConverter)
-            .setFactEntityResolver(factEntityResolver)
-            .setAccessChecker(accessChecker)
-            .setRetractionChecker(retractionChecker)
-            .build();
   }
 
   private FactEntity createEntity() {
@@ -335,5 +220,4 @@ public class FactConverterTest {
     assertEquals(entity.getLastSeenTimestamp(), (long) model.getLastSeenTimestamp());
     assertEquals(set(), model.getFlags());
   }
-
 }

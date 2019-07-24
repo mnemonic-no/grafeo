@@ -5,23 +5,25 @@ import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class FactStorageHelper {
 
   private final FactManager factManager;
-  private final Supplier<UUID> currentUserResolver;
+  private final SecurityContext securityContext;
 
-  public FactStorageHelper(FactManager factManager, Supplier<UUID> currentUserResolver) {
+  @Inject
+  public FactStorageHelper(FactManager factManager, SecurityContext securityContext) {
     this.factManager = factManager;
-    this.currentUserResolver = currentUserResolver;
+    this.securityContext = securityContext;
   }
 
   /**
@@ -41,7 +43,7 @@ public class FactStorageHelper {
     }
 
     List<UUID> copiedAcl = ListUtils.list(acl); // Don't change provided ACL.
-    UUID currentUser = currentUserResolver.get();
+    UUID currentUser = securityContext.getCurrentUserID();
     if (fact.getAccessMode() == AccessMode.Explicit && !copiedAcl.contains(currentUser)) {
       // Make sure that current user is in the ACL with 'Explicit' AccessMode.
       // With 'RoleBased' AccessMode current user has access to Fact via the Organization.

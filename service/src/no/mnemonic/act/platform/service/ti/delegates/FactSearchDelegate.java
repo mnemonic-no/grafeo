@@ -8,51 +8,30 @@ import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.SearchFactRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
-public class FactSearchDelegate extends AbstractDelegate {
+import javax.inject.Inject;
+import java.util.function.Function;
 
+public class FactSearchDelegate extends AbstractDelegate implements Delegate {
+
+  private final TiSecurityContext securityContext;
+  private final Function<SearchFactRequest, FactSearchCriteria> requestConverter;
   private final FactSearchHandler factSearchHandler;
 
-  private FactSearchDelegate(FactSearchHandler factSearchHandler) {
+  @Inject
+  public FactSearchDelegate(TiSecurityContext securityContext,
+                            Function<SearchFactRequest, FactSearchCriteria> requestConverter,
+                            FactSearchHandler factSearchHandler) {
+    this.securityContext = securityContext;
+    this.requestConverter = requestConverter;
     this.factSearchHandler = factSearchHandler;
   }
 
   public ResultSet<Fact> handle(SearchFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactObjects);
-    return factSearchHandler.search(toCriteria(request), request.getIncludeRetracted());
-  }
-
-  private FactSearchCriteria toCriteria(SearchFactRequest request) {
-    return SearchFactRequestConverter.builder()
-            .setCurrentUserIdSupplier(() -> TiSecurityContext.get().getCurrentUserID())
-            .setAvailableOrganizationIdSupplier(() -> TiSecurityContext.get().getAvailableOrganizationID())
-            .build()
-            .apply(request);
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactSearchHandler factSearchHandler;
-
-    private Builder() {
-    }
-
-    public FactSearchDelegate build() {
-      ObjectUtils.notNull(factSearchHandler, "Cannot instantiate FactSearchDelegate without 'factSearchHandler'.");
-      return new FactSearchDelegate(factSearchHandler);
-    }
-
-    public Builder setFactSearchHandler(FactSearchHandler factSearchHandler) {
-      this.factSearchHandler = factSearchHandler;
-      return this;
-    }
+    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
+    return factSearchHandler.search(requestConverter.apply(request), request.getIncludeRetracted());
   }
 }

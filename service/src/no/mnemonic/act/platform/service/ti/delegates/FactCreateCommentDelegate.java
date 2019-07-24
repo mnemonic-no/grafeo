@@ -6,19 +6,30 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.FactComment;
 import no.mnemonic.act.platform.api.request.v1.CreateFactCommentRequest;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 
+import javax.inject.Inject;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 
-public class FactCreateCommentDelegate extends AbstractDelegate {
+public class FactCreateCommentDelegate extends AbstractDelegate implements Delegate {
 
-  public static FactCreateCommentDelegate create() {
-    return new FactCreateCommentDelegate();
+  private final TiSecurityContext securityContext;
+  private final FactManager factManager;
+  private final Function<FactCommentEntity, FactComment> factCommentConverter;
+
+  @Inject
+  public FactCreateCommentDelegate(TiSecurityContext securityContext,
+                                   FactManager factManager,
+                                   Function<FactCommentEntity, FactComment> factCommentConverter) {
+    this.securityContext = securityContext;
+    this.factManager = factManager;
+    this.factCommentConverter = factCommentConverter;
   }
 
   public FactComment handle(CreateFactCommentRequest request)
@@ -26,19 +37,19 @@ public class FactCreateCommentDelegate extends AbstractDelegate {
     // Fetch Fact and verify that it exists.
     FactEntity fact = fetchExistingFact(request.getFact());
     // Verify that user is allowed to access the Fact.
-    TiSecurityContext.get().checkReadPermission(fact);
+    securityContext.checkReadPermission(fact);
     // Verify that user is allowed to comment on the Fact.
-    TiSecurityContext.get().checkPermission(TiFunctionConstants.addFactComments, fact.getOrganizationID());
+    securityContext.checkPermission(TiFunctionConstants.addFactComments, fact.getOrganizationID());
     // Verify that the 'replyTo' comment exists.
     verifyReplyToCommentExists(fact, request);
     // Save comment and return it to the user.
-    return TiRequestContext.get().getFactCommentConverter().apply(saveComment(fact, request));
+    return factCommentConverter.apply(saveComment(fact, request));
   }
 
   private void verifyReplyToCommentExists(FactEntity fact, CreateFactCommentRequest request) throws InvalidArgumentException {
     if (request.getReplyTo() == null) return;
 
-    boolean exists = TiRequestContext.get().getFactManager()
+    boolean exists = factManager
             .fetchFactComments(fact.getId())
             .stream()
             .anyMatch(comment -> Objects.equals(comment.getId(), request.getReplyTo()));
@@ -54,11 +65,10 @@ public class FactCreateCommentDelegate extends AbstractDelegate {
             .setId(UUID.randomUUID()) // Need to provide client-generated ID.
             .setFactID(fact.getId())
             .setReplyToID(request.getReplyTo())
-            .setSourceID(TiSecurityContext.get().getCurrentUserID())
+            .setSourceID(securityContext.getCurrentUserID())
             .setComment(request.getComment())
             .setTimestamp(System.currentTimeMillis());
 
-    return TiRequestContext.get().getFactManager().saveFactComment(comment);
+    return factManager.saveFactComment(comment);
   }
-
 }

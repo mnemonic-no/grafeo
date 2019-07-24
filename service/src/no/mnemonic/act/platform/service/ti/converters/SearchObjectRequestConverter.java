@@ -2,22 +2,20 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Supplier;
+import javax.inject.Inject;
 
 public class SearchObjectRequestConverter implements Converter<SearchObjectRequest, FactSearchCriteria> {
 
   private static final int DEFAULT_LIMIT = 25;
 
-  private final Supplier<UUID> currentUserIdSupplier;
-  private final Supplier<Set<UUID>> availableOrganizationIdSupplier;
+  private final SecurityContext securityContext;
 
-  private SearchObjectRequestConverter(Supplier<UUID> currentUserIdSupplier, Supplier<Set<UUID>> availableOrganizationIdSupplier) {
-    this.currentUserIdSupplier = currentUserIdSupplier;
-    this.availableOrganizationIdSupplier = availableOrganizationIdSupplier;
+  @Inject
+  public SearchObjectRequestConverter(SecurityContext securityContext) {
+    this.securityContext = securityContext;
   }
 
   @Override
@@ -51,37 +49,8 @@ public class SearchObjectRequestConverter implements Converter<SearchObjectReque
             .setEndTimestamp(request.getBefore())
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.timestamp)
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
-            .setCurrentUserID(currentUserIdSupplier.get())
-            .setAvailableOrganizationID(availableOrganizationIdSupplier.get())
+            .setCurrentUserID(securityContext.getCurrentUserID())
+            .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
             .build();
   }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private Supplier<UUID> currentUserIdSupplier;
-    private Supplier<Set<UUID>> availableOrganizationIdSupplier;
-
-    private Builder() {
-    }
-
-    public SearchObjectRequestConverter build() {
-      ObjectUtils.notNull(currentUserIdSupplier, "Cannot instantiate SearchObjectRequestConverter without 'currentUserIdSupplier'.");
-      ObjectUtils.notNull(availableOrganizationIdSupplier, "Cannot instantiate SearchObjectRequestConverter without 'availableOrganizationIdSupplier'.");
-      return new SearchObjectRequestConverter(currentUserIdSupplier, availableOrganizationIdSupplier);
-    }
-
-    public Builder setCurrentUserIdSupplier(Supplier<UUID> currentUserIdSupplier) {
-      this.currentUserIdSupplier = currentUserIdSupplier;
-      return this;
-    }
-
-    public Builder setAvailableOrganizationIdSupplier(Supplier<Set<UUID>> availableOrganizationIdSupplier) {
-      this.availableOrganizationIdSupplier = availableOrganizationIdSupplier;
-      return this;
-    }
-  }
-
 }

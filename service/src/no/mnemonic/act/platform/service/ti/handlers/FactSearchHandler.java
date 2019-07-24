@@ -15,6 +15,7 @@ import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -37,11 +38,12 @@ public class FactSearchHandler {
   private final TiSecurityContext securityContext;
   private final Function<FactEntity, Fact> factConverter;
 
-  private FactSearchHandler(FactRetractionHandler retractionHandler,
-                            FactSearchManager factSearchManager,
-                            FactManager factManager,
-                            TiSecurityContext securityContext,
-                            Function<FactEntity, Fact> factConverter) {
+  @Inject
+  public FactSearchHandler(FactRetractionHandler retractionHandler,
+                           FactSearchManager factSearchManager,
+                           FactManager factManager,
+                           TiSecurityContext securityContext,
+                           Function<FactEntity, Fact> factConverter) {
     this.retractionHandler = retractionHandler;
     this.factSearchManager = factSearchManager;
     this.factManager = factManager;
@@ -86,55 +88,6 @@ public class FactSearchHandler {
             .setLimit(limit)
             .setValues(facts)
             .build();
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactRetractionHandler retractionHandler;
-    private FactSearchManager factSearchManager;
-    private FactManager factManager;
-    private TiSecurityContext securityContext;
-    private Function<FactEntity, Fact> factConverter;
-
-    private Builder() {
-    }
-
-    public FactSearchHandler build() {
-      ObjectUtils.notNull(retractionHandler, "Cannot instantiate FactSearchHandler without 'retractionHandler'.");
-      ObjectUtils.notNull(factSearchManager, "Cannot instantiate FactSearchHandler without 'factSearchManager'.");
-      ObjectUtils.notNull(factManager, "Cannot instantiate FactSearchHandler without 'factManager'.");
-      ObjectUtils.notNull(securityContext, "Cannot instantiate FactSearchHandler without 'securityContext'.");
-      ObjectUtils.notNull(factConverter, "Cannot instantiate FactSearchHandler without 'factConverter'.");
-      return new FactSearchHandler(retractionHandler, factSearchManager, factManager, securityContext, factConverter);
-    }
-
-    public Builder setRetractionHandler(FactRetractionHandler retractionHandler) {
-      this.retractionHandler = retractionHandler;
-      return this;
-    }
-
-    public Builder setFactSearchManager(FactSearchManager factSearchManager) {
-      this.factSearchManager = factSearchManager;
-      return this;
-    }
-
-    public Builder setFactManager(FactManager factManager) {
-      this.factManager = factManager;
-      return this;
-    }
-
-    public Builder setSecurityContext(TiSecurityContext securityContext) {
-      this.securityContext = securityContext;
-      return this;
-    }
-
-    public Builder setFactConverter(Function<FactEntity, Fact> factConverter) {
-      this.factConverter = factConverter;
-      return this;
-    }
   }
 
   private boolean includeRetracted(FactDocument fact, Boolean includeRetracted) {

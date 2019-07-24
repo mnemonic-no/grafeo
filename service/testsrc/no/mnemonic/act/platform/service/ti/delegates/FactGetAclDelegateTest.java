@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
@@ -20,9 +21,17 @@ import static org.mockito.Mockito.*;
 
 public class FactGetAclDelegateTest extends AbstractDelegateTest {
 
+  private FactGetAclDelegate delegate;
+
+  @Before
+  public void setup() {
+    // initMocks() will be called by base class.
+    delegate = new FactGetAclDelegate(getSecurityContext(), getFactManager(), getAclEntryConverter());
+  }
+
   @Test(expected = ObjectNotFoundException.class)
   public void testGetFactAclFactNotExists() throws Exception {
-    FactGetAclDelegate.create().handle(new GetFactAclRequest());
+    delegate.handle(new GetFactAclRequest());
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -31,7 +40,7 @@ public class FactGetAclDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
 
-    FactGetAclDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -40,7 +49,7 @@ public class FactGetAclDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.viewFactAccess), any());
 
-    FactGetAclDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test
@@ -50,12 +59,11 @@ public class FactGetAclDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity().setId(request.getFact()));
     when(getFactManager().fetchFactAcl(request.getFact())).thenReturn(entities);
 
-    ResultSet<AclEntry> result = FactGetAclDelegate.create().handle(request);
+    ResultSet<AclEntry> result = delegate.handle(request);
 
     assertEquals(entities.size(), result.getCount());
     assertEquals(0, result.getLimit());
     assertEquals(entities.size(), ListUtils.list(result.iterator()).size());
     verify(getAclEntryConverter(), times(entities.size())).apply(argThat(entities::contains));
   }
-
 }

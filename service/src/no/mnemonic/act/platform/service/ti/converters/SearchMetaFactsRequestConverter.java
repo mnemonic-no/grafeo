@@ -2,12 +2,11 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Supplier;
+import javax.inject.Inject;
 
 import static no.mnemonic.act.platform.dao.api.FactSearchCriteria.KeywordFieldStrategy.*;
 
@@ -15,12 +14,11 @@ public class SearchMetaFactsRequestConverter implements Converter<SearchMetaFact
 
   private static final int DEFAULT_LIMIT = 25;
 
-  private final Supplier<UUID> currentUserIdSupplier;
-  private final Supplier<Set<UUID>> availableOrganizationIdSupplier;
+  private final SecurityContext securityContext;
 
-  private SearchMetaFactsRequestConverter(Supplier<UUID> currentUserIdSupplier, Supplier<Set<UUID>> availableOrganizationIdSupplier) {
-    this.currentUserIdSupplier = currentUserIdSupplier;
-    this.availableOrganizationIdSupplier = availableOrganizationIdSupplier;
+  @Inject
+  public SearchMetaFactsRequestConverter(SecurityContext securityContext) {
+    this.securityContext = securityContext;
   }
 
   @Override
@@ -51,37 +49,8 @@ public class SearchMetaFactsRequestConverter implements Converter<SearchMetaFact
             .setEndTimestamp(request.getBefore())
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.timestamp)
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
-            .setCurrentUserID(currentUserIdSupplier.get())
-            .setAvailableOrganizationID(availableOrganizationIdSupplier.get())
+            .setCurrentUserID(securityContext.getCurrentUserID())
+            .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
             .build();
   }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private Supplier<UUID> currentUserIdSupplier;
-    private Supplier<Set<UUID>> availableOrganizationIdSupplier;
-
-    private Builder() {
-    }
-
-    public SearchMetaFactsRequestConverter build() {
-      ObjectUtils.notNull(currentUserIdSupplier, "Cannot instantiate SearchMetaFactsRequestConverter without 'currentUserIdSupplier'.");
-      ObjectUtils.notNull(availableOrganizationIdSupplier, "Cannot instantiate SearchMetaFactsRequestConverter without 'availableOrganizationIdSupplier'.");
-      return new SearchMetaFactsRequestConverter(currentUserIdSupplier, availableOrganizationIdSupplier);
-    }
-
-    public Builder setCurrentUserIdSupplier(Supplier<UUID> currentUserIdSupplier) {
-      this.currentUserIdSupplier = currentUserIdSupplier;
-      return this;
-    }
-
-    public Builder setAvailableOrganizationIdSupplier(Supplier<Set<UUID>> availableOrganizationIdSupplier) {
-      this.availableOrganizationIdSupplier = availableOrganizationIdSupplier;
-      return this;
-    }
-  }
-
 }

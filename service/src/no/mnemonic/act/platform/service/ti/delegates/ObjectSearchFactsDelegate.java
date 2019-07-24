@@ -6,32 +6,43 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
-public class ObjectSearchFactsDelegate extends AbstractDelegate {
+import javax.inject.Inject;
+import java.util.function.Function;
 
+public class ObjectSearchFactsDelegate extends AbstractDelegate implements Delegate {
+
+  private final TiSecurityContext securityContext;
+  private final ObjectManager objectManager;
+  private final Function<SearchObjectFactsRequest, FactSearchCriteria> requestConverter;
   private final FactSearchHandler factSearchHandler;
 
-  private ObjectSearchFactsDelegate(FactSearchHandler factSearchHandler) {
+  @Inject
+  public ObjectSearchFactsDelegate(TiSecurityContext securityContext,
+                                   ObjectManager objectManager,
+                                   Function<SearchObjectFactsRequest, FactSearchCriteria> requestConverter,
+                                   FactSearchHandler factSearchHandler) {
+    this.securityContext = securityContext;
+    this.objectManager = objectManager;
+    this.requestConverter = requestConverter;
     this.factSearchHandler = factSearchHandler;
   }
 
   public ResultSet<Fact> handle(SearchObjectFactsRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
     assertRequest(request);
     // Resolve Object based on parameters set in request.
     ObjectEntity object = resolveObject(request);
     // Check access to Object. This will throw an AccessDeniedException if Object doesn't exist.
-    TiSecurityContext.get().checkReadPermission(object);
+    securityContext.checkReadPermission(object);
     // Search for Facts bound to the resolved Object.
     return factSearchHandler.search(toCriteria(request, object), request.getIncludeRetracted());
   }
@@ -52,9 +63,9 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
     ObjectEntity object;
 
     if (request.getObjectID() != null) {
-      object = TiRequestContext.get().getObjectManager().getObject(request.getObjectID());
+      object = objectManager.getObject(request.getObjectID());
     } else {
-      object = TiRequestContext.get().getObjectManager().getObject(request.getObjectType(), request.getObjectValue());
+      object = objectManager.getObject(request.getObjectType(), request.getObjectValue());
     }
 
     return object;
@@ -66,31 +77,6 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate {
             .setObjectType(null)
             .setObjectValue(null);
 
-    return SearchObjectFactsRequestConverter.builder()
-            .setCurrentUserIdSupplier(() -> TiSecurityContext.get().getCurrentUserID())
-            .setAvailableOrganizationIdSupplier(() -> TiSecurityContext.get().getAvailableOrganizationID())
-            .build()
-            .apply(request);
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactSearchHandler factSearchHandler;
-
-    private Builder() {
-    }
-
-    public ObjectSearchFactsDelegate build() {
-      ObjectUtils.notNull(factSearchHandler, "Cannot instantiate ObjectSearchFactsDelegate without 'factSearchHandler'.");
-      return new ObjectSearchFactsDelegate(factSearchHandler);
-    }
-
-    public Builder setFactSearchHandler(FactSearchHandler factSearchHandler) {
-      this.factSearchHandler = factSearchHandler;
-      return this;
-    }
+    return requestConverter.apply(request);
   }
 }

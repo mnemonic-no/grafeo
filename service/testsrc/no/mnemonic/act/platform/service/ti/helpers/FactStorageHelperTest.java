@@ -5,13 +5,13 @@ import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -22,14 +22,14 @@ public class FactStorageHelperTest {
   @Mock
   private FactManager factManager;
   @Mock
-  private Supplier<UUID> currentUserResolver;
+  private SecurityContext securityContext;
 
   private FactStorageHelper helper;
 
   @Before
   public void initialize() {
     initMocks(this);
-    helper = new FactStorageHelper(factManager, currentUserResolver);
+    helper = new FactStorageHelper(factManager, securityContext);
   }
 
   @Test
@@ -45,7 +45,7 @@ public class FactStorageHelperTest {
   }
 
   @Test
-  public void testSaveInitialAclWithAccessModeRoleBased() throws Exception {
+  public void testSaveInitialAclWithAccessModeRoleBased() {
     FactEntity fact = createFact().setAccessMode(AccessMode.RoleBased);
     UUID user = UUID.randomUUID();
     assertEquals(ListUtils.list(user), helper.saveInitialAclForNewFact(fact, ListUtils.list(user)));
@@ -53,10 +53,10 @@ public class FactStorageHelperTest {
   }
 
   @Test
-  public void testSaveInitialAclWithAccessModeExplicitAddsCurrentUser() throws Exception {
+  public void testSaveInitialAclWithAccessModeExplicitAddsCurrentUser() {
     FactEntity fact = createFact().setAccessMode(AccessMode.Explicit);
     UUID currentUser = UUID.randomUUID();
-    when(currentUserResolver.get()).thenReturn(currentUser);
+    when(securityContext.getCurrentUserID()).thenReturn(currentUser);
     assertEquals(ListUtils.list(currentUser), helper.saveInitialAclForNewFact(fact, null));
     verify(factManager).saveFactAclEntry(matchFactAclEntity(fact, currentUser));
   }
@@ -80,7 +80,7 @@ public class FactStorageHelperTest {
   }
 
   @Test
-  public void testSaveAdditionalAclSkipExisting() throws Exception {
+  public void testSaveAdditionalAclSkipExisting() {
     FactEntity fact = createFact().setAccessMode(AccessMode.Explicit);
     UUID user = UUID.randomUUID();
     when(factManager.fetchFactAcl(fact.getId())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(user)));
@@ -91,7 +91,7 @@ public class FactStorageHelperTest {
   }
 
   @Test
-  public void testSaveAdditionalAclEntries() throws Exception {
+  public void testSaveAdditionalAclEntries() {
     FactEntity fact = createFact().setAccessMode(AccessMode.Explicit);
     UUID user = UUID.randomUUID();
     when(factManager.fetchFactAcl(fact.getId())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(UUID.randomUUID())));
@@ -114,7 +114,7 @@ public class FactStorageHelperTest {
   }
 
   @Test
-  public void testSaveComment() throws Exception {
+  public void testSaveComment() {
     FactEntity fact = createFact();
     String comment = "Hello World!";
     helper.saveCommentForFact(fact, comment);

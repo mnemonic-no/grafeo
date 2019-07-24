@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
@@ -20,9 +21,17 @@ import static org.mockito.Mockito.*;
 
 public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
 
+  private FactGetCommentsDelegate delegate;
+
+  @Before
+  public void setup() {
+    // initMocks() will be called by base class.
+    delegate = new FactGetCommentsDelegate(getSecurityContext(), getFactManager(), getFactCommentConverter());
+  }
+
   @Test(expected = ObjectNotFoundException.class)
   public void testGetFactCommentsFactNotExists() throws Exception {
-    FactGetCommentsDelegate.create().handle(new GetFactCommentsRequest());
+    delegate.handle(new GetFactCommentsRequest());
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -31,7 +40,7 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
 
-    FactGetCommentsDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -40,7 +49,7 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.viewFactComments), any());
 
-    FactGetCommentsDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test
@@ -49,7 +58,7 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
     List<FactCommentEntity> entities = createComments(request.getFact());
     mockFetchingComments(request, entities);
 
-    ResultSet<FactComment> result = FactGetCommentsDelegate.create().handle(request);
+    ResultSet<FactComment> result = delegate.handle(request);
 
     assertEquals(entities.size(), result.getCount());
     assertEquals(0, result.getLimit());
@@ -63,7 +72,7 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
     List<FactCommentEntity> entities = createComments(request.getFact());
     mockFetchingComments(request, entities);
 
-    assertEquals(1, FactGetCommentsDelegate.create().handle(request).getCount());
+    assertEquals(1, delegate.handle(request).getCount());
     verify(getFactCommentConverter()).apply(entities.get(0));
     verifyNoMoreInteractions(getFactCommentConverter());
   }
@@ -74,7 +83,7 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
     List<FactCommentEntity> entities = createComments(request.getFact());
     mockFetchingComments(request, entities);
 
-    assertEquals(1, FactGetCommentsDelegate.create().handle(request).getCount());
+    assertEquals(1, delegate.handle(request).getCount());
     verify(getFactCommentConverter()).apply(entities.get(2));
     verifyNoMoreInteractions(getFactCommentConverter());
   }
@@ -97,5 +106,4 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity().setId(request.getFact()));
     when(getFactManager().fetchFactComments(request.getFact())).thenReturn(entities);
   }
-
 }

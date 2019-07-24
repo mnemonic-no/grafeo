@@ -65,36 +65,14 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   @Before
   public void setup() {
     // initMocks() will be called by base class.
-    delegate = TraverseGraphDelegate.builder()
-            .setObjectSearch(objectSearch)
-            .setObjectConverter(getObjectConverter())
-            .setFactConverter(getFactConverter())
-            .setScriptExecutionTimeout(2000)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutObjectSearch() {
-    TraverseGraphDelegate.builder()
-            .setObjectConverter(getObjectConverter())
-            .setFactConverter(getFactConverter())
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutObjectConverter() {
-    TraverseGraphDelegate.builder()
-            .setObjectSearch(objectSearch)
-            .setFactConverter(getFactConverter())
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactConverter() {
-    TraverseGraphDelegate.builder()
-            .setObjectSearch(objectSearch)
-            .setObjectConverter(getObjectConverter())
-            .build();
+    delegate = new TraverseGraphDelegate(
+            getSecurityContext(),
+            getObjectManager(),
+            getFactManager(),
+            objectSearch,
+            getObjectConverter(),
+            getFactConverter()
+    ).setScriptExecutionTimeout(2000);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -362,5 +340,4 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   private interface TestMethod {
     ResultSet<?> execute(ObjectEntity object, String query) throws Exception;
   }
-
 }

@@ -8,12 +8,14 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
@@ -23,28 +25,51 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class FactCreateDelegate extends AbstractDelegate {
+public class FactCreateDelegate extends AbstractDelegate implements Delegate {
 
+  private final TiSecurityContext securityContext;
+  private final TriggerContext triggerContext;
+  private final FactManager factManager;
+  private final FactSearchManager factSearchManager;
+  private final ObjectManager objectManager;
   private final FactTypeResolver factTypeResolver;
   private final ObjectResolver objectResolver;
   private final FactStorageHelper factStorageHelper;
+  private final Function<FactEntity, Fact> factConverter;
 
-  private FactCreateDelegate(FactTypeResolver factTypeResolver, ObjectResolver objectResolver, FactStorageHelper factStorageHelper) {
+  @Inject
+  public FactCreateDelegate(TiSecurityContext securityContext,
+                            TriggerContext triggerContext,
+                            FactManager factManager,
+                            FactSearchManager factSearchManager,
+                            ObjectManager objectManager,
+                            FactTypeResolver factTypeResolver,
+                            ObjectResolver objectResolver,
+                            FactStorageHelper factStorageHelper,
+                            Function<FactEntity, Fact> factConverter) {
+    this.securityContext = securityContext;
+    this.triggerContext = triggerContext;
+    this.factManager = factManager;
+    this.factSearchManager = factSearchManager;
+    this.objectManager = objectManager;
     this.factTypeResolver = factTypeResolver;
     this.objectResolver = objectResolver;
     this.factStorageHelper = factStorageHelper;
+    this.factConverter = factConverter;
   }
 
   public Fact handle(CreateFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     // Verify that user is allowed to add Facts for the requested organization.
-    TiSecurityContext.get().checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
+    securityContext.checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
 
     FactTypeEntity type = factTypeResolver.resolveFactType(request.getType());
     if (Objects.equals(type.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
@@ -58,7 +83,7 @@ public class FactCreateDelegate extends AbstractDelegate {
     FactEntity fact = resolveExistingFact(request, type);
     if (fact != null) {
       // Refresh an existing Fact.
-      fact = TiRequestContext.get().getFactManager().refreshFact(fact.getId());
+      fact = factManager.refreshFact(fact.getId());
       List<UUID> subjectsAddedToAcl = factStorageHelper.saveAdditionalAclForFact(fact, request.getAcl());
       // Reindex existing Fact in ElasticSearch.
       reindexExistingFact(fact, subjectsAddedToAcl);
@@ -74,45 +99,10 @@ public class FactCreateDelegate extends AbstractDelegate {
     factStorageHelper.saveCommentForFact(fact, request.getComment());
 
     // Register TriggerEvent before returning added Fact.
-    Fact addedFact = TiRequestContext.get().getFactConverter().apply(fact);
+    Fact addedFact = factConverter.apply(fact);
     registerTriggerEvent(addedFact);
 
     return addedFact;
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactTypeResolver factTypeResolver;
-    private ObjectResolver objectResolver;
-    private FactStorageHelper factStorageHelper;
-
-    private Builder() {
-    }
-
-    public FactCreateDelegate build() {
-      ObjectUtils.notNull(factTypeResolver, "Cannot instantiate FactCreateDelegate without 'factTypeResolver'.");
-      ObjectUtils.notNull(objectResolver, "Cannot instantiate FactCreateDelegate without 'objectResolver'.");
-      ObjectUtils.notNull(factStorageHelper, "Cannot instantiate FactCreateDelegate without 'factStorageHelper'.");
-      return new FactCreateDelegate(factTypeResolver, objectResolver, factStorageHelper);
-    }
-
-    public Builder setFactTypeResolver(FactTypeResolver factTypeResolver) {
-      this.factTypeResolver = factTypeResolver;
-      return this;
-    }
-
-    public Builder setObjectResolver(ObjectResolver objectResolver) {
-      this.objectResolver = objectResolver;
-      return this;
-    }
-
-    public Builder setFactStorageHelper(FactStorageHelper factStorageHelper) {
-      this.factStorageHelper = factStorageHelper;
-      return this;
-    }
   }
 
   private void assertValidFactObjectBindings(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
@@ -154,15 +144,15 @@ public class FactCreateDelegate extends AbstractDelegate {
     }
 
     // Try to fetch any existing Facts from ElasticSearch.
-    SearchResult<FactDocument> result = TiRequestContext.get().getFactSearchManager().retrieveExistingFacts(criteriaBuilder.build());
+    SearchResult<FactDocument> result = factSearchManager.retrieveExistingFacts(criteriaBuilder.build());
     if (result.getCount() <= 0) {
       return null; // No results, need to create new Fact.
     }
 
     // Fetch the authorative data from Cassandra, apply permission check and return existing Fact if accessible.
     List<UUID> factID = result.getValues().stream().map(FactDocument::getId).collect(Collectors.toList());
-    return Streams.stream(TiRequestContext.get().getFactManager().getFacts(factID))
-            .filter(fact -> TiSecurityContext.get().hasReadPermission(fact))
+    return Streams.stream(factManager.getFacts(factID))
+            .filter(securityContext::hasReadPermission)
             .findFirst()
             .orElse(null);
   }
@@ -179,14 +169,14 @@ public class FactCreateDelegate extends AbstractDelegate {
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
 
-    fact = TiRequestContext.get().getFactManager().saveFact(fact);
+    fact = factManager.saveFact(fact);
     // Save all bindings between Objects and the created Facts.
     for (FactEntity.FactObjectBinding binding : fact.getBindings()) {
       ObjectFactBindingEntity entity = new ObjectFactBindingEntity()
               .setObjectID(binding.getObjectID())
               .setFactID(fact.getId())
               .setDirection(binding.getDirection());
-      TiRequestContext.get().getObjectManager().saveObjectFactBinding(entity);
+      objectManager.saveObjectFactBinding(entity);
     }
 
     return fact;
@@ -230,7 +220,6 @@ public class FactCreateDelegate extends AbstractDelegate {
             .setAccessMode(addedFact.getAccessMode())
             .addContextParameter(TiServiceEvent.ContextParameter.AddedFact.name(), addedFact)
             .build();
-    TriggerContext.get().registerTriggerEvent(event);
+    triggerContext.registerTriggerEvent(event);
   }
-
 }

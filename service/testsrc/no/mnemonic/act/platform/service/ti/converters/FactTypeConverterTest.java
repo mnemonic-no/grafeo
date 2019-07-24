@@ -19,6 +19,7 @@ public class FactTypeConverterTest {
   private final Function<UUID, Namespace> namespaceConverter = id -> Namespace.builder().setId(id).setName("Namespace").build();
   private final Function<UUID, ObjectType> objectTypeConverter = id -> ObjectType.builder().setId(id).setName("ObjectType").build();
   private final Function<UUID, FactTypeEntity> factTypeEntityResolver = id -> new FactTypeEntity().setId(id);
+  private final FactTypeConverter converter = new FactTypeConverter(namespaceConverter, objectTypeConverter, factTypeEntityResolver);
 
   @Test
   public void testConvertFactTypeWithBothSourceAndDestination() {
@@ -33,7 +34,7 @@ public class FactTypeConverterTest {
     FactTypeEntity entity = createEntity()
             .addRelevantObjectBinding(binding1)
             .addRelevantObjectBinding(binding2);
-    FactType model = createFactTypeConverter().apply(entity);
+    FactType model = converter.apply(entity);
     assertModelCommon(entity, model);
     assertNotNull(model.getRelevantObjectBindings());
     assertRelevantObjectBindings(entity, model);
@@ -44,7 +45,7 @@ public class FactTypeConverterTest {
   public void testConvertFactTypeWithOnlySource() {
     FactTypeEntity entity = createEntity()
             .addRelevantObjectBinding(new FactTypeEntity.FactObjectBindingDefinition().setSourceObjectTypeID(UUID.randomUUID()));
-    FactType model = createFactTypeConverter().apply(entity);
+    FactType model = converter.apply(entity);
     assertNotNull(model.getRelevantObjectBindings().get(0).getSourceObjectType());
     assertNull(model.getRelevantObjectBindings().get(0).getDestinationObjectType());
   }
@@ -53,7 +54,7 @@ public class FactTypeConverterTest {
   public void testConvertFactTypeWithOnlyDestination() {
     FactTypeEntity entity = createEntity()
             .addRelevantObjectBinding(new FactTypeEntity.FactObjectBindingDefinition().setDestinationObjectTypeID(UUID.randomUUID()));
-    FactType model = createFactTypeConverter().apply(entity);
+    FactType model = converter.apply(entity);
     assertNull(model.getRelevantObjectBindings().get(0).getSourceObjectType());
     assertNotNull(model.getRelevantObjectBindings().get(0).getDestinationObjectType());
   }
@@ -63,7 +64,7 @@ public class FactTypeConverterTest {
     FactTypeEntity entity = createEntity()
             .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(UUID.randomUUID()))
             .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(UUID.randomUUID()));
-    FactType model = createFactTypeConverter().apply(entity);
+    FactType model = converter.apply(entity);
     assertModelCommon(entity, model);
     assertNull(model.getRelevantObjectBindings());
     assertNotNull(model.getRelevantFactBindings());
@@ -72,39 +73,7 @@ public class FactTypeConverterTest {
 
   @Test
   public void testConvertNullReturnsNull() {
-    assertNull(createFactTypeConverter().apply(null));
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutNamespaceConverterThrowsException() {
-    FactTypeConverter.builder()
-            .setObjectTypeConverter(objectTypeConverter)
-            .setFactTypeEntityResolver(factTypeEntityResolver)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutObjectTypeConverterThrowsException() {
-    FactTypeConverter.builder()
-            .setNamespaceConverter(namespaceConverter)
-            .setFactTypeEntityResolver(factTypeEntityResolver)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutFactTypeEntityResolverThrowsException() {
-    FactTypeConverter.builder()
-            .setNamespaceConverter(namespaceConverter)
-            .setObjectTypeConverter(objectTypeConverter)
-            .build();
-  }
-
-  private FactTypeConverter createFactTypeConverter() {
-    return FactTypeConverter.builder()
-            .setNamespaceConverter(namespaceConverter)
-            .setObjectTypeConverter(objectTypeConverter)
-            .setFactTypeEntityResolver(factTypeEntityResolver)
-            .build();
+    assertNull(converter.apply(null));
   }
 
   private FactTypeEntity createEntity() {
@@ -153,5 +122,4 @@ public class FactTypeConverterTest {
             .findFirst()
             .orElseThrow(IllegalStateException::new);
   }
-
 }
