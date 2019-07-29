@@ -1,7 +1,8 @@
 CREATE KEYSPACE IF NOT EXISTS act WITH replication = { 'class':'SimpleStrategy', 'replication_factor':1 } AND durable_writes=true;
 
 DROP TABLE IF EXISTS act.namespace;
-DROP TABLE IF EXISTS act.source;
+DROP INDEX IF EXISTS act.origin_name_index;
+DROP TABLE IF EXISTS act.origin;
 DROP INDEX IF EXISTS act.object_type_name_index;
 DROP TABLE IF EXISTS act.object_type;
 DROP TABLE IF EXISTS act.object;
@@ -24,15 +25,19 @@ CREATE TABLE IF NOT EXISTS act.namespace (
   PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS act.source (
+CREATE TABLE IF NOT EXISTS act.origin (
   id UUID,
   namespace_id UUID,
   organization_id UUID,
   name VARCHAR,
+  description VARCHAR,
+  trust FLOAT,
   type INT,
-  trust_level INT,
+  flags SET<INT>,
   PRIMARY KEY (id)
 );
+
+CREATE INDEX IF NOT EXISTS origin_name_index ON act.origin (name);
 
 CREATE TABLE IF NOT EXISTS act.object_type (
   id UUID,
@@ -74,6 +79,7 @@ CREATE TABLE IF NOT EXISTS act.fact_type (
   validator_parameter VARCHAR,
   relevant_object_bindings VARCHAR,
   relevant_fact_bindings VARCHAR,
+  default_confidence FLOAT,
   PRIMARY KEY (id)
 );
 
@@ -86,8 +92,10 @@ CREATE TABLE IF NOT EXISTS act.fact (
   in_reference_to_id UUID,
   organization_id UUID,
   source_id UUID,
+  added_by_id UUID,
   access_mode INT,
-  confidence_level INT,
+  confidence FLOAT,
+  trust FLOAT,
   timestamp BIGINT,
   last_seen_timestamp BIGINT,
   bindings VARCHAR,

@@ -4,7 +4,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.CassandraEnumCodec;
 import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
-import no.mnemonic.act.platform.dao.cassandra.entity.SourceEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.dao.cassandra.mapper.CassandraMapper;
 import no.mnemonic.commons.component.ComponentException;
 import no.mnemonic.commons.component.LifecycleAspect;
@@ -50,7 +50,8 @@ public class ClusterManager implements LifecycleAspect {
               // Register any custom type codecs.
               .addTypeCodecs(new CassandraEnumCodec<>(AccessMode.class, AccessMode.getValueMap()))
               .addTypeCodecs(new CassandraEnumCodec<>(Direction.class, Direction.getValueMap()))
-              .addTypeCodecs(new CassandraEnumCodec<>(SourceEntity.Type.class, SourceEntity.Type.getValueMap()))
+              .addTypeCodecs(new CassandraEnumCodec<>(OriginEntity.Type.class, OriginEntity.Type.getValueMap()))
+              .addTypeCodecs(new CassandraEnumCodec<>(OriginEntity.Flag.class, OriginEntity.Flag.getValueMap()))
               .buildAsync()
               .toCompletableFuture();
 

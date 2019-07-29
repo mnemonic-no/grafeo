@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -27,6 +28,7 @@ import static no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity.TABLE
 public class FactTypeEntity implements CassandraEntity {
 
   public static final String TABLE = "fact_type";
+  public static final float DEFAULT_CONFIDENCE = 1.0f;
 
   private static final ObjectMapper mapper = new ObjectMapper();
   private static final ObjectReader factObjectBindingDefinitionReader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(Set.class, FactObjectBindingDefinition.class));
@@ -55,6 +57,8 @@ public class FactTypeEntity implements CassandraEntity {
   // But they are also available as objects.
   @Transient
   private Set<MetaFactBindingDefinition> relevantFactBindings;
+  @CqlName("default_confidence")
+  private Float defaultConfidence;
 
   public UUID getId() {
     return id;
@@ -173,6 +177,16 @@ public class FactTypeEntity implements CassandraEntity {
   public FactTypeEntity addRelevantFactBinding(MetaFactBindingDefinition relevantFactBinding) {
     // Need to call setRelevantFactBindings() in order to store JSON blob.
     return setRelevantFactBindings(SetUtils.addToSet(relevantFactBindings, relevantFactBinding));
+  }
+
+  public Float getDefaultConfidence() {
+    // Required for backwards-compatibility where the 'default_confidence' column is unset.
+    return ObjectUtils.ifNull(defaultConfidence, DEFAULT_CONFIDENCE);
+  }
+
+  public FactTypeEntity setDefaultConfidence(Float defaultConfidence) {
+    this.defaultConfidence = defaultConfidence;
+    return this;
   }
 
   private void logAndRethrow(IOException ex, String msg) {

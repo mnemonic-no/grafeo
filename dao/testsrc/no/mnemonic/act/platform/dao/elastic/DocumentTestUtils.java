@@ -30,7 +30,11 @@ class DocumentTestUtils {
             .setOrganizationName("organization")
             .setSourceID(UUID.randomUUID())
             .setSourceName("source")
+            .setAddedByID(UUID.randomUUID())
+            .setAddedByName("addedBy")
             .setAccessMode(FactDocument.AccessMode.Public)
+            .setConfidence(0.1f)
+            .setTrust(0.2f)
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321)
             .addAclEntry(UUID.randomUUID())
@@ -56,7 +60,12 @@ class DocumentTestUtils {
     assertEquals(expected.getOrganizationName(), actual.getOrganizationName());
     assertEquals(expected.getSourceID(), actual.getSourceID());
     assertEquals(expected.getSourceName(), actual.getSourceName());
+    assertEquals(expected.getAddedByID(), actual.getAddedByID());
+    assertEquals(expected.getAddedByName(), actual.getAddedByName());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());
+    assertEquals(expected.getConfidence(), actual.getConfidence(), 0);
+    assertEquals(expected.getTrust(), actual.getTrust(), 0);
+    assertEquals(expected.getCertainty(), actual.getCertainty(), 0);
     assertEquals(expected.getTimestamp(), actual.getTimestamp());
     assertEquals(expected.getLastSeenTimestamp(), actual.getLastSeenTimestamp());
     assertEquals(expected.getAcl(), actual.getAcl());

@@ -63,8 +63,10 @@ public class FactEntityTest {
             .setInReferenceToID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setSourceID(UUID.randomUUID())
+            .setAddedByID(UUID.randomUUID())
             .setAccessMode(AccessMode.Public)
-            .setConfidenceLevel(0)
+            .setConfidence(0.1f)
+            .setTrust(0.2f)
             .setTimestamp(1)
             .setLastSeenTimestamp(2)
             .setBindings(Collections.singletonList(createFactObjectBinding(Direction.BiDirectional)));
@@ -83,8 +85,10 @@ public class FactEntityTest {
     assertEquals(expected.getInReferenceToID(), actual.getInReferenceToID());
     assertEquals(expected.getOrganizationID(), actual.getOrganizationID());
     assertEquals(expected.getSourceID(), actual.getSourceID());
+    assertEquals(expected.getAddedByID(), actual.getAddedByID());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());
-    assertEquals(expected.getConfidenceLevel(), actual.getConfidenceLevel());
+    assertEquals(expected.getConfidence(), actual.getConfidence(), 0);
+    assertEquals(expected.getTrust(), actual.getTrust(), 0);
     assertEquals(expected.getTimestamp(), actual.getTimestamp());
     assertEquals(expected.getLastSeenTimestamp(), actual.getLastSeenTimestamp());
     assertEquals(expected.getBindingsStored(), actual.getBindingsStored());

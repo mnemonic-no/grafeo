@@ -61,4 +61,15 @@ public class FactSearchManagerIndexFactsTest extends AbstractManagerTest {
     assertEquals("updatedValue", indexedFact2.getValue());
   }
 
+  @Test
+  public void testIndexAndGetFactWithDefaultValues() {
+    FactDocument fact = new FactDocument()
+            .setId(UUID.randomUUID());
+
+    getFactSearchManager().indexFact(fact);
+    FactDocument indexedFact = getFactSearchManager().getFact(fact.getId());
+    assertEquals(FactDocument.DEFAULT_CONFIDENCE, indexedFact.getConfidence(), 0);
+    assertEquals(FactDocument.DEFAULT_TRUST, indexedFact.getTrust(), 0);
+  }
+
 }
