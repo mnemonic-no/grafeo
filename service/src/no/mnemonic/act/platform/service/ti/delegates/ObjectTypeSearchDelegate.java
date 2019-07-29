@@ -6,29 +6,41 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
-import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.services.common.api.ResultSet;
 
+import javax.inject.Inject;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ObjectTypeSearchDelegate {
+public class ObjectTypeSearchDelegate implements Delegate {
 
-  public static ObjectTypeSearchDelegate create() {
-    return new ObjectTypeSearchDelegate();
+  private final TiSecurityContext securityContext;
+  private final ObjectManager objectManager;
+  private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+
+  @Inject
+  public ObjectTypeSearchDelegate(TiSecurityContext securityContext,
+                                  ObjectManager objectManager,
+                                  Function<ObjectTypeEntity, ObjectType> objectTypeConverter) {
+    this.securityContext = securityContext;
+    this.objectManager = objectManager;
+    this.objectTypeConverter = objectTypeConverter;
   }
 
   public ResultSet<ObjectType> handle(SearchObjectTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    SecurityContext.get().checkPermission(TiFunctionConstants.viewTypes);
+    securityContext.checkPermission(TiFunctionConstants.viewTypes);
 
     // No filtering is defined in SearchObjectTypeRequest yet, just fetch all ObjectTypes.
-    List<ObjectType> types = TiRequestContext.get().getObjectManager()
+    List<ObjectType> types = objectManager
             .fetchObjectTypes()
             .stream()
-            .map(TiRequestContext.get().getObjectTypeConverter())
+            .map(objectTypeConverter)
             .collect(Collectors.toList());
 
     return StreamingResultSet.<ObjectType>builder()
@@ -37,5 +49,4 @@ public class ObjectTypeSearchDelegate {
             .setValues(types)
             .build();
   }
-
 }

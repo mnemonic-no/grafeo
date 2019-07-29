@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
@@ -19,9 +20,17 @@ import static org.mockito.Mockito.*;
 
 public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
 
+  private FactCreateCommentDelegate delegate;
+
+  @Before
+  public void setup() {
+    // initMocks() will be called by base class.
+    delegate = new FactCreateCommentDelegate(getSecurityContext(), getFactManager(), getFactCommentConverter());
+  }
+
   @Test(expected = ObjectNotFoundException.class)
   public void testCreateFactCommentFactNotExists() throws Exception {
-    FactCreateCommentDelegate.create().handle(createFactCommentRequest());
+    delegate.handle(createFactCommentRequest());
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -30,7 +39,7 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
 
-    FactCreateCommentDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -39,7 +48,7 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.addFactComments), any());
 
-    FactCreateCommentDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test(expected = InvalidArgumentException.class)
@@ -48,7 +57,7 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(createFactEntity(request.getFact()));
     when(getFactManager().fetchFactComments(request.getFact())).thenReturn(createExistingComments(UUID.randomUUID()));
 
-    FactCreateCommentDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test
@@ -60,7 +69,7 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
     when(getFactManager().saveFactComment(any())).then(i -> i.getArgument(0));
     when(getSecurityContext().getCurrentUserID()).thenReturn(currentUser);
 
-    FactCreateCommentDelegate.create().handle(request);
+    delegate.handle(request);
 
     verify(getFactManager()).saveFactComment(matchFactCommentEntity(request, currentUser));
     verify(getFactCommentConverter()).apply(matchFactCommentEntity(request, currentUser));
@@ -92,5 +101,4 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
       return true;
     });
   }
-
 }

@@ -60,24 +60,15 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
   @Before
   public void setup() {
     // initMocks() will be called by base class.
-    delegate = FactCreateMetaDelegate.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .setFactStorageHelper(factStorageHelper)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactTypeResolver() {
-    FactCreateMetaDelegate.builder()
-            .setFactStorageHelper(factStorageHelper)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactStorageHelper() {
-    FactCreateMetaDelegate.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .build();
+    delegate = new FactCreateMetaDelegate(
+            getSecurityContext(),
+            getTriggerContext(),
+            getFactManager(),
+            getFactSearchManager(),
+            factTypeResolver,
+            factStorageHelper,
+            getFactConverter()
+    );
   }
 
   @Test(expected = ObjectNotFoundException.class)
@@ -388,5 +379,4 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
       return true;
     });
   }
-
 }

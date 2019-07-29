@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
+import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
@@ -17,6 +18,7 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -25,20 +27,15 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
   @Mock
   private FactSearchHandler factSearchHandler;
+  @Mock
+  private Function<SearchObjectFactsRequest, FactSearchCriteria> requestConverter;
 
   private ObjectSearchFactsDelegate delegate;
 
   @Before
   public void setup() {
     // initMocks() will be called by base class.
-    delegate = ObjectSearchFactsDelegate.builder()
-            .setFactSearchHandler(factSearchHandler)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactSearchHandler() {
-    ObjectSearchFactsDelegate.builder().build();
+    delegate = new ObjectSearchFactsDelegate(getSecurityContext(), getObjectManager(), requestConverter, factSearchHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -98,9 +95,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   @Test
   public void testSearchObjectFactsByIdPopulateCriteria() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest()
-            .setObjectID(UUID.randomUUID())
-            .addFactValue("factValue")
-            .setIncludeRetracted(true);
+            .setObjectID(UUID.randomUUID());
     testPopulateCriteria(request);
   }
 
@@ -108,36 +103,36 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   public void testSearchObjectFactsByTypeValuePopulateCriteria() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest()
             .setObjectType("type")
-            .setObjectValue("value")
-            .addFactValue("factValue")
-            .setIncludeRetracted(true);
+            .setObjectValue("value");
     testPopulateCriteria(request);
   }
 
   @Test
   public void testSearchObjectFactsById() throws Exception {
-    SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(UUID.randomUUID());
+    SearchObjectFactsRequest request = new SearchObjectFactsRequest()
+            .setObjectID(UUID.randomUUID())
+            .setIncludeRetracted(true);
     testSearchObjectFacts(request);
   }
 
   @Test
   public void testSearchObjectFactsByTypeValue() throws Exception {
-    SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
+    SearchObjectFactsRequest request = new SearchObjectFactsRequest()
+            .setObjectType("type")
+            .setObjectValue("value")
+            .setIncludeRetracted(true);
     testSearchObjectFacts(request);
   }
 
   private void testPopulateCriteria(SearchObjectFactsRequest request) throws Exception {
     mockSearchObjectFacts();
     delegate.handle(request);
-    verify(factSearchHandler).search(argThat(criteria -> {
-      assertTrue(criteria.getObjectTypeName().size() == 0);
-      assertTrue(criteria.getObjectValue().size() == 0);
-      assertTrue(criteria.getObjectID().size() > 0);
-      assertTrue(criteria.getFactValue().size() > 0);
-      assertTrue(criteria.getAvailableOrganizationID().size() > 0);
-      assertNotNull(criteria.getCurrentUserID());
+    verify(requestConverter).apply(argThat(req -> {
+      assertNull(req.getObjectType());
+      assertNull(req.getObjectValue());
+      assertNotNull(req.getObjectID());
       return true;
-    }), eq(request.getIncludeRetracted()));
+    }));
   }
 
   private void testSearchObjectFacts(SearchObjectFactsRequest request) throws Exception {
@@ -148,7 +143,8 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     assertEquals(100, result.getCount());
     assertEquals(1, ListUtils.list(result.iterator()).size());
 
-    verify(factSearchHandler).search(isNotNull(), isNull());
+    verify(requestConverter).apply(isNotNull());
+    verify(factSearchHandler).search(isNotNull(), eq(request.getIncludeRetracted()));
     verify(getSecurityContext()).checkReadPermission(isA(ObjectEntity.class));
   }
 
@@ -157,9 +153,10 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     when(getObjectManager().getObject(any())).thenReturn(new ObjectEntity().setId(UUID.randomUUID()));
     when(getObjectManager().getObject(any(), any())).thenReturn(new ObjectEntity().setId(UUID.randomUUID()));
 
-    when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(getSecurityContext().getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
-
+    when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
+            .build());
     when(factSearchHandler.search(any(), any())).thenReturn(StreamingResultSet.<Fact>builder()
             .setLimit(25)
             .setCount(100)
@@ -167,5 +164,4 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
             .build()
     );
   }
-
 }

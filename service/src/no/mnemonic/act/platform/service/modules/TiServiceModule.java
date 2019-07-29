@@ -21,9 +21,10 @@ public class TiServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // Install all dependencies for the service (DAO, access controller, aspects).
+    // Install all dependencies for the service (DAO, access controller, converters, aspects).
     install(new DaoModule());
     install(new PropertiesBasedAccessControllerModule());
+    install(new ConverterModule());
     install(new AuthenticationAspect());
     install(new RequestContextAspect());
     install(new ValidationAspect());

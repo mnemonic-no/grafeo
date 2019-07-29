@@ -75,35 +75,17 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   @Before
   public void setup() {
     // initMocks() will be called by base class.
-    delegate = FactCreateDelegate.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .setObjectResolver(objectResolver)
-            .setFactStorageHelper(factStorageHelper)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactTypeResolver() {
-    FactCreateDelegate.builder()
-            .setObjectResolver(objectResolver)
-            .setFactStorageHelper(factStorageHelper)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutObjectResolver() {
-    FactCreateDelegate.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .setFactStorageHelper(factStorageHelper)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactStorageHelper() {
-    FactCreateDelegate.builder()
-            .setObjectResolver(objectResolver)
-            .setFactTypeResolver(factTypeResolver)
-            .build();
+    delegate = new FactCreateDelegate(
+            getSecurityContext(),
+            getTriggerContext(),
+            getFactManager(),
+            getFactSearchManager(),
+            getObjectManager(),
+            factTypeResolver,
+            objectResolver,
+            factStorageHelper,
+            getFactConverter()
+    );
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -500,5 +482,4 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
       return true;
     });
   }
-
 }

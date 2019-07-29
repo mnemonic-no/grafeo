@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.StringUtils;
 
+import javax.inject.Inject;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +20,7 @@ public class ObjectResolver {
   private final ObjectManager objectManager;
   private final ValidatorFactory validatorFactory;
 
+  @Inject
   public ObjectResolver(ObjectManager objectManager, ValidatorFactory validatorFactory) {
     this.objectManager = objectManager;
     this.validatorFactory = validatorFactory;

@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.UpdateObjectTypeRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -16,16 +17,24 @@ import static org.mockito.Mockito.*;
 
 public class ObjectTypeUpdateDelegateTest extends AbstractDelegateTest {
 
+  private ObjectTypeUpdateDelegate delegate;
+
+  @Before
+  public void setup() {
+    // initMocks() will be called by base class.
+    delegate = new ObjectTypeUpdateDelegate(getSecurityContext(), getObjectManager(), getObjectTypeConverter());
+  }
+
   @Test(expected = AccessDeniedException.class)
   public void testUpdateObjectTypeWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.updateTypes);
-    ObjectTypeUpdateDelegate.create().handle(createRequest());
+    delegate.handle(createRequest());
   }
 
   @Test(expected = ObjectNotFoundException.class)
   public void testUpdateObjectTypeNotExisting() throws Exception {
     UpdateObjectTypeRequest request = createRequest();
-    ObjectTypeUpdateDelegate.create().handle(request);
+    delegate.handle(request);
     verify(getObjectManager()).getObjectType(request.getId());
   }
 
@@ -34,7 +43,7 @@ public class ObjectTypeUpdateDelegateTest extends AbstractDelegateTest {
     UpdateObjectTypeRequest request = createRequest();
     when(getObjectManager().getObjectType(request.getId())).thenReturn(new ObjectTypeEntity());
     when(getObjectManager().getObjectType(request.getName())).thenReturn(new ObjectTypeEntity());
-    ObjectTypeUpdateDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test
@@ -48,7 +57,7 @@ public class ObjectTypeUpdateDelegateTest extends AbstractDelegateTest {
       return true;
     }))).thenReturn(entity);
 
-    ObjectTypeUpdateDelegate.create().handle(request);
+    delegate.handle(request);
     verify(getObjectTypeConverter()).apply(entity);
   }
 
@@ -57,5 +66,4 @@ public class ObjectTypeUpdateDelegateTest extends AbstractDelegateTest {
             .setId(UUID.randomUUID())
             .setName("newName");
   }
-
 }

@@ -14,27 +14,17 @@ import static org.junit.Assert.assertNull;
 public class FactCommentConverterTest {
 
   private final Function<UUID, Source> sourceConverter = id -> Source.builder().setId(id).build();
+  private final FactCommentConverter converter = new FactCommentConverter(sourceConverter);
 
   @Test
   public void testConvertFactComment() {
     FactCommentEntity entity = createEntity();
-    assertModel(entity, createConverter().apply(entity));
+    assertModel(entity, converter.apply(entity));
   }
 
   @Test
   public void testConvertNullReturnsNull() {
-    assertNull(createConverter().apply(null));
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutSourceConverterThrowsException() {
-    FactCommentConverter.builder().build();
-  }
-
-  private FactCommentConverter createConverter() {
-    return FactCommentConverter.builder()
-            .setSourceConverter(sourceConverter)
-            .build();
+    assertNull(converter.apply(null));
   }
 
   private FactCommentEntity createEntity() {
@@ -54,5 +44,4 @@ public class FactCommentConverterTest {
     assertEquals(entity.getComment(), model.getComment());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
   }
-
 }

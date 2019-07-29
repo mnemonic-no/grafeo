@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -21,9 +22,17 @@ import static org.mockito.Mockito.*;
 
 public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
 
+  private FactGrantAccessDelegate delegate;
+
+  @Before
+  public void setup() {
+    // initMocks() will be called by base class.
+    delegate = new FactGrantAccessDelegate(getSecurityContext(), getFactManager(), getAclEntryConverter());
+  }
+
   @Test(expected = ObjectNotFoundException.class)
   public void testGrantFactAccessFactNotExists() throws Exception {
-    FactGrantAccessDelegate.create().handle(createGrantAccessRequest());
+    delegate.handle(createGrantAccessRequest());
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -32,7 +41,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
 
-    FactGrantAccessDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -41,7 +50,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity());
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.grantFactAccess), any());
 
-    FactGrantAccessDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test(expected = InvalidArgumentException.class)
@@ -49,7 +58,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
     GrantFactAccessRequest request = createGrantAccessRequest();
     when(getFactManager().getFact(request.getFact())).thenReturn(new FactEntity().setAccessMode(AccessMode.Public));
 
-    FactGrantAccessDelegate.create().handle(request);
+    delegate.handle(request);
   }
 
   @Test
@@ -59,7 +68,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
     when(getFactManager().getFact(request.getFact())).thenReturn(createFactEntity(request));
     when(getFactManager().fetchFactAcl(request.getFact())).thenReturn(ListUtils.list(existingEntry));
 
-    FactGrantAccessDelegate.create().handle(request);
+    delegate.handle(request);
 
     verify(getFactManager(), never()).saveFactAclEntry(any());
     verify(getFactSearchManager(), never()).indexFact(any());
@@ -75,7 +84,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
     when(getFactManager().saveFactAclEntry(any())).then(i -> i.getArgument(0));
     when(getSecurityContext().getCurrentUserID()).thenReturn(currentUser);
 
-    FactGrantAccessDelegate.create().handle(request);
+    delegate.handle(request);
 
     verify(getFactManager()).saveFactAclEntry(matchFactAclEntity(request, currentUser));
     verify(getFactSearchManager()).indexFact(argThat(document -> document.getAcl().contains(request.getSubject())));
@@ -113,5 +122,4 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
       return true;
     });
   }
-
 }

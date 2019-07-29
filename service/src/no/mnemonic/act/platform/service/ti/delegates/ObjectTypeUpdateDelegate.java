@@ -6,21 +6,33 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.UpdateObjectTypeRequest;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
-import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.StringUtils;
 
-public class ObjectTypeUpdateDelegate extends AbstractDelegate {
+import javax.inject.Inject;
+import java.util.function.Function;
 
-  public static ObjectTypeUpdateDelegate create() {
-    return new ObjectTypeUpdateDelegate();
+public class ObjectTypeUpdateDelegate extends AbstractDelegate implements Delegate {
+
+  private final TiSecurityContext securityContext;
+  private final ObjectManager objectManager;
+  private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+
+  @Inject
+  public ObjectTypeUpdateDelegate(TiSecurityContext securityContext,
+                                  ObjectManager objectManager,
+                                  Function<ObjectTypeEntity, ObjectType> objectTypeConverter) {
+    this.securityContext = securityContext;
+    this.objectManager = objectManager;
+    this.objectTypeConverter = objectTypeConverter;
   }
 
   public ObjectType handle(UpdateObjectTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    SecurityContext.get().checkPermission(TiFunctionConstants.updateTypes);
+    securityContext.checkPermission(TiFunctionConstants.updateTypes);
 
     ObjectTypeEntity entity = fetchExistingObjectType(request.getId());
 
@@ -29,8 +41,7 @@ public class ObjectTypeUpdateDelegate extends AbstractDelegate {
       entity.setName(request.getName());
     }
 
-    entity = TiRequestContext.get().getObjectManager().saveObjectType(entity);
-    return TiRequestContext.get().getObjectTypeConverter().apply(entity);
+    entity = objectManager.saveObjectType(entity);
+    return objectTypeConverter.apply(entity);
   }
-
 }

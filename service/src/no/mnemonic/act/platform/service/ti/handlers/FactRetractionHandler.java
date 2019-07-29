@@ -3,12 +3,13 @@ package no.mnemonic.act.platform.service.ti.handlers;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
+import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Handler class computing whether a Fact has been retracted. See {@link #isRetracted(UUID, Boolean)} for the details.
  */
+@ServiceRequestScope
 public class FactRetractionHandler {
 
   private final Map<UUID, Boolean> retractionCache = new ConcurrentHashMap<>();
@@ -25,9 +27,10 @@ public class FactRetractionHandler {
   private final FactSearchManager factSearchManager;
   private final TiSecurityContext securityContext;
 
-  private FactRetractionHandler(FactTypeResolver factTypeResolver,
-                                FactSearchManager factSearchManager,
-                                TiSecurityContext securityContext) {
+  @Inject
+  public FactRetractionHandler(FactTypeResolver factTypeResolver,
+                               FactSearchManager factSearchManager,
+                               TiSecurityContext securityContext) {
     this.factTypeResolver = factTypeResolver;
     this.factSearchManager = factSearchManager;
     this.securityContext = securityContext;
@@ -75,41 +78,6 @@ public class FactRetractionHandler {
     // If no hint is provided or the Fact has been retracted by some user
     // compute if the Fact is retracted from the current user's point of view.
     return retractionCache.computeIfAbsent(factID, this::computeRetraction);
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactTypeResolver factTypeResolver;
-    private FactSearchManager factSearchManager;
-    private TiSecurityContext securityContext;
-
-    private Builder() {
-    }
-
-    public FactRetractionHandler build() {
-      ObjectUtils.notNull(factTypeResolver, "Cannot instantiate FactRetractionHandler without 'factTypeResolver'.");
-      ObjectUtils.notNull(factSearchManager, "Cannot instantiate FactRetractionHandler without 'factSearchManager'.");
-      ObjectUtils.notNull(securityContext, "Cannot instantiate FactRetractionHandler without 'securityContext'.");
-      return new FactRetractionHandler(factTypeResolver, factSearchManager, securityContext);
-    }
-
-    public Builder setFactTypeResolver(FactTypeResolver factTypeResolver) {
-      this.factTypeResolver = factTypeResolver;
-      return this;
-    }
-
-    public Builder setFactSearchManager(FactSearchManager factSearchManager) {
-      this.factSearchManager = factSearchManager;
-      return this;
-    }
-
-    public Builder setSecurityContext(TiSecurityContext securityContext) {
-      this.securityContext = securityContext;
-      return this;
-    }
   }
 
   private boolean computeRetraction(UUID factID) {

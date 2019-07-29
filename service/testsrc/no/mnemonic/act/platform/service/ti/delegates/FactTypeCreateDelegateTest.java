@@ -30,14 +30,7 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
     // initMocks() will be called by base class.
     when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
     when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
-    delegate = FactTypeCreateDelegate.builder()
-            .setFactTypeHelper(factTypeHelper)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactTypeHelper() {
-    FactTypeCreateDelegate.builder().build();
+    delegate = new FactTypeCreateDelegate(getSecurityContext(), getFactManager(), factTypeHelper, getFactTypeConverter());
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -138,5 +131,4 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
     assertEquals(request.getValidator(), entity.getValidator());
     assertEquals(request.getValidatorParameter(), entity.getValidatorParameter());
   }
-
 }

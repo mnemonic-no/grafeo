@@ -12,29 +12,47 @@ import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class ObjectGetDelegateTest extends AbstractDelegateTest {
 
+  @Mock
+  private Function<UUID, FactType> factTypeConverter;
+  @Mock
+  private Function<UUID, ObjectType> objectTypeConverter;
+
+  private ObjectGetDelegate delegate;
+
   @Before
   public void setup() {
     // Mocks required for ObjectConverter.
-    when(getObjectTypeConverter().apply(any())).thenReturn(ObjectType.builder().build());
-    when(getFactTypeConverter().apply(any())).thenReturn(FactType.builder().build());
+    when(objectTypeConverter.apply(any())).thenReturn(ObjectType.builder().build());
+    when(factTypeConverter.apply(any())).thenReturn(FactType.builder().build());
     when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(getSecurityContext().getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
     when(getFactSearchManager().calculateObjectStatistics(any())).thenReturn(ObjectStatisticsResult.builder().build());
+
+    // initMocks() will be called by base class.
+    delegate = new ObjectGetDelegate(
+            getSecurityContext(),
+            getObjectManager(),
+            getFactSearchManager(),
+            factTypeConverter,
+            objectTypeConverter
+    );
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByIdWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
-    ObjectGetDelegate.create().handle(new GetObjectByIdRequest());
+    delegate.handle(new GetObjectByIdRequest());
   }
 
   @Test
@@ -43,7 +61,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
 
     try {
-      ObjectGetDelegate.create().handle(request);
+      delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
       verify(getObjectManager()).getObject(request.getId());
@@ -56,7 +74,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
     ObjectEntity object = new ObjectEntity().setId(UUID.randomUUID());
     when(getObjectManager().getObject(object.getId())).thenReturn(object);
 
-    assertNotNull(ObjectGetDelegate.create().handle(new GetObjectByIdRequest().setId(object.getId())));
+    assertNotNull(delegate.handle(new GetObjectByIdRequest().setId(object.getId())));
     verify(getSecurityContext()).checkReadPermission(object);
     verify(getFactSearchManager()).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
@@ -69,7 +87,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByTypeValueWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
-    ObjectGetDelegate.create().handle(new GetObjectByTypeValueRequest());
+    delegate.handle(new GetObjectByTypeValueRequest());
   }
 
   @Test
@@ -77,7 +95,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
     GetObjectByTypeValueRequest request = new GetObjectByTypeValueRequest().setType("type").setValue("value");
 
     try {
-      ObjectGetDelegate.create().handle(request);
+      delegate.handle(request);
       fail();
     } catch (InvalidArgumentException ignored) {
       verify(getObjectManager()).getObjectType(request.getType());
@@ -92,7 +110,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
     doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
 
     try {
-      ObjectGetDelegate.create().handle(request);
+      delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
       verify(getObjectManager()).getObjectType(request.getType());
@@ -108,7 +126,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
     when(getObjectManager().getObjectType(request.getType())).thenReturn(new ObjectTypeEntity());
     when(getObjectManager().getObject(request.getType(), request.getValue())).thenReturn(object);
 
-    assertNotNull(ObjectGetDelegate.create().handle(request));
+    assertNotNull(delegate.handle(request));
     verify(getSecurityContext()).checkReadPermission(object);
     verify(getFactSearchManager()).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
@@ -117,5 +135,4 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
       return true;
     }));
   }
-
 }

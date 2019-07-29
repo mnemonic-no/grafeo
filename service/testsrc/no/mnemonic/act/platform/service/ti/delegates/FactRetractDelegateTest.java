@@ -37,20 +37,14 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   @Before
   public void setup() {
     // initMocks() will be called by base class.
-    delegate = FactRetractDelegate.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .setFactStorageHelper(factStorageHelper)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactTypeResolver() {
-    FactRetractDelegate.builder().setFactStorageHelper(factStorageHelper).build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactStorageHelper() {
-    FactRetractDelegate.builder().setFactTypeResolver(factTypeResolver).build();
+    delegate = new FactRetractDelegate(
+            getSecurityContext(),
+            getTriggerContext(),
+            getFactManager(),
+            factTypeResolver,
+            factStorageHelper,
+            getFactConverter()
+    );
   }
 
   @Test(expected = ObjectNotFoundException.class)
@@ -266,5 +260,4 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       return true;
     });
   }
-
 }

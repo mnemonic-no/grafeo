@@ -2,33 +2,34 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.api.FactSearchCriteria.KeywordFieldStrategy.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 public class SearchObjectFactsRequestConverterTest {
 
-  private final SearchObjectFactsRequestConverter converter = SearchObjectFactsRequestConverter.builder()
-          .setCurrentUserIdSupplier(UUID::randomUUID)
-          .setAvailableOrganizationIdSupplier(() -> SetUtils.set(UUID.randomUUID()))
-          .build();
+  @Mock
+  private SecurityContext securityContext;
 
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutCurrentUserIdSupplierThrowsException() {
-    SearchObjectFactsRequestConverter.builder()
-            .setAvailableOrganizationIdSupplier(() -> SetUtils.set(UUID.randomUUID()))
-            .build();
-  }
+  private SearchObjectFactsRequestConverter converter;
 
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutAvailableOrganizationIdSupplierThrowsException() {
-    SearchObjectFactsRequestConverter.builder()
-            .setCurrentUserIdSupplier(UUID::randomUUID)
-            .build();
+  @Before
+  public void setup() {
+    initMocks(this);
+
+    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
+
+    converter = new SearchObjectFactsRequestConverter(securityContext);
   }
 
   @Test
@@ -127,5 +128,4 @@ public class SearchObjectFactsRequestConverterTest {
             .setLimit(123));
     assertEquals(123, criteria.getLimit());
   }
-
 }

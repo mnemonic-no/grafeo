@@ -10,13 +10,14 @@ import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
 import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.helpers.GremlinSandboxExtension;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -30,6 +31,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
+import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -37,39 +39,42 @@ import java.util.function.Function;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
-public class TraverseGraphDelegate extends AbstractDelegate {
+public class TraverseGraphDelegate extends AbstractDelegate implements Delegate {
 
   private static final String SCRIPT_ENGINE = "gremlin-groovy";
   private static final long SCRIPT_EXECUTION_TIMEOUT = 120_000;
 
+  private final TiSecurityContext securityContext;
+  private final ObjectManager objectManager;
+  private final FactManager factManager;
   private final ObjectSearchDelegate objectSearch;
   private final Function<ObjectEntity, Object> objectConverter;
   private final Function<FactEntity, Fact> factConverter;
-  private final long scriptExecutionTimeout;
-  private final TiRequestContext requestContext;
-  private final TiSecurityContext securityContext;
 
   private final Collection<java.lang.Object> traversalResult = new ArrayList<>();
 
-  private TraverseGraphDelegate(ObjectSearchDelegate objectSearch,
-                                Function<ObjectEntity, Object> objectConverter,
-                                Function<FactEntity, Fact> factConverter,
-                                long scriptExecutionTimeout) {
+  private long scriptExecutionTimeout = SCRIPT_EXECUTION_TIMEOUT;
+
+  @Inject
+  public TraverseGraphDelegate(TiSecurityContext securityContext,
+                               ObjectManager objectManager,
+                               FactManager factManager,
+                               ObjectSearchDelegate objectSearch,
+                               Function<ObjectEntity, Object> objectConverter,
+                               Function<FactEntity, Fact> factConverter) {
+    this.securityContext = securityContext;
+    this.objectManager = objectManager;
+    this.factManager = factManager;
     this.objectSearch = objectSearch;
     this.objectConverter = objectConverter;
     this.factConverter = factConverter;
-    this.scriptExecutionTimeout = scriptExecutionTimeout > 0 ? scriptExecutionTimeout : SCRIPT_EXECUTION_TIMEOUT;
-    // Need to store references to the contexts. They won't be available via Context.get() when the graph traversal
-    // and processing is executed in a different thread.
-    this.requestContext = TiRequestContext.get();
-    this.securityContext = TiSecurityContext.get();
   }
 
   public ResultSet<?> handle(TraverseByObjectIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
 
-    return handle(requestContext.getObjectManager().getObject(request.getId()), request.getQuery());
+    return handle(objectManager.getObject(request.getId()), request.getQuery());
   }
 
   public ResultSet<?> handle(TraverseByObjectTypeValueRequest request)
@@ -77,7 +82,7 @@ public class TraverseGraphDelegate extends AbstractDelegate {
     securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
     assertObjectTypeExists(request.getType(), "type");
 
-    return handle(requestContext.getObjectManager().getObject(request.getType(), request.getValue()), request.getQuery());
+    return handle(objectManager.getObject(request.getType(), request.getValue()), request.getQuery());
   }
 
   public ResultSet<?> handle(TraverseByObjectSearchRequest request)
@@ -102,45 +107,9 @@ public class TraverseGraphDelegate extends AbstractDelegate {
             .build();
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private ObjectSearchDelegate objectSearch;
-    private Function<ObjectEntity, Object> objectConverter;
-    private Function<FactEntity, Fact> factConverter;
-    private long scriptExecutionTimeout;
-
-    private Builder() {
-    }
-
-    public TraverseGraphDelegate build() {
-      ObjectUtils.notNull(objectSearch, "Cannot instantiate TraverseGraphDelegate without 'objectSearch'.");
-      ObjectUtils.notNull(objectConverter, "Cannot instantiate TraverseGraphDelegate without 'objectConverter'.");
-      ObjectUtils.notNull(factConverter, "Cannot instantiate TraverseGraphDelegate without 'factConverter'.");
-      return new TraverseGraphDelegate(objectSearch, objectConverter, factConverter, scriptExecutionTimeout);
-    }
-
-    public Builder setObjectSearch(ObjectSearchDelegate objectSearch) {
-      this.objectSearch = objectSearch;
-      return this;
-    }
-
-    public Builder setObjectConverter(Function<ObjectEntity, Object> objectConverter) {
-      this.objectConverter = objectConverter;
-      return this;
-    }
-
-    public Builder setFactConverter(Function<FactEntity, Fact> factConverter) {
-      this.factConverter = factConverter;
-      return this;
-    }
-
-    public Builder setScriptExecutionTimeout(long scriptExecutionTimeout) {
-      this.scriptExecutionTimeout = scriptExecutionTimeout;
-      return this;
-    }
+  TraverseGraphDelegate setScriptExecutionTimeout(long scriptExecutionTimeout) {
+    this.scriptExecutionTimeout = scriptExecutionTimeout;
+    return this;
   }
 
   private ResultSet<?> handle(ObjectEntity startingObject, String query)
@@ -215,8 +184,8 @@ public class TraverseGraphDelegate extends AbstractDelegate {
 
   private Graph createGraph() {
     return ActGraph.builder()
-            .setObjectManager(requestContext.getObjectManager())
-            .setFactManager(requestContext.getFactManager())
+            .setObjectManager(objectManager)
+            .setFactManager(factManager)
             .setHasFactAccess(securityContext::hasReadPermission)
             .build();
   }
@@ -236,5 +205,4 @@ public class TraverseGraphDelegate extends AbstractDelegate {
             .addPlugins(SCRIPT_ENGINE, MapUtils.map(T(GroovyCompilerGremlinPlugin.class.getName(), groovyCompilerConfig)))
             .create();
   }
-
 }

@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -18,9 +19,10 @@ public class FactTypeConverter implements Converter<FactTypeEntity, FactType> {
   private final Function<UUID, ObjectType> objectTypeConverter;
   private final Function<UUID, FactTypeEntity> factTypeEntityResolver;
 
-  private FactTypeConverter(Function<UUID, Namespace> namespaceConverter,
-                            Function<UUID, ObjectType> objectTypeConverter,
-                            Function<UUID, FactTypeEntity> factTypeEntityResolver) {
+  @Inject
+  public FactTypeConverter(Function<UUID, Namespace> namespaceConverter,
+                           Function<UUID, ObjectType> objectTypeConverter,
+                           Function<UUID, FactTypeEntity> factTypeEntityResolver) {
     this.namespaceConverter = namespaceConverter;
     this.objectTypeConverter = objectTypeConverter;
     this.factTypeEntityResolver = factTypeEntityResolver;
@@ -76,40 +78,4 @@ public class FactTypeConverter implements Converter<FactTypeEntity, FactType> {
     // Skip converting bindings in order to avoid infinite recursive resolving of FactTypes.
     return ObjectUtils.ifNotNull(convertFactType(entity, true), FactType::toInfo);
   }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private Function<UUID, Namespace> namespaceConverter;
-    private Function<UUID, ObjectType> objectTypeConverter;
-    private Function<UUID, FactTypeEntity> factTypeEntityResolver;
-
-    private Builder() {
-    }
-
-    public FactTypeConverter build() {
-      ObjectUtils.notNull(namespaceConverter, "Cannot instantiate FactTypeConverter without 'namespaceConverter'.");
-      ObjectUtils.notNull(objectTypeConverter, "Cannot instantiate FactTypeConverter without 'objectTypeConverter'.");
-      ObjectUtils.notNull(factTypeEntityResolver, "Cannot instantiate FactTypeConverter without 'factTypeEntityResolver'.");
-      return new FactTypeConverter(namespaceConverter, objectTypeConverter, factTypeEntityResolver);
-    }
-
-    public Builder setNamespaceConverter(Function<UUID, Namespace> namespaceConverter) {
-      this.namespaceConverter = namespaceConverter;
-      return this;
-    }
-
-    public Builder setObjectTypeConverter(Function<UUID, ObjectType> objectTypeConverter) {
-      this.objectTypeConverter = objectTypeConverter;
-      return this;
-    }
-
-    public Builder setFactTypeEntityResolver(Function<UUID, FactTypeEntity> factTypeEntityResolver) {
-      this.factTypeEntityResolver = factTypeEntityResolver;
-      return this;
-    }
-  }
-
 }

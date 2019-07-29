@@ -9,55 +9,34 @@ import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
-public class FactSearchMetaDelegate extends AbstractDelegate {
+import javax.inject.Inject;
+import java.util.function.Function;
 
+public class FactSearchMetaDelegate extends AbstractDelegate implements Delegate {
+
+  private final TiSecurityContext securityContext;
+  private final Function<SearchMetaFactsRequest, FactSearchCriteria> requestConverter;
   private final FactSearchHandler factSearchHandler;
 
-  private FactSearchMetaDelegate(FactSearchHandler factSearchHandler) {
+  @Inject
+  public FactSearchMetaDelegate(TiSecurityContext securityContext,
+                                Function<SearchMetaFactsRequest, FactSearchCriteria> requestConverter,
+                                FactSearchHandler factSearchHandler) {
+    this.securityContext = securityContext;
+    this.requestConverter = requestConverter;
     this.factSearchHandler = factSearchHandler;
   }
 
   public ResultSet<Fact> handle(SearchMetaFactsRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Verify that user is allowed to view Facts.
-    TiSecurityContext.get().checkPermission(TiFunctionConstants.viewFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
     // Fetch referenced Fact, verify that it exists and that user is allowed to access the Fact.
-    TiSecurityContext.get().checkReadPermission(fetchExistingFact(request.getFact()));
+    securityContext.checkReadPermission(fetchExistingFact(request.getFact()));
     // Search for meta Facts bound to the referenced Fact.
-    return factSearchHandler.search(toCriteria(request), request.getIncludeRetracted());
-  }
-
-  private FactSearchCriteria toCriteria(SearchMetaFactsRequest request) {
-    return SearchMetaFactsRequestConverter.builder()
-            .setCurrentUserIdSupplier(() -> TiSecurityContext.get().getCurrentUserID())
-            .setAvailableOrganizationIdSupplier(() -> TiSecurityContext.get().getAvailableOrganizationID())
-            .build()
-            .apply(request);
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactSearchHandler factSearchHandler;
-
-    private Builder() {
-    }
-
-    public FactSearchMetaDelegate build() {
-      ObjectUtils.notNull(factSearchHandler, "Cannot instantiate FactSearchMetaDelegate without 'factSearchHandler'.");
-      return new FactSearchMetaDelegate(factSearchHandler);
-    }
-
-    public Builder setFactSearchHandler(FactSearchHandler factSearchHandler) {
-      this.factSearchHandler = factSearchHandler;
-      return this;
-    }
+    return factSearchHandler.search(requestConverter.apply(request), request.getIncludeRetracted());
   }
 }

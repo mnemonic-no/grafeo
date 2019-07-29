@@ -16,33 +16,17 @@ public class AclEntryConverterTest {
 
   private final Function<UUID, Source> sourceConverter = id -> Source.builder().setId(id).build();
   private final Function<UUID, Subject> subjectConverter = id -> Subject.builder().setId(id).build();
+  private final AclEntryConverter converter = new AclEntryConverter(sourceConverter, subjectConverter);
 
   @Test
   public void testConvertAclEntry() {
     FactAclEntity entity = createEntity();
-    assertModel(entity, createConverter().apply(entity));
+    assertModel(entity, converter.apply(entity));
   }
 
   @Test
   public void testConvertNullReturnsNull() {
-    assertNull(createConverter().apply(null));
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutSourceConverterThrowsException() {
-    AclEntryConverter.builder().setSubjectConverter(subjectConverter).build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutSubjectConverterThrowsException() {
-    AclEntryConverter.builder().setSourceConverter(sourceConverter).build();
-  }
-
-  private AclEntryConverter createConverter() {
-    return AclEntryConverter.builder()
-            .setSourceConverter(sourceConverter)
-            .setSubjectConverter(subjectConverter)
-            .build();
+    assertNull(converter.apply(null));
   }
 
   private FactAclEntity createEntity() {
@@ -60,5 +44,4 @@ public class AclEntryConverterTest {
     assertEquals(entity.getSubjectID(), model.getSubject().getId());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
   }
-
 }

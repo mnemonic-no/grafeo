@@ -19,20 +19,18 @@ public class ObjectConverterTest {
   private final Function<UUID, ObjectType> objectTypeConverter = id -> ObjectType.builder().setId(id).build();
   private final Function<UUID, FactType> factTypeConverter = id -> FactType.builder().setId(id).build();
   private final Function<UUID, Collection<ObjectStatisticsResult.FactStatistic>> factStatisticsResolver = id -> null;
+  private final ObjectConverter converter = new ObjectConverter(objectTypeConverter, factTypeConverter, factStatisticsResolver);
 
   @Test
   public void testConvertObject() {
     ObjectEntity entity = createEntity();
-    assertModel(entity, createObjectConverter().apply(entity));
+    assertModel(entity, converter.apply(entity));
   }
 
   @Test
   public void testConvertObjectWithStatistics() {
-    ObjectConverter converter = ObjectConverter.builder()
-            .setObjectTypeConverter(objectTypeConverter)
-            .setFactTypeConverter(factTypeConverter)
-            .setFactStatisticsResolver(id -> Collections.singleton(new ObjectStatisticsResult.FactStatistic(UUID.randomUUID(), 42, 123456789, 987654321)))
-            .build();
+    ObjectConverter converter = new ObjectConverter(objectTypeConverter, factTypeConverter,
+            id -> Collections.singleton(new ObjectStatisticsResult.FactStatistic(UUID.randomUUID(), 42, 123456789, 987654321)));
 
     ObjectEntity entity = createEntity();
     Object model = converter.apply(entity);
@@ -46,39 +44,7 @@ public class ObjectConverterTest {
 
   @Test
   public void testConvertNullReturnsNull() {
-    assertNull(createObjectConverter().apply(null));
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutObjectTypeConverterThrowsException() {
-    ObjectConverter.builder()
-            .setFactTypeConverter(factTypeConverter)
-            .setFactStatisticsResolver(factStatisticsResolver)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutFactTypeConverterThrowsException() {
-    ObjectConverter.builder()
-            .setObjectTypeConverter(objectTypeConverter)
-            .setFactStatisticsResolver(factStatisticsResolver)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutFactStatisticsResolverThrowsException() {
-    ObjectConverter.builder()
-            .setObjectTypeConverter(objectTypeConverter)
-            .setFactTypeConverter(factTypeConverter)
-            .build();
-  }
-
-  private ObjectConverter createObjectConverter() {
-    return ObjectConverter.builder()
-            .setObjectTypeConverter(objectTypeConverter)
-            .setFactTypeConverter(factTypeConverter)
-            .setFactStatisticsResolver(factStatisticsResolver)
-            .build();
+    assertNull(converter.apply(null));
   }
 
   private ObjectEntity createEntity() {
@@ -93,5 +59,4 @@ public class ObjectConverterTest {
     assertEquals(entity.getTypeID(), model.getType().getId());
     assertEquals(entity.getValue(), model.getValue());
   }
-
 }

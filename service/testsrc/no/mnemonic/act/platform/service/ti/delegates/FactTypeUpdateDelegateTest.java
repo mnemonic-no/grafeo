@@ -41,24 +41,7 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
     when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
     when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
     when(factTypeResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
-    delegate = FactTypeUpdateDelegate.builder()
-            .setFactTypeHelper(factTypeHelper)
-            .setFactTypeResolver(factTypeResolver)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactTypeHelper() {
-    FactTypeUpdateDelegate.builder()
-            .setFactTypeResolver(factTypeResolver)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateDelegateWithoutFactTypeResolver() {
-    FactTypeUpdateDelegate.builder()
-            .setFactTypeHelper(factTypeHelper)
-            .build();
+    delegate = new FactTypeUpdateDelegate(getSecurityContext(), getFactManager(), factTypeHelper, factTypeResolver, getFactTypeConverter());
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -169,5 +152,4 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
   }
-
 }

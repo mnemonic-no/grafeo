@@ -55,63 +55,7 @@ public class FactSearchHandlerTest {
     when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
     when(factConverter.apply(any())).thenReturn(factModel);
 
-    handler = FactSearchHandler.builder()
-            .setRetractionHandler(retractionHandler)
-            .setFactSearchManager(factSearchManager)
-            .setFactManager(factManager)
-            .setSecurityContext(securityContext)
-            .setFactConverter(factConverter)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutRetractionHandler() {
-    FactSearchHandler.builder()
-            .setFactSearchManager(factSearchManager)
-            .setFactManager(factManager)
-            .setSecurityContext(securityContext)
-            .setFactConverter(factConverter)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutFactSearchManager() {
-    FactSearchHandler.builder()
-            .setRetractionHandler(retractionHandler)
-            .setFactManager(factManager)
-            .setSecurityContext(securityContext)
-            .setFactConverter(factConverter)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutFactManager() {
-    FactSearchHandler.builder()
-            .setRetractionHandler(retractionHandler)
-            .setFactSearchManager(factSearchManager)
-            .setSecurityContext(securityContext)
-            .setFactConverter(factConverter)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutSecurityContext() {
-    FactSearchHandler.builder()
-            .setRetractionHandler(retractionHandler)
-            .setFactSearchManager(factSearchManager)
-            .setFactManager(factManager)
-            .setFactConverter(factConverter)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateHandlerWithoutFactConverter() {
-    FactSearchHandler.builder()
-            .setRetractionHandler(retractionHandler)
-            .setFactSearchManager(factSearchManager)
-            .setFactManager(factManager)
-            .setSecurityContext(securityContext)
-            .build();
+    handler = new FactSearchHandler(retractionHandler, factSearchManager, factManager, securityContext, factConverter);
   }
 
   @Test
@@ -278,5 +222,4 @@ public class FactSearchHandlerTest {
   private interface ObjectPreparation<T> {
     T prepare(T e);
   }
-
 }

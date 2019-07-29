@@ -12,25 +12,18 @@ import static org.junit.Assert.*;
 
 public class ObjectTypeConverterTest {
 
+  private final Function<UUID, Namespace> namespaceConverter = id -> Namespace.builder().setId(id).setName("Namespace").build();
+  private final ObjectTypeConverter converter = new ObjectTypeConverter(namespaceConverter);
+
   @Test
   public void testConvertObjectType() {
     ObjectTypeEntity entity = createEntity();
-    assertModel(entity, createObjectTypeConverter().apply(entity));
+    assertModel(entity, converter.apply(entity));
   }
 
   @Test
   public void testConvertNullReturnsNull() {
-    assertNull(createObjectTypeConverter().apply(null));
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateConverterWithoutNamespaceConverterThrowsException() {
-    ObjectTypeConverter.builder().build();
-  }
-
-  private ObjectTypeConverter createObjectTypeConverter() {
-    Function<UUID, Namespace> namespaceConverter = id -> Namespace.builder().setId(id).setName("Namespace").build();
-    return ObjectTypeConverter.builder().setNamespaceConverter(namespaceConverter).build();
+    assertNull(converter.apply(null));
   }
 
   private ObjectTypeEntity createEntity() {
@@ -51,5 +44,4 @@ public class ObjectTypeConverterTest {
     assertEquals(entity.getNamespaceID(), model.getNamespace().getId());
     assertEquals("Namespace", model.getNamespace().getName());
   }
-
 }

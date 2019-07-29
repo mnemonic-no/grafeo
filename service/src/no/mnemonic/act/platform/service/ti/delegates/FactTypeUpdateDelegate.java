@@ -6,32 +6,44 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
-import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import javax.inject.Inject;
 import java.util.Objects;
+import java.util.function.Function;
 
-public class FactTypeUpdateDelegate extends AbstractDelegate {
+public class FactTypeUpdateDelegate extends AbstractDelegate implements Delegate {
 
+  private final TiSecurityContext securityContext;
+  private final FactManager factManager;
   private final FactTypeHelper factTypeHelper;
   private final FactTypeResolver factTypeResolver;
+  private final Function<FactTypeEntity, FactType> factTypeConverter;
 
-  private FactTypeUpdateDelegate(FactTypeHelper factTypeHelper, FactTypeResolver factTypeResolver) {
+  @Inject
+  public FactTypeUpdateDelegate(TiSecurityContext securityContext,
+                                FactManager factManager,
+                                FactTypeHelper factTypeHelper,
+                                FactTypeResolver factTypeResolver,
+                                Function<FactTypeEntity, FactType> factTypeConverter) {
+    this.securityContext = securityContext;
+    this.factManager = factManager;
     this.factTypeHelper = factTypeHelper;
     this.factTypeResolver = factTypeResolver;
+    this.factTypeConverter = factTypeConverter;
   }
 
   public FactType handle(UpdateFactTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    SecurityContext.get().checkPermission(TiFunctionConstants.updateTypes);
+    securityContext.checkPermission(TiFunctionConstants.updateTypes);
 
     FactTypeEntity entity = fetchExistingFactType(request.getId());
     if (Objects.equals(entity.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
@@ -65,35 +77,7 @@ public class FactTypeUpdateDelegate extends AbstractDelegate {
       entity.setRelevantFactBindings(SetUtils.union(entity.getRelevantFactBindings(), factTypeHelper.convertMetaFactBindingDefinitions(request.getAddFactBindings())));
     }
 
-    entity = TiRequestContext.get().getFactManager().saveFactType(entity);
-    return TiRequestContext.get().getFactTypeConverter().apply(entity);
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-    private FactTypeHelper factTypeHelper;
-    private FactTypeResolver factTypeResolver;
-
-    private Builder() {
-    }
-
-    public FactTypeUpdateDelegate build() {
-      ObjectUtils.notNull(factTypeHelper, "Cannot instantiate FactTypeUpdateDelegate without 'factTypeHelper'.");
-      ObjectUtils.notNull(factTypeResolver, "Cannot instantiate FactTypeUpdateDelegate without 'factTypeResolver'.");
-      return new FactTypeUpdateDelegate(factTypeHelper, factTypeResolver);
-    }
-
-    public Builder setFactTypeHelper(FactTypeHelper factTypeHelper) {
-      this.factTypeHelper = factTypeHelper;
-      return this;
-    }
-
-    public Builder setFactTypeResolver(FactTypeResolver factTypeResolver) {
-      this.factTypeResolver = factTypeResolver;
-      return this;
-    }
+    entity = factManager.saveFactType(entity);
+    return factTypeConverter.apply(entity);
   }
 }
