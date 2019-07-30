@@ -81,8 +81,28 @@
           }
         }
       },
+      "addedByID": {
+        "type": "keyword"
+      },
+      "addedByName": {
+        "type": "keyword",
+        "fields": {
+          "text": {
+            "type": "text"
+          }
+        }
+      },
       "accessMode": {
         "type": "keyword"
+      },
+      "confidence": {
+        "type": "half_float"
+      },
+      "trust": {
+        "type": "half_float"
+      },
+      "certainty": {
+        "type": "half_float"
       },
       "timestamp": {
         "type": "date"

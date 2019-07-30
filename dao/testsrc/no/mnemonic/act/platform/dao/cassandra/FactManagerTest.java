@@ -122,6 +122,18 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   @Test
+  public void testSaveFactTypeWithDefaultValue() {
+    UUID factTypeID = UUID.randomUUID();
+
+    getFactManager().saveFactType(new FactTypeEntity()
+            .setId(factTypeID)
+            .setName("factType")
+    );
+    FactTypeEntity entity = getFactManager().getFactType(factTypeID);
+    assertEquals(FactTypeEntity.DEFAULT_CONFIDENCE, entity.getDefaultConfidence(), 0);
+  }
+
+  @Test
   public void testFetchFactTypes() {
     List<FactTypeEntity> expected = createAndSaveFactTypes(3);
     List<FactTypeEntity> actual = getFactManager().fetchFactTypes();
@@ -165,6 +177,20 @@ public class FactManagerTest extends AbstractManagerTest {
   @Test
   public void testSaveFactReturnsNullOnNullInput() {
     assertNull(getFactManager().saveFact(null));
+  }
+
+  @Test
+  public void testSaveFactWithDefaultValues() {
+    UUID factID = UUID.randomUUID();
+    UUID factTypeID = createAndSaveFactType().getId();
+
+    getFactManager().saveFact(new FactEntity()
+            .setId(factID)
+            .setTypeID(factTypeID)
+    );
+    FactEntity entity = getFactManager().getFact(factID);
+    assertEquals(FactEntity.DEFAULT_CONFIDENCE, entity.getConfidence(), 0);
+    assertEquals(FactEntity.DEFAULT_TRUST, entity.getTrust(), 0);
   }
 
   @Test
@@ -330,7 +356,8 @@ public class FactManagerTest extends AbstractManagerTest {
             .setNamespaceID(UUID.randomUUID())
             .setName(name)
             .setValidator("validator")
-            .setValidatorParameter("validatorParameter");
+            .setValidatorParameter("validatorParameter")
+            .setDefaultConfidence(0.5f);
   }
 
   private FactTypeEntity.FactObjectBindingDefinition createBindingDefinition(UUID sourceObjectTypeID, UUID destinationObjectTypeID) {
@@ -356,8 +383,10 @@ public class FactManagerTest extends AbstractManagerTest {
             .setInReferenceToID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setSourceID(UUID.randomUUID())
+            .setAddedByID(UUID.randomUUID())
             .setAccessMode(AccessMode.Public)
-            .setConfidenceLevel(0)
+            .setConfidence(0.1f)
+            .setTrust(0.2f)
             .setTimestamp(1)
             .setLastSeenTimestamp(2)
             .setBindings(Collections.singletonList(new FactEntity.FactObjectBinding()
@@ -431,6 +460,7 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getValidator(), actual.getValidator());
     assertEquals(expected.getValidatorParameter(), actual.getValidatorParameter());
     assertEquals(expected.getRelevantObjectBindingsStored(), actual.getRelevantObjectBindingsStored());
+    assertEquals(expected.getDefaultConfidence(), actual.getDefaultConfidence(), 0);
   }
 
   private void assertFactTypes(List<FactTypeEntity> expected, List<FactTypeEntity> actual) {
@@ -447,8 +477,10 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getInReferenceToID(), actual.getInReferenceToID());
     assertEquals(expected.getOrganizationID(), actual.getOrganizationID());
     assertEquals(expected.getSourceID(), actual.getSourceID());
+    assertEquals(expected.getAddedByID(), actual.getAddedByID());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());
-    assertEquals(expected.getConfidenceLevel(), actual.getConfidenceLevel());
+    assertEquals(expected.getConfidence(), actual.getConfidence(), 0);
+    assertEquals(expected.getTrust(), actual.getTrust(), 0);
     assertEquals(expected.getTimestamp(), actual.getTimestamp());
     assertEquals(expected.getLastSeenTimestamp(), actual.getLastSeenTimestamp());
     assertEquals(expected.getBindingsStored(), actual.getBindingsStored());

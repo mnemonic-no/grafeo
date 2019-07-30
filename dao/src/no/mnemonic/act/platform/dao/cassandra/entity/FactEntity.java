@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -29,6 +30,8 @@ import static no.mnemonic.act.platform.dao.cassandra.entity.FactEntity.TABLE;
 public class FactEntity implements CassandraEntity {
 
   public static final String TABLE = "fact";
+  public static final float DEFAULT_CONFIDENCE = 1.0f;
+  public static final float DEFAULT_TRUST = 0.8f;
 
   private static final ObjectMapper mapper = new ObjectMapper();
   private static final ObjectReader reader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBinding.class));
@@ -46,11 +49,12 @@ public class FactEntity implements CassandraEntity {
   private UUID organizationID;
   @CqlName("source_id")
   private UUID sourceID;
+  @CqlName("added_by_id")
+  private UUID addedByID;
   @CqlName("access_mode")
   private AccessMode accessMode;
-  // TODO: Change to enum after we have defined confidence levels.
-  @CqlName("confidence_level")
-  private int confidenceLevel;
+  private Float confidence;
+  private Float trust;
   private long timestamp;
   @CqlName("last_seen_timestamp")
   private long lastSeenTimestamp;
@@ -115,6 +119,15 @@ public class FactEntity implements CassandraEntity {
     return this;
   }
 
+  public UUID getAddedByID() {
+    return addedByID;
+  }
+
+  public FactEntity setAddedByID(UUID addedByID) {
+    this.addedByID = addedByID;
+    return this;
+  }
+
   public AccessMode getAccessMode() {
     return accessMode;
   }
@@ -124,12 +137,23 @@ public class FactEntity implements CassandraEntity {
     return this;
   }
 
-  public int getConfidenceLevel() {
-    return confidenceLevel;
+  public Float getConfidence() {
+    // Required for backwards-compatibility where the 'confidence' column is unset.
+    return ObjectUtils.ifNull(confidence, DEFAULT_CONFIDENCE);
   }
 
-  public FactEntity setConfidenceLevel(int confidenceLevel) {
-    this.confidenceLevel = confidenceLevel;
+  public FactEntity setConfidence(Float confidence) {
+    this.confidence = confidence;
+    return this;
+  }
+
+  public Float getTrust() {
+    // Required for backwards-compatibility where the 'trust' column is unset.
+    return ObjectUtils.ifNull(trust, DEFAULT_TRUST);
+  }
+
+  public FactEntity setTrust(Float trust) {
+    this.trust = trust;
     return this;
   }
 
@@ -202,8 +226,10 @@ public class FactEntity implements CassandraEntity {
             .setInReferenceToID(getInReferenceToID())
             .setOrganizationID(getOrganizationID())
             .setSourceID(getSourceID())
+            .setAddedByID(getAddedByID())
             .setAccessMode(getAccessMode())
-            .setConfidenceLevel(getConfidenceLevel())
+            .setConfidence(getConfidence())
+            .setTrust(getTrust())
             .setTimestamp(getTimestamp())
             .setLastSeenTimestamp(getLastSeenTimestamp())
             .setBindingsStored(getBindingsStored());

@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.dao.elastic.document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -14,6 +15,9 @@ public class FactDocument implements ElasticDocument {
     Public, RoleBased, Explicit
   }
 
+  public static final float DEFAULT_CONFIDENCE = 1.0f;
+  public static final float DEFAULT_TRUST = 0.8f;
+
   @JsonIgnore // 'id' won't be indexed separately, '_id' is used instead.
   private UUID id;
   private boolean retracted;
@@ -25,7 +29,11 @@ public class FactDocument implements ElasticDocument {
   private String organizationName;
   private UUID sourceID;
   private String sourceName;
+  private UUID addedByID;
+  private String addedByName;
   private AccessMode accessMode;
+  private Float confidence;
+  private Float trust;
   private long timestamp;
   private long lastSeenTimestamp;
   private Set<UUID> acl;
@@ -121,6 +129,24 @@ public class FactDocument implements ElasticDocument {
     return this;
   }
 
+  public UUID getAddedByID() {
+    return addedByID;
+  }
+
+  public FactDocument setAddedByID(UUID addedByID) {
+    this.addedByID = addedByID;
+    return this;
+  }
+
+  public String getAddedByName() {
+    return addedByName;
+  }
+
+  public FactDocument setAddedByName(String addedByName) {
+    this.addedByName = addedByName;
+    return this;
+  }
+
   public AccessMode getAccessMode() {
     return accessMode;
   }
@@ -128,6 +154,33 @@ public class FactDocument implements ElasticDocument {
   public FactDocument setAccessMode(AccessMode accessMode) {
     this.accessMode = accessMode;
     return this;
+  }
+
+  public Float getConfidence() {
+    // Required for backwards-compatibility where the 'confidence' field is unset.
+    return ObjectUtils.ifNull(confidence, DEFAULT_CONFIDENCE);
+  }
+
+  public FactDocument setConfidence(Float confidence) {
+    this.confidence = confidence;
+    return this;
+  }
+
+  public Float getTrust() {
+    // Required for backwards-compatibility where the 'trust' field is unset.
+    return ObjectUtils.ifNull(trust, DEFAULT_TRUST);
+  }
+
+  public FactDocument setTrust(Float trust) {
+    this.trust = trust;
+    return this;
+  }
+
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  public float getCertainty() {
+    // This field is only required when storing the document into ElasticSearch in
+    // order to have 'certainty' available as a de-normalized field during search.
+    return getConfidence() * getTrust();
   }
 
   public long getTimestamp() {
