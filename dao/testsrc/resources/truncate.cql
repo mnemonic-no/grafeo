@@ -1,3 +1,4 @@
+TRUNCATE TABLE act.origin;
 TRUNCATE TABLE act.object_type;
 TRUNCATE TABLE act.object;
 TRUNCATE TABLE act.object_fact_binding;

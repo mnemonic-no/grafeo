@@ -20,6 +20,9 @@ public interface CassandraMapper {
   @DaoFactory
   ObjectTypeDao getObjectTypeDao();
 
+  @DaoFactory
+  OriginDao getOriginDao();
+
   static MapperBuilder<CassandraMapper> builder(CqlSession session) {
     return new CassandraMapperBuilder(session);
   }
