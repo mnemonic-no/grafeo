@@ -9,6 +9,7 @@ public abstract class AbstractManagerTest {
   private static ClusterManager clusterManager;
   private FactManager factManager;
   private ObjectManager objectManager;
+  private OriginManager originManager;
 
   @ClassRule
   public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
@@ -33,9 +34,11 @@ public abstract class AbstractManagerTest {
   public void initialize() {
     factManager = new FactManager(clusterManager);
     objectManager = new ObjectManager(clusterManager);
+    originManager = new OriginManager(clusterManager);
 
     factManager.startComponent();
     objectManager.startComponent();
+    originManager.startComponent();
   }
 
   @After
@@ -57,4 +60,7 @@ public abstract class AbstractManagerTest {
     return objectManager;
   }
 
+  protected OriginManager getOriginManager() {
+    return originManager;
+  }
 }

@@ -18,10 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -90,7 +87,7 @@ public class FactManager implements LifecycleAspect {
 
     // It's not allowed to add a FactType with the same name, but if the IDs are equal this is updating an existing FactType.
     FactTypeEntity existing = getFactType(type.getName());
-    if (existing != null && !existing.getId().equals(type.getId()) && existing.getName().equals(type.getName())) {
+    if (existing != null && !Objects.equals(existing.getId(), type.getId()) && Objects.equals(existing.getName(), type.getName())) {
       throw new IllegalArgumentException(String.format("FactType with name = %s already exists.", type.getName()));
     }
 
