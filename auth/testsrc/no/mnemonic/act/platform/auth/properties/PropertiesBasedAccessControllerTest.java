@@ -894,16 +894,36 @@ public class PropertiesBasedAccessControllerTest {
     Subject subject = accessController.resolveSubject(id);
     assertEquals(id, subject.getId());
     assertEquals("N/A", subject.getName());
+    assertNull(subject.getOrganization());
   }
 
   @Test
-  public void testResolveSubjectExistingSubject() throws Exception {
+  public void testResolveSubjectExistingSubjectWithoutAffiliation() throws Exception {
     setup("subject.1.name = subject");
 
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
     Subject subject = accessController.resolveSubject(id);
     assertEquals(id, subject.getId());
     assertEquals("subject", subject.getName());
+    assertNull(subject.getOrganization());
+  }
+
+  @Test
+  public void testResolveSubjectExistingSubjectWithAffiliation() throws Exception {
+    String content = "" +
+            "subject.1.name = subject\n" +
+            "subject.1.affiliation = 1\n" +
+            "organization.1.name = organization\n" +
+            "";
+    setup(content);
+
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    Subject subject = accessController.resolveSubject(id);
+    assertEquals(id, subject.getId());
+    assertEquals("subject", subject.getName());
+    assertNotNull(subject.getOrganization());
+    assertEquals(id, subject.getOrganization().getId());
+    assertEquals("organization", subject.getOrganization().getName());
   }
 
   /* resolveCurrentUser(credentials) */
@@ -915,12 +935,30 @@ public class PropertiesBasedAccessControllerTest {
   }
 
   @Test
-  public void testResolveCurrentUser() throws Exception {
+  public void testResolveCurrentUserWithoutAffiliation() throws Exception {
     setup("subject.1.name = subject");
 
     Subject subject = accessController.resolveCurrentUser(createCredentials(1));
     assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), subject.getId());
     assertEquals("subject", subject.getName());
+    assertNull(subject.getOrganization());
+  }
+
+  @Test
+  public void testResolveCurrentUserWitAffiliation() throws Exception {
+    String content = "" +
+            "subject.1.name = subject\n" +
+            "subject.1.affiliation = 1\n" +
+            "organization.1.name = organization\n" +
+            "";
+    setup(content);
+
+    Subject subject = accessController.resolveCurrentUser(createCredentials(1));
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), subject.getId());
+    assertEquals("subject", subject.getName());
+    assertNotNull(subject.getOrganization());
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), subject.getOrganization().getId());
+    assertEquals("organization", subject.getOrganization().getName());
   }
 
   private void setup(String content) throws Exception {
