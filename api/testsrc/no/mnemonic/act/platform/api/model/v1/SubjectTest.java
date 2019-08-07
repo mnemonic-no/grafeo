@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SubjectTest {
 
@@ -18,6 +19,7 @@ public class SubjectTest {
     JsonNode root = mapper.valueToTree(subject);
     assertEquals(subject.getId().toString(), root.get("id").textValue());
     assertEquals(subject.getName(), root.get("name").textValue());
+    assertTrue(root.get("organization").isObject());
   }
 
   @Test
@@ -32,6 +34,7 @@ public class SubjectTest {
     return Subject.builder()
             .setId(UUID.randomUUID())
             .setName("subject")
+            .setOrganization(Organization.builder().setId(UUID.randomUUID()).setName("organization").build().toInfo())
             .build();
   }
 

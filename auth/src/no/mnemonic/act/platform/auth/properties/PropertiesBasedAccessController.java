@@ -132,7 +132,11 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   @Override
   public no.mnemonic.act.platform.api.model.v1.Subject resolveSubject(UUID id) {
     Subject subject = state.get().getSubject(IdMapper.toInternalID(id));
-    return ObjectUtils.ifNotNull(subject, s -> createSubject(id, s.getName()), createSubject(id, NOT_AVAILABLE_NAME));
+    return ObjectUtils.ifNotNull(
+            subject,
+            s -> createSubject(id, s.getName(), state.get().getOrganization(s.getAffiliation())),
+            createSubject(id, NOT_AVAILABLE_NAME, null)
+    );
   }
 
   @Override
@@ -315,11 +319,14 @@ public class PropertiesBasedAccessController implements AccessController, Organi
             .build();
   }
 
-  private no.mnemonic.act.platform.api.model.v1.Subject createSubject(UUID id, String name) {
+  private no.mnemonic.act.platform.api.model.v1.Subject createSubject(UUID id, String name, Organization organization) {
     return no.mnemonic.act.platform.api.model.v1.Subject.builder()
             .setId(id)
             .setName(name)
-            .build();
+            .setOrganization(ObjectUtils.ifNotNull(
+                    organization,
+                    o -> createOrganization(IdMapper.toGlobalID(o.getInternalID()), o.getName()).toInfo())
+            ).build();
   }
 
   public static class Builder {

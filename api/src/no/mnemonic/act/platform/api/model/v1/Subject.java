@@ -12,10 +12,13 @@ public class Subject {
   private final UUID id;
   @ApiModelProperty(value = "Name of the Subject", example = "John Doe", required = true)
   private final String name;
+  @ApiModelProperty(value = "Organization the Subject belongs to")
+  private final Organization.Info organization;
 
-  private Subject(UUID id, String name) {
+  private Subject(UUID id, String name, Organization.Info organization) {
     this.id = id;
     this.name = name;
+    this.organization = organization;
   }
 
   public UUID getId() {
@@ -24,6 +27,10 @@ public class Subject {
 
   public String getName() {
     return name;
+  }
+
+  public Organization.Info getOrganization() {
+    return organization;
   }
 
   public Info toInfo() {
@@ -37,12 +44,13 @@ public class Subject {
   public static class Builder {
     private UUID id;
     private String name;
+    private Organization.Info organization;
 
     private Builder() {
     }
 
     public Subject build() {
-      return new Subject(id, name);
+      return new Subject(id, name, organization);
     }
 
     public Builder setId(UUID id) {
@@ -52,6 +60,11 @@ public class Subject {
 
     public Builder setName(String name) {
       this.name = name;
+      return this;
+    }
+
+    public Builder setOrganization(Organization.Info organization) {
+      this.organization = organization;
       return this;
     }
   }
