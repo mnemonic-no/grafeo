@@ -113,8 +113,8 @@ public class OriginManagerTest extends AbstractManagerTest {
             .setName(name)
             .setDescription("description")
             .setTrust(0.1f)
-            .setType(OriginEntity.Type.user)
-            .addFlag(OriginEntity.Flag.deleted);
+            .setType(OriginEntity.Type.User)
+            .addFlag(OriginEntity.Flag.Deleted);
   }
 
   private OriginEntity createAndSaveOrigin() {

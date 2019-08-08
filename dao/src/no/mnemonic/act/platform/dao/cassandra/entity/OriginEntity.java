@@ -22,7 +22,7 @@ public class OriginEntity implements CassandraEntity {
   public static final String TABLE = "origin";
 
   public enum Type implements CassandraEnum<Type> {
-    group(0), user(1);
+    Group(0), User(1);
 
     private static final Map<Integer, Type> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
     private int value;
@@ -42,7 +42,7 @@ public class OriginEntity implements CassandraEntity {
   }
 
   public enum Flag implements CassandraEnum<Flag> {
-    deleted(0);
+    Deleted(0);
 
     private static final Map<Integer, Flag> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
     private int value;

@@ -402,4 +402,20 @@ public interface ThreatIntelligenceService extends Service {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Fetch an Origin by its id.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request identifying Origin.
+   * @return Origin identified by its id.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws ObjectNotFoundException       If the requested Origin could not be found.
+   */
+  default Origin getOrigin(RequestHeader rh, GetOriginByIdRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    throw new UnsupportedOperationException();
+  }
+
 }

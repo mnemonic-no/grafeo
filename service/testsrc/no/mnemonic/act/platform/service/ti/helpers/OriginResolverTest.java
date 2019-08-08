@@ -26,10 +26,10 @@ public class OriginResolverTest {
 
   private final OriginEntity groupOrigin = new OriginEntity()
           .setId(UUID.randomUUID())
-          .setType(OriginEntity.Type.group);
+          .setType(OriginEntity.Type.Group);
   private final OriginEntity userOrigin = new OriginEntity()
           .setId(UUID.randomUUID())
-          .setType(OriginEntity.Type.user)
+          .setType(OriginEntity.Type.User)
           .setName("originalName")
           .setOrganizationID(UUID.randomUUID());
 

@@ -38,7 +38,7 @@ public class OriginResolver implements Function<UUID, OriginEntity> {
     if (origin == null) return null;
 
     // If Origin is of type 'group' just return it.
-    if (origin.getType() == OriginEntity.Type.group) return origin;
+    if (origin.getType() == OriginEntity.Type.Group) return origin;
 
     // Fetch user corresponding to Origin (should have the same id).
     Subject user = subjectResolver.resolveSubject(origin.getId());
