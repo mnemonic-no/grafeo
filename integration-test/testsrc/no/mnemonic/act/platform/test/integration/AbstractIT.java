@@ -8,6 +8,7 @@ import com.google.inject.name.Names;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
@@ -50,6 +51,7 @@ public abstract class AbstractIT {
 
   private ComponentContainer serviceContainer;
   private ComponentContainer restContainer;
+  private OriginManager originManager;
   private ObjectManager objectManager;
   private FactManager factManager;
   private FactSearchManager factSearchManager;
@@ -99,6 +101,7 @@ public abstract class AbstractIT {
     restContainer.initialize();
 
     // Store references to managers used by tests.
+    originManager = serviceBeanProvider.getBean(OriginManager.class).orElseThrow(IllegalStateException::new);
     objectManager = serviceBeanProvider.getBean(ObjectManager.class).orElseThrow(IllegalStateException::new);
     factManager = serviceBeanProvider.getBean(FactManager.class).orElseThrow(IllegalStateException::new);
     factSearchManager = serviceBeanProvider.getBean(FactSearchManager.class).orElseThrow(IllegalStateException::new);
@@ -117,6 +120,10 @@ public abstract class AbstractIT {
   }
 
   /* Getters */
+
+  OriginManager getOriginManager() {
+    return originManager;
+  }
 
   ObjectManager getObjectManager() {
     return objectManager;

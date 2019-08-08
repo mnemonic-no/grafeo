@@ -20,6 +20,7 @@ import no.mnemonic.act.platform.service.bindings.RetractionChecker;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.*;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -47,6 +48,8 @@ class ConverterModule extends AbstractModule {
     }).to(ObjectConverter.class);
     bind(new TypeLiteral<Function<ObjectTypeEntity, ObjectType>>() {
     }).to(ObjectTypeConverter.class);
+    bind(new TypeLiteral<Function<OriginEntity, Origin>>() {
+    }).to(OriginConverter.class);
 
     // Converters which convert from UUID to model.
     bind(new TypeLiteral<Function<UUID, FactType>>() {
@@ -73,12 +76,12 @@ class ConverterModule extends AbstractModule {
 
   @Provides
   Function<UUID, Subject> provideSubjectByIdConverter(SubjectResolver resolver) {
-    return resolver::resolveSubject;
+    return id -> ObjectUtils.ifNotNull(id, resolver::resolveSubject);
   }
 
   @Provides
   Function<UUID, Organization> provideOrganizationByIdConverter(OrganizationResolver resolver) {
-    return resolver::resolveOrganization;
+    return id -> ObjectUtils.ifNotNull(id, resolver::resolveOrganization);
   }
 
   @Provides
