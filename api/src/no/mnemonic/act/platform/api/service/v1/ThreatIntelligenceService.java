@@ -418,4 +418,19 @@ public interface ThreatIntelligenceService extends Service {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Search existing Origins.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request limiting the returned Origins.
+   * @return All Origins fulfilling the request parameters.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   */
+  default ResultSet<Origin> searchOrigins(RequestHeader rh, SearchOriginRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    throw new UnsupportedOperationException();
+  }
+
 }

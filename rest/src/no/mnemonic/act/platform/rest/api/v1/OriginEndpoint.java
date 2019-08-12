@@ -7,16 +7,15 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.request.v1.GetOriginByIdRequest;
+import no.mnemonic.act.platform.api.request.v1.SearchOriginRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
@@ -50,5 +49,28 @@ public class OriginEndpoint extends AbstractEndpoint {
           @PathParam("id") @ApiParam(value = "UUID of the requested Origin.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.getOrigin(getHeader(), new GetOriginByIdRequest().setId(id)));
+  }
+
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "List available Origins.",
+          notes = "This operation returns all available Origins.",
+          response = Origin.class,
+          responseContainer = "list"
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
+  public Response searchOrigins(
+          @QueryParam("includeDeleted") @ApiParam(value = "Include deleted Origins (default false)") Boolean includeDeleted,
+          @QueryParam("limit") @ApiParam(value = "Limit the number of returned Origins (default 25, 0 means all)") @Min(0) Integer limit
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return buildResponse(service.searchOrigins(getHeader(), new SearchOriginRequest()
+            .setIncludeDeleted(includeDeleted)
+            .setLimit(limit)
+    ));
   }
 }

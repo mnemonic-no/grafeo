@@ -6,10 +6,7 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
-import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
@@ -104,6 +101,25 @@ public class TiSecurityContext extends SecurityContext {
   }
 
   /**
+   * Check if a user is allowed to view a specific Origin.
+   *
+   * @param origin Origin to verify access to.
+   * @throws AccessDeniedException         If the user is not allowed to view the Origin.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   */
+  public void checkReadPermission(OriginEntity origin) throws AccessDeniedException, AuthenticationFailedException {
+    if (origin == null) throw new AccessDeniedException("No access to Origin.");
+
+    if (origin.getOrganizationID() != null) {
+      // Check that the user has view permission for the organization the Origin belongs to.
+      checkPermission(TiFunctionConstants.viewOrigins, origin.getOrganizationID());
+    } else {
+      // Only check that the user has general view permission.
+      checkPermission(TiFunctionConstants.viewOrigins);
+    }
+  }
+
+  /**
    * Check if a user is allowed to view a specific Fact based on the Fact's AccessMode.
    *
    * @param fact Fact to verify access to.
@@ -127,6 +143,21 @@ public class TiSecurityContext extends SecurityContext {
   public boolean hasReadPermission(ObjectEntity object) {
     try {
       checkReadPermission(object);
+      return true;
+    } catch (AccessDeniedException | AuthenticationFailedException ignored) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if a user is allowed to view a specific Origin.
+   *
+   * @param origin Origin to verify access to.
+   * @return True if user has access to the Origin.
+   */
+  public boolean hasReadPermission(OriginEntity origin) {
+    try {
+      checkReadPermission(origin);
       return true;
     } catch (AccessDeniedException | AuthenticationFailedException ignored) {
       return false;

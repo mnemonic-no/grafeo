@@ -6,3 +6,4 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 ## [Origin, Trust & Confidence] - WIP
 ### Added
 - REST endpoint for retrieval of an Origin by ID, `GET /v1/origin/uuid/{id}`.
+- REST endpoint for listing Origins, `GET /v1/origin`.

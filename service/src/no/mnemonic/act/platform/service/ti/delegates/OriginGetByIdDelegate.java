@@ -41,10 +41,8 @@ public class OriginGetByIdDelegate implements Delegate {
               "origin.not.exist", "id", request.getId().toString());
     }
 
-    if (entity.getOrganizationID() != null) {
-      // Verify that the user is allowed to view the fetched Origin if it belongs to an organization.
-      securityContext.checkPermission(TiFunctionConstants.viewOrigins, entity.getOrganizationID());
-    }
+    // Verify that the user is allowed to view the fetched Origin.
+    securityContext.checkReadPermission(entity);
 
     return originConverter.apply(entity);
   }

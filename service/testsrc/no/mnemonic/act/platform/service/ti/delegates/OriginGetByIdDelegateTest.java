@@ -51,7 +51,7 @@ public class OriginGetByIdDelegateTest {
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID());
     when(originResolver.apply(origin.getId())).thenReturn(origin);
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewOrigins, origin.getOrganizationID());
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(origin);
 
     delegate.handle(new GetOriginByIdRequest().setId(origin.getId()));
   }
@@ -68,6 +68,6 @@ public class OriginGetByIdDelegateTest {
     verify(originResolver).apply(origin.getId());
     verify(originConverter).apply(origin);
     verify(securityContext).checkPermission(TiFunctionConstants.viewOrigins);
-    verify(securityContext).checkPermission(TiFunctionConstants.viewOrigins, origin.getOrganizationID());
+    verify(securityContext).checkReadPermission(origin);
   }
 }

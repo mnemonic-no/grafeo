@@ -16,6 +16,15 @@ public class OriginIT extends AbstractIT {
     fetchAndAssertSingle("/v1/origin/uuid/" + entity.getId(), entity.getId());
   }
 
+  @Test
+  public void testSearchOrigins() throws Exception {
+    // Create an Origin in the database ...
+    OriginEntity entity = createOrigin();
+
+    // ... and check that it can be found via the REST API.
+    fetchAndAssertList("/v1/origin", entity.getId());
+  }
+
   private OriginEntity createOrigin() {
     OriginEntity entity = new OriginEntity()
             .setId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
