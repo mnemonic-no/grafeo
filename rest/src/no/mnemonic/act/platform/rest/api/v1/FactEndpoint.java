@@ -17,6 +17,7 @@ import no.mnemonic.commons.utilities.StringUtils;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -158,7 +159,7 @@ public class FactEndpoint extends AbstractEndpoint {
           @QueryParam("includeRetracted") @ApiParam(value = "Include retracted meta Facts (default false)") Boolean includeRetracted,
           @QueryParam("before") @ApiParam(value = "Only return meta Facts added before a specific timestamp.") String before,
           @QueryParam("after") @ApiParam(value = "Only return meta Facts added after a specific timestamp.") String after,
-          @QueryParam("limit") @ApiParam(value = "Limit the number of returned meta Facts (default 25, 0 means all)") Integer limit
+          @QueryParam("limit") @ApiParam(value = "Limit the number of returned meta Facts (default 25, 0 means all)") @Min(0) Integer limit
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.searchMetaFacts(getHeader(), new SearchMetaFactsRequest()
             .setFact(fact)
