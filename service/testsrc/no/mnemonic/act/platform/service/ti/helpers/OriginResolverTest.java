@@ -127,4 +127,22 @@ public class OriginResolverTest {
     resolver.apply(userOrigin.getId());
     verify(originManager, never()).saveOrigin(any());
   }
+
+  @Test
+  public void testApplyFetchUserOriginSkipUpdateNameFromOtherOrigin() {
+    OriginEntity otherOrigin = new OriginEntity()
+            .setId(UUID.randomUUID())
+            .setName("otherOrigin");
+    Subject userSubject = Subject.builder()
+            .setId(userOrigin.getId())
+            .setName(otherOrigin.getName())
+            .build();
+
+    when(originManager.getOrigin(userOrigin.getId())).thenReturn(userOrigin);
+    when(originManager.getOrigin(otherOrigin.getName())).thenReturn(otherOrigin);
+    when(subjectResolver.resolveSubject(userOrigin.getId())).thenReturn(userSubject);
+
+    resolver.apply(userOrigin.getId());
+    verify(originManager, never()).saveOrigin(any());
+  }
 }

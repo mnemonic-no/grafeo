@@ -6,10 +6,12 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Origin;
+import no.mnemonic.act.platform.api.request.v1.CreateOriginRequest;
 import no.mnemonic.act.platform.api.request.v1.GetOriginByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchOriginRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
+import no.mnemonic.act.platform.rest.api.ResultStash;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -72,5 +74,33 @@ public class OriginEndpoint extends AbstractEndpoint {
             .setIncludeDeleted(includeDeleted)
             .setLimit(limit)
     ));
+  }
+
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Create a new Origin.",
+          notes = "This operation creates a new Origin in the Namespace of the running instance.\n\n" +
+                  "All Facts are marked with an Origin in order to identify where the information came from. This operation " +
+                  "creates an Origin of type 'Group', i.e. an Origin which is not bound to a specific user. Origins bound " +
+                  "to specific users will automatically be created when Facts are added without an Origin. Then the user " +
+                  "adding the Fact will become the Origin. If the request contains an organization users must hold the " +
+                  "permission to create Origins for that organization.",
+          response = Origin.class,
+          code = 201
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
+  public Response createOrigin(
+          @ApiParam(value = "Request to create Origin.") @NotNull @Valid CreateOriginRequest request
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return ResultStash.builder()
+            .setStatus(Response.Status.CREATED)
+            .setData(service.createOrigin(getHeader(), request))
+            .buildResponse();
   }
 }

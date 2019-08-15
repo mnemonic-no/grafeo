@@ -2,12 +2,14 @@ package no.mnemonic.act.platform.rest.api.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import no.mnemonic.act.platform.api.model.v1.Origin;
+import no.mnemonic.act.platform.api.request.v1.CreateOriginRequest;
 import no.mnemonic.act.platform.api.request.v1.GetOriginByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchOriginRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import org.junit.Test;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.HashSet;
@@ -56,6 +58,18 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(3, payload.size());
 
     verify(getTiService(), times(1)).searchOrigins(any(), isA(SearchOriginRequest.class));
+  }
+
+  @Test
+  public void testCreateOrigin() throws Exception {
+    UUID id = UUID.randomUUID();
+    when(getTiService().createOrigin(any(), isA(CreateOriginRequest.class))).then(i -> Origin.builder().setId(id).build());
+
+    Response response = target("/v1/origin").request().post(Entity.json(new CreateOriginRequest().setName("name")));
+    assertEquals(201, response.getStatus());
+    assertEquals(id.toString(), getPayload(response).get("id").textValue());
+
+    verify(getTiService(), times(1)).createOrigin(any(), isA(CreateOriginRequest.class));
   }
 
   private Collection<Origin> createOrigins() {
