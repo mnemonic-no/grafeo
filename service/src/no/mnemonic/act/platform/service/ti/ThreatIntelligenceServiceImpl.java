@@ -250,6 +250,12 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return delegateProvider.get(OriginSearchDelegate.class).handle(request);
   }
 
+  @Override
+  public Origin createOrigin(RequestHeader rh, CreateOriginRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    return delegateProvider.get(OriginCreateDelegate.class).handle(request);
+  }
+
   private Function<UUID, Iterator<FactEntity>> createFactsBoundToObjectResolver() {
     return objectID -> {
       // Look up bindings for the given Object ID ...

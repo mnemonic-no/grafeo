@@ -433,4 +433,19 @@ public interface ThreatIntelligenceService extends Service {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Create a new Origin.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request containing new Origin.
+   * @return Newly created Origin.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   */
+  default Origin createOrigin(RequestHeader rh, CreateOriginRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
+    throw new UnsupportedOperationException();
+  }
+
 }

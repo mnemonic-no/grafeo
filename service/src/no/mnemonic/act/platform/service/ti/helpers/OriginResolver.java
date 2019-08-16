@@ -52,11 +52,12 @@ public class OriginResolver implements Function<UUID, OriginEntity> {
   private OriginEntity updateFields(OriginEntity origin, Subject user) {
     boolean updated = false;
 
-    // The default SubjectResolver implementation will always return an object. If it can't find a subject
-    // the name is set to 'N/A'. In this case don't update the Origin's name.
+    // The default SubjectResolver implementation will always return an object. If it can't find a subject the name is set
+    // to 'N/A'. In this case don't update the Origin's name. Also verify that no other Origin with the user's name exists.
     if (!StringUtils.isBlank(user.getName()) &&
             !Objects.equals(user.getName(), NOT_AVAILABLE_NAME) &&
-            !Objects.equals(user.getName(), origin.getName())) {
+            !Objects.equals(user.getName(), origin.getName()) &&
+            !originWithSameNameExists(origin, user)) {
       origin.setName(user.getName());
       updated = true;
     }
@@ -70,5 +71,11 @@ public class OriginResolver implements Function<UUID, OriginEntity> {
     if (!updated) return origin;
 
     return originManager.saveOrigin(origin);
+  }
+
+  private boolean originWithSameNameExists(OriginEntity origin, Subject user) {
+    // Check if there exists another Origin with the user's name because there can't exist two Origins with the same name.
+    OriginEntity existing = originManager.getOrigin(user.getName());
+    return existing != null && !Objects.equals(origin.getId(), existing.getId());
   }
 }

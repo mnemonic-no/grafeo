@@ -346,4 +346,14 @@ public class ThreatIntelligenceServiceImplTest {
     service.searchOrigins(RequestHeader.builder().build(), request);
     verify(delegate).handle(request);
   }
+
+  @Test
+  public void testCreateOriginCallsDelegate() throws Exception {
+    OriginCreateDelegate delegate = mock(OriginCreateDelegate.class);
+    when(delegateProvider.get(OriginCreateDelegate.class)).thenReturn(delegate);
+
+    CreateOriginRequest request = new CreateOriginRequest();
+    service.createOrigin(RequestHeader.builder().build(), request);
+    verify(delegate).handle(request);
+  }
 }
