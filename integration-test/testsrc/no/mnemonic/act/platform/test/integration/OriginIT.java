@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.test.integration;
 
 import no.mnemonic.act.platform.api.request.v1.CreateOriginRequest;
+import no.mnemonic.act.platform.api.request.v1.UpdateOriginRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import org.junit.Test;
 
@@ -41,6 +42,20 @@ public class OriginIT extends AbstractIT {
 
     // ... and check that it ends up in the database.
     assertNotNull(getOriginManager().getOrigin(getIdFromModel(getPayload(response))));
+  }
+
+  @Test
+  public void testUpdateOrigin() {
+    // Create an Origin in the database ...
+    OriginEntity entity = createOrigin();
+
+    // ... update it via the REST API ...
+    UpdateOriginRequest request = new UpdateOriginRequest().setName("OriginUpdated");
+    Response response = request("/v1/origin/uuid/" + entity.getId()).put(Entity.json(request));
+    assertEquals(200, response.getStatus());
+
+    // ... and check that the update ends up in the database.
+    assertEquals(request.getName(), getOriginManager().getOrigin(entity.getId()).getName());
   }
 
   private OriginEntity createOrigin() {
