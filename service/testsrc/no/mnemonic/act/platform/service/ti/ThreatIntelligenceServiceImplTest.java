@@ -366,4 +366,14 @@ public class ThreatIntelligenceServiceImplTest {
     service.updateOrigin(RequestHeader.builder().build(), request);
     verify(delegate).handle(request);
   }
+
+  @Test
+  public void testDeleteOriginCallsDelegate() throws Exception {
+    OriginDeleteDelegate delegate = mock(OriginDeleteDelegate.class);
+    when(delegateProvider.get(OriginDeleteDelegate.class)).thenReturn(delegate);
+
+    DeleteOriginRequest request = new DeleteOriginRequest();
+    service.deleteOrigin(RequestHeader.builder().build(), request);
+    verify(delegate).handle(request);
+  }
 }

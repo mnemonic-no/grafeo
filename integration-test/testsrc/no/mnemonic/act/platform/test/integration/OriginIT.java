@@ -9,8 +9,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class OriginIT extends AbstractIT {
 
@@ -56,6 +55,19 @@ public class OriginIT extends AbstractIT {
 
     // ... and check that the update ends up in the database.
     assertEquals(request.getName(), getOriginManager().getOrigin(entity.getId()).getName());
+  }
+
+  @Test
+  public void testDeleteOrigin() {
+    // Create an Origin in the database ...
+    OriginEntity entity = createOrigin();
+
+    // ... delete it via the REST API ...
+    Response response = request("/v1/origin/uuid/" + entity.getId()).delete();
+    assertEquals(200, response.getStatus());
+
+    // ... and check that it's marked as deleted in the database.
+    assertTrue(getOriginManager().getOrigin(entity.getId()).getFlags().contains(OriginEntity.Flag.Deleted));
   }
 
   private OriginEntity createOrigin() {

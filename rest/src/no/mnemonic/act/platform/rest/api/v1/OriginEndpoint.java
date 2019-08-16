@@ -6,10 +6,7 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Origin;
-import no.mnemonic.act.platform.api.request.v1.CreateOriginRequest;
-import no.mnemonic.act.platform.api.request.v1.GetOriginByIdRequest;
-import no.mnemonic.act.platform.api.request.v1.SearchOriginRequest;
-import no.mnemonic.act.platform.api.request.v1.UpdateOriginRequest;
+import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
@@ -128,5 +125,25 @@ public class OriginEndpoint extends AbstractEndpoint {
           @ApiParam(value = "Request to update Origin.") @NotNull @Valid UpdateOriginRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.updateOrigin(getHeader(), request.setId(id)));
+  }
+
+  @DELETE
+  @Path("/uuid/{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Mark an existing Origin as deleted.",
+          notes = "This operation marks an existing Origin as deleted. It is not allowed to use deleted Origins when adding new Facts.",
+          response = Origin.class
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 404, message = "Origin does not exist."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
+  public Response deleteOrigin(
+          @PathParam("id") @ApiParam(value = "UUID of Origin.") @NotNull @Valid UUID id
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return buildResponse(service.deleteOrigin(getHeader(), new DeleteOriginRequest().setId(id)));
   }
 }

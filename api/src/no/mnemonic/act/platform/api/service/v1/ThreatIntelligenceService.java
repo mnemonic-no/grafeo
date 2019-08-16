@@ -464,4 +464,20 @@ public interface ThreatIntelligenceService extends Service {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Mark an existing Origin as deleted.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request to mark an existing Origin as deleted.
+   * @return Deleted Origin.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws ObjectNotFoundException       If the Origin could not be found.
+   */
+  default Origin deleteOrigin(RequestHeader rh, DeleteOriginRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    throw new UnsupportedOperationException();
+  }
+
 }
