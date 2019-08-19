@@ -103,6 +103,7 @@ public class FactTypeResolverTest {
     assertEquals(RETRACTION_FACT_TYPE_ID, retraction.getId());
     assertEquals(GLOBAL_NAMESPACE, retraction.getNamespaceID());
     assertTrue(retraction.getName().startsWith(RETRACTION_FACT_TYPE_NAME));
+    assertEquals(1.0f, retraction.getDefaultConfidence(), 0.0);
     assertEquals("TrueValidator", retraction.getValidator());
   }
 

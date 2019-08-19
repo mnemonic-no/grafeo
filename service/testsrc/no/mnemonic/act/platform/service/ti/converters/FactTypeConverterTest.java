@@ -81,6 +81,7 @@ public class FactTypeConverterTest {
             .setId(UUID.randomUUID())
             .setNamespaceID(UUID.randomUUID())
             .setName("FactType")
+            .setDefaultConfidence(0.1f)
             .setValidator("Validator")
             .setValidatorParameter("ValidatorParameter");
   }
@@ -88,6 +89,7 @@ public class FactTypeConverterTest {
   private void assertModelCommon(FactTypeEntity entity, FactType model) {
     assertEquals(entity.getId(), model.getId());
     assertEquals(entity.getName(), model.getName());
+    assertEquals(entity.getDefaultConfidence(), model.getDefaultConfidence(), 0.0);
     assertEquals(entity.getValidator(), model.getValidator());
     assertEquals(entity.getValidatorParameter(), model.getValidatorParameter());
 

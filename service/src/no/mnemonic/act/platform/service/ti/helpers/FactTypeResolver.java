@@ -64,6 +64,7 @@ public class FactTypeResolver {
               .setId(RETRACTION_FACT_TYPE_ID)
               .setNamespaceID(GLOBAL_NAMESPACE)
               .setName(createRetractionFactTypeName())
+              .setDefaultConfidence(1.0f)
               .setValidator("TrueValidator"));
     }
 
