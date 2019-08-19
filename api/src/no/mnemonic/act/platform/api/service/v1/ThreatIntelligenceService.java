@@ -448,4 +448,20 @@ public interface ThreatIntelligenceService extends Service {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Update an existing Origin.
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request containing updates to an existing Origin.
+   * @return Updated Origin.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws ObjectNotFoundException       If the Origin could not be found.
+   */
+  default Origin updateOrigin(RequestHeader rh, UpdateOriginRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    throw new UnsupportedOperationException();
+  }
+
 }

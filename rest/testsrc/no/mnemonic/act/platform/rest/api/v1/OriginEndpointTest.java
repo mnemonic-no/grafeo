@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.request.v1.CreateOriginRequest;
 import no.mnemonic.act.platform.api.request.v1.GetOriginByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchOriginRequest;
+import no.mnemonic.act.platform.api.request.v1.UpdateOriginRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
 import org.junit.Test;
@@ -70,6 +71,21 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
     verify(getTiService(), times(1)).createOrigin(any(), isA(CreateOriginRequest.class));
+  }
+
+  @Test
+  public void testUpdateOrigin() throws Exception {
+    UUID id = UUID.randomUUID();
+    when(getTiService().updateOrigin(any(), isA(UpdateOriginRequest.class))).then(i -> {
+      assertEquals(id, i.<UpdateOriginRequest>getArgument(1).getId());
+      return Origin.builder().setId(id).build();
+    });
+
+    Response response = target(String.format("/v1/origin/uuid/%s", id)).request().put(Entity.json(new UpdateOriginRequest()));
+    assertEquals(200, response.getStatus());
+    assertEquals(id.toString(), getPayload(response).get("id").textValue());
+
+    verify(getTiService(), times(1)).updateOrigin(any(), isA(UpdateOriginRequest.class));
   }
 
   private Collection<Origin> createOrigins() {

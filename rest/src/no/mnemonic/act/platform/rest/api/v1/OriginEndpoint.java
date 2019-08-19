@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.request.v1.CreateOriginRequest;
 import no.mnemonic.act.platform.api.request.v1.GetOriginByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchOriginRequest;
+import no.mnemonic.act.platform.api.request.v1.UpdateOriginRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
@@ -102,5 +103,30 @@ public class OriginEndpoint extends AbstractEndpoint {
             .setStatus(Response.Status.CREATED)
             .setData(service.createOrigin(getHeader(), request))
             .buildResponse();
+  }
+
+  @PUT
+  @Path("/uuid/{id}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Update an existing Origin.",
+          notes = "This operation updates an existing Origin.\n\n" +
+                  "If the Origin contains an organization users must hold the permission to update Origins for that " +
+                  "organization. Similarly, if the operation changes the Origin's organization users must hold the " +
+                  "same permission for the new organization.",
+          response = Origin.class
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 404, message = "Origin does not exist."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
+  public Response updateOrigin(
+          @PathParam("id") @ApiParam(value = "UUID of Origin.") @NotNull @Valid UUID id,
+          @ApiParam(value = "Request to update Origin.") @NotNull @Valid UpdateOriginRequest request
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return buildResponse(service.updateOrigin(getHeader(), request.setId(id)));
   }
 }
