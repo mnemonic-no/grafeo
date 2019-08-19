@@ -262,6 +262,12 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return delegateProvider.get(OriginUpdateDelegate.class).handle(request);
   }
 
+  @Override
+  public Origin deleteOrigin(RequestHeader rh, DeleteOriginRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
+    return delegateProvider.get(OriginDeleteDelegate.class).handle(request);
+  }
+
   private Function<UUID, Iterator<FactEntity>> createFactsBoundToObjectResolver() {
     return objectID -> {
       // Look up bindings for the given Object ID ...
