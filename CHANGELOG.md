@@ -10,3 +10,6 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 - REST endpoint for creating Origins, `POST /v1/origin`.
 - REST endpoint for updating Origins, `PUT /v1/origin/uuid/{id}`.
 - REST endpoint for deleting Origins, `DELETE /v1/origin/uuid/{id}`.
+
+### Changed
+- Extend FactType API to include `defaultConfidence` field.

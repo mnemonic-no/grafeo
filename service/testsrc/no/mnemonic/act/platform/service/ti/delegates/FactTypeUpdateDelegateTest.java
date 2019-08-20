@@ -79,6 +79,23 @@ public class FactTypeUpdateDelegateTest extends AbstractDelegateTest {
     }));
   }
 
+  @Test
+  public void testUpdateFactTypeWithDefaultConfidence() throws Exception {
+    UpdateFactTypeRequest request = new UpdateFactTypeRequest()
+            .setId(UUID.randomUUID())
+            .setDefaultConfidence(0.1f);
+    FactTypeEntity existingEntity = new FactTypeEntity();
+    when(getFactManager().getFactType(request.getId())).thenReturn(existingEntity);
+
+    delegate.handle(request);
+    verify(getFactTypeConverter()).apply(existingEntity);
+    verify(getFactManager()).saveFactType(argThat(entity -> {
+      assertSame(existingEntity, entity);
+      assertEquals(request.getDefaultConfidence(), entity.getDefaultConfidence(), 0.0);
+      return true;
+    }));
+  }
+
   @Test(expected = InvalidArgumentException.class)
   public void testUpdateFactTypeWithObjectBindingsFailsOnExistingFactBindings() throws Exception {
     UpdateFactTypeRequest request = new UpdateFactTypeRequest()

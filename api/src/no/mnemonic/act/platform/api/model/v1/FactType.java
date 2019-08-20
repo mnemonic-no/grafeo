@@ -18,6 +18,8 @@ public class FactType {
   private final Namespace namespace;
   @ApiModelProperty(value = "Name of the FactType. Unique per Namespace", example = "ThreatActorAlias", required = true)
   private final String name;
+  @ApiModelProperty(value = "Confidence assigned by default to new Facts of this type", example = "0.9", required = true)
+  private final float defaultConfidence;
   @ApiModelProperty(value = "Validator used to validate new Facts of this type", example = "RegexValidator", required = true)
   private final String validator;
   @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
@@ -27,11 +29,18 @@ public class FactType {
   @ApiModelProperty(value = "Defines to which Facts new meta Facts of this type can be linked")
   private final List<MetaFactBindingDefinition> relevantFactBindings;
 
-  private FactType(UUID id, Namespace namespace, String name, String validator, String validatorParameter,
-                   List<FactObjectBindingDefinition> relevantObjectBindings, List<MetaFactBindingDefinition> relevantFactBindings) {
+  private FactType(UUID id,
+                   Namespace namespace,
+                   String name,
+                   float defaultConfidence,
+                   String validator,
+                   String validatorParameter,
+                   List<FactObjectBindingDefinition> relevantObjectBindings,
+                   List<MetaFactBindingDefinition> relevantFactBindings) {
     this.id = id;
     this.namespace = namespace;
     this.name = name;
+    this.defaultConfidence = defaultConfidence;
     this.validator = validator;
     this.validatorParameter = validatorParameter;
     this.relevantObjectBindings = ObjectUtils.ifNotNull(relevantObjectBindings, Collections::unmodifiableList);
@@ -48,6 +57,10 @@ public class FactType {
 
   public String getName() {
     return name;
+  }
+
+  public float getDefaultConfidence() {
+    return defaultConfidence;
   }
 
   public String getValidator() {
@@ -78,6 +91,7 @@ public class FactType {
     private UUID id;
     private Namespace namespace;
     private String name;
+    private float defaultConfidence;
     private String validator;
     private String validatorParameter;
     private List<FactObjectBindingDefinition> relevantObjectBindings;
@@ -87,7 +101,7 @@ public class FactType {
     }
 
     public FactType build() {
-      return new FactType(id, namespace, name, validator, validatorParameter, relevantObjectBindings, relevantFactBindings);
+      return new FactType(id, namespace, name, defaultConfidence, validator, validatorParameter, relevantObjectBindings, relevantFactBindings);
     }
 
     public Builder setId(UUID id) {
@@ -102,6 +116,11 @@ public class FactType {
 
     public Builder setName(String name) {
       this.name = name;
+      return this;
+    }
+
+    public Builder setDefaultConfidence(float defaultConfidence) {
+      this.defaultConfidence = defaultConfidence;
       return this;
     }
 

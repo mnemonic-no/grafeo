@@ -55,6 +55,10 @@ public class FactTypeUpdateDelegate extends AbstractDelegate implements Delegate
       entity.setName(request.getName());
     }
 
+    if (request.getDefaultConfidence() != null) {
+      entity.setDefaultConfidence(request.getDefaultConfidence());
+    }
+
     if (!CollectionUtils.isEmpty(request.getAddObjectBindings())) {
       if (!CollectionUtils.isEmpty(entity.getRelevantFactBindings())) {
         throw new InvalidArgumentException()

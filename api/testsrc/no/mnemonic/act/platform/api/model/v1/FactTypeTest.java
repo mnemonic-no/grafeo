@@ -20,6 +20,7 @@ public class FactTypeTest {
     assertEquals(type.getId().toString(), root.get("id").textValue());
     assertTrue(root.get("namespace").isObject());
     assertEquals(type.getName(), root.get("name").textValue());
+    assertEquals(type.getDefaultConfidence(), root.get("defaultConfidence").floatValue(), 0.0);
     assertEquals(type.getValidator(), root.get("validator").textValue());
     assertEquals(type.getValidatorParameter(), root.get("validatorParameter").textValue());
     assertTrue(root.get("relevantObjectBindings").isArray());
@@ -43,6 +44,7 @@ public class FactTypeTest {
             .setId(UUID.randomUUID())
             .setNamespace(Namespace.builder().setId(UUID.randomUUID()).setName("namespace").build())
             .setName("factType")
+            .setDefaultConfidence(0.1f)
             .setValidator("validator")
             .setValidatorParameter("validatorParameter")
             .addRelevantObjectBinding(new FactType.FactObjectBindingDefinition(createObjectType(), createObjectType(), true))

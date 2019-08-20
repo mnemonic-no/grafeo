@@ -20,6 +20,7 @@ public class UpdateFactTypeRequestTest extends AbstractRequestTest {
     String json = String.format("{" +
             "id : '%s'," +
             "name : 'name'," +
+            "defaultConfidence : 0.1," +
             "addObjectBindings : [{ sourceObjectType : '%s', destinationObjectType : '%s', bidirectionalBinding : true }]," +
             "addFactBindings : [{ factType : '%s' }]" +
             "}", id, sourceObjectType, destinationObjectType, factType);
@@ -27,6 +28,7 @@ public class UpdateFactTypeRequestTest extends AbstractRequestTest {
     UpdateFactTypeRequest request = getMapper().readValue(json, UpdateFactTypeRequest.class);
     assertEquals(id, request.getId());
     assertEquals("name", request.getName());
+    assertEquals(0.1f, request.getDefaultConfidence(), 0.0);
     assertEquals(1, request.getAddObjectBindings().size());
     assertEquals(sourceObjectType, request.getAddObjectBindings().get(0).getSourceObjectType());
     assertEquals(destinationObjectType, request.getAddObjectBindings().get(0).getDestinationObjectType());
@@ -49,6 +51,24 @@ public class UpdateFactTypeRequestTest extends AbstractRequestTest {
             .setName(""));
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "name");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMin() {
+    Set<ConstraintViolation<UpdateFactTypeRequest>> violations = getValidator().validate(new UpdateFactTypeRequest()
+            .setId(UUID.randomUUID())
+            .setDefaultConfidence(-0.1f));
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "defaultConfidence");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMax() {
+    Set<ConstraintViolation<UpdateFactTypeRequest>> violations = getValidator().validate(new UpdateFactTypeRequest()
+            .setId(UUID.randomUUID())
+            .setDefaultConfidence(1.1f));
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "defaultConfidence");
   }
 
   @Test

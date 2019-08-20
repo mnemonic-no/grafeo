@@ -65,6 +65,7 @@ public class FactTypeCreateDelegate extends AbstractDelegate implements Delegate
             .setId(UUID.randomUUID()) // ID needs to be provided by client.
             .setNamespaceID(GLOBAL_NAMESPACE) // For now everything will just be part of the global namespace.
             .setName(request.getName())
+            .setDefaultConfidence(request.getDefaultConfidence())
             .setValidator(request.getValidator())
             .setValidatorParameter(request.getValidatorParameter())
             .setRelevantObjectBindings(factTypeHelper.convertFactObjectBindingDefinitions(request.getRelevantObjectBindings()))

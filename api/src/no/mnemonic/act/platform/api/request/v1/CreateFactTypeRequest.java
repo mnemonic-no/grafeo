@@ -7,6 +7,8 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 
@@ -16,6 +18,11 @@ public class CreateFactTypeRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Name of new FactType. Needs to be unique per Namespace", example = "ThreatActorAlias", required = true)
   @NotBlank
   private String name;
+  @ApiModelProperty(value = "Confidence assigned by default to new Facts of this type (value between 0.0 and 1.0, default 1.0)",
+          example = "0.9", required = true)
+  @Min(0)
+  @Max(1)
+  private float defaultConfidence = 1.0f;
   @ApiModelProperty(value = "Validator used to validate new Facts of this type", example = "RegexValidator", required = true)
   @NotBlank
   private String validator;
@@ -32,6 +39,15 @@ public class CreateFactTypeRequest implements ValidatingRequest {
 
   public CreateFactTypeRequest setName(String name) {
     this.name = name;
+    return this;
+  }
+
+  public float getDefaultConfidence() {
+    return defaultConfidence;
+  }
+
+  public CreateFactTypeRequest setDefaultConfidence(float defaultConfidence) {
+    this.defaultConfidence = defaultConfidence;
     return this;
   }
 

@@ -108,6 +108,7 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
 
     return new CreateFactTypeRequest()
             .setName("FactType")
+            .setDefaultConfidence(0.1f)
             .setValidator("Validator")
             .setValidatorParameter("ValidatorParameter")
             .addRelevantObjectBinding(binding);
@@ -119,6 +120,7 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
 
     return new CreateFactTypeRequest()
             .setName("FactType")
+            .setDefaultConfidence(0.1f)
             .setValidator("Validator")
             .setValidatorParameter("ValidatorParameter")
             .addRelevantFactBinding(binding);
@@ -128,6 +130,7 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
     assertNotNull(entity.getId());
     assertNotNull(entity.getNamespaceID());
     assertEquals(request.getName(), entity.getName());
+    assertEquals(request.getDefaultConfidence(), entity.getDefaultConfidence(), 0.0);
     assertEquals(request.getValidator(), entity.getValidator());
     assertEquals(request.getValidatorParameter(), entity.getValidatorParameter());
   }

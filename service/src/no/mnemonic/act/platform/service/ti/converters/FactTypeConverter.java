@@ -49,6 +49,7 @@ public class FactTypeConverter implements Converter<FactTypeEntity, FactType> {
             .setId(entity.getId())
             .setNamespace(namespaceConverter.apply(entity.getNamespaceID()))
             .setName(entity.getName())
+            .setDefaultConfidence(entity.getDefaultConfidence())
             .setValidator(entity.getValidator())
             .setValidatorParameter(entity.getValidatorParameter())
             .setRelevantObjectBindings(!skipBindings ? convertObjectBindings(entity.getRelevantObjectBindings()) : null)

@@ -18,6 +18,7 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
     UUID factType = UUID.randomUUID();
     String json = String.format("{" +
             "name : 'name'," +
+            "defaultConfidence : 0.1," +
             "validator : 'validator'," +
             "validatorParameter : 'validatorParameter'," +
             "relevantObjectBindings : [{ sourceObjectType : '%s', destinationObjectType : '%s', bidirectionalBinding : true }]," +
@@ -26,6 +27,7 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
 
     CreateFactTypeRequest request = getMapper().readValue(json, CreateFactTypeRequest.class);
     assertEquals("name", request.getName());
+    assertEquals(0.1f, request.getDefaultConfidence(), 0.0);
     assertEquals("validator", request.getValidator());
     assertEquals("validatorParameter", request.getValidatorParameter());
     assertEquals(1, request.getRelevantObjectBindings().size());
@@ -62,6 +64,26 @@ public class CreateFactTypeRequestTest extends AbstractRequestTest {
     assertEquals(2, violations.size());
     assertPropertyInvalid(violations, "name");
     assertPropertyInvalid(violations, "validator");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMin() {
+    Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
+            .setName("name")
+            .setValidator("validator")
+            .setDefaultConfidence(-0.1f));
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "defaultConfidence");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMax() {
+    Set<ConstraintViolation<CreateFactTypeRequest>> violations = getValidator().validate(new CreateFactTypeRequest()
+            .setName("name")
+            .setValidator("validator")
+            .setDefaultConfidence(1.1f));
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "defaultConfidence");
   }
 
   @Test
