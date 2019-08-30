@@ -6,6 +6,8 @@ import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.UUID;
@@ -19,12 +21,17 @@ public class CreateFactRequest implements ValidatingRequest {
   private String type;
   @ApiModelProperty(value = "Value of new Fact (can be empty if allowed by FactType)", example = "APT28")
   private String value;
-  @ApiModelProperty(value = "Set owner of new Fact. If not set the current user's organization will be used (takes Organization UUID)",
+  @ApiModelProperty(value = "Set owner of new Fact. If not set the Origins's organization will be used (takes Organization UUID)",
           example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID organization;
-  @ApiModelProperty(value = "Set Source of new Fact. If not set the current user will be used as Source (takes Source UUID)",
+  @ApiModelProperty(value = "Set Origin of new Fact. If not set the current user will be used as Origin (takes Origin UUID)",
           example = "123e4567-e89b-12d3-a456-426655440000")
-  private UUID source;
+  private UUID origin;
+  @ApiModelProperty(value = "Set confidence of new Fact. If not set the FactType's default confidence will be used " +
+          "(value between 0.0 and 1.0)", example = "0.9")
+  @Min(0)
+  @Max(1)
+  private Float confidence;
   @ApiModelProperty(value = "Set access mode of new Fact (default 'RoleBased')")
   private AccessMode accessMode = AccessMode.RoleBased;
   @ApiModelProperty(value = "If set adds a comment to new Fact", example = "Hello World!")
@@ -39,7 +46,6 @@ public class CreateFactRequest implements ValidatingRequest {
   private String destinationObject;
   @ApiModelProperty(value = "If true the binding between source Object, Fact and destination Object is bidirectional (default 'false')")
   private boolean bidirectionalBinding;
-  // TODO: Add confidenceLevel once defined.
 
   public String getType() {
     return type;
@@ -68,12 +74,21 @@ public class CreateFactRequest implements ValidatingRequest {
     return this;
   }
 
-  public UUID getSource() {
-    return source;
+  public UUID getOrigin() {
+    return origin;
   }
 
-  public CreateFactRequest setSource(UUID source) {
-    this.source = source;
+  public CreateFactRequest setOrigin(UUID origin) {
+    this.origin = origin;
+    return this;
+  }
+
+  public Float getConfidence() {
+    return confidence;
+  }
+
+  public CreateFactRequest setConfidence(Float confidence) {
+    this.confidence = confidence;
     return this;
   }
 

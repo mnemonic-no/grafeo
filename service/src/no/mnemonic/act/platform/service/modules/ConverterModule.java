@@ -60,6 +60,8 @@ class ConverterModule extends AbstractModule {
     }).to(ObjectByIdConverter.class);
     bind(new TypeLiteral<Function<UUID, ObjectType>>() {
     }).to(ObjectTypeByIdConverter.class);
+    bind(new TypeLiteral<Function<UUID, Origin>>() {
+    }).to(OriginByIdConverter.class);
     bind(new TypeLiteral<Function<UUID, Source>>() {
     }).to(SourceByIdConverter.class);
 

@@ -15,27 +15,29 @@ public class CreateFactRequestTest extends AbstractRequestTest {
   @Test
   public void testDecodeRequest() throws Exception {
     UUID organization = UUID.randomUUID();
-    UUID source = UUID.randomUUID();
+    UUID origin = UUID.randomUUID();
     UUID acl = UUID.randomUUID();
     UUID objectID = UUID.randomUUID();
     String json = String.format("{" +
             "type : 'factType'," +
             "value : 'factValue'," +
             "organization : '%s'," +
-            "source : '%s'," +
+            "origin : '%s'," +
+            "confidence : 0.1," +
             "accessMode : 'Explicit'," +
             "comment : 'comment'," +
             "acl : ['%s']," +
             "sourceObject : 'type/value'," +
             "destinationObject : '%s'," +
             "bidirectionalBinding : true" +
-            "}", organization, source, acl, objectID);
+            "}", organization, origin, acl, objectID);
 
     CreateFactRequest request = getMapper().readValue(json, CreateFactRequest.class);
     assertEquals("factType", request.getType());
     assertEquals("factValue", request.getValue());
     assertEquals(organization, request.getOrganization());
-    assertEquals(source, request.getSource());
+    assertEquals(origin, request.getOrigin());
+    assertEquals(0.1f, request.getConfidence(), 0.0);
     assertEquals(AccessMode.Explicit, request.getAccessMode());
     assertEquals("comment", request.getComment());
     assertEquals(ListUtils.list(acl), request.getAcl());
@@ -69,6 +71,28 @@ public class CreateFactRequestTest extends AbstractRequestTest {
     );
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "type");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMin() {
+    Set<ConstraintViolation<CreateFactRequest>> violations = getValidator().validate(new CreateFactRequest()
+            .setType("type")
+            .setValue("value")
+            .setConfidence(-0.1f)
+    );
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "confidence");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMax() {
+    Set<ConstraintViolation<CreateFactRequest>> violations = getValidator().validate(new CreateFactRequest()
+            .setType("type")
+            .setValue("value")
+            .setConfidence(1.1f)
+    );
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "confidence");
   }
 
   @Test

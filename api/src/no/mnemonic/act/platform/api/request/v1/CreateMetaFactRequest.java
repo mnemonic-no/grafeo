@@ -7,6 +7,8 @@ import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.UUID;
@@ -23,19 +25,23 @@ public class CreateMetaFactRequest implements ValidatingRequest {
   private String type;
   @ApiModelProperty(value = "Value of new meta Fact (can be empty if allowed by FactType)", example = "2016-09-28T21:26:22Z")
   private String value;
-  @ApiModelProperty(value = "Set owner of new meta Fact. If not set the current user's organization will be used (takes Organization UUID)",
+  @ApiModelProperty(value = "Set owner of new meta Fact. If not set the Origin's organization will be used (takes Organization UUID)",
           example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID organization;
-  @ApiModelProperty(value = "Set Source of new meta Fact. If not set the current user will be used as Source (takes Source UUID)",
+  @ApiModelProperty(value = "Set Origin of new meta Fact. If not set the current user will be used as Origin (takes Origin UUID)",
           example = "123e4567-e89b-12d3-a456-426655440000")
-  private UUID source;
+  private UUID origin;
+  @ApiModelProperty(value = "Set confidence of new meta Fact. If not set the FactType's default confidence will be used " +
+          "(value between 0.0 and 1.0)", example = "0.9")
+  @Min(0)
+  @Max(1)
+  private Float confidence;
   @ApiModelProperty(value = "Set access mode of new meta Fact. If not set the access mode from the referenced Fact will be used")
   private AccessMode accessMode;
   @ApiModelProperty(value = "If set adds a comment to new meta Fact", example = "Hello World!")
   private String comment;
   @ApiModelProperty(value = "If set defines explicitly who has access to new meta Fact (takes Subject UUIDs)")
   private List<UUID> acl;
-  // TODO: Add confidenceLevel once defined.
 
   public UUID getFact() {
     return fact;
@@ -73,17 +79,26 @@ public class CreateMetaFactRequest implements ValidatingRequest {
     return this;
   }
 
-  public UUID getSource() {
-    return source;
+  public UUID getOrigin() {
+    return origin;
   }
 
-  public CreateMetaFactRequest setSource(UUID source) {
-    this.source = source;
+  public CreateMetaFactRequest setOrigin(UUID origin) {
+    this.origin = origin;
     return this;
   }
 
   public AccessMode getAccessMode() {
     return accessMode;
+  }
+
+  public Float getConfidence() {
+    return confidence;
+  }
+
+  public CreateMetaFactRequest setConfidence(Float confidence) {
+    this.confidence = confidence;
+    return this;
   }
 
   public CreateMetaFactRequest setAccessMode(AccessMode accessMode) {

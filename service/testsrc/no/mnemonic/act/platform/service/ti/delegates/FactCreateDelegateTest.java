@@ -12,6 +12,7 @@ import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
@@ -35,10 +36,20 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   @Mock
   private ObjectResolver objectResolver;
   @Mock
+  private FactCreateHelper factCreateHelper;
+  @Mock
   private FactStorageHelper factStorageHelper;
 
   private FactCreateDelegate delegate;
 
+  private final OriginEntity origin = new OriginEntity()
+          .setId(UUID.randomUUID())
+          .setName("origin")
+          .setTrust(0.1f);
+  private final Organization organization = Organization.builder()
+          .setId(UUID.randomUUID())
+          .setName("organization")
+          .build();
   private final ObjectTypeEntity ipObjectType = new ObjectTypeEntity()
           .setId(UUID.randomUUID())
           .setName("ip");
@@ -53,6 +64,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
           .setName("resolve")
           .setValidator("validator")
           .setValidatorParameter("validatorParameter")
+          .setDefaultConfidence(0.2f)
           .setRelevantObjectBindings(SetUtils.set(
                   // Allow bindings with both cardinality 1 and 2.
                   new FactTypeEntity.FactObjectBindingDefinition().setSourceObjectTypeID(ipObjectType.getId()).setDestinationObjectTypeID(domainObjectType.getId()),
@@ -83,16 +95,10 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
             getObjectManager(),
             factTypeResolver,
             objectResolver,
+            factCreateHelper,
             factStorageHelper,
             getFactConverter()
     );
-  }
-
-  @Test(expected = AccessDeniedException.class)
-  public void testCreateFactWithoutAddPermission() throws Exception {
-    CreateFactRequest request = createRequest();
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.addFactObjects, request.getOrganization());
-    delegate.handle(request);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -101,9 +107,18 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     delegate.handle(new CreateFactRequest().setType(retractionFactType.getName()));
   }
 
+  @Test(expected = AccessDeniedException.class)
+  public void testCreateFactWithoutAddPermission() throws Exception {
+    mockFetchingOrganization();
+    mockFetchingFactType();
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.addFactObjects, organization.getId());
+    delegate.handle(createRequest());
+  }
+
   @Test
   public void testValidateFactValueThrowsException() throws Exception {
     CreateFactRequest request = createRequest();
+    mockFetchingOrganization();
     mockFetchingFactType();
     Validator validatorMock = mockValidator(false);
 
@@ -228,7 +243,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
             .setOrganization(null);
     mockCreateNewFact();
 
-    when(getSecurityContext().getCurrentUserOrganizationID()).thenReturn(organizationID);
+    when(factCreateHelper.resolveOrganization(isNull(), eq(origin)))
+            .thenReturn(Organization.builder().setId(organizationID).build());
 
     delegate.handle(request);
 
@@ -237,18 +253,31 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
-  public void testCreateFactSetMissingSource() throws Exception {
-    UUID sourceID = UUID.randomUUID();
+  public void testCreateFactSetMissingOrigin() throws Exception {
+    UUID originID = UUID.randomUUID();
     CreateFactRequest request = createRequest()
-            .setSource(null);
+            .setOrigin(null);
     mockCreateNewFact();
 
-    when(getSecurityContext().getCurrentUserID()).thenReturn(sourceID);
+    when(factCreateHelper.resolveOrigin(isNull())).thenReturn(new OriginEntity().setId(originID));
+    when(factCreateHelper.resolveOrganization(notNull(), notNull())).thenReturn(organization);
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> sourceID.equals(e.getSourceID())));
-    verify(getFactConverter()).apply(argThat(e -> sourceID.equals(e.getSourceID())));
+    verify(getFactManager()).saveFact(argThat(e -> originID.equals(e.getSourceID())));
+    verify(getFactConverter()).apply(argThat(e -> originID.equals(e.getSourceID())));
+  }
+
+  @Test
+  public void testCreateFactSetMissingConfidence() throws Exception {
+    CreateFactRequest request = createRequest()
+            .setConfidence(null);
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(getFactManager()).saveFact(argThat(e -> Objects.equals(resolveFactType.getDefaultConfidence(), e.getConfidence())));
+    verify(getFactConverter()).apply(argThat(e -> Objects.equals(resolveFactType.getDefaultConfidence(), e.getConfidence())));
   }
 
   @Test
@@ -277,9 +306,10 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
             .setId(UUID.randomUUID())
             .setTypeID(resolveFactType.getId())
             .setValue(request.getValue())
-            .setSourceID(request.getSource())
+            .setSourceID(request.getOrigin())
             .setOrganizationID(request.getOrganization())
             .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.valueOf(request.getAccessMode().name()))
+            .setConfidence(request.getConfidence())
             .setLastSeenTimestamp(123)
             .setBindings(ListUtils.list(
                     new FactEntity.FactObjectBinding().setObjectID(UUID.fromString(request.getSourceObject())).setDirection(Direction.FactIsDestination),
@@ -314,8 +344,12 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   private void mockCreateNewFact() throws Exception {
     mockValidator(true);
     mockFactConverter();
+    mockFetchingOrganization();
     mockFetchingFactType();
     mockFetchingObjects();
+
+    // Mock fetching of current user.
+    when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
 
     // Mock fetching of existing Fact.
     when(getFactSearchManager().retrieveExistingFacts(any())).thenReturn(SearchResult.<FactDocument>builder().build());
@@ -323,6 +357,11 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     // Mock stuff needed for saving Fact.
     when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
     when(factStorageHelper.saveInitialAclForNewFact(any(), any())).thenAnswer(i -> i.getArgument(1));
+  }
+
+  private void mockFetchingOrganization() throws Exception {
+    when(factCreateHelper.resolveOrigin(origin.getId())).thenReturn(origin);
+    when(factCreateHelper.resolveOrganization(organization.getId(), origin)).thenReturn(organization);
   }
 
   private void mockFetchingFactType() throws Exception {
@@ -370,8 +409,9 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     return new CreateFactRequest()
             .setType(resolveFactType.getName())
             .setValue("factValue")
-            .setOrganization(UUID.randomUUID())
-            .setSource(UUID.randomUUID())
+            .setOrganization(organization.getId())
+            .setOrigin(origin.getId())
+            .setConfidence(0.3f)
             .setComment("Hello World!")
             .setAccessMode(AccessMode.RoleBased)
             .setAcl(ListUtils.list(UUID.randomUUID()))
@@ -385,7 +425,10 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
       assertEquals(resolveFactType.getId(), entity.getTypeID());
       assertEquals(request.getValue(), entity.getValue());
       assertEquals(request.getOrganization(), entity.getOrganizationID());
-      assertEquals(request.getSource(), entity.getSourceID());
+      assertNotNull(entity.getAddedByID());
+      assertEquals(request.getOrigin(), entity.getSourceID());
+      assertEquals(origin.getTrust(), entity.getTrust(), 0.0);
+      assertEquals(request.getConfidence(), entity.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), entity.getAccessMode().name());
       assertTrue(entity.getTimestamp() > 0);
       assertTrue(entity.getLastSeenTimestamp() > 0);
@@ -414,7 +457,10 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
       assertEquals(resolveFactType.getName(), document.getTypeName());
       assertEquals(request.getValue(), document.getValue());
       assertEquals(request.getOrganization(), document.getOrganizationID());
-      assertEquals(request.getSource(), document.getSourceID());
+      assertNotNull(document.getAddedByID());
+      assertEquals(request.getOrigin(), document.getSourceID());
+      assertEquals(origin.getTrust(), document.getTrust(), 0.0);
+      assertEquals(request.getConfidence(), document.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), document.getAccessMode().name());
       assertTrue(document.getTimestamp() > 0);
       assertTrue(document.getLastSeenTimestamp() > 0);
@@ -463,9 +509,10 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     return argThat(criteria -> {
       assertEquals(request.getValue(), criteria.getFactValue());
       assertEquals(resolveFactType.getId(), criteria.getFactTypeID());
-      assertEquals(request.getSource(), criteria.getSourceID());
+      assertEquals(request.getOrigin(), criteria.getSourceID());
       assertEquals(request.getOrganization(), criteria.getOrganizationID());
       assertEquals(request.getAccessMode().name(), criteria.getAccessMode().name());
+      assertEquals(request.getConfidence(), criteria.getConfidence(), 0.0);
 
       if (request.getSourceObject() != null) {
         assertTrue(criteria.getObjects().stream()

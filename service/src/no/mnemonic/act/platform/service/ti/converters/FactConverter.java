@@ -25,7 +25,8 @@ public class FactConverter implements Converter<FactEntity, Fact> {
 
   private final Function<UUID, FactType> factTypeConverter;
   private final Function<UUID, Organization> organizationConverter;
-  private final Function<UUID, Source> sourceConverter;
+  private final Function<UUID, Subject> subjectConverter;
+  private final Function<UUID, Origin> originConverter;
   private final Function<UUID, Object> objectConverter;
   private final Function<UUID, FactEntity> factEntityResolver;
   private final Predicate<FactEntity> accessChecker;
@@ -34,14 +35,16 @@ public class FactConverter implements Converter<FactEntity, Fact> {
   @Inject
   public FactConverter(Function<UUID, FactType> factTypeConverter,
                        Function<UUID, Organization> organizationConverter,
-                       Function<UUID, Source> sourceConverter,
+                       Function<UUID, Subject> subjectConverter,
+                       Function<UUID, Origin> originConverter,
                        Function<UUID, Object> objectConverter,
                        Function<UUID, FactEntity> factEntityResolver,
                        @AccessChecker Predicate<FactEntity> accessChecker,
                        @RetractionChecker Predicate<FactEntity> retractionChecker) {
     this.factTypeConverter = factTypeConverter;
     this.organizationConverter = organizationConverter;
-    this.sourceConverter = sourceConverter;
+    this.subjectConverter = subjectConverter;
+    this.originConverter = originConverter;
     this.objectConverter = objectConverter;
     this.factEntityResolver = factEntityResolver;
     this.accessChecker = accessChecker;
@@ -68,7 +71,10 @@ public class FactConverter implements Converter<FactEntity, Fact> {
             .setValue(entity.getValue())
             .setInReferenceTo(ObjectUtils.ifNotNull(convertInReferenceTo(entity.getInReferenceToID()), Fact::toInfo))
             .setOrganization(ObjectUtils.ifNotNull(organizationConverter.apply(entity.getOrganizationID()), Organization::toInfo))
-            .setSource(ObjectUtils.ifNotNull(sourceConverter.apply(entity.getSourceID()), Source::toInfo))
+            .setAddedBy(ObjectUtils.ifNotNull(subjectConverter.apply(entity.getAddedByID()), Subject::toInfo))
+            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getSourceID()), Origin::toInfo))
+            .setTrust(entity.getTrust())
+            .setConfidence(entity.getConfidence())
             .setAccessMode(AccessMode.valueOf(entity.getAccessMode().name()))
             .setTimestamp(entity.getTimestamp())
             .setLastSeenTimestamp(entity.getLastSeenTimestamp())

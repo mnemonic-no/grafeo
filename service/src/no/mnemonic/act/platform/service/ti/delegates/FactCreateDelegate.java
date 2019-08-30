@@ -18,6 +18,7 @@ import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.helpers.ObjectResolver;
@@ -42,8 +43,13 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
   private final ObjectManager objectManager;
   private final FactTypeResolver factTypeResolver;
   private final ObjectResolver objectResolver;
+  private final FactCreateHelper factCreateHelper;
   private final FactStorageHelper factStorageHelper;
   private final Function<FactEntity, Fact> factConverter;
+
+  private FactTypeEntity requestedFactType;
+  private OriginEntity requestedOrigin;
+  private Organization requestedOrganization;
 
   @Inject
   public FactCreateDelegate(TiSecurityContext securityContext,
@@ -53,6 +59,7 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
                             ObjectManager objectManager,
                             FactTypeResolver factTypeResolver,
                             ObjectResolver objectResolver,
+                            FactCreateHelper factCreateHelper,
                             FactStorageHelper factStorageHelper,
                             Function<FactEntity, Fact> factConverter) {
     this.securityContext = securityContext;
@@ -62,25 +69,29 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
     this.objectManager = objectManager;
     this.factTypeResolver = factTypeResolver;
     this.objectResolver = objectResolver;
+    this.factCreateHelper = factCreateHelper;
     this.factStorageHelper = factStorageHelper;
     this.factConverter = factConverter;
   }
 
   public Fact handle(CreateFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    // Verify that user is allowed to add Facts for the requested organization.
-    securityContext.checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
-
-    FactTypeEntity type = factTypeResolver.resolveFactType(request.getType());
-    if (Objects.equals(type.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
+    // First resolve some objects which are required later on. This will also validate those request parameters.
+    requestedOrigin = factCreateHelper.resolveOrigin(request.getOrigin());
+    requestedOrganization = factCreateHelper.resolveOrganization(request.getOrganization(), requestedOrigin);
+    requestedFactType = factTypeResolver.resolveFactType(request.getType());
+    if (Objects.equals(requestedFactType.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
       throw new AccessDeniedException("Not allowed to manually use system-defined Retraction FactType. Use /retract endpoint instead.");
     }
 
-    // Validate that requested Fact matches its FactType.
-    assertValidFactValue(type, request.getValue());
-    assertValidFactObjectBindings(request, type);
+    // Verify that user is allowed to add Facts for the requested organization.
+    securityContext.checkPermission(TiFunctionConstants.addFactObjects, requestedOrganization.getId());
 
-    FactEntity fact = resolveExistingFact(request, type);
+    // Validate that requested Fact matches its FactType.
+    assertValidFactValue(requestedFactType, request.getValue());
+    assertValidFactObjectBindings(request);
+
+    FactEntity fact = resolveExistingFact(request);
     if (fact != null) {
       // Refresh an existing Fact.
       fact = factManager.refreshFact(fact.getId());
@@ -89,10 +100,10 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
       reindexExistingFact(fact, subjectsAddedToAcl);
     } else {
       // Or create a new Fact.
-      fact = saveFact(request, type);
+      fact = saveFact(request);
       List<UUID> subjectsAddedToAcl = factStorageHelper.saveInitialAclForNewFact(fact, request.getAcl());
       // Index new Fact into ElasticSearch.
-      indexCreatedFact(fact, type, subjectsAddedToAcl);
+      indexCreatedFact(fact, requestedFactType, subjectsAddedToAcl);
     }
 
     // Always add provided comment.
@@ -105,7 +116,7 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
     return addedFact;
   }
 
-  private void assertValidFactObjectBindings(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
+  private void assertValidFactObjectBindings(CreateFactRequest request) throws InvalidArgumentException {
     // Validate that either source or destination or both are set. One field can be NULL to support bindings of cardinality 1.
     ObjectEntity source = objectResolver.resolveObject(request.getSourceObject());
     ObjectEntity destination = objectResolver.resolveObject(request.getDestinationObject());
@@ -117,7 +128,7 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
 
     // Validate that the binding between source Object, Fact and destination Object is valid according to the FactType.
     // Both source and destination ObjectTypes must be the same plus the bidirectional binding flag must match.
-    boolean valid = !CollectionUtils.isEmpty(type.getRelevantObjectBindings()) && type.getRelevantObjectBindings()
+    boolean valid = !CollectionUtils.isEmpty(requestedFactType.getRelevantObjectBindings()) && requestedFactType.getRelevantObjectBindings()
             .stream()
             .anyMatch(b -> Objects.equals(b.getSourceObjectTypeID(), ObjectUtils.ifNotNull(source, ObjectEntity::getTypeID)) &&
                     Objects.equals(b.getDestinationObjectTypeID(), ObjectUtils.ifNotNull(destination, ObjectEntity::getTypeID)) &&
@@ -125,19 +136,19 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
     if (!valid) {
       String invalidValue = String.format("sourceObject = %s|destinationObject = %s|bidirectionalBinding = %s", request.getSourceObject(), request.getDestinationObject(), request.isBidirectionalBinding());
       throw new InvalidArgumentException()
-              .addValidationError(String.format("Requested binding between Fact and Object(s) is not allowed for FactType with id = %s.", type.getId()),
+              .addValidationError(String.format("Requested binding between Fact and Object(s) is not allowed for FactType with id = %s.", requestedFactType.getId()),
                       "invalid.fact.object.binding", "sourceObject|destinationObject|bidirectionalBinding", invalidValue);
     }
   }
 
-  private FactEntity resolveExistingFact(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
-    // Skip confidenceLevel for now as it's currently not provided in the request.
+  private FactEntity resolveExistingFact(CreateFactRequest request) throws InvalidArgumentException {
     FactExistenceSearchCriteria.Builder criteriaBuilder = FactExistenceSearchCriteria.builder()
             .setFactValue(request.getValue())
-            .setFactTypeID(type.getId())
-            .setSourceID(resolveSource(request.getSource()))
-            .setOrganizationID(resolveOrganization(request.getOrganization()))
-            .setAccessMode(request.getAccessMode().name());
+            .setFactTypeID(requestedFactType.getId())
+            .setSourceID(requestedOrigin.getId())
+            .setOrganizationID(requestedOrganization.getId())
+            .setAccessMode(request.getAccessMode().name())
+            .setConfidence(resolveConfidence(request));
     // Need to resolve bindings in order to get the correct objectID if this isn't provided in the request.
     for (FactEntity.FactObjectBinding binding : resolveFactObjectBindings(request)) {
       criteriaBuilder.addObject(binding.getObjectID(), binding.getDirection().name());
@@ -157,14 +168,17 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
             .orElse(null);
   }
 
-  private FactEntity saveFact(CreateFactRequest request, FactTypeEntity type) throws InvalidArgumentException {
+  private FactEntity saveFact(CreateFactRequest request) throws InvalidArgumentException {
     FactEntity fact = new FactEntity()
             .setId(UUID.randomUUID())  // Need to provide client-generated ID.
-            .setTypeID(type.getId())
+            .setTypeID(requestedFactType.getId())
             .setValue(request.getValue())
             .setAccessMode(AccessMode.valueOf(request.getAccessMode().name()))
-            .setOrganizationID(resolveOrganization(request.getOrganization()))
-            .setSourceID(resolveSource(request.getSource()))
+            .setOrganizationID(requestedOrganization.getId())
+            .setAddedByID(securityContext.getCurrentUserID())
+            .setSourceID(requestedOrigin.getId())
+            .setTrust(requestedOrigin.getTrust())
+            .setConfidence(resolveConfidence(request))
             .setBindings(resolveFactObjectBindings(request))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
@@ -180,6 +194,10 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
     }
 
     return fact;
+  }
+
+  private Float resolveConfidence(CreateFactRequest request) {
+    return ObjectUtils.ifNull(request.getConfidence(), requestedFactType.getDefaultConfidence());
   }
 
   private List<FactEntity.FactObjectBinding> resolveFactObjectBindings(CreateFactRequest request) throws InvalidArgumentException {

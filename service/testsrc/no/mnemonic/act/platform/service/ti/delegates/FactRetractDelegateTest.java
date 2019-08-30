@@ -11,6 +11,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -30,6 +31,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactTypeResolver factTypeResolver;
   @Mock
+  private FactCreateHelper factCreateHelper;
+  @Mock
   private FactStorageHelper factStorageHelper;
 
   private FactRetractDelegate delegate;
@@ -42,6 +45,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
             getTriggerContext(),
             getFactManager(),
             factTypeResolver,
+            factCreateHelper,
             factStorageHelper,
             getFactConverter()
     );
@@ -98,7 +102,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     UUID organizationID = UUID.randomUUID();
     RetractFactRequest request = mockRetractingFact().setOrganization(null);
 
-    when(getSecurityContext().getCurrentUserOrganizationID()).thenReturn(organizationID);
+    when(factCreateHelper.resolveOrganization(isNull(), notNull()))
+            .thenReturn(Organization.builder().setId(organizationID).build());
 
     Fact fact = delegate.handle(request);
 
@@ -109,18 +114,32 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
-  public void testRetractFactSetMissingSource() throws Exception {
-    UUID sourceID = UUID.randomUUID();
-    RetractFactRequest request = mockRetractingFact().setSource(null);
+  public void testRetractFactSetMissingOrigin() throws Exception {
+    UUID originID = UUID.randomUUID();
+    RetractFactRequest request = mockRetractingFact().setOrigin(null);
 
-    when(getSecurityContext().getCurrentUserID()).thenReturn(sourceID);
+    when(factCreateHelper.resolveOrigin(isNull())).thenReturn(new OriginEntity().setId(originID));
+    when(factCreateHelper.resolveOrganization(notNull(), notNull()))
+            .thenReturn(Organization.builder().setId(request.getOrganization()).build());
 
     Fact fact = delegate.handle(request);
 
     verify(getFactManager()).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && sourceID.equals(e.getSourceID())));
+            && originID.equals(e.getSourceID())));
     verify(getFactConverter()).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && sourceID.equals(e.getSourceID())));
+            && originID.equals(e.getSourceID())));
+  }
+
+  @Test
+  public void testRetractFactSetMissingConfidence() throws Exception {
+    RetractFactRequest request = mockRetractingFact().setConfidence(null);
+
+    Fact fact = delegate.handle(request);
+
+    verify(getFactManager()).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && e.getConfidence() > 0.0));
+    verify(getFactConverter()).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && e.getConfidence() > 0.0));
   }
 
   @Test
@@ -174,23 +193,39 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     }));
   }
 
-  private RetractFactRequest mockRetractingFact() {
+  private RetractFactRequest mockRetractingFact() throws Exception {
     RetractFactRequest request = createRetractRequest();
 
+    OriginEntity origin = new OriginEntity()
+            .setId(request.getOrigin())
+            .setName("origin")
+            .setTrust(0.1f);
+    Organization organization = Organization.builder()
+            .setId(request.getOrganization())
+            .setName("organization")
+            .build();
     ObjectEntity object = new ObjectEntity()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID());
+    FactTypeEntity retractionFactType = new FactTypeEntity()
+            .setId(UUID.randomUUID())
+            .setName("retractionFact")
+            .setDefaultConfidence(0.2f);
     FactEntity factToRetract = new FactEntity()
             .setId(request.getFact())
             .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.RoleBased)
             .setBindings(ListUtils.list(new FactEntity.FactObjectBinding().setObjectID(object.getId()).setDirection(Direction.BiDirectional)));
+
+    when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(factCreateHelper.resolveOrigin(request.getOrigin())).thenReturn(origin);
+    when(factCreateHelper.resolveOrganization(request.getOrganization(), origin)).thenReturn(organization);
 
     // Needed for indexing into ElasticSearch.
     when(getFactSearchManager().getFact(request.getFact())).thenReturn(new FactDocument().setId(request.getFact()));
     when(getObjectManager().getObject(object.getId())).thenReturn(object);
     when(getObjectManager().getObjectType(object.getTypeID())).thenReturn(new ObjectTypeEntity().setId(object.getTypeID()).setName("objectType"));
 
-    when(factTypeResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()).setName("retractionFact"));
+    when(factTypeResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
     when(factStorageHelper.saveInitialAclForNewFact(any(), any())).thenAnswer(i -> i.getArgument(1));
     when(getFactManager().getFact(request.getFact())).thenReturn(factToRetract);
     when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
@@ -212,7 +247,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     return new RetractFactRequest()
             .setFact(UUID.randomUUID())
             .setOrganization(UUID.randomUUID())
-            .setSource(UUID.randomUUID())
+            .setOrigin(UUID.randomUUID())
+            .setConfidence(0.3f)
             .setComment("Hello World!")
             .setAccessMode(AccessMode.Explicit)
             .setAcl(ListUtils.list(UUID.randomUUID()));
@@ -229,7 +265,10 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertNotNull(entity.getTypeID());
       assertEquals(request.getFact(), entity.getInReferenceToID());
       assertEquals(request.getOrganization(), entity.getOrganizationID());
-      assertEquals(request.getSource(), entity.getSourceID());
+      assertNotNull(entity.getAddedByID());
+      assertEquals(request.getOrigin(), entity.getSourceID());
+      assertTrue(entity.getTrust() > 0.0);
+      assertEquals(request.getConfidence(), entity.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), entity.getAccessMode().name());
       assertTrue(entity.getTimestamp() > 0);
       assertTrue(entity.getLastSeenTimestamp() > 0);
@@ -252,7 +291,10 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertEquals("retractionFact", document.getTypeName());
       assertEquals(request.getFact(), document.getInReferenceTo());
       assertEquals(request.getOrganization(), document.getOrganizationID());
-      assertEquals(request.getSource(), document.getSourceID());
+      assertNotNull(document.getAddedByID());
+      assertEquals(request.getOrigin(), document.getSourceID());
+      assertTrue(document.getTrust() > 0.0);
+      assertEquals(request.getConfidence(), document.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), document.getAccessMode().name());
       assertTrue(document.getTimestamp() > 0);
       assertTrue(document.getLastSeenTimestamp() > 0);

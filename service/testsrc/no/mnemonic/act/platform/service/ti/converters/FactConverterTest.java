@@ -19,13 +19,14 @@ public class FactConverterTest {
 
   private final Function<UUID, FactType> factTypeConverter = id -> FactType.builder().setId(id).build();
   private final Function<UUID, Organization> organizationConverter = id -> Organization.builder().setId(id).build();
-  private final Function<UUID, Source> sourceConverter = id -> Source.builder().setId(id).build();
+  private final Function<UUID, Subject> subjectConverter = id -> Subject.builder().setId(id).build();
+  private final Function<UUID, Origin> originConverter = id -> Origin.builder().setId(id).build();
   private final Function<UUID, Object> objectConverter = id -> Object.builder().setId(id).build();
   private final Function<UUID, FactEntity> factEntityResolver = id -> createEntity().setId(id);
   private final Predicate<FactEntity> accessChecker = fact -> true;
   private final Predicate<FactEntity> retractionChecker = fact -> false;
-  private final FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, sourceConverter,
-          objectConverter, factEntityResolver, accessChecker, retractionChecker);
+  private final FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, subjectConverter,
+          originConverter, objectConverter, factEntityResolver, accessChecker, retractionChecker);
 
   @Test
   public void testConvertNullReturnsNull() {
@@ -176,21 +177,21 @@ public class FactConverterTest {
 
   @Test
   public void testConvertFactCannotResolveInReferenceToFact() {
-    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, sourceConverter,
+    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, subjectConverter, originConverter,
             objectConverter, id -> null, accessChecker, retractionChecker);
     assertNull(converter.apply(createEntity()).getInReferenceTo());
   }
 
   @Test
   public void testConvertFactNoAccessToInReferenceToFact() {
-    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, sourceConverter,
+    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, subjectConverter, originConverter,
             objectConverter, factEntityResolver, fact -> false, retractionChecker);
     assertNull(converter.apply(createEntity()).getInReferenceTo());
   }
 
   @Test
   public void testConvertRetractedFact() {
-    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, sourceConverter,
+    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, subjectConverter, originConverter,
             objectConverter, factEntityResolver, accessChecker, fact -> true);
     assertEquals(set(Fact.Flag.Retracted), converter.apply(createEntity()).getFlags());
   }
@@ -202,7 +203,10 @@ public class FactConverterTest {
             .setValue("value")
             .setInReferenceToID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
+            .setAddedByID(UUID.randomUUID())
             .setSourceID(UUID.randomUUID())
+            .setTrust(0.1f)
+            .setConfidence(0.2f)
             .setAccessMode(AccessMode.Explicit)
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321);
@@ -214,7 +218,10 @@ public class FactConverterTest {
     assertEquals(entity.getValue(), model.getValue());
     assertEquals(entity.getInReferenceToID(), model.getInReferenceTo().getId());
     assertEquals(entity.getOrganizationID(), model.getOrganization().getId());
-    assertEquals(entity.getSourceID(), model.getSource().getId());
+    assertEquals(entity.getAddedByID(), model.getAddedBy().getId());
+    assertEquals(entity.getSourceID(), model.getOrigin().getId());
+    assertEquals(entity.getTrust(), model.getTrust(), 0.0);
+    assertEquals(entity.getConfidence(), model.getConfidence(), 0.0);
     assertEquals(entity.getAccessMode().name(), model.getAccessMode().name());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
     assertEquals(entity.getLastSeenTimestamp(), (long) model.getLastSeenTimestamp());

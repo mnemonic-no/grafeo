@@ -119,7 +119,7 @@ public class FactEndpoint extends AbstractEndpoint {
                   "* Explicit: Only users given explict access to the Fact can view it, in addition to the user creating it.\n\n" +
                   "If the new Fact links to an Object which does not exist yet the missing Object will be created " +
                   "automatically with respect to the Object's ObjectType (need to pass the ObjectType's Validator).\n\n" +
-                  "If a Fact with the same type, value, organization, source, access mode and bound Objects already " +
+                  "If a Fact with the same type, value, organization, origin, confidence, access mode and bound Objects already " +
                   "exists, no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
           response = Fact.class,
           code = 201
@@ -183,8 +183,8 @@ public class FactEndpoint extends AbstractEndpoint {
                   "The access mode of a meta Fact can be more restricted than the access mode of the referenced Fact, " +
                   "but never less restricted (Public < RoleBased < Explicit). If not specified the access mode of the " +
                   "referenced Fact will be used.\n\n" +
-                  "If a meta Fact with the same type, value, organization, source and access mode exists, no new Fact " +
-                  "will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.\n\n" +
+                  "If a meta Fact with the same type, value, organization, origin, confidence and access mode exists, no " +
+                  "new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.\n\n" +
                   "The request will be rejected with a 403 if a user does not have access to the Fact for which the new " +
                   "meta Fact should be created.",
           response = Fact.class,

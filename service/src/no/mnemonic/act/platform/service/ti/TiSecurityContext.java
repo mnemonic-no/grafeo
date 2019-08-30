@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.service.ti;
 import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
+import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
@@ -120,6 +121,22 @@ public class TiSecurityContext extends SecurityContext {
   }
 
   /**
+   * Check if a user is allowed to view a specific Organization.
+   *
+   * @param organization Organization to verify access to.
+   * @throws AccessDeniedException         If the user is not allowed to view the Organization.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   */
+  public void checkReadPermission(Organization organization) throws AccessDeniedException, AuthenticationFailedException {
+    if (organization == null) throw new AccessDeniedException("No access to Organization.");
+
+    // Just check that the Organization is available to the current user.
+    if (!getAvailableOrganizationID().contains(organization.getId())) {
+      throw new AccessDeniedException(String.format("No access to Organization with id = %s.", organization.getId()));
+    }
+  }
+
+  /**
    * Check if a user is allowed to view a specific Fact based on the Fact's AccessMode.
    *
    * @param fact Fact to verify access to.
@@ -158,6 +175,21 @@ public class TiSecurityContext extends SecurityContext {
   public boolean hasReadPermission(OriginEntity origin) {
     try {
       checkReadPermission(origin);
+      return true;
+    } catch (AccessDeniedException | AuthenticationFailedException ignored) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if a user is allowed to view a specific Organization.
+   *
+   * @param organization Organization to verify access to.
+   * @return True if user has access to the Organization.
+   */
+  public boolean hasReadPermission(Organization organization) {
+    try {
+      checkReadPermission(organization);
       return true;
     } catch (AccessDeniedException | AuthenticationFailedException ignored) {
       return false;

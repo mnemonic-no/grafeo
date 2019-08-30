@@ -6,14 +6,12 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.CreateMetaFactRequest;
 import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
-import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.MetaFactBindingEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
@@ -35,10 +33,20 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactTypeResolver factTypeResolver;
   @Mock
+  private FactCreateHelper factCreateHelper;
+  @Mock
   private FactStorageHelper factStorageHelper;
 
   private FactCreateMetaDelegate delegate;
 
+  private final OriginEntity origin = new OriginEntity()
+          .setId(UUID.randomUUID())
+          .setName("origin")
+          .setTrust(0.1f);
+  private final Organization organization = Organization.builder()
+          .setId(UUID.randomUUID())
+          .setName("organization")
+          .build();
   private final FactTypeEntity retractionFactType = new FactTypeEntity()
           .setId(UUID.randomUUID())
           .setName("Retraction");
@@ -50,6 +58,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
           .setName("observation")
           .setValidator("validator")
           .setValidatorParameter("validatorParameter")
+          .setDefaultConfidence(0.2f)
           .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(seenInFactType.getId()));
   private FactEntity seenIn = new FactEntity()
           .setId(UUID.randomUUID())
@@ -66,6 +75,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             getFactManager(),
             getFactSearchManager(),
             factTypeResolver,
+            factCreateHelper,
             factStorageHelper,
             getFactConverter()
     );
@@ -85,16 +95,6 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
   }
 
   @Test(expected = AccessDeniedException.class)
-  public void testCreateMetaFactWithoutAddPermission() throws Exception {
-    CreateMetaFactRequest request = createRequest();
-
-    when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.addFactObjects, request.getOrganization());
-
-    delegate.handle(request);
-  }
-
-  @Test(expected = AccessDeniedException.class)
   public void testCreateMetaFactWithRetractionFactTypeThrowsException() throws Exception {
     CreateMetaFactRequest request = new CreateMetaFactRequest()
             .setFact(seenIn.getId())
@@ -106,11 +106,21 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     delegate.handle(request);
   }
 
+  @Test(expected = AccessDeniedException.class)
+  public void testCreateMetaFactWithoutAddPermission() throws Exception {
+    when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
+    mockFetchingOrganization();
+    mockFetchingFactType();
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.addFactObjects, organization.getId());
+    delegate.handle(createRequest());
+  }
+
   @Test
   public void testValidateFactValueThrowsException() throws Exception {
     CreateMetaFactRequest request = createRequest();
 
     when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
+    mockFetchingOrganization();
     mockFetchingFactType();
     Validator validatorMock = mockValidator(false);
 
@@ -125,6 +135,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     observationFactType.setRelevantFactBindings(null);
 
     when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
+    mockFetchingOrganization();
     mockFetchingFactType();
     mockValidator(true);
 
@@ -140,6 +151,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setFact(anotherFact.getId());
 
     when(getFactManager().getFact(anotherFact.getId())).thenReturn(anotherFact);
+    mockFetchingOrganization();
     mockFetchingFactType();
     mockValidator(true);
 
@@ -168,7 +180,8 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setOrganization(null);
     mockCreateNewFact();
 
-    when(getSecurityContext().getCurrentUserOrganizationID()).thenReturn(organizationID);
+    when(factCreateHelper.resolveOrganization(isNull(), eq(origin)))
+            .thenReturn(Organization.builder().setId(organizationID).build());
 
     delegate.handle(request);
 
@@ -177,18 +190,31 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
-  public void testCreateMetaFactSetMissingSource() throws Exception {
-    UUID sourceID = UUID.randomUUID();
+  public void testCreateMetaFactSetMissingOrigin() throws Exception {
+    UUID originID = UUID.randomUUID();
     CreateMetaFactRequest request = createRequest()
-            .setSource(null);
+            .setOrigin(null);
     mockCreateNewFact();
 
-    when(getSecurityContext().getCurrentUserID()).thenReturn(sourceID);
+    when(factCreateHelper.resolveOrigin(isNull())).thenReturn(new OriginEntity().setId(originID));
+    when(factCreateHelper.resolveOrganization(notNull(), notNull())).thenReturn(organization);
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> sourceID.equals(e.getSourceID())));
-    verify(getFactConverter()).apply(argThat(e -> sourceID.equals(e.getSourceID())));
+    verify(getFactManager()).saveFact(argThat(e -> originID.equals(e.getSourceID())));
+    verify(getFactConverter()).apply(argThat(e -> originID.equals(e.getSourceID())));
+  }
+
+  @Test
+  public void testCreateMetaFactSetMissingConfidence() throws Exception {
+    CreateMetaFactRequest request = createRequest()
+            .setConfidence(null);
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(getFactManager()).saveFact(argThat(e -> Objects.equals(observationFactType.getDefaultConfidence(), e.getConfidence())));
+    verify(getFactConverter()).apply(argThat(e -> Objects.equals(observationFactType.getDefaultConfidence(), e.getConfidence())));
   }
 
   @Test
@@ -241,9 +267,10 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setTypeID(observationFactType.getId())
             .setValue(request.getValue())
             .setInReferenceToID(request.getFact())
-            .setSourceID(request.getSource())
+            .setSourceID(request.getOrigin())
             .setOrganizationID(request.getOrganization())
             .setAccessMode(AccessMode.valueOf(request.getAccessMode().name()))
+            .setConfidence(request.getConfidence())
             .setLastSeenTimestamp(123);
 
     // Mock fetching of existing Fact.
@@ -276,8 +303,9 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setFact(seenIn.getId())
             .setType(observationFactType.getName())
             .setValue("today")
-            .setOrganization(UUID.randomUUID())
-            .setSource(UUID.randomUUID())
+            .setOrganization(organization.getId())
+            .setOrigin(origin.getId())
+            .setConfidence(0.3f)
             .setAccessMode(no.mnemonic.act.platform.api.request.v1.AccessMode.Explicit)
             .setComment("Hello World!")
             .addAcl(UUID.randomUUID());
@@ -287,7 +315,10 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     mockFetchingFactType();
     mockValidator(true);
     mockFactConverter();
+    mockFetchingOrganization();
 
+    // Mock fetching of current user.
+    when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
     // Mock fetching of referenced Fact.
     when(getFactManager().getFact(seenIn.getId())).thenReturn(seenIn);
     // Mock fetching of existing Fact.
@@ -295,6 +326,11 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     // Mock stuff needed for saving Fact.
     when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
     when(factStorageHelper.saveInitialAclForNewFact(any(), any())).thenAnswer(i -> i.getArgument(1));
+  }
+
+  private void mockFetchingOrganization() throws Exception {
+    when(factCreateHelper.resolveOrigin(origin.getId())).thenReturn(origin);
+    when(factCreateHelper.resolveOrganization(organization.getId(), origin)).thenReturn(organization);
   }
 
   private void mockFetchingFactType() throws Exception {
@@ -331,7 +367,10 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getValue(), entity.getValue());
       assertEquals(request.getFact(), entity.getInReferenceToID());
       assertEquals(request.getOrganization(), entity.getOrganizationID());
-      assertEquals(request.getSource(), entity.getSourceID());
+      assertNotNull(entity.getAddedByID());
+      assertEquals(request.getOrigin(), entity.getSourceID());
+      assertEquals(origin.getTrust(), entity.getTrust(), 0.0);
+      assertEquals(request.getConfidence(), entity.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), entity.getAccessMode().name());
       assertTrue(entity.getTimestamp() > 0);
       assertTrue(entity.getLastSeenTimestamp() > 0);
@@ -349,7 +388,10 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getValue(), document.getValue());
       assertEquals(request.getFact(), document.getInReferenceTo());
       assertEquals(request.getOrganization(), document.getOrganizationID());
-      assertEquals(request.getSource(), document.getSourceID());
+      assertNotNull(document.getAddedByID());
+      assertEquals(request.getOrigin(), document.getSourceID());
+      assertEquals(origin.getTrust(), document.getTrust(), 0.0);
+      assertEquals(request.getConfidence(), document.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), document.getAccessMode().name());
       assertTrue(document.getTimestamp() > 0);
       assertTrue(document.getLastSeenTimestamp() > 0);
@@ -371,9 +413,10 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     return argThat(criteria -> {
       assertEquals(request.getValue(), criteria.getFactValue());
       assertEquals(observationFactType.getId(), criteria.getFactTypeID());
-      assertEquals(request.getSource(), criteria.getSourceID());
+      assertEquals(request.getOrigin(), criteria.getSourceID());
       assertEquals(request.getOrganization(), criteria.getOrganizationID());
       assertEquals(request.getAccessMode().name(), criteria.getAccessMode().name());
+      assertEquals(request.getConfidence(), criteria.getConfidence(), 0.0);
       assertEquals(request.getFact(), criteria.getInReferenceTo());
 
       return true;

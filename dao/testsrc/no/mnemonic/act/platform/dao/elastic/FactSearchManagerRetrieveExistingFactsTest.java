@@ -70,6 +70,11 @@ public class FactSearchManagerRetrieveExistingFactsTest extends AbstractManagerT
   }
 
   @Test
+  public void testRetrieveExistingFactsNoMatchOnConfidence() {
+    testRetrieveExistingFactsNoMatch(b -> b.setConfidence(0.9f));
+  }
+
+  @Test
   public void testRetrieveExistingFactsNoMatchOnObjectID() {
     FactDocument fact = indexFact(d -> d);
     FactExistenceSearchCriteria criteria = createCriteriaWithoutObjects(fact, b -> {
@@ -148,7 +153,8 @@ public class FactSearchManagerRetrieveExistingFactsTest extends AbstractManagerT
             .setFactTypeID(fact.getTypeID())
             .setSourceID(fact.getSourceID())
             .setOrganizationID(fact.getOrganizationID())
-            .setAccessMode(fact.getAccessMode().name());
+            .setAccessMode(fact.getAccessMode().name())
+            .setConfidence(fact.getConfidence());
 
     if (preparation != null) {
       builder = preparation.prepare(builder);

@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.service.ti;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
+import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
@@ -281,12 +282,49 @@ public class TiSecurityContextTest {
     assertFalse(context.hasReadPermission(new OriginEntity()));
   }
 
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForOrganizationWithoutOrganization() throws Exception {
+    context.checkReadPermission((Organization) null);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForOrganizationWithNoAccess() throws Exception {
+    when(accessController.getAvailableOrganizations(credentials)).thenReturn(Collections.emptySet());
+    context.checkReadPermission(Organization.builder().setId(UUID.randomUUID()).build());
+  }
+
+  @Test
+  public void testCheckReadPermissionForOrganizationWithAccess() throws Exception {
+    Organization org = mockCheckPermissionForOrganization();
+    context.checkReadPermission(org);
+    verify(accessController).getAvailableOrganizations(credentials);
+  }
+
+  @Test
+  public void testHasReadPermissionForOrganizationReturnsTrueOnAccess() throws Exception {
+    Organization org = mockCheckPermissionForOrganization();
+    assertTrue(context.hasReadPermission(org));
+  }
+
+  @Test
+  public void testHasReadPermissionForOrganizationReturnsFalseOnNoAccess() throws Exception {
+    when(accessController.getAvailableOrganizations(credentials)).thenReturn(Collections.emptySet());
+    assertFalse(context.hasReadPermission(Organization.builder().setId(UUID.randomUUID()).build()));
+  }
+
   private ObjectEntity mockCheckPermissionForObject(boolean result) throws Exception {
     ObjectEntity object = new ObjectEntity().setId(UUID.randomUUID());
     FactEntity fact = new FactEntity().setAccessMode(AccessMode.Public);
     when(factsBoundToObjectResolver.apply(object.getId())).thenReturn(ListUtils.list(fact).iterator());
     when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(result); // Mock access to public Fact.
     return object;
+  }
+
+  private Organization mockCheckPermissionForOrganization() throws Exception {
+    UUID organizationID = UUID.randomUUID();
+    when(accessController.getAvailableOrganizations(credentials)).thenReturn(Collections.singleton(organization));
+    when(identityResolver.resolveOrganizationUUID(organization)).thenReturn(organizationID);
+    return Organization.builder().setId(organizationID).build();
   }
 
 }

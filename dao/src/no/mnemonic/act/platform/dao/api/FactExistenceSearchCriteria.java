@@ -25,17 +25,24 @@ public class FactExistenceSearchCriteria {
   private final UUID sourceID;
   private final UUID organizationID;
   private final AccessMode accessMode;
+  private final Float confidence;
   private final UUID inReferenceTo;
   private final Set<ObjectExistence> objects;
-  // TODO: Add confidenceLevel once defined.
 
-  private FactExistenceSearchCriteria(String factValue, UUID factTypeID, UUID sourceID, UUID organizationID,
-                                      AccessMode accessMode, UUID inReferenceTo, Set<ObjectExistence> objects) {
+  private FactExistenceSearchCriteria(String factValue,
+                                      UUID factTypeID,
+                                      UUID sourceID,
+                                      UUID organizationID,
+                                      AccessMode accessMode,
+                                      Float confidence,
+                                      UUID inReferenceTo,
+                                      Set<ObjectExistence> objects) {
     this.factValue = factValue; // Field 'factValue' is optional.
     this.factTypeID = ObjectUtils.notNull(factTypeID, "Missing required field 'factTypeID'.");
     this.sourceID = ObjectUtils.notNull(sourceID, "Missing required field 'sourceID'.");
     this.organizationID = ObjectUtils.notNull(organizationID, "Missing required field 'organizationID'.");
     this.accessMode = ObjectUtils.notNull(accessMode, "Missing required field 'accessMode'.");
+    this.confidence = ObjectUtils.notNull(confidence, "Missing required field 'confidence'.");
     this.inReferenceTo = inReferenceTo;
     this.objects = objects;
 
@@ -93,6 +100,15 @@ public class FactExistenceSearchCriteria {
   }
 
   /**
+   * Confidence of Fact to verify. This field is required.
+   *
+   * @return Confidence of Fact
+   */
+  public Float getConfidence() {
+    return confidence;
+  }
+
+  /**
    * Referenced Fact of Fact to verify (used for meta Facts).
    *
    * @return UUID of referenced Fact
@@ -120,6 +136,7 @@ public class FactExistenceSearchCriteria {
     private UUID sourceID;
     private UUID organizationID;
     private AccessMode accessMode;
+    private Float confidence;
     private UUID inReferenceTo;
     private Set<ObjectExistence> objects;
 
@@ -127,7 +144,7 @@ public class FactExistenceSearchCriteria {
     }
 
     public FactExistenceSearchCriteria build() {
-      return new FactExistenceSearchCriteria(factValue, factTypeID, sourceID, organizationID, accessMode, inReferenceTo, objects);
+      return new FactExistenceSearchCriteria(factValue, factTypeID, sourceID, organizationID, accessMode, confidence, inReferenceTo, objects);
     }
 
     public Builder setFactValue(String factValue) {
@@ -152,6 +169,11 @@ public class FactExistenceSearchCriteria {
 
     public Builder setAccessMode(String accessMode) {
       this.accessMode = AccessMode.valueOf(accessMode);
+      return this;
+    }
+
+    public Builder setConfidence(Float confidence) {
+      this.confidence = confidence;
       return this;
     }
 

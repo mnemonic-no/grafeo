@@ -153,9 +153,9 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFieldParsingErrorReturns412() throws Exception {
-    Response response = target("/v1/fact").request().post(Entity.json("{\"source\" : \"something\"}"));
+    Response response = target("/v1/fact").request().post(Entity.json("{\"origin\" : \"something\"}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "source", "something");
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "origin", "something");
   }
 
   @Test
