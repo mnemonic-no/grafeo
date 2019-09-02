@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service.ti;
 
+import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.exceptions.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.*;
@@ -18,6 +19,7 @@ import no.mnemonic.act.platform.service.Service;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.delegates.*;
+import no.mnemonic.act.platform.service.ti.utilities.FactsFetchingIterator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.common.api.ResultSet;
 import no.mnemonic.services.common.auth.AccessController;
@@ -25,10 +27,8 @@ import no.mnemonic.services.common.auth.model.Credentials;
 
 import javax.inject.Inject;
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenceService {
 
@@ -271,12 +271,11 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   private Function<UUID, Iterator<FactEntity>> createFactsBoundToObjectResolver() {
     return objectID -> {
       // Look up bindings for the given Object ID ...
-      List<UUID> factID = objectManager.fetchObjectFactBindings(objectID)
-              .stream()
+      Iterator<UUID> factID = Streams.stream(objectManager.fetchObjectFactBindings(objectID))
               .map(ObjectFactBindingEntity::getFactID)
-              .collect(Collectors.toList());
+              .iterator();
       // ... and use those to fetch the bound Facts.
-      return factManager.getFacts(factID);
+      return new FactsFetchingIterator(factManager, factID);
     };
   }
 }

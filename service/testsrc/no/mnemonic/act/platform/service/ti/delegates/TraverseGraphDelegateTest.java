@@ -308,7 +308,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
                     .setObjectID(object.getId())
                     .setFactID(fact.getId())
                     .setDirection(Direction.BiDirectional)
-    ));
+    ).iterator());
 
     return object;
   }

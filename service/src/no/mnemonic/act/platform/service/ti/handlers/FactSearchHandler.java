@@ -10,15 +10,12 @@ import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.commons.logging.Logger;
-import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.act.platform.service.ti.utilities.FactsFetchingIterator;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -28,9 +25,6 @@ import java.util.function.Function;
 public class FactSearchHandler {
 
   private static final int MAXIMUM_SEARCH_LIMIT = 10_000;
-  private static final int MAXIMUM_BATCH_SIZE = 1000;
-
-  private static final Logger LOGGER = Logging.getLogger(FactSearchHandler.class);
 
   private final FactRetractionHandler retractionHandler;
   private final FactSearchManager factSearchManager;
@@ -97,50 +91,5 @@ public class FactSearchHandler {
     // not stored on FactEntity).
     boolean isRetracted = retractionHandler.isRetracted(fact.getId(), fact.isRetracted());
     return ObjectUtils.ifNull(includeRetracted, false) || !isRetracted;
-  }
-
-  /**
-   * Iterator which consumes a stream of Fact UUIDs and uses those UUIDs to fetch Facts from Cassandra.
-   * Data is fetched batch-wise from Cassandra while iterating over the input stream.
-   */
-  private class FactsFetchingIterator implements Iterator<FactEntity> {
-    private final FactManager factManager;
-    private final Iterator<UUID> input;
-    private Iterator<FactEntity> output;
-
-    private FactsFetchingIterator(FactManager factManager, Iterator<UUID> input) {
-      this.factManager = factManager;
-      this.input = input;
-    }
-
-    @Override
-    public boolean hasNext() {
-      // If this is the initial batch or the current batch has be consumed completely, fetch the next batch.
-      if (output == null || !output.hasNext()) {
-        output = ObjectUtils.notNull(nextOutputBatch(), "Next output batch cannot be null!");
-        LOGGER.debug("Successfully fetched next batch of Facts from Cassandra.");
-      }
-
-      return output.hasNext();
-    }
-
-    @Override
-    public FactEntity next() {
-      return output.next();
-    }
-
-    private Iterator<FactEntity> nextOutputBatch() {
-      List<UUID> factID = new ArrayList<>(MAXIMUM_BATCH_SIZE);
-
-      int currentBatchSize = 0;
-      // Consume input until no more data is available or maximum batch size has be reached.
-      while (input.hasNext() && currentBatchSize < MAXIMUM_BATCH_SIZE) {
-        factID.add(input.next());
-        currentBatchSize++;
-      }
-
-      // Fetch next batch of entities. This will return an empty iterator if 'factID' is empty.
-      return factManager.getFacts(factID);
-    }
   }
 }

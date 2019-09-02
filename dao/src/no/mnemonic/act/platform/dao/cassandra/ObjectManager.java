@@ -16,7 +16,6 @@ import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -145,9 +144,9 @@ public class ObjectManager implements LifecycleAspect {
 
   /* ObjectFactBindingEntity-related methods */
 
-  public List<ObjectFactBindingEntity> fetchObjectFactBindings(UUID id) {
-    if (id == null) return ListUtils.list();
-    return objectDao.fetchObjectFactBindings(id).all();
+  public Iterator<ObjectFactBindingEntity> fetchObjectFactBindings(UUID id) {
+    if (id == null) return Collections.emptyIterator();
+    return objectDao.fetchObjectFactBindings(id).iterator();
   }
 
   public ObjectFactBindingEntity saveObjectFactBinding(ObjectFactBindingEntity binding) {

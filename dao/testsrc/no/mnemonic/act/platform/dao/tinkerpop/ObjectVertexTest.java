@@ -239,7 +239,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             .setObjectID(objectID)
             .setFactID(factID)
             .setDirection(inDirection)
-    ));
+    ).iterator());
 
     return objectID;
   }
