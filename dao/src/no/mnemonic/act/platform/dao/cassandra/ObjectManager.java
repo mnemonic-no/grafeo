@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.dao.cassandra.mapper.ObjectDao;
 import no.mnemonic.act.platform.dao.cassandra.mapper.ObjectTypeDao;
+import no.mnemonic.act.platform.dao.cassandra.utilities.MultiFetchIterator;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -116,7 +117,7 @@ public class ObjectManager implements LifecycleAspect {
 
   public Iterator<ObjectEntity> getObjects(List<UUID> id) {
     if (CollectionUtils.isEmpty(id)) return Collections.emptyIterator();
-    return objectDao.fetchByID(id).iterator();
+    return new MultiFetchIterator<>(partition -> objectDao.fetchByID(partition).iterator(), id);
   }
 
   public ObjectEntity saveObject(ObjectEntity object) {

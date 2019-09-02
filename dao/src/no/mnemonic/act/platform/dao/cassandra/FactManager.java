@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.dao.cassandra.mapper.FactDao;
 import no.mnemonic.act.platform.dao.cassandra.mapper.FactTypeDao;
+import no.mnemonic.act.platform.dao.cassandra.utilities.MultiFetchIterator;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -107,7 +108,7 @@ public class FactManager implements LifecycleAspect {
 
   public Iterator<FactEntity> getFacts(List<UUID> id) {
     if (CollectionUtils.isEmpty(id)) return Collections.emptyIterator();
-    return factDao.fetchByID(id).iterator();
+    return new MultiFetchIterator<>(partition -> factDao.fetchByID(partition).iterator(), id);
   }
 
   public FactEntity saveFact(FactEntity fact) {
