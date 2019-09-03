@@ -189,15 +189,15 @@ public class ObjectManagerTest extends AbstractManagerTest {
     ObjectEntity object = createAndSaveObject(createAndSaveObjectType().getId());
     ObjectFactBindingEntity binding = createAndSaveObjectFactBinding(object.getId());
 
-    List<ObjectFactBindingEntity> actual = getObjectManager().fetchObjectFactBindings(object.getId());
+    List<ObjectFactBindingEntity> actual = ListUtils.list(getObjectManager().fetchObjectFactBindings(object.getId()));
     assertEquals(1, actual.size());
     assertObjectFactBinding(binding, actual.get(0));
   }
 
   @Test
   public void testFetchObjectFactBindingsWithNonExistingObject() {
-    assertEquals(0, getObjectManager().fetchObjectFactBindings(null).size());
-    assertEquals(0, getObjectManager().fetchObjectFactBindings(UUID.randomUUID()).size());
+    assertEquals(0, ListUtils.list(getObjectManager().fetchObjectFactBindings(null)).size());
+    assertEquals(0, ListUtils.list(getObjectManager().fetchObjectFactBindings(UUID.randomUUID())).size());
   }
 
   @Test

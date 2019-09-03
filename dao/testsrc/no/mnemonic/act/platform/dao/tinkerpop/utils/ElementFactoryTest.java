@@ -203,7 +203,7 @@ public class ElementFactoryTest {
 
   private void mockObject(ObjectFactBindingEntity inBinding) {
     mockObject(inBinding.getObjectID());
-    when(objectManager.fetchObjectFactBindings(inBinding.getObjectID())).thenReturn(ListUtils.list(inBinding));
+    when(objectManager.fetchObjectFactBindings(inBinding.getObjectID())).thenReturn(ListUtils.list(inBinding).iterator());
   }
 
   private void mockFact(UUID factID, FactEntity.FactObjectBinding outBinding) {
