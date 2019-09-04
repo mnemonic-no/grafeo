@@ -18,7 +18,10 @@ public class TraverseByObjectSearchRequestTest extends AbstractRequestTest {
             "factType : ['factType']," +
             "objectValue : ['objectValue']," +
             "factValue : ['factValue']," +
-            "source : ['source']," +
+            "origin : ['origin']," +
+            "minimum : 0.1," +
+            "maximum : 0.2," +
+            "dimension : 'trust'," +
             "before : '2016-11-30T15:47:00Z'," +
             "after : '2016-11-30T15:47:01Z'," +
             "limit : 25," +
@@ -30,7 +33,10 @@ public class TraverseByObjectSearchRequestTest extends AbstractRequestTest {
     assertEquals(SetUtils.set("factType"), request.getFactType());
     assertEquals(SetUtils.set("objectValue"), request.getObjectValue());
     assertEquals(SetUtils.set("factValue"), request.getFactValue());
-    assertEquals(SetUtils.set("source"), request.getSource());
+    assertEquals(SetUtils.set("origin"), request.getOrigin());
+    assertEquals(0.1f, request.getMinimum(), 0.0);
+    assertEquals(0.2f, request.getMaximum(), 0.0);
+    assertEquals(Dimension.trust, request.getDimension());
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
     assertEquals(25, request.getLimit().intValue());

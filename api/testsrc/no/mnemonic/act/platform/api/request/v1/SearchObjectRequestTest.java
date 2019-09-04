@@ -26,7 +26,10 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
             "objectValue : ['objectValue']," +
             "factValue : ['factValue']," +
             "organization : ['organization']," +
-            "source : ['source']," +
+            "origin : ['origin']," +
+            "minimum : 0.1," +
+            "maximum : 0.2," +
+            "dimension : 'trust'," +
             "before : '2016-11-30T15:47:00Z'," +
             "after : '2016-11-30T15:47:01Z'," +
             "limit : 25" +
@@ -41,7 +44,10 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
     assertEquals(SetUtils.set("objectValue"), request.getObjectValue());
     assertEquals(SetUtils.set("factValue"), request.getFactValue());
     assertEquals(SetUtils.set("organization"), request.getOrganization());
-    assertEquals(SetUtils.set("source"), request.getSource());
+    assertEquals(SetUtils.set("origin"), request.getOrigin());
+    assertEquals(0.1f, request.getMinimum(), 0.0);
+    assertEquals(0.2f, request.getMaximum(), 0.0);
+    assertEquals(Dimension.trust, request.getDimension());
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
     assertEquals(25, request.getLimit().intValue());
@@ -50,11 +56,27 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
   @Test
   public void testRequestValidationFailsOnMin() {
     Set<ConstraintViolation<SearchObjectRequest>> violations = getValidator().validate(new SearchObjectRequest()
+            .setMinimum(-0.1f)
+            .setMaximum(-0.2f)
             .setLimit(-1)
     );
 
-    assertEquals(1, violations.size());
+    assertEquals(3, violations.size());
+    assertPropertyInvalid(violations, "minimum");
+    assertPropertyInvalid(violations, "maximum");
     assertPropertyInvalid(violations, "limit");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMax() {
+    Set<ConstraintViolation<SearchObjectRequest>> violations = getValidator().validate(new SearchObjectRequest()
+            .setMinimum(1.1f)
+            .setMaximum(1.2f)
+    );
+
+    assertEquals(2, violations.size());
+    assertPropertyInvalid(violations, "minimum");
+    assertPropertyInvalid(violations, "maximum");
   }
 
   @Test

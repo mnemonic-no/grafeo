@@ -532,6 +532,7 @@ public class FactSearchManager implements LifecycleAspect {
     applySimpleFilterQueries(criteria, rootQuery);
     applyKeywordSearchQuery(criteria, rootQuery);
     applyTimestampSearchQuery(criteria, rootQuery);
+    applyNumberSearchQuery(criteria, rootQuery);
 
     // Always apply access control query.
     return rootQuery.filter(createAccessControlQuery(criteria.getCurrentUserID(), criteria.getAvailableOrganizationID()));
@@ -601,6 +602,12 @@ public class FactSearchManager implements LifecycleAspect {
     if (criteria.getStartTimestamp() == null && criteria.getEndTimestamp() == null) return;
     applyFieldStrategy(rootQuery, field -> createFieldQuery(field, criteria.getStartTimestamp(), criteria.getEndTimestamp()),
             criteria.getTimeFieldStrategy(), criteria.getTimeMatchStrategy());
+  }
+
+  private void applyNumberSearchQuery(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
+    if (criteria.getMinNumber() == null && criteria.getMaxNumber() == null) return;
+    applyFieldStrategy(rootQuery, field -> rangeQuery(field).gte(criteria.getMinNumber()).lte(criteria.getMaxNumber()),
+            criteria.getNumberFieldStrategy(), criteria.getNumberMatchStrategy());
   }
 
   private void applyFieldStrategy(BoolQueryBuilder rootQuery, Function<String, QueryBuilder> fieldQueryResolver,

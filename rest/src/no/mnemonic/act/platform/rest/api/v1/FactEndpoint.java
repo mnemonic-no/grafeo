@@ -73,7 +73,7 @@ public class FactEndpoint extends AbstractEndpoint {
                   "level deep, i.e. only Objects directly linked to a Fact will be searched. Only the Facts a user has " +
                   "access to will be returned.\n\n" +
                   "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
-                  "Fact organization, Fact source, Fact value and Object value. The 'keywords' parameter must match one " +
+                  "Fact organization, Fact origin, Fact value and Object value. The 'keywords' parameter must match one " +
                   "of those fields. The following search features are available when using this parameter.\n\n" +
                   "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
                   "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
@@ -82,7 +82,7 @@ public class FactEndpoint extends AbstractEndpoint {
                   "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
                   "'factType' or 'objectType' in addition.\n\n" +
                   "In contrast to the fuzzy search above other filter parameters such as 'objectValue' and 'factValue' " +
-                  "require an exact match. When searching on 'objectType', 'factType', 'organization' or 'source' it is " +
+                  "require an exact match. When searching on 'objectType', 'factType', 'organization' or 'origin' it is " +
                   "possible to either specify the name or UUID of the referenced entity. Retracted Facts are excluded by " +
                   "default from the search result but they are always included in the returned 'count' value (the total " +
                   "number of Facts matching the search parameters). It is allowed to request an unlimited search result " +

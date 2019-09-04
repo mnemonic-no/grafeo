@@ -58,6 +58,24 @@ public class FactSearchCriteria {
     }
   }
 
+  public enum NumberFieldStrategy implements FieldStrategy {
+    trust("trust"),
+    confidence("confidence"),
+    certainty("certainty"),
+    all("trust", "confidence", "certainty");
+
+    private final Set<String> fields;
+
+    NumberFieldStrategy(String... fields) {
+      this.fields = Collections.unmodifiableSet(SetUtils.set(fields));
+    }
+
+    @Override
+    public Set<String> getFields() {
+      return fields;
+    }
+  }
+
   // Filter returned Facts based on those fields.
   private final Set<UUID> factID;
   private final Set<UUID> factTypeID;
@@ -84,6 +102,12 @@ public class FactSearchCriteria {
   private final Set<TimeFieldStrategy> timeFieldStrategy;
   private final MatchStrategy timeMatchStrategy;
 
+  // Number search.
+  private final Number minNumber;
+  private final Number maxNumber;
+  private final Set<NumberFieldStrategy> numberFieldStrategy;
+  private final MatchStrategy numberMatchStrategy;
+
   // Additional search options.
   private final int limit;
 
@@ -91,13 +115,33 @@ public class FactSearchCriteria {
   private final UUID currentUserID;
   private final Set<UUID> availableOrganizationID;
 
-  private FactSearchCriteria(Set<UUID> factID, Set<UUID> factTypeID, Set<String> factTypeName, Set<String> factValue,
-                             Set<UUID> inReferenceTo, Set<UUID> organizationID, Set<String> organizationName,
-                             Set<UUID> sourceID, Set<String> sourceName, Set<UUID> objectID, Set<UUID> objectTypeID,
-                             Set<String> objectTypeName, Set<String> objectValue, String keywords,
-                             Set<KeywordFieldStrategy> keywordFieldStrategy, MatchStrategy keywordMatchStrategy,
-                             Long startTimestamp, Long endTimestamp, Set<TimeFieldStrategy> timeFieldStrategy,
-                             MatchStrategy timeMatchStrategy, int limit, UUID currentUserID, Set<UUID> availableOrganizationID) {
+  private FactSearchCriteria(Set<UUID> factID,
+                             Set<UUID> factTypeID,
+                             Set<String> factTypeName,
+                             Set<String> factValue,
+                             Set<UUID> inReferenceTo,
+                             Set<UUID> organizationID,
+                             Set<String> organizationName,
+                             Set<UUID> sourceID,
+                             Set<String> sourceName,
+                             Set<UUID> objectID,
+                             Set<UUID> objectTypeID,
+                             Set<String> objectTypeName,
+                             Set<String> objectValue,
+                             String keywords,
+                             Set<KeywordFieldStrategy> keywordFieldStrategy,
+                             MatchStrategy keywordMatchStrategy,
+                             Long startTimestamp,
+                             Long endTimestamp,
+                             Set<TimeFieldStrategy> timeFieldStrategy,
+                             MatchStrategy timeMatchStrategy,
+                             Number minNumber,
+                             Number maxNumber,
+                             Set<NumberFieldStrategy> numberFieldStrategy,
+                             MatchStrategy numberMatchStrategy,
+                             int limit,
+                             UUID currentUserID,
+                             Set<UUID> availableOrganizationID) {
     if (currentUserID == null) throw new IllegalArgumentException("Missing required field 'currentUserID'.");
     if (CollectionUtils.isEmpty(availableOrganizationID))
       throw new IllegalArgumentException("Missing required field 'availableOrganizationID'.");
@@ -118,6 +162,8 @@ public class FactSearchCriteria {
     this.keywords = keywords;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
+    this.minNumber = minNumber;
+    this.maxNumber = maxNumber;
     this.limit = limit;
     this.currentUserID = currentUserID;
     this.availableOrganizationID = availableOrganizationID;
@@ -129,6 +175,9 @@ public class FactSearchCriteria {
     this.timeFieldStrategy = !CollectionUtils.isEmpty(timeFieldStrategy) ? timeFieldStrategy :
             SetUtils.set(TimeFieldStrategy.all);
     this.timeMatchStrategy = ObjectUtils.ifNull(timeMatchStrategy, MatchStrategy.any);
+    this.numberFieldStrategy = !CollectionUtils.isEmpty(numberFieldStrategy) ? numberFieldStrategy :
+            SetUtils.set(NumberFieldStrategy.all);
+    this.numberMatchStrategy = ObjectUtils.ifNull(numberMatchStrategy, MatchStrategy.any);
   }
 
   /**
@@ -318,6 +367,45 @@ public class FactSearchCriteria {
   }
 
   /**
+   * Filter Facts by number (minimum value)
+   *
+   * @return Minimum for number search
+   */
+  public Number getMinNumber() {
+    return minNumber;
+  }
+
+  /**
+   * Filter Facts by number (maximum value)
+   *
+   * @return Maximum for number search
+   */
+  public Number getMaxNumber() {
+    return maxNumber;
+  }
+
+  /**
+   * Specify against which fields the number search will be executed (defaults to 'all').
+   *
+   * @return Fields to execute number search against
+   */
+  public Set<NumberFieldStrategy> getNumberFieldStrategy() {
+    return numberFieldStrategy;
+  }
+
+  /**
+   * Specify how the number search will be executed (defaults to 'any').
+   * <p>
+   * any: At least one number defined in the NumberFieldStrategy must be between minNumber and maxNumber.
+   * all: All numbers defined in the NumberFieldStrategy must be between minNumber and maxNumber.
+   *
+   * @return How the number search will be executed
+   */
+  public MatchStrategy getNumberMatchStrategy() {
+    return numberMatchStrategy;
+  }
+
+  /**
    * Restrict the maximum amount of returned Facts. The amount actually returned might be smaller.
    *
    * @return Maximum amount of returned Facts
@@ -375,6 +463,12 @@ public class FactSearchCriteria {
     private Set<TimeFieldStrategy> timeFieldStrategy;
     private MatchStrategy timeMatchStrategy;
 
+    // Numerical search.
+    private Number minNumber;
+    private Number maxNumber;
+    private Set<NumberFieldStrategy> numberFieldStrategy;
+    private MatchStrategy numberMatchStrategy;
+
     // Additional search options.
     private int limit;
 
@@ -388,8 +482,8 @@ public class FactSearchCriteria {
     public FactSearchCriteria build() {
       return new FactSearchCriteria(factID, factTypeID, factTypeName, factValue, inReferenceTo, organizationID, organizationName,
               sourceID, sourceName, objectID, objectTypeID, objectTypeName, objectValue, keywords, keywordFieldStrategy,
-              keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy, timeMatchStrategy, limit, currentUserID,
-              availableOrganizationID);
+              keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy, timeMatchStrategy, minNumber, maxNumber,
+              numberFieldStrategy, numberMatchStrategy, limit, currentUserID, availableOrganizationID);
     }
 
     public Builder setFactID(Set<UUID> factID) {
@@ -564,6 +658,31 @@ public class FactSearchCriteria {
 
     public Builder setTimeMatchStrategy(MatchStrategy timeMatchStrategy) {
       this.timeMatchStrategy = timeMatchStrategy;
+      return this;
+    }
+
+    public Builder setMinNumber(Number minNumber) {
+      this.minNumber = minNumber;
+      return this;
+    }
+
+    public Builder setMaxNumber(Number maxNumber) {
+      this.maxNumber = maxNumber;
+      return this;
+    }
+
+    public Builder setNumberFieldStrategy(Set<NumberFieldStrategy> numberFieldStrategy) {
+      this.numberFieldStrategy = numberFieldStrategy;
+      return this;
+    }
+
+    public Builder addNumberFieldStrategy(NumberFieldStrategy numberFieldStrategy) {
+      this.numberFieldStrategy = SetUtils.addToSet(this.numberFieldStrategy, numberFieldStrategy);
+      return this;
+    }
+
+    public Builder setNumberMatchStrategy(MatchStrategy numberMatchStrategy) {
+      this.numberMatchStrategy = numberMatchStrategy;
       return this;
     }
 
