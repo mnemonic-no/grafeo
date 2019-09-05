@@ -16,25 +16,27 @@ public class CreateMetaFactRequestTest extends AbstractRequestTest {
   public void testDecodeRequest() throws Exception {
     UUID fact = UUID.randomUUID();
     UUID organization = UUID.randomUUID();
-    UUID source = UUID.randomUUID();
+    UUID origin = UUID.randomUUID();
     UUID acl = UUID.randomUUID();
     String json = String.format("{" +
             "fact : '%s'," +
             "type : 'factType'," +
             "value : 'factValue'," +
             "organization : '%s'," +
-            "source : '%s'," +
+            "origin : '%s'," +
+            "confidence : 0.1," +
             "accessMode : 'Explicit'," +
             "comment : 'comment'," +
             "acl : ['%s']" +
-            "}", fact, organization, source, acl);
+            "}", fact, organization, origin, acl);
 
     CreateMetaFactRequest request = getMapper().readValue(json, CreateMetaFactRequest.class);
     assertEquals(fact, request.getFact());
     assertEquals("factType", request.getType());
     assertEquals("factValue", request.getValue());
     assertEquals(organization, request.getOrganization());
-    assertEquals(source, request.getSource());
+    assertEquals(origin, request.getOrigin());
+    assertEquals(0.1f, request.getConfidence(), 0.0);
     assertEquals(AccessMode.Explicit, request.getAccessMode());
     assertEquals("comment", request.getComment());
     assertEquals(ListUtils.list(acl), request.getAcl());
@@ -66,6 +68,28 @@ public class CreateMetaFactRequestTest extends AbstractRequestTest {
     );
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "type");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMin() {
+    Set<ConstraintViolation<CreateMetaFactRequest>> violations = getValidator().validate(new CreateMetaFactRequest()
+            .setFact(UUID.randomUUID())
+            .setType("type")
+            .setConfidence(-0.1f)
+    );
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "confidence");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMax() {
+    Set<ConstraintViolation<CreateMetaFactRequest>> violations = getValidator().validate(new CreateMetaFactRequest()
+            .setFact(UUID.randomUUID())
+            .setType("type")
+            .setConfidence(1.1f)
+    );
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "confidence");
   }
 
   @Test

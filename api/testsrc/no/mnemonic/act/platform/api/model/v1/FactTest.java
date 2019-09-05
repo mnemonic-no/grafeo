@@ -23,7 +23,11 @@ public class FactTest {
     assertEquals(fact.getValue(), root.get("value").textValue());
     assertTrue(root.get("inReferenceTo").isObject());
     assertTrue(root.get("organization").isObject());
-    assertTrue(root.get("source").isObject());
+    assertTrue(root.get("addedBy").isObject());
+    assertTrue(root.get("origin").isObject());
+    assertEquals(fact.getTrust(), root.get("trust").floatValue(), 0.0);
+    assertEquals(fact.getConfidence(), root.get("confidence").floatValue(), 0.0);
+    assertEquals(fact.getCertainty(), root.get("certainty").floatValue(), 0.0);
     assertEquals(fact.getAccessMode().toString(), root.get("accessMode").textValue());
     assertEquals("2016-11-30T15:47:01Z", root.get("timestamp").textValue());
     assertEquals("2016-11-30T15:47:02Z", root.get("lastSeenTimestamp").textValue());
@@ -49,7 +53,10 @@ public class FactTest {
             .setValue("value")
             .setInReferenceTo(createFactInfo())
             .setOrganization(Organization.builder().setId(UUID.randomUUID()).setName("organization").build().toInfo())
-            .setSource(Source.builder().setId(UUID.randomUUID()).setName("source").build().toInfo())
+            .setAddedBy(Subject.builder().setId(UUID.randomUUID()).setName("subject").build().toInfo())
+            .setOrigin(Origin.builder().setId(UUID.randomUUID()).setName("origin").build().toInfo())
+            .setTrust(0.1f)
+            .setConfidence(0.2f)
             .setAccessMode(AccessMode.Explicit)
             .setTimestamp(1480520821000L)
             .setLastSeenTimestamp(1480520822000L)

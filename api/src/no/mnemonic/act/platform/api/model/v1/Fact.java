@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -30,8 +31,14 @@ public class Fact {
   private final Fact.Info inReferenceTo;
   @ApiModelProperty(value = "Who owns the Fact", required = true)
   private final Organization.Info organization;
-  @ApiModelProperty(value = "Who created the Fact", required = true)
-  private final Source.Info source;
+  @ApiModelProperty(value = "Who added the Fact", required = true)
+  private final Subject.Info addedBy;
+  @ApiModelProperty(value = "Where the information came from", required = true)
+  private final Origin.Info origin;
+  @ApiModelProperty(value = "How much the Origin was trusted when the Fact was created", example = "0.8", required = true)
+  private final float trust;
+  @ApiModelProperty(value = "How much confidence was given that the Fact is true", example = "0.9", required = true)
+  private final float confidence;
   @ApiModelProperty(value = "Who has access to the Fact", required = true)
   private final AccessMode accessMode;
   @ApiModelProperty(value = "When the Fact was created", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
@@ -48,17 +55,32 @@ public class Fact {
   private final boolean bidirectionalBinding;
   @ApiModelProperty(value = "Contains any flags set on the Fact")
   private final Set<Flag> flags;
-  // TODO: Add confidenceLevel once defined.
 
-  private Fact(UUID id, FactType.Info type, String value, Info inReferenceTo, Organization.Info organization, Source.Info source,
-               AccessMode accessMode, Long timestamp, Long lastSeenTimestamp, Object.Info sourceObject, Object.Info destinationObject,
-               boolean bidirectionalBinding, Set<Flag> flags) {
+  private Fact(UUID id,
+               FactType.Info type,
+               String value,
+               Info inReferenceTo,
+               Organization.Info organization,
+               Subject.Info addedBy,
+               Origin.Info origin,
+               float trust,
+               float confidence,
+               AccessMode accessMode,
+               Long timestamp,
+               Long lastSeenTimestamp,
+               Object.Info sourceObject,
+               Object.Info destinationObject,
+               boolean bidirectionalBinding,
+               Set<Flag> flags) {
     this.id = id;
     this.type = type;
     this.value = value;
     this.inReferenceTo = inReferenceTo;
     this.organization = organization;
-    this.source = source;
+    this.addedBy = addedBy;
+    this.origin = origin;
+    this.trust = trust;
+    this.confidence = confidence;
     this.accessMode = accessMode;
     this.timestamp = timestamp;
     this.lastSeenTimestamp = lastSeenTimestamp;
@@ -88,8 +110,26 @@ public class Fact {
     return organization;
   }
 
-  public Source.Info getSource() {
-    return source;
+  public Subject.Info getAddedBy() {
+    return addedBy;
+  }
+
+  public Origin.Info getOrigin() {
+    return origin;
+  }
+
+  public float getTrust() {
+    return trust;
+  }
+
+  public float getConfidence() {
+    return confidence;
+  }
+
+  @ApiModelProperty(value = "Certainty = Trust x Confidence", example = "0.72", required = true)
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  public float getCertainty() {
+    return getTrust() * getConfidence();
   }
 
   public AccessMode getAccessMode() {
@@ -134,7 +174,10 @@ public class Fact {
     private String value;
     private Fact.Info inReferenceTo;
     private Organization.Info organization;
-    private Source.Info source;
+    private Subject.Info addedBy;
+    private Origin.Info origin;
+    private float trust;
+    private float confidence;
     private AccessMode accessMode;
     private Long timestamp;
     private Long lastSeenTimestamp;
@@ -147,8 +190,8 @@ public class Fact {
     }
 
     public Fact build() {
-      return new Fact(id, type, value, inReferenceTo, organization, source, accessMode, timestamp, lastSeenTimestamp,
-              sourceObject, destinationObject, bidirectionalBinding, flags);
+      return new Fact(id, type, value, inReferenceTo, organization, addedBy, origin, trust, confidence, accessMode,
+              timestamp, lastSeenTimestamp, sourceObject, destinationObject, bidirectionalBinding, flags);
     }
 
     public Builder setId(UUID id) {
@@ -176,8 +219,23 @@ public class Fact {
       return this;
     }
 
-    public Builder setSource(Source.Info source) {
-      this.source = source;
+    public Builder setAddedBy(Subject.Info addedBy) {
+      this.addedBy = addedBy;
+      return this;
+    }
+
+    public Builder setOrigin(Origin.Info origin) {
+      this.origin = origin;
+      return this;
+    }
+
+    public Builder setTrust(float trust) {
+      this.trust = trust;
+      return this;
+    }
+
+    public Builder setConfidence(float confidence) {
+      this.confidence = confidence;
       return this;
     }
 

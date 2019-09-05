@@ -5,7 +5,6 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -138,30 +137,6 @@ abstract class AbstractDelegate {
   }
 
   /**
-   * Resolve an Organization by its ID. Falls back to the current user's Organization if no 'organizationID' is provided.
-   *
-   * @param organizationID ID of Organization
-   * @return Resolved Organization (currently just its ID, but this might change)
-   */
-  UUID resolveOrganization(UUID organizationID) {
-    // TODO: Verify organization.
-    // If no organization is provided use the current user's organization by default.
-    return ObjectUtils.ifNull(organizationID, SecurityContext.get().getCurrentUserOrganizationID());
-  }
-
-  /**
-   * Resolve a Source by its ID. Falls back to the current user if no 'sourceID' is provided.
-   *
-   * @param sourceID ID of Source
-   * @return Resolved Source (currently just its ID, but this might change)
-   */
-  UUID resolveSource(UUID sourceID) {
-    // TODO: Verify source.
-    // If no source is provided use the current user as source by default.
-    return ObjectUtils.ifNull(sourceID, SecurityContext.get().getCurrentUserID());
-  }
-
-  /**
    * Resolve AccessMode from a request and verify that it's not less restrictive than the AccessMode from another Fact.
    * Falls back to AccessMode from referenced Fact if requested AccessMode is not given.
    *
@@ -204,7 +179,10 @@ abstract class AbstractDelegate {
             .setInReferenceTo(fact.getInReferenceToID())
             .setOrganizationID(fact.getOrganizationID())
             .setSourceID(fact.getSourceID())
+            .setAddedByID(fact.getAddedByID())
             .setAccessMode(FactDocument.AccessMode.valueOf(fact.getAccessMode().name()))
+            .setTrust(fact.getTrust())
+            .setConfidence(fact.getConfidence())
             .setTimestamp(fact.getTimestamp())
             .setLastSeenTimestamp(fact.getLastSeenTimestamp())
             .setAcl(SetUtils.set(acl));

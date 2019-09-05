@@ -13,6 +13,7 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.MetaFactBindingEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
@@ -20,6 +21,7 @@ import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -40,8 +42,13 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
   private final FactManager factManager;
   private final FactSearchManager factSearchManager;
   private final FactTypeResolver factTypeResolver;
+  private final FactCreateHelper factCreateHelper;
   private final FactStorageHelper factStorageHelper;
   private final Function<FactEntity, Fact> factConverter;
+
+  private FactTypeEntity requestedFactType;
+  private OriginEntity requestedOrigin;
+  private Organization requestedOrganization;
 
   @Inject
   public FactCreateMetaDelegate(TiSecurityContext securityContext,
@@ -49,6 +56,7 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
                                 FactManager factManager,
                                 FactSearchManager factSearchManager,
                                 FactTypeResolver factTypeResolver,
+                                FactCreateHelper factCreateHelper,
                                 FactStorageHelper factStorageHelper,
                                 Function<FactEntity, Fact> factConverter) {
     this.securityContext = securityContext;
@@ -56,6 +64,7 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
     this.factManager = factManager;
     this.factSearchManager = factSearchManager;
     this.factTypeResolver = factTypeResolver;
+    this.factCreateHelper = factCreateHelper;
     this.factStorageHelper = factStorageHelper;
     this.factConverter = factConverter;
   }
@@ -66,19 +75,23 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
     FactEntity referencedFact = fetchExistingFact(request.getFact());
     // Verify that user is allowed to access the referenced Fact.
     securityContext.checkReadPermission(referencedFact);
-    // Verify that user is allowed to add Facts for the requested organization.
-    securityContext.checkPermission(TiFunctionConstants.addFactObjects, resolveOrganization(request.getOrganization()));
 
-    FactTypeEntity type = factTypeResolver.resolveFactType(request.getType());
-    if (Objects.equals(type.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
+    // Resolve some objects which are required later on. This will also validate those request parameters.
+    requestedOrigin = factCreateHelper.resolveOrigin(request.getOrigin());
+    requestedOrganization = factCreateHelper.resolveOrganization(request.getOrganization(), requestedOrigin);
+    requestedFactType = factTypeResolver.resolveFactType(request.getType());
+    if (Objects.equals(requestedFactType.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
       throw new AccessDeniedException("Not allowed to manually use system-defined Retraction FactType. Use /retract endpoint instead.");
     }
 
-    // Validate that requested Fact matches its FactType.
-    assertValidFactValue(type, request.getValue());
-    assertValidFactBinding(request, type, referencedFact);
+    // Verify that user is allowed to add Facts for the requested organization.
+    securityContext.checkPermission(TiFunctionConstants.addFactObjects, requestedOrganization.getId());
 
-    FactEntity metaFact = resolveExistingFact(request, type, referencedFact);
+    // Validate that requested Fact matches its FactType.
+    assertValidFactValue(requestedFactType, request.getValue());
+    assertValidFactBinding(request, referencedFact);
+
+    FactEntity metaFact = resolveExistingFact(request, referencedFact);
     if (metaFact != null) {
       // Refresh an existing Fact.
       metaFact = factManager.refreshFact(metaFact.getId());
@@ -87,10 +100,10 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
       reindexExistingFact(metaFact, subjectsAddedToAcl);
     } else {
       // Or create a new Fact.
-      metaFact = saveFact(request, type, referencedFact);
+      metaFact = saveFact(request, referencedFact);
       List<UUID> subjectsAddedToAcl = factStorageHelper.saveInitialAclForNewFact(metaFact, request.getAcl());
       // Index new Fact into ElasticSearch.
-      indexCreatedFact(metaFact, type, subjectsAddedToAcl);
+      indexCreatedFact(metaFact, requestedFactType, subjectsAddedToAcl);
     }
 
     // Always add provided comment.
@@ -103,25 +116,25 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
     return addedFact;
   }
 
-  private void assertValidFactBinding(CreateMetaFactRequest request, FactTypeEntity type, FactEntity referencedFact) throws InvalidArgumentException {
+  private void assertValidFactBinding(CreateMetaFactRequest request, FactEntity referencedFact) throws InvalidArgumentException {
     // Validate that the referenced Fact has the correct type according to the requested FactType.
-    boolean valid = !CollectionUtils.isEmpty(type.getRelevantFactBindings()) && type.getRelevantFactBindings()
+    boolean valid = !CollectionUtils.isEmpty(requestedFactType.getRelevantFactBindings()) && requestedFactType.getRelevantFactBindings()
             .stream()
             .anyMatch(b -> Objects.equals(b.getFactTypeID(), referencedFact.getTypeID()));
     if (!valid) {
       throw new InvalidArgumentException()
-              .addValidationError(String.format("Requested binding between Facts is not allowed for FactType with id = %s.", type.getId()),
+              .addValidationError(String.format("Requested binding between Facts is not allowed for FactType with id = %s.", requestedFactType.getId()),
                       "invalid.meta.fact.binding", "type", request.getType());
     }
   }
 
-  private FactEntity resolveExistingFact(CreateMetaFactRequest request, FactTypeEntity type, FactEntity referencedFact) throws InvalidArgumentException {
-    // Skip confidenceLevel for now as it's currently not provided in the request.
+  private FactEntity resolveExistingFact(CreateMetaFactRequest request, FactEntity referencedFact) throws InvalidArgumentException {
     FactExistenceSearchCriteria criteria = FactExistenceSearchCriteria.builder()
             .setFactValue(request.getValue())
-            .setFactTypeID(type.getId())
-            .setSourceID(resolveSource(request.getSource()))
-            .setOrganizationID(resolveOrganization(request.getOrganization()))
+            .setFactTypeID(requestedFactType.getId())
+            .setSourceID(requestedOrigin.getId())
+            .setOrganizationID(requestedOrganization.getId())
+            .setConfidence(resolveConfidence(request))
             .setAccessMode(resolveAccessMode(referencedFact, request.getAccessMode()).name())
             .setInReferenceTo(referencedFact.getId())
             .build();
@@ -140,14 +153,17 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
             .orElse(null);
   }
 
-  private FactEntity saveFact(CreateMetaFactRequest request, FactTypeEntity type, FactEntity referencedFact) throws InvalidArgumentException {
+  private FactEntity saveFact(CreateMetaFactRequest request, FactEntity referencedFact) throws InvalidArgumentException {
     FactEntity metaFact = new FactEntity()
             .setId(UUID.randomUUID()) // Need to provide client-generated ID.
-            .setTypeID(type.getId())
+            .setTypeID(requestedFactType.getId())
             .setValue(request.getValue())
             .setInReferenceToID(referencedFact.getId())
-            .setOrganizationID(resolveOrganization(request.getOrganization()))
-            .setSourceID(resolveSource(request.getSource()))
+            .setOrganizationID(requestedOrganization.getId())
+            .setAddedByID(securityContext.getCurrentUserID())
+            .setSourceID(requestedOrigin.getId())
+            .setTrust(requestedOrigin.getTrust())
+            .setConfidence(resolveConfidence(request))
             .setAccessMode(resolveAccessMode(referencedFact, request.getAccessMode()))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
@@ -160,6 +176,10 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
     );
 
     return metaFact;
+  }
+
+  private Float resolveConfidence(CreateMetaFactRequest request) {
+    return ObjectUtils.ifNull(request.getConfidence(), requestedFactType.getDefaultConfidence());
   }
 
   private void reindexExistingFact(FactEntity fact, List<UUID> acl) {

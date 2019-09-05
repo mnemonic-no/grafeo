@@ -89,6 +89,8 @@ public class FactSearchManager implements LifecycleAspect {
   private static final String MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME = "MaxLastAddedTimestampAggregation";
   private static final String MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME = "MaxLastSeenTimestampAggregation";
 
+  private static final float CONFIDENCE_EQUALITY_INTERVAL = 0.01f;
+
   private static final Logger LOGGER = Logging.getLogger(FactSearchManager.class);
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -495,7 +497,11 @@ public class FactSearchManager implements LifecycleAspect {
             .filter(termQuery("typeID", toString(criteria.getFactTypeID())))
             .filter(termQuery("sourceID", toString(criteria.getSourceID())))
             .filter(termQuery("organizationID", toString(criteria.getOrganizationID())))
-            .filter(termQuery("accessMode", toString(criteria.getAccessMode())));
+            .filter(termQuery("accessMode", toString(criteria.getAccessMode())))
+            // Consider 'confidence' to be equal inside a given interval.
+            .filter(rangeQuery("confidence")
+                    .gt(criteria.getConfidence() - CONFIDENCE_EQUALITY_INTERVAL / 2)
+                    .lt(criteria.getConfidence() + CONFIDENCE_EQUALITY_INTERVAL / 2));
 
     if (criteria.getFactValue() != null) {
       // Fact values must match exactly if given.

@@ -13,3 +13,5 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ### Changed
 - Extend FactType API to include `defaultConfidence` field.
+- Extend Fact API to include `trust`, `confidence`, `certainty` and `addedBy` fields.
+- Rename field `source` to `origin` in Fact API (**breaking**).
