@@ -23,7 +23,10 @@ public class SearchObjectFactsRequestTest extends AbstractRequestTest {
             "factType : ['factType']," +
             "factValue : ['factValue']," +
             "organization : ['organization']," +
-            "source : ['source']," +
+            "origin : ['origin']," +
+            "minimum : 0.1," +
+            "maximum : 0.2," +
+            "dimension : 'trust'," +
             "includeRetracted : true," +
             "before : '2016-11-30T15:47:00Z'," +
             "after : '2016-11-30T15:47:01Z'," +
@@ -38,7 +41,10 @@ public class SearchObjectFactsRequestTest extends AbstractRequestTest {
     assertEquals(SetUtils.set("factType"), request.getFactType());
     assertEquals(SetUtils.set("factValue"), request.getFactValue());
     assertEquals(SetUtils.set("organization"), request.getOrganization());
-    assertEquals(SetUtils.set("source"), request.getSource());
+    assertEquals(SetUtils.set("origin"), request.getOrigin());
+    assertEquals(0.1f, request.getMinimum(), 0.0);
+    assertEquals(0.2f, request.getMaximum(), 0.0);
+    assertEquals(Dimension.trust, request.getDimension());
     assertTrue(request.getIncludeRetracted());
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
@@ -48,11 +54,27 @@ public class SearchObjectFactsRequestTest extends AbstractRequestTest {
   @Test
   public void testRequestValidationFailsOnMin() {
     Set<ConstraintViolation<SearchObjectFactsRequest>> violations = getValidator().validate(new SearchObjectFactsRequest()
+            .setMinimum(-0.1f)
+            .setMaximum(-0.2f)
             .setLimit(-1)
     );
 
-    assertEquals(1, violations.size());
+    assertEquals(3, violations.size());
+    assertPropertyInvalid(violations, "minimum");
+    assertPropertyInvalid(violations, "maximum");
     assertPropertyInvalid(violations, "limit");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnMax() {
+    Set<ConstraintViolation<SearchObjectFactsRequest>> violations = getValidator().validate(new SearchObjectFactsRequest()
+            .setMinimum(1.1f)
+            .setMaximum(1.2f)
+    );
+
+    assertEquals(2, violations.size());
+    assertPropertyInvalid(violations, "minimum");
+    assertPropertyInvalid(violations, "maximum");
   }
 
   @Test

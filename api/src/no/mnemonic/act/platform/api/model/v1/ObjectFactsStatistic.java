@@ -20,7 +20,6 @@ public class ObjectFactsStatistic {
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long lastSeenTimestamp;
-  // TODO: Add minConfidenceLevel/maxConfidenceLevel once confidence levels are defined.
 
   private ObjectFactsStatistic(FactType.Info type, int count, Long lastAddedTimestamp, Long lastSeenTimestamp) {
     this.type = type;

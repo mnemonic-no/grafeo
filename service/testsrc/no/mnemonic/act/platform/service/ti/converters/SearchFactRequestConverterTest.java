@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
+import no.mnemonic.act.platform.api.request.v1.Dimension;
 import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
@@ -39,6 +40,7 @@ public class SearchFactRequestConverterTest {
   @Test
   public void testConvertEmptyRequest() {
     FactSearchCriteria criteria = converter.apply(new SearchFactRequest());
+    assertEquals(SetUtils.set(FactSearchCriteria.NumberFieldStrategy.certainty), criteria.getNumberFieldStrategy());
     assertEquals(25, criteria.getLimit());
     assertNotNull(criteria.getCurrentUserID());
     assertNotNull(criteria.getAvailableOrganizationID());
@@ -115,15 +117,28 @@ public class SearchFactRequestConverterTest {
   }
 
   @Test
-  public void testConvertRequestFilterOnSource() {
+  public void testConvertRequestFilterOnOrigin() {
     UUID id = UUID.randomUUID();
     String name = "name";
     FactSearchCriteria criteria = converter.apply(new SearchFactRequest()
-            .addSource(id.toString())
-            .addSource(name)
+            .addOrigin(id.toString())
+            .addOrigin(name)
     );
     assertEquals(SetUtils.set(id), criteria.getSourceID());
     assertEquals(SetUtils.set(name), criteria.getSourceName());
+  }
+
+  @Test
+  public void testConvertRequestFilterOnMinMax() {
+    FactSearchCriteria criteria = converter.apply(new SearchFactRequest()
+            .setMinimum(0.1f)
+            .setMaximum(0.2f)
+            .setDimension(Dimension.trust)
+    );
+    assertEquals(0.1f, (Float) criteria.getMinNumber(), 0.0);
+    assertEquals(0.2f, (Float) criteria.getMaxNumber(), 0.0);
+    assertEquals(SetUtils.set(FactSearchCriteria.NumberFieldStrategy.trust), criteria.getNumberFieldStrategy());
+    assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getNumberMatchStrategy());
   }
 
   @Test
@@ -135,6 +150,7 @@ public class SearchFactRequestConverterTest {
     assertEquals(123456789L, (long) criteria.getStartTimestamp());
     assertEquals(987654321L, (long) criteria.getEndTimestamp());
     assertEquals(SetUtils.set(FactSearchCriteria.TimeFieldStrategy.timestamp), criteria.getTimeFieldStrategy());
+    assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getTimeMatchStrategy());
   }
 
   @Test

@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.Set;
 import java.util.UUID;
@@ -27,8 +28,18 @@ public class SearchMetaFactsRequest implements ValidatingRequest {
   private Set<String> factValue;
   @ApiModelProperty(value = "Only return meta Facts belonging to a specific Organization")
   private Set<String> organization;
-  @ApiModelProperty(value = "Only return meta Facts coming from a specific Source")
-  private Set<String> source;
+  @ApiModelProperty(value = "Only return meta Facts coming from a specific Origin")
+  private Set<String> origin;
+  @ApiModelProperty(value = "Only return meta Facts where the field specified by 'dimension' is above a specific value (value between 0.0 and 1.0)")
+  @Min(0)
+  @Max(1)
+  private Float minimum;
+  @ApiModelProperty(value = "Only return meta Facts where the field specified by 'dimension' is below a specific value (value between 0.0 and 1.0)")
+  @Min(0)
+  @Max(1)
+  private Float maximum;
+  @ApiModelProperty(value = "Specify the field used for minimum/maximum filters (default 'certainty')")
+  private Dimension dimension;
   @ApiModelProperty(value = "Include retracted meta Facts (default false)", example = "false")
   private Boolean includeRetracted;
   @ApiModelProperty(value = "Only return meta Facts added before a specific timestamp", example = "2016-09-28T21:26:22Z", dataType = "string")
@@ -40,7 +51,6 @@ public class SearchMetaFactsRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Limit the number of returned meta Facts (default 25, 0 means all)", example = "25")
   @Min(0)
   private Integer limit;
-  // TODO: Add minConfidence/maxConfidence once confidence level is defined.
 
   public UUID getFact() {
     return fact;
@@ -102,17 +112,44 @@ public class SearchMetaFactsRequest implements ValidatingRequest {
     return this;
   }
 
-  public Set<String> getSource() {
-    return source;
+  public Set<String> getOrigin() {
+    return origin;
   }
 
-  public SearchMetaFactsRequest setSource(Set<String> source) {
-    this.source = ObjectUtils.ifNotNull(source, SetUtils::set);
+  public SearchMetaFactsRequest setOrigin(Set<String> origin) {
+    this.origin = ObjectUtils.ifNotNull(origin, SetUtils::set);
     return this;
   }
 
-  public SearchMetaFactsRequest addSource(String source) {
-    this.source = SetUtils.addToSet(this.source, source);
+  public SearchMetaFactsRequest addOrigin(String origin) {
+    this.origin = SetUtils.addToSet(this.origin, origin);
+    return this;
+  }
+
+  public Float getMinimum() {
+    return minimum;
+  }
+
+  public SearchMetaFactsRequest setMinimum(Float minimum) {
+    this.minimum = minimum;
+    return this;
+  }
+
+  public Float getMaximum() {
+    return maximum;
+  }
+
+  public SearchMetaFactsRequest setMaximum(Float maximum) {
+    this.maximum = maximum;
+    return this;
+  }
+
+  public Dimension getDimension() {
+    return dimension;
+  }
+
+  public SearchMetaFactsRequest setDimension(Dimension dimension) {
+    this.dimension = dimension;
     return this;
   }
 

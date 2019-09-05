@@ -213,7 +213,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
                   "Objects and Facts a user has access to. In order to return an Object a user needs to have access to " +
                   "at least one Fact linked to the Object.\n\n" +
                   "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
-                  "Fact organization, Fact source, Fact value and Object value. The 'keywords' parameter must match one " +
+                  "Fact organization, Fact origin, Fact value and Object value. The 'keywords' parameter must match one " +
                   "of those fields. The following search features are available when using this parameter.\n\n" +
                   "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
                   "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
@@ -222,7 +222,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
                   "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
                   "'factType' or 'objectType' in addition.\n\n" +
                   "In contrast to the fuzzy search above other filter parameters such as 'objectValue' and 'factValue' " +
-                  "require an exact match. When searching on 'objectType', 'factType', 'organization' or 'source' it is " +
+                  "require an exact match. When searching on 'objectType', 'factType', 'organization' or 'origin' it is " +
                   "possible to either specify the name or UUID of the referenced entity. It is allowed to request an " +
                   "unlimited search result (i.e. 'limit' parameter set to 0), however, the API will enforce a maximum " +
                   "upper limit in order to protect system resources. In this case the search should be narrowed down " +

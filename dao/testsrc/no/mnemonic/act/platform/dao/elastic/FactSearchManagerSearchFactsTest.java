@@ -468,6 +468,66 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
   }
 
   @Test
+  public void testSearchFactsFilterByNumberTrust() {
+    FactDocument accessibleFact = indexFact(d -> d.setTrust(0.2f));
+    indexFact(d -> d.setTrust(0.4f));
+    indexFact(d -> d.setTrust(0.6f));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setMinNumber(0.1f)
+            .setMaxNumber(0.3f)
+            .addNumberFieldStrategy(FactSearchCriteria.NumberFieldStrategy.trust));
+    testSearchFacts(criteria, accessibleFact);
+  }
+
+  @Test
+  public void testSearchFactsFilterByNumberConfidence() {
+    FactDocument accessibleFact = indexFact(d -> d.setConfidence(0.2f));
+    indexFact(d -> d.setConfidence(0.4f));
+    indexFact(d -> d.setConfidence(0.6f));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setMinNumber(0.1f)
+            .setMaxNumber(0.3f)
+            .addNumberFieldStrategy(FactSearchCriteria.NumberFieldStrategy.confidence));
+    testSearchFacts(criteria, accessibleFact);
+  }
+
+  @Test
+  public void testSearchFactsFilterByNumberCertainty() {
+    FactDocument accessibleFact = indexFact(d -> d.setTrust(1.0f).setConfidence(0.2f));
+    indexFact(d -> d.setTrust(1.0f).setConfidence(0.4f));
+    indexFact(d -> d.setTrust(1.0f).setConfidence(0.6f));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setMinNumber(0.1f)
+            .setMaxNumber(0.3f)
+            .addNumberFieldStrategy(FactSearchCriteria.NumberFieldStrategy.certainty));
+    testSearchFacts(criteria, accessibleFact);
+  }
+
+  @Test
+  public void testSearchFactsFilterByNumberFieldStrategyAll() {
+    indexFact(d -> d.setTrust(0.2f).setConfidence(0.4f));
+    indexFact(d -> d.setTrust(0.4f).setConfidence(0.2f));
+    indexFact(d -> d.setTrust(0.5f).setConfidence(0.5f));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setMinNumber(0.1f)
+            .setMaxNumber(0.3f)
+            .addNumberFieldStrategy(FactSearchCriteria.NumberFieldStrategy.all));
+    testSearchFacts(criteria, 3);
+  }
+
+  @Test
+  public void testSearchFactsFilterByNumberMatchStrategyAll() {
+    FactDocument accessibleFact = indexFact(d -> d.setTrust(0.4f).setConfidence(0.5f));
+    indexFact(d -> d.setTrust(0.5f).setConfidence(0.9f));
+    indexFact(d -> d.setTrust(0.8f).setConfidence(0.4f));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setMinNumber(0.1f)
+            .setMaxNumber(0.6f)
+            .setNumberMatchStrategy(FactSearchCriteria.MatchStrategy.all));
+    testSearchFacts(criteria, accessibleFact);
+  }
+
+  @Test
   public void testSearchFactsPopulateSearchResult() {
     indexFact(d -> d);
     indexFact(d -> d);
