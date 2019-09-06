@@ -110,15 +110,17 @@ public class FactEdge implements Edge {
 
   private Set<Property> getAllProperties() {
     // Currently, those properties only expose information directly from a Fact. Some additional interesting properties
-    // would be e.g. confidenceLevel, organizationName, sourceName, sourceTrustLevel, but those are not stored yet and
-    // therefore not easily available. Maybe it would be good to expose complex OrganizationProperty and SourceProperty
-    // properties instead of one simple property per field?
+    // would be e.g. organizationName or originName, but those are not directly available. Maybe it would be good to
+    // expose complex OrganizationProperty and OriginProperty properties instead of one simple property per field?
     return SetUtils.set(
             new FactID(fact, this),
             new Value(fact, this),
             new InReferenceToID(fact, this),
             new OrganizationID(fact, this),
-            new SourceID(fact, this),
+            new OriginID(fact, this),
+            new Trust(fact, this),
+            new Confidence(fact, this),
+            new Certainty(fact, this),
             new AccessMode(fact, this),
             new Timestamp(fact, this),
             new LastSeenTimestamp(fact, this)

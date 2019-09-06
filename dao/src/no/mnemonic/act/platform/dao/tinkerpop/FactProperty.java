@@ -115,19 +115,67 @@ abstract class FactProperty<V> implements Property<V> {
     }
   }
 
-  static class SourceID extends FactProperty<UUID> {
-    SourceID(FactEntity fact, FactEdge owner) {
+  static class OriginID extends FactProperty<UUID> {
+    OriginID(FactEntity fact, FactEdge owner) {
       super(fact, owner);
     }
 
     @Override
     public String key() {
-      return "sourceID";
+      return "originID";
     }
 
     @Override
     public UUID value() throws NoSuchElementException {
       return getFact().getSourceID();
+    }
+  }
+
+  static class Trust extends FactProperty<Float> {
+    Trust(FactEntity fact, FactEdge owner) {
+      super(fact, owner);
+    }
+
+    @Override
+    public String key() {
+      return "trust";
+    }
+
+    @Override
+    public Float value() throws NoSuchElementException {
+      return getFact().getTrust();
+    }
+  }
+
+  static class Confidence extends FactProperty<Float> {
+    Confidence(FactEntity fact, FactEdge owner) {
+      super(fact, owner);
+    }
+
+    @Override
+    public String key() {
+      return "confidence";
+    }
+
+    @Override
+    public Float value() throws NoSuchElementException {
+      return getFact().getConfidence();
+    }
+  }
+
+  static class Certainty extends FactProperty<Float> {
+    Certainty(FactEntity fact, FactEdge owner) {
+      super(fact, owner);
+    }
+
+    @Override
+    public String key() {
+      return "certainty";
+    }
+
+    @Override
+    public Float value() throws NoSuchElementException {
+      return getFact().getTrust() * getFact().getConfidence();
     }
   }
 

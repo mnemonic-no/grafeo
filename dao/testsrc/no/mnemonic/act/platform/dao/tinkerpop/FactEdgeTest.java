@@ -150,6 +150,13 @@ public class FactEdgeTest extends AbstractGraphTest {
   }
 
   @Test
+  public void testAutotypeFloatProperties() {
+    Edge edge = createEdge();
+    float trust = edge.value("trust");
+    assertEquals(0.3f, trust, 0.0);
+  }
+
+  @Test
   public void testAutotypeEnumProperties() {
     Edge edge = createEdge();
     AccessMode accessMode = edge.value("accessMode");
@@ -159,8 +166,8 @@ public class FactEdgeTest extends AbstractGraphTest {
   @Test
   public void testAutotypeUuidProperties() {
     Edge edge = createEdge();
-    UUID sourceID = edge.value("sourceID");
-    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000003"), sourceID);
+    UUID originID = edge.value("originID");
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000003"), originID);
   }
 
   @Test
@@ -174,7 +181,10 @@ public class FactEdgeTest extends AbstractGraphTest {
             T("value", "value"),
             T("inReferenceToID", UUID.fromString("00000000-0000-0000-0000-000000000001")),
             T("organizationID", UUID.fromString("00000000-0000-0000-0000-000000000002")),
-            T("sourceID", UUID.fromString("00000000-0000-0000-0000-000000000003")),
+            T("originID", UUID.fromString("00000000-0000-0000-0000-000000000003")),
+            T("trust", 0.3f),
+            T("confidence", 0.5f),
+            T("certainty", 0.15f),
             T("accessMode", AccessMode.Public),
             T("timestamp", 123456789L),
             T("lastSeenTimestamp", 987654321L)
