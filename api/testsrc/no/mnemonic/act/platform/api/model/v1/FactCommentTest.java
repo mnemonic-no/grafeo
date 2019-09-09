@@ -18,7 +18,7 @@ public class FactCommentTest {
     FactComment comment = FactComment.builder()
             .setId(UUID.randomUUID())
             .setReplyTo(UUID.randomUUID())
-            .setSource(Source.builder().setId(UUID.randomUUID()).setName("source").build().toInfo())
+            .setOrigin(Origin.builder().setId(UUID.randomUUID()).setName("origin").build().toInfo())
             .setComment("comment")
             .setTimestamp(1480520821000L)
             .build();
@@ -26,7 +26,7 @@ public class FactCommentTest {
     JsonNode root = mapper.valueToTree(comment);
     assertEquals(comment.getId().toString(), root.get("id").textValue());
     assertEquals(comment.getReplyTo().toString(), root.get("replyTo").textValue());
-    assertTrue(root.get("source").isObject());
+    assertTrue(root.get("origin").isObject());
     assertEquals(comment.getComment(), root.get("comment").textValue());
     assertEquals("2016-11-30T15:47:01Z", root.get("timestamp").textValue());
   }

@@ -28,7 +28,7 @@ public class EvidenceSubmission {
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long observationTimestamp;
   @ApiModelProperty(value = "Who submitted the evidence", required = true)
-  private final Source.Info source;
+  private final Origin.Info origin;
   @ApiModelProperty(value = "Who has access to the evidence", required = true)
   private final AccessMode accessMode;
   @ApiModelProperty(value = "Checksum of the evidence data using SHA-256",
@@ -36,7 +36,7 @@ public class EvidenceSubmission {
   private final String checksum;
 
   private EvidenceSubmission(UUID id, String name, String dataType, String mediaType, long length, Long timestamp,
-                             Long observationTimestamp, Source.Info source, AccessMode accessMode, String checksum) {
+                             Long observationTimestamp, Origin.Info origin, AccessMode accessMode, String checksum) {
     this.id = id;
     this.name = name;
     this.dataType = dataType;
@@ -44,7 +44,7 @@ public class EvidenceSubmission {
     this.length = length;
     this.timestamp = timestamp;
     this.observationTimestamp = observationTimestamp;
-    this.source = source;
+    this.origin = origin;
     this.accessMode = accessMode;
     this.checksum = checksum;
   }
@@ -77,8 +77,8 @@ public class EvidenceSubmission {
     return observationTimestamp;
   }
 
-  public Source.Info getSource() {
-    return source;
+  public Origin.Info getOrigin() {
+    return origin;
   }
 
   public AccessMode getAccessMode() {
@@ -101,7 +101,7 @@ public class EvidenceSubmission {
     private long length;
     private Long timestamp;
     private Long observationTimestamp;
-    private Source.Info source;
+    private Origin.Info origin;
     private AccessMode accessMode;
     private String checksum;
 
@@ -109,7 +109,7 @@ public class EvidenceSubmission {
     }
 
     public EvidenceSubmission build() {
-      return new EvidenceSubmission(id, name, dataType, mediaType, length, timestamp, observationTimestamp, source, accessMode, checksum);
+      return new EvidenceSubmission(id, name, dataType, mediaType, length, timestamp, observationTimestamp, origin, accessMode, checksum);
     }
 
     public Builder setId(UUID id) {
@@ -147,8 +147,8 @@ public class EvidenceSubmission {
       return this;
     }
 
-    public Builder setSource(Source.Info source) {
-      this.source = source;
+    public Builder setOrigin(Origin.Info origin) {
+      this.origin = origin;
       return this;
     }
 

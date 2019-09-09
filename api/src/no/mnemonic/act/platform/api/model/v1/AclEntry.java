@@ -15,15 +15,15 @@ public class AclEntry {
   @ApiModelProperty(value = "To whom access is granted", required = true)
   private final Subject.Info subject;
   @ApiModelProperty(value = "Who granted access", required = true)
-  private final Source.Info source;
+  private final Origin.Info origin;
   @ApiModelProperty(value = "When access was granted", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
 
-  private AclEntry(UUID id, Subject.Info subject, Source.Info source, Long timestamp) {
+  private AclEntry(UUID id, Subject.Info subject, Origin.Info origin, Long timestamp) {
     this.id = id;
     this.subject = subject;
-    this.source = source;
+    this.origin = origin;
     this.timestamp = timestamp;
   }
 
@@ -35,8 +35,8 @@ public class AclEntry {
     return subject;
   }
 
-  public Source.Info getSource() {
-    return source;
+  public Origin.Info getOrigin() {
+    return origin;
   }
 
   public Long getTimestamp() {
@@ -50,14 +50,14 @@ public class AclEntry {
   public static class Builder {
     private UUID id;
     private Subject.Info subject;
-    private Source.Info source;
+    private Origin.Info origin;
     private Long timestamp;
 
     private Builder() {
     }
 
     public AclEntry build() {
-      return new AclEntry(id, subject, source, timestamp);
+      return new AclEntry(id, subject, origin, timestamp);
     }
 
     public Builder setId(UUID id) {
@@ -70,8 +70,8 @@ public class AclEntry {
       return this;
     }
 
-    public Builder setSource(Source.Info source) {
-      this.source = source;
+    public Builder setOrigin(Origin.Info origin) {
+      this.origin = origin;
       return this;
     }
 

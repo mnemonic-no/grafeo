@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.FactComment;
-import no.mnemonic.act.platform.api.model.v1.Source;
+import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import org.junit.Test;
 
@@ -13,8 +13,8 @@ import static org.junit.Assert.assertNull;
 
 public class FactCommentConverterTest {
 
-  private final Function<UUID, Source> sourceConverter = id -> Source.builder().setId(id).build();
-  private final FactCommentConverter converter = new FactCommentConverter(sourceConverter);
+  private final Function<UUID, Origin> originConverter = id -> Origin.builder().setId(id).build();
+  private final FactCommentConverter converter = new FactCommentConverter(originConverter);
 
   @Test
   public void testConvertFactComment() {
@@ -40,7 +40,7 @@ public class FactCommentConverterTest {
   private void assertModel(FactCommentEntity entity, FactComment model) {
     assertEquals(entity.getId(), model.getId());
     assertEquals(entity.getReplyToID(), model.getReplyTo());
-    assertEquals(entity.getSourceID(), model.getSource().getId());
+    assertEquals(entity.getSourceID(), model.getOrigin().getId());
     assertEquals(entity.getComment(), model.getComment());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
   }

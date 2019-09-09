@@ -15,17 +15,17 @@ public class FactComment {
   @ApiModelProperty(value = "Links to another comment to which this comment is a reply", example = "123e4567-e89b-12d3-a456-426655440000")
   private final UUID replyTo;
   @ApiModelProperty(value = "Who made the comment", required = true)
-  private final Source.Info source;
+  private final Origin.Info origin;
   @ApiModelProperty(value = "Contains the content of the comment", example = "Hello World!", required = true)
   private final String comment;
   @ApiModelProperty(value = "When the comment was made", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
 
-  private FactComment(UUID id, UUID replyTo, Source.Info source, String comment, Long timestamp) {
+  private FactComment(UUID id, UUID replyTo, Origin.Info origin, String comment, Long timestamp) {
     this.id = id;
     this.replyTo = replyTo;
-    this.source = source;
+    this.origin = origin;
     this.comment = comment;
     this.timestamp = timestamp;
   }
@@ -38,8 +38,8 @@ public class FactComment {
     return replyTo;
   }
 
-  public Source.Info getSource() {
-    return source;
+  public Origin.Info getOrigin() {
+    return origin;
   }
 
   public String getComment() {
@@ -57,7 +57,7 @@ public class FactComment {
   public static class Builder {
     private UUID id;
     private UUID replyTo;
-    private Source.Info source;
+    private Origin.Info origin;
     private String comment;
     private Long timestamp;
 
@@ -65,7 +65,7 @@ public class FactComment {
     }
 
     public FactComment build() {
-      return new FactComment(id, replyTo, source, comment, timestamp);
+      return new FactComment(id, replyTo, origin, comment, timestamp);
     }
 
     public Builder setId(UUID id) {
@@ -78,8 +78,8 @@ public class FactComment {
       return this;
     }
 
-    public Builder setSource(Source.Info source) {
-      this.source = source;
+    public Builder setOrigin(Origin.Info origin) {
+      this.origin = origin;
       return this;
     }
 
