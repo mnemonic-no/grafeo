@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.FactComment;
-import no.mnemonic.act.platform.api.model.v1.Source;
+import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -11,11 +11,11 @@ import java.util.function.Function;
 
 public class FactCommentConverter implements Converter<FactCommentEntity, FactComment> {
 
-  private final Function<UUID, Source> sourceConverter;
+  private final Function<UUID, Origin> originConverter;
 
   @Inject
-  public FactCommentConverter(Function<UUID, Source> sourceConverter) {
-    this.sourceConverter = sourceConverter;
+  public FactCommentConverter(Function<UUID, Origin> originConverter) {
+    this.originConverter = originConverter;
   }
 
   @Override
@@ -34,7 +34,7 @@ public class FactCommentConverter implements Converter<FactCommentEntity, FactCo
     return FactComment.builder()
             .setId(entity.getId())
             .setReplyTo(entity.getReplyToID())
-            .setSource(ObjectUtils.ifNotNull(sourceConverter.apply(entity.getSourceID()), Source::toInfo))
+            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getSourceID()), Origin::toInfo))
             .setComment(entity.getComment())
             .setTimestamp(entity.getTimestamp())
             .build();

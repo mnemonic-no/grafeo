@@ -23,7 +23,7 @@ public class EvidenceSubmissionTest {
             .setLength(42)
             .setTimestamp(1480520821000L)
             .setObservationTimestamp(1480520822000L)
-            .setSource(Source.builder().setId(UUID.randomUUID()).setName("source").build().toInfo())
+            .setOrigin(Origin.builder().setId(UUID.randomUUID()).setName("origin").build().toInfo())
             .setAccessMode(AccessMode.Explicit)
             .setChecksum("checksum")
             .build();
@@ -36,7 +36,7 @@ public class EvidenceSubmissionTest {
     assertEquals(submission.getLength(), root.get("length").longValue());
     assertEquals("2016-11-30T15:47:01Z", root.get("timestamp").textValue());
     assertEquals("2016-11-30T15:47:02Z", root.get("observationTimestamp").textValue());
-    assertTrue(root.get("source").isObject());
+    assertTrue(root.get("origin").isObject());
     assertEquals(submission.getAccessMode().toString(), root.get("accessMode").textValue());
     assertEquals(submission.getChecksum(), root.get("checksum").textValue());
   }

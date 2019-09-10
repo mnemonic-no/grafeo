@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.AclEntry;
-import no.mnemonic.act.platform.api.model.v1.Source;
+import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import org.junit.Test;
@@ -14,9 +14,9 @@ import static org.junit.Assert.assertNull;
 
 public class AclEntryConverterTest {
 
-  private final Function<UUID, Source> sourceConverter = id -> Source.builder().setId(id).build();
+  private final Function<UUID, Origin> originConverter = id -> Origin.builder().setId(id).build();
   private final Function<UUID, Subject> subjectConverter = id -> Subject.builder().setId(id).build();
-  private final AclEntryConverter converter = new AclEntryConverter(sourceConverter, subjectConverter);
+  private final AclEntryConverter converter = new AclEntryConverter(originConverter, subjectConverter);
 
   @Test
   public void testConvertAclEntry() {
@@ -40,7 +40,7 @@ public class AclEntryConverterTest {
 
   private void assertModel(FactAclEntity entity, AclEntry model) {
     assertEquals(entity.getId(), model.getId());
-    assertEquals(entity.getSourceID(), model.getSource().getId());
+    assertEquals(entity.getSourceID(), model.getOrigin().getId());
     assertEquals(entity.getSubjectID(), model.getSubject().getId());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
   }

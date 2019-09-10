@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.AclEntry;
-import no.mnemonic.act.platform.api.model.v1.Source;
+import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -12,13 +12,13 @@ import java.util.function.Function;
 
 public class AclEntryConverter implements Converter<FactAclEntity, AclEntry> {
 
-  private final Function<UUID, Source> sourceConverter;
+  private final Function<UUID, Origin> originConverter;
   private final Function<UUID, Subject> subjectConverter;
 
   @Inject
-  public AclEntryConverter(Function<UUID, Source> sourceConverter,
+  public AclEntryConverter(Function<UUID, Origin> originConverter,
                            Function<UUID, Subject> subjectConverter) {
-    this.sourceConverter = sourceConverter;
+    this.originConverter = originConverter;
     this.subjectConverter = subjectConverter;
   }
 
@@ -37,7 +37,7 @@ public class AclEntryConverter implements Converter<FactAclEntity, AclEntry> {
     if (entity == null) return null;
     return AclEntry.builder()
             .setId(entity.getId())
-            .setSource(ObjectUtils.ifNotNull(sourceConverter.apply(entity.getSourceID()), Source::toInfo))
+            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getSourceID()), Origin::toInfo))
             .setSubject(ObjectUtils.ifNotNull(subjectConverter.apply(entity.getSubjectID()), Subject::toInfo))
             .setTimestamp(entity.getTimestamp())
             .build();
