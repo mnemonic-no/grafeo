@@ -55,8 +55,8 @@ public class FactSearchManagerRetrieveExistingFactsTest extends AbstractManagerT
   }
 
   @Test
-  public void testRetrieveExistingFactsNoMatchOnSource() {
-    testRetrieveExistingFactsNoMatch(b -> b.setSourceID(UUID.randomUUID()));
+  public void testRetrieveExistingFactsNoMatchOnOrigin() {
+    testRetrieveExistingFactsNoMatch(b -> b.setOriginID(UUID.randomUUID()));
   }
 
   @Test
@@ -151,7 +151,7 @@ public class FactSearchManagerRetrieveExistingFactsTest extends AbstractManagerT
     FactExistenceSearchCriteria.Builder builder = FactExistenceSearchCriteria.builder()
             .setFactValue(fact.getValue())
             .setFactTypeID(fact.getTypeID())
-            .setSourceID(fact.getSourceID())
+            .setOriginID(fact.getOriginID())
             .setOrganizationID(fact.getOrganizationID())
             .setAccessMode(fact.getAccessMode().name())
             .setConfidence(fact.getConfidence());

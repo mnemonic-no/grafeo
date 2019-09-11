@@ -65,7 +65,7 @@ public class FactCreateCommentDelegate extends AbstractDelegate implements Deleg
             .setId(UUID.randomUUID()) // Need to provide client-generated ID.
             .setFactID(fact.getId())
             .setReplyToID(request.getReplyTo())
-            .setSourceID(securityContext.getCurrentUserID())
+            .setOriginID(securityContext.getCurrentUserID())
             .setComment(request.getComment())
             .setTimestamp(System.currentTimeMillis());
 

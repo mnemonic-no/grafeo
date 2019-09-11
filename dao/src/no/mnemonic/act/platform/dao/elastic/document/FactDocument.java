@@ -27,8 +27,10 @@ public class FactDocument implements ElasticDocument {
   private UUID inReferenceTo;
   private UUID organizationID;
   private String organizationName;
-  private UUID sourceID;
-  private String sourceName;
+  @JsonProperty("sourceID")
+  private UUID originID;
+  @JsonProperty("sourceName")
+  private String originName;
   private UUID addedByID;
   private String addedByName;
   private AccessMode accessMode;
@@ -111,21 +113,21 @@ public class FactDocument implements ElasticDocument {
     return this;
   }
 
-  public UUID getSourceID() {
-    return sourceID;
+  public UUID getOriginID() {
+    return originID;
   }
 
-  public FactDocument setSourceID(UUID sourceID) {
-    this.sourceID = sourceID;
+  public FactDocument setOriginID(UUID originID) {
+    this.originID = originID;
     return this;
   }
 
-  public String getSourceName() {
-    return sourceName;
+  public String getOriginName() {
+    return originName;
   }
 
-  public FactDocument setSourceName(String sourceName) {
-    this.sourceName = sourceName;
+  public FactDocument setOriginName(String originName) {
+    this.originName = originName;
     return this;
   }
 

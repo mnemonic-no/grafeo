@@ -24,7 +24,7 @@ public class EvidenceSubmissionAclEntity implements CassandraEntity {
   @CqlName("subject_id")
   private UUID subjectID;
   @CqlName("source_id")
-  private UUID sourceID;
+  private UUID originID;
   private long timestamp;
 
   public UUID getSubmissionID() {
@@ -54,12 +54,12 @@ public class EvidenceSubmissionAclEntity implements CassandraEntity {
     return this;
   }
 
-  public UUID getSourceID() {
-    return sourceID;
+  public UUID getOriginID() {
+    return originID;
   }
 
-  public EvidenceSubmissionAclEntity setSourceID(UUID sourceID) {
-    this.sourceID = sourceID;
+  public EvidenceSubmissionAclEntity setOriginID(UUID originID) {
+    this.originID = originID;
     return this;
   }
 

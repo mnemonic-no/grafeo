@@ -72,7 +72,7 @@ public class FactConverter implements Converter<FactEntity, Fact> {
             .setInReferenceTo(ObjectUtils.ifNotNull(convertInReferenceTo(entity.getInReferenceToID()), Fact::toInfo))
             .setOrganization(ObjectUtils.ifNotNull(organizationConverter.apply(entity.getOrganizationID()), Organization::toInfo))
             .setAddedBy(ObjectUtils.ifNotNull(subjectConverter.apply(entity.getAddedByID()), Subject::toInfo))
-            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getSourceID()), Origin::toInfo))
+            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getOriginID()), Origin::toInfo))
             .setTrust(entity.getTrust())
             .setConfidence(entity.getConfidence())
             .setAccessMode(AccessMode.valueOf(entity.getAccessMode().name()))

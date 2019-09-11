@@ -73,7 +73,7 @@ abstract class AbstractGraphTest {
             .setValue("value")
             .setInReferenceToID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000002"))
-            .setSourceID(UUID.fromString("00000000-0000-0000-0000-000000000003"))
+            .setOriginID(UUID.fromString("00000000-0000-0000-0000-000000000003"))
             .setTrust(0.3f)
             .setConfidence(0.5f)
             .setAccessMode(AccessMode.Public)

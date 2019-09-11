@@ -90,12 +90,12 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
     return ListUtils.list(new FactCommentEntity().setId(replyToID));
   }
 
-  private FactCommentEntity matchFactCommentEntity(CreateFactCommentRequest request, UUID source) {
+  private FactCommentEntity matchFactCommentEntity(CreateFactCommentRequest request, UUID origin) {
     return argThat(comment -> {
       assertNotNull(comment.getId());
       assertEquals(request.getFact(), comment.getFactID());
       assertEquals(request.getReplyTo(), comment.getReplyToID());
-      assertEquals(source, comment.getSourceID());
+      assertEquals(origin, comment.getOriginID());
       assertEquals(request.getComment(), comment.getComment());
       assertTrue(comment.getTimestamp() > 0);
       return true;

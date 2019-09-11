@@ -145,7 +145,7 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
     FactExistenceSearchCriteria.Builder criteriaBuilder = FactExistenceSearchCriteria.builder()
             .setFactValue(request.getValue())
             .setFactTypeID(requestedFactType.getId())
-            .setSourceID(requestedOrigin.getId())
+            .setOriginID(requestedOrigin.getId())
             .setOrganizationID(requestedOrganization.getId())
             .setAccessMode(request.getAccessMode().name())
             .setConfidence(resolveConfidence(request));
@@ -176,7 +176,7 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
             .setAccessMode(AccessMode.valueOf(request.getAccessMode().name()))
             .setOrganizationID(requestedOrganization.getId())
             .setAddedByID(securityContext.getCurrentUserID())
-            .setSourceID(requestedOrigin.getId())
+            .setOriginID(requestedOrigin.getId())
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(resolveConfidence(request))
             .setBindings(resolveFactObjectBindings(request))

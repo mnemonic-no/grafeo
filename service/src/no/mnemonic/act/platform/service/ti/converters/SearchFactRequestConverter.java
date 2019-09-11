@@ -43,8 +43,8 @@ public class SearchFactRequestConverter implements Converter<SearchFactRequest, 
             .setFactValue(request.getFactValue())
             .setOrganizationID(onlyUUID(request.getOrganization()))
             .setOrganizationName(noneUUID(request.getOrganization()))
-            .setSourceID(onlyUUID(request.getOrigin()))
-            .setSourceName(noneUUID(request.getOrigin()))
+            .setOriginID(onlyUUID(request.getOrigin()))
+            .setOriginName(noneUUID(request.getOrigin()))
             .setMinNumber(request.getMinimum())
             .setMaxNumber(request.getMaximum())
             .addNumberFieldStrategy(ObjectUtils.ifNotNull(request.getDimension(),

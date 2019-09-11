@@ -125,9 +125,9 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     Fact fact = delegate.handle(request);
 
     verify(getFactManager()).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && originID.equals(e.getSourceID())));
+            && originID.equals(e.getOriginID())));
     verify(getFactConverter()).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && originID.equals(e.getSourceID())));
+            && originID.equals(e.getOriginID())));
   }
 
   @Test
@@ -266,7 +266,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getFact(), entity.getInReferenceToID());
       assertEquals(request.getOrganization(), entity.getOrganizationID());
       assertNotNull(entity.getAddedByID());
-      assertEquals(request.getOrigin(), entity.getSourceID());
+      assertEquals(request.getOrigin(), entity.getOriginID());
       assertTrue(entity.getTrust() > 0.0);
       assertEquals(request.getConfidence(), entity.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), entity.getAccessMode().name());
@@ -292,7 +292,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getFact(), document.getInReferenceTo());
       assertEquals(request.getOrganization(), document.getOrganizationID());
       assertNotNull(document.getAddedByID());
-      assertEquals(request.getOrigin(), document.getSourceID());
+      assertEquals(request.getOrigin(), document.getOriginID());
       assertTrue(document.getTrust() > 0.0);
       assertEquals(request.getConfidence(), document.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), document.getAccessMode().name());

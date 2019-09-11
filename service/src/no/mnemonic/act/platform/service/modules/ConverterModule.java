@@ -62,8 +62,6 @@ class ConverterModule extends AbstractModule {
     }).to(ObjectTypeByIdConverter.class);
     bind(new TypeLiteral<Function<UUID, Origin>>() {
     }).to(OriginByIdConverter.class);
-    bind(new TypeLiteral<Function<UUID, Source>>() {
-    }).to(SourceByIdConverter.class);
 
     // Converters which convert request objects.
     bind(new TypeLiteral<Function<SearchFactRequest, FactSearchCriteria>>() {

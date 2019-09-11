@@ -140,20 +140,20 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testSearchFactsFilterBySourceID() {
-    FactDocument accessibleFact = indexFact(d -> d.setSourceID(UUID.randomUUID()));
-    indexFact(d -> d.setSourceID(UUID.randomUUID()));
+  public void testSearchFactsFilterByOriginID() {
+    FactDocument accessibleFact = indexFact(d -> d.setOriginID(UUID.randomUUID()));
+    indexFact(d -> d.setOriginID(UUID.randomUUID()));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.addSourceID(accessibleFact.getSourceID()));
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.addOriginID(accessibleFact.getOriginID()));
     testSearchFacts(criteria, accessibleFact);
   }
 
   @Test
-  public void testSearchFactsFilterBySourceName() {
-    FactDocument accessibleFact = indexFact(d -> d.setSourceName("sourceA"));
-    indexFact(d -> d.setSourceName("sourceB"));
+  public void testSearchFactsFilterByOriginName() {
+    FactDocument accessibleFact = indexFact(d -> d.setOriginName("originA"));
+    indexFact(d -> d.setOriginName("originB"));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.addSourceName(accessibleFact.getSourceName()));
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.addOriginName(accessibleFact.getOriginName()));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -364,12 +364,12 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testSearchFactsFilterByKeywordsSource() {
-    FactDocument accessibleFact = indexFact(d -> d.setSourceName("organization"));
-    indexFact(d -> d.setSourceName("something"));
+  public void testSearchFactsFilterByKeywordsOrigin() {
+    FactDocument accessibleFact = indexFact(d -> d.setOriginName("origin"));
+    indexFact(d -> d.setOriginName("something"));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("org*")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.source));
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("ori*")
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.origin));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -377,7 +377,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
   public void testSearchFactsFilterByKeywordsAllFields() {
     indexFact(d -> d.setValue("matching"));
     indexFact(d -> d.setOrganizationName("matching"));
-    indexFact(d -> d.setSourceName("matching"));
+    indexFact(d -> d.setOriginName("matching"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("matching")
             .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.all));
@@ -386,12 +386,12 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
 
   @Test
   public void testSearchFactsFilterByKeywordsMatchStrategyAll() {
-    FactDocument accessibleFact = indexFact(d -> d.setOrganizationName("matching").setSourceName("matching"));
-    indexFact(d -> d.setOrganizationName("something").setSourceName("matching"));
+    FactDocument accessibleFact = indexFact(d -> d.setOrganizationName("matching").setOriginName("matching"));
+    indexFact(d -> d.setOrganizationName("something").setOriginName("matching"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("matching")
             .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.organization)
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.source)
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.origin)
             .setKeywordMatchStrategy(FactSearchCriteria.MatchStrategy.all));
     testSearchFacts(criteria, accessibleFact);
   }

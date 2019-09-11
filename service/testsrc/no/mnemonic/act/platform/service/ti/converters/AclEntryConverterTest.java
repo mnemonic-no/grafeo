@@ -33,14 +33,14 @@ public class AclEntryConverterTest {
     return new FactAclEntity()
             .setId(UUID.randomUUID())
             .setFactID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setSubjectID(UUID.randomUUID())
             .setTimestamp(123456789);
   }
 
   private void assertModel(FactAclEntity entity, AclEntry model) {
     assertEquals(entity.getId(), model.getId());
-    assertEquals(entity.getSourceID(), model.getOrigin().getId());
+    assertEquals(entity.getOriginID(), model.getOrigin().getId());
     assertEquals(entity.getSubjectID(), model.getSubject().getId());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
   }

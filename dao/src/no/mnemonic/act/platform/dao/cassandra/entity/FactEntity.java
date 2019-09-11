@@ -48,7 +48,7 @@ public class FactEntity implements CassandraEntity {
   @CqlName("organization_id")
   private UUID organizationID;
   @CqlName("source_id")
-  private UUID sourceID;
+  private UUID originID;
   @CqlName("added_by_id")
   private UUID addedByID;
   @CqlName("access_mode")
@@ -110,12 +110,12 @@ public class FactEntity implements CassandraEntity {
     return this;
   }
 
-  public UUID getSourceID() {
-    return sourceID;
+  public UUID getOriginID() {
+    return originID;
   }
 
-  public FactEntity setSourceID(UUID sourceID) {
-    this.sourceID = sourceID;
+  public FactEntity setOriginID(UUID originID) {
+    this.originID = originID;
     return this;
   }
 
@@ -225,7 +225,7 @@ public class FactEntity implements CassandraEntity {
             .setValue(getValue())
             .setInReferenceToID(getInReferenceToID())
             .setOrganizationID(getOrganizationID())
-            .setSourceID(getSourceID())
+            .setOriginID(getOriginID())
             .setAddedByID(getAddedByID())
             .setAccessMode(getAccessMode())
             .setConfidence(getConfidence())

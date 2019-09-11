@@ -169,7 +169,6 @@ abstract class AbstractDelegate {
    * @param acl      Full access control list of Fact to index (list of Subject IDs)
    */
   void indexCreatedFact(FactEntity fact, FactTypeEntity factType, List<UUID> acl) {
-    // TODO: Resolve and index organizationName and sourceName.
     FactDocument document = new FactDocument()
             .setId(fact.getId())
             .setRetracted(false) // A newly created Fact isn't retracted by definition.
@@ -178,7 +177,7 @@ abstract class AbstractDelegate {
             .setValue(fact.getValue())
             .setInReferenceTo(fact.getInReferenceToID())
             .setOrganizationID(fact.getOrganizationID())
-            .setSourceID(fact.getSourceID())
+            .setOriginID(fact.getOriginID())
             .setAddedByID(fact.getAddedByID())
             .setAccessMode(FactDocument.AccessMode.valueOf(fact.getAccessMode().name()))
             .setTrust(fact.getTrust())

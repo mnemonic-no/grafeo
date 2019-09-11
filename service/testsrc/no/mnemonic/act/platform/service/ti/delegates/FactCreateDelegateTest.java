@@ -264,8 +264,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> originID.equals(e.getSourceID())));
-    verify(getFactConverter()).apply(argThat(e -> originID.equals(e.getSourceID())));
+    verify(getFactManager()).saveFact(argThat(e -> originID.equals(e.getOriginID())));
+    verify(getFactConverter()).apply(argThat(e -> originID.equals(e.getOriginID())));
   }
 
   @Test
@@ -306,7 +306,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
             .setId(UUID.randomUUID())
             .setTypeID(resolveFactType.getId())
             .setValue(request.getValue())
-            .setSourceID(request.getOrigin())
+            .setOriginID(request.getOrigin())
             .setOrganizationID(request.getOrganization())
             .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.valueOf(request.getAccessMode().name()))
             .setConfidence(request.getConfidence())
@@ -426,7 +426,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getValue(), entity.getValue());
       assertEquals(request.getOrganization(), entity.getOrganizationID());
       assertNotNull(entity.getAddedByID());
-      assertEquals(request.getOrigin(), entity.getSourceID());
+      assertEquals(request.getOrigin(), entity.getOriginID());
       assertEquals(origin.getTrust(), entity.getTrust(), 0.0);
       assertEquals(request.getConfidence(), entity.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), entity.getAccessMode().name());
@@ -458,7 +458,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
       assertEquals(request.getValue(), document.getValue());
       assertEquals(request.getOrganization(), document.getOrganizationID());
       assertNotNull(document.getAddedByID());
-      assertEquals(request.getOrigin(), document.getSourceID());
+      assertEquals(request.getOrigin(), document.getOriginID());
       assertEquals(origin.getTrust(), document.getTrust(), 0.0);
       assertEquals(request.getConfidence(), document.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), document.getAccessMode().name());
@@ -509,7 +509,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     return argThat(criteria -> {
       assertEquals(request.getValue(), criteria.getFactValue());
       assertEquals(resolveFactType.getId(), criteria.getFactTypeID());
-      assertEquals(request.getOrigin(), criteria.getSourceID());
+      assertEquals(request.getOrigin(), criteria.getOriginID());
       assertEquals(request.getOrganization(), criteria.getOrganizationID());
       assertEquals(request.getAccessMode().name(), criteria.getAccessMode().name());
       assertEquals(request.getConfidence(), criteria.getConfidence(), 0.0);

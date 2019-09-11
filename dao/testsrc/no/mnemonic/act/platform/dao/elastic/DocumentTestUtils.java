@@ -28,8 +28,8 @@ class DocumentTestUtils {
             .setInReferenceTo(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setOrganizationName("organization")
-            .setSourceID(UUID.randomUUID())
-            .setSourceName("source")
+            .setOriginID(UUID.randomUUID())
+            .setOriginName("origin")
             .setAddedByID(UUID.randomUUID())
             .setAddedByName("addedBy")
             .setAccessMode(FactDocument.AccessMode.Public)
@@ -58,8 +58,8 @@ class DocumentTestUtils {
     assertEquals(expected.getInReferenceTo(), actual.getInReferenceTo());
     assertEquals(expected.getOrganizationID(), actual.getOrganizationID());
     assertEquals(expected.getOrganizationName(), actual.getOrganizationName());
-    assertEquals(expected.getSourceID(), actual.getSourceID());
-    assertEquals(expected.getSourceName(), actual.getSourceName());
+    assertEquals(expected.getOriginID(), actual.getOriginID());
+    assertEquals(expected.getOriginName(), actual.getOriginName());
     assertEquals(expected.getAddedByID(), actual.getAddedByID());
     assertEquals(expected.getAddedByName(), actual.getAddedByName());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());

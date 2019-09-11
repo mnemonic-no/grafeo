@@ -204,7 +204,7 @@ public class FactConverterTest {
             .setInReferenceToID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setTrust(0.1f)
             .setConfidence(0.2f)
             .setAccessMode(AccessMode.Explicit)
@@ -219,7 +219,7 @@ public class FactConverterTest {
     assertEquals(entity.getInReferenceToID(), model.getInReferenceTo().getId());
     assertEquals(entity.getOrganizationID(), model.getOrganization().getId());
     assertEquals(entity.getAddedByID(), model.getAddedBy().getId());
-    assertEquals(entity.getSourceID(), model.getOrigin().getId());
+    assertEquals(entity.getOriginID(), model.getOrigin().getId());
     assertEquals(entity.getTrust(), model.getTrust(), 0.0);
     assertEquals(entity.getConfidence(), model.getConfidence(), 0.0);
     assertEquals(entity.getAccessMode().name(), model.getAccessMode().name());
