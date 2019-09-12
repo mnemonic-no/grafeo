@@ -46,12 +46,12 @@ public class ActGraph implements Graph {
   }
 
   @Override
-  public <C extends GraphComputer> C compute(Class<C> graphComputerClass) throws IllegalArgumentException {
+  public <C extends GraphComputer> C compute(Class<C> graphComputerClass) {
     throw graphComputerNotSupported();
   }
 
   @Override
-  public GraphComputer compute() throws IllegalArgumentException {
+  public GraphComputer compute() {
     throw graphComputerNotSupported();
   }
 
@@ -73,7 +73,7 @@ public class ActGraph implements Graph {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     // NOOP, managers are handled outside this graph implementation.
   }
 
@@ -208,7 +208,7 @@ public class ActGraph implements Graph {
 
   private static class ActGraphGraphFeatures implements Features.GraphFeatures {
 
-    private static ActGraphVariableFeatures VARIABLE_FEATURES = new ActGraphVariableFeatures();
+    private static final ActGraphVariableFeatures VARIABLE_FEATURES = new ActGraphVariableFeatures();
 
     @Override
     public boolean supportsComputer() {
@@ -391,7 +391,7 @@ public class ActGraph implements Graph {
     }
 
     @Override
-    public boolean supportsSerializableValues() {
+    public boolean supportsFloatValues() {
       return true;
     }
 
