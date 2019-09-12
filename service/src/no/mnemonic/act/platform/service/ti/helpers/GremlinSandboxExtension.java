@@ -24,6 +24,7 @@ public class GremlinSandboxExtension extends AbstractSandboxExtension {
           "org\\.apache\\.tinkerpop\\.gremlin\\.process\\.traversal\\.P.*",
           "org\\.apache\\.tinkerpop\\.gremlin\\.process\\.traversal\\.Pop.*",
           "org\\.apache\\.tinkerpop\\.gremlin\\.process\\.traversal\\.Scope.*",
+          "org\\.apache\\.tinkerpop\\.gremlin\\.process\\.traversal\\.TextP.*",
           "org\\.apache\\.tinkerpop\\.gremlin\\.process\\.traversal\\.dsl\\.graph\\.__.*",
           "org\\.apache\\.tinkerpop\\.gremlin\\.process\\.traversal\\.dsl\\.graph\\.GraphTraversal.*",
           "org\\.apache\\.tinkerpop\\.gremlin\\.structure\\.Column.*",
