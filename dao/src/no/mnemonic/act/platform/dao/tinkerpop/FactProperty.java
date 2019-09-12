@@ -127,7 +127,7 @@ abstract class FactProperty<V> implements Property<V> {
 
     @Override
     public UUID value() throws NoSuchElementException {
-      return getFact().getSourceID();
+      return getFact().getOriginID();
     }
   }
 

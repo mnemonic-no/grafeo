@@ -32,7 +32,7 @@ public class FactCommentConverterTest {
             .setId(UUID.randomUUID())
             .setFactID(UUID.randomUUID())
             .setReplyToID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setComment("Hello World!")
             .setTimestamp(123456789);
   }
@@ -40,7 +40,7 @@ public class FactCommentConverterTest {
   private void assertModel(FactCommentEntity entity, FactComment model) {
     assertEquals(entity.getId(), model.getId());
     assertEquals(entity.getReplyToID(), model.getReplyTo());
-    assertEquals(entity.getSourceID(), model.getOrigin().getId());
+    assertEquals(entity.getOriginID(), model.getOrigin().getId());
     assertEquals(entity.getComment(), model.getComment());
     assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
   }

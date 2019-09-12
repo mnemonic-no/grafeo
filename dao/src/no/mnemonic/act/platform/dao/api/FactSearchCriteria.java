@@ -42,7 +42,7 @@ public class FactSearchCriteria {
     factValue("value.text", "value.ip", "value.domain"),
     objectValue("objects.value.text", "objects.value.ip", "objects.value.domain"),
     organization("organizationName.text"),
-    source("sourceName.text"),
+    origin("sourceName.text"),
     all("value.text", "value.ip", "value.domain", "objects.value.text", "objects.value.ip", "objects.value.domain",
             "organizationName.text", "sourceName.text");
 
@@ -84,8 +84,8 @@ public class FactSearchCriteria {
   private final Set<UUID> inReferenceTo;
   private final Set<UUID> organizationID;
   private final Set<String> organizationName;
-  private final Set<UUID> sourceID;
-  private final Set<String> sourceName;
+  private final Set<UUID> originID;
+  private final Set<String> originName;
   private final Set<UUID> objectID;
   private final Set<UUID> objectTypeID;
   private final Set<String> objectTypeName;
@@ -122,8 +122,8 @@ public class FactSearchCriteria {
                              Set<UUID> inReferenceTo,
                              Set<UUID> organizationID,
                              Set<String> organizationName,
-                             Set<UUID> sourceID,
-                             Set<String> sourceName,
+                             Set<UUID> originID,
+                             Set<String> originName,
                              Set<UUID> objectID,
                              Set<UUID> objectTypeID,
                              Set<String> objectTypeName,
@@ -153,8 +153,8 @@ public class FactSearchCriteria {
     this.inReferenceTo = inReferenceTo;
     this.organizationID = organizationID;
     this.organizationName = organizationName;
-    this.sourceID = sourceID;
-    this.sourceName = sourceName;
+    this.originID = originID;
+    this.originName = originName;
     this.objectID = objectID;
     this.objectTypeID = objectTypeID;
     this.objectTypeName = objectTypeName;
@@ -244,21 +244,21 @@ public class FactSearchCriteria {
   }
 
   /**
-   * Filter Facts by their Source (by UUID).
+   * Filter Facts by their Origin (by UUID).
    *
-   * @return UUIDs of Sources
+   * @return UUIDs of Origins
    */
-  public Set<UUID> getSourceID() {
-    return sourceID;
+  public Set<UUID> getOriginID() {
+    return originID;
   }
 
   /**
-   * Filter Facts by their Source (by name).
+   * Filter Facts by their Origin (by name).
    *
-   * @return Names of Sources
+   * @return Names of Origins
    */
-  public Set<String> getSourceName() {
-    return sourceName;
+  public Set<String> getOriginName() {
+    return originName;
   }
 
   /**
@@ -445,8 +445,8 @@ public class FactSearchCriteria {
     private Set<UUID> inReferenceTo;
     private Set<UUID> organizationID;
     private Set<String> organizationName;
-    private Set<UUID> sourceID;
-    private Set<String> sourceName;
+    private Set<UUID> originID;
+    private Set<String> originName;
     private Set<UUID> objectID;
     private Set<UUID> objectTypeID;
     private Set<String> objectTypeName;
@@ -481,7 +481,7 @@ public class FactSearchCriteria {
 
     public FactSearchCriteria build() {
       return new FactSearchCriteria(factID, factTypeID, factTypeName, factValue, inReferenceTo, organizationID, organizationName,
-              sourceID, sourceName, objectID, objectTypeID, objectTypeName, objectValue, keywords, keywordFieldStrategy,
+              originID, originName, objectID, objectTypeID, objectTypeName, objectValue, keywords, keywordFieldStrategy,
               keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy, timeMatchStrategy, minNumber, maxNumber,
               numberFieldStrategy, numberMatchStrategy, limit, currentUserID, availableOrganizationID);
     }
@@ -556,23 +556,23 @@ public class FactSearchCriteria {
       return this;
     }
 
-    public Builder setSourceID(Set<UUID> sourceID) {
-      this.sourceID = sourceID;
+    public Builder setOriginID(Set<UUID> originID) {
+      this.originID = originID;
       return this;
     }
 
-    public Builder addSourceID(UUID sourceID) {
-      this.sourceID = SetUtils.addToSet(this.sourceID, sourceID);
+    public Builder addOriginID(UUID originID) {
+      this.originID = SetUtils.addToSet(this.originID, originID);
       return this;
     }
 
-    public Builder setSourceName(Set<String> sourceName) {
-      this.sourceName = sourceName;
+    public Builder setOriginName(Set<String> originName) {
+      this.originName = originName;
       return this;
     }
 
-    public Builder addSourceName(String sourceName) {
-      this.sourceName = SetUtils.addToSet(this.sourceName, sourceName);
+    public Builder addOriginName(String originName) {
+      this.originName = SetUtils.addToSet(this.originName, originName);
       return this;
     }
 

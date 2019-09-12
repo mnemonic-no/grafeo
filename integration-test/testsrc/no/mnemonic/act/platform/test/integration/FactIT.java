@@ -386,7 +386,7 @@ public class FactIT extends AbstractIT {
             .setId(UUID.randomUUID())
             .setFactID(fact.getId())
             .setSubjectID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setTimestamp(123456789);
 
     return getFactManager().saveFactAclEntry(entry);
@@ -398,7 +398,7 @@ public class FactIT extends AbstractIT {
             .setFactID(fact.getId())
             .setComment("Hello World!")
             .setReplyToID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setTimestamp(123456789);
 
     return getFactManager().saveFactComment(comment);

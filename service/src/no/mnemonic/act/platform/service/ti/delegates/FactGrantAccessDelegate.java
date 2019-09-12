@@ -71,7 +71,7 @@ public class FactGrantAccessDelegate extends AbstractDelegate implements Delegat
     FactAclEntity entry = new FactAclEntity()
             .setId(UUID.randomUUID()) // Need to provide client-generated ID.
             .setFactID(fact.getId())
-            .setSourceID(securityContext.getCurrentUserID())
+            .setOriginID(securityContext.getCurrentUserID())
             .setSubjectID(subject)
             .setTimestamp(System.currentTimeMillis());
 

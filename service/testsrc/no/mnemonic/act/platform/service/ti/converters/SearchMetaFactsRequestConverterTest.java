@@ -60,7 +60,7 @@ public class SearchMetaFactsRequestConverterTest {
   public void testConvertRequestFilterByKeywords() {
     FactSearchCriteria criteria = converter.apply(new SearchMetaFactsRequest().setKeywords("keyword"));
     assertEquals("keyword", criteria.getKeywords());
-    assertEquals(SetUtils.set(factValue, organization, source), criteria.getKeywordFieldStrategy());
+    assertEquals(SetUtils.set(factValue, organization, origin), criteria.getKeywordFieldStrategy());
     assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getKeywordMatchStrategy());
   }
 
@@ -103,8 +103,8 @@ public class SearchMetaFactsRequestConverterTest {
             .addOrigin(id.toString())
             .addOrigin(name)
     );
-    assertEquals(SetUtils.set(id), criteria.getSourceID());
-    assertEquals(SetUtils.set(name), criteria.getSourceName());
+    assertEquals(SetUtils.set(id), criteria.getOriginID());
+    assertEquals(SetUtils.set(name), criteria.getOriginName());
   }
 
   @Test

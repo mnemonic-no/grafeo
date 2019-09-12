@@ -93,7 +93,7 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
             .setId(UUID.randomUUID())
             .setFactID(factID)
             .setReplyToID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setComment("Hello World!")
             .setTimestamp(timestamp);
   }

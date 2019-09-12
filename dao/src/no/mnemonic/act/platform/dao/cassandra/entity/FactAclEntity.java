@@ -24,7 +24,7 @@ public class FactAclEntity implements CassandraEntity {
   @CqlName("subject_id")
   private UUID subjectID;
   @CqlName("source_id")
-  private UUID sourceID;
+  private UUID originID;
   private long timestamp;
 
   public UUID getFactID() {
@@ -54,12 +54,12 @@ public class FactAclEntity implements CassandraEntity {
     return this;
   }
 
-  public UUID getSourceID() {
-    return sourceID;
+  public UUID getOriginID() {
+    return originID;
   }
 
-  public FactAclEntity setSourceID(UUID sourceID) {
-    this.sourceID = sourceID;
+  public FactAclEntity setOriginID(UUID originID) {
+    this.originID = originID;
     return this;
   }
 

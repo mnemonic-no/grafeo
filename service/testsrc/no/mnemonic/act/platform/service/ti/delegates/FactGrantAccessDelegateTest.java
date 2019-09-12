@@ -72,7 +72,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
 
     verify(getFactManager(), never()).saveFactAclEntry(any());
     verify(getFactSearchManager(), never()).indexFact(any());
-    verify(getAclEntryConverter()).apply(matchFactAclEntity(request, existingEntry.getSourceID()));
+    verify(getAclEntryConverter()).apply(matchFactAclEntity(request, existingEntry.getOriginID()));
   }
 
   @Test
@@ -108,16 +108,16 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
             .setFactID(request.getFact())
             .setSubjectID(request.getSubject())
             .setId(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setTimestamp(123456789);
   }
 
-  private FactAclEntity matchFactAclEntity(GrantFactAccessRequest request, UUID source) {
+  private FactAclEntity matchFactAclEntity(GrantFactAccessRequest request, UUID origin) {
     return argThat(entry -> {
       assertNotNull(entry.getId());
       assertEquals(request.getFact(), entry.getFactID());
       assertEquals(request.getSubject(), entry.getSubjectID());
-      assertEquals(source, entry.getSourceID());
+      assertEquals(origin, entry.getOriginID());
       assertTrue(entry.getTimestamp() > 0);
       return true;
     });

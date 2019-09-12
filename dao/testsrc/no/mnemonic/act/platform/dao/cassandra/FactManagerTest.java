@@ -382,7 +382,7 @@ public class FactManagerTest extends AbstractManagerTest {
             .setValue(value)
             .setInReferenceToID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
             .setAccessMode(AccessMode.Public)
             .setConfidence(0.1f)
@@ -399,7 +399,7 @@ public class FactManagerTest extends AbstractManagerTest {
             .setFactID(factID)
             .setId(UUID.randomUUID())
             .setSubjectID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setTimestamp(1);
   }
 
@@ -408,7 +408,7 @@ public class FactManagerTest extends AbstractManagerTest {
             .setFactID(factID)
             .setId(UUID.randomUUID())
             .setReplyToID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setComment("Comment")
             .setTimestamp(1);
   }
@@ -476,7 +476,7 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getValue(), actual.getValue());
     assertEquals(expected.getInReferenceToID(), actual.getInReferenceToID());
     assertEquals(expected.getOrganizationID(), actual.getOrganizationID());
-    assertEquals(expected.getSourceID(), actual.getSourceID());
+    assertEquals(expected.getOriginID(), actual.getOriginID());
     assertEquals(expected.getAddedByID(), actual.getAddedByID());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());
     assertEquals(expected.getConfidence(), actual.getConfidence(), 0);
@@ -490,7 +490,7 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getFactID(), actual.getFactID());
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getSubjectID(), actual.getSubjectID());
-    assertEquals(expected.getSourceID(), actual.getSourceID());
+    assertEquals(expected.getOriginID(), actual.getOriginID());
     assertEquals(expected.getTimestamp(), actual.getTimestamp());
   }
 
@@ -498,7 +498,7 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getFactID(), actual.getFactID());
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getReplyToID(), actual.getReplyToID());
-    assertEquals(expected.getSourceID(), actual.getSourceID());
+    assertEquals(expected.getOriginID(), actual.getOriginID());
     assertEquals(expected.getComment(), actual.getComment());
     assertEquals(expected.getTimestamp(), actual.getTimestamp());
   }

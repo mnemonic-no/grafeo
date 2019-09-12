@@ -183,9 +183,9 @@ public class FactSearchManager implements LifecycleAspect {
   /**
    * Retrieve all Facts which are considered logically the same when matched against a given search criteria, i.e. the
    * following condition holds: an indexed Fact matches the search criteria and will be included in the returned result
-   * if and only if the value, FactType, organization, source, access mode and all bound Objects (including direction)
-   * match exactly. In the case of a meta Fact the inReferenceTo must match instead of bound Objects (Objects should
-   * be omitted). If no Fact satisfies this condition an empty result container is returned.
+   * if and only if the value, FactType, organization, origin, confidence, access mode and all bound Objects (including
+   * direction) match exactly. In the case of a meta Fact the inReferenceTo must match instead of bound Objects (Objects
+   * should be omitted). If no Fact satisfies this condition an empty result container is returned.
    * <p>
    * This method can be used to determine if a Fact already logically exists in the system, e.g. before a new Fact is
    * created. No access control will be performed. This must be done by the caller.
@@ -495,7 +495,7 @@ public class FactSearchManager implements LifecycleAspect {
     // Define all filters on direct Fact fields. Every field from the criteria must match.
     BoolQueryBuilder rootQuery = boolQuery()
             .filter(termQuery("typeID", toString(criteria.getFactTypeID())))
-            .filter(termQuery("sourceID", toString(criteria.getSourceID())))
+            .filter(termQuery("sourceID", toString(criteria.getOriginID())))
             .filter(termQuery("organizationID", toString(criteria.getOrganizationID())))
             .filter(termQuery("accessMode", toString(criteria.getAccessMode())))
             // Consider 'confidence' to be equal inside a given interval.
@@ -573,12 +573,12 @@ public class FactSearchManager implements LifecycleAspect {
       rootQuery.filter(termsQuery("organizationName", criteria.getOrganizationName()));
     }
 
-    if (!CollectionUtils.isEmpty(criteria.getSourceID())) {
-      rootQuery.filter(termsQuery("sourceID", toString(criteria.getSourceID())));
+    if (!CollectionUtils.isEmpty(criteria.getOriginID())) {
+      rootQuery.filter(termsQuery("sourceID", toString(criteria.getOriginID())));
     }
 
-    if (!CollectionUtils.isEmpty(criteria.getSourceName())) {
-      rootQuery.filter(termsQuery("sourceName", criteria.getSourceName()));
+    if (!CollectionUtils.isEmpty(criteria.getOriginName())) {
+      rootQuery.filter(termsQuery("sourceName", criteria.getOriginName()));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectID())) {

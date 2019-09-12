@@ -37,7 +37,7 @@ public class AclEntryConverter implements Converter<FactAclEntity, AclEntry> {
     if (entity == null) return null;
     return AclEntry.builder()
             .setId(entity.getId())
-            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getSourceID()), Origin::toInfo))
+            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getOriginID()), Origin::toInfo))
             .setSubject(ObjectUtils.ifNotNull(subjectConverter.apply(entity.getSubjectID()), Subject::toInfo))
             .setTimestamp(entity.getTimestamp())
             .build();

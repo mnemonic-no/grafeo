@@ -62,7 +62,7 @@ public class FactEntityTest {
             .setValue("value")
             .setInReferenceToID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
             .setAccessMode(AccessMode.Public)
             .setConfidence(0.1f)
@@ -84,7 +84,7 @@ public class FactEntityTest {
     assertEquals(expected.getValue(), actual.getValue());
     assertEquals(expected.getInReferenceToID(), actual.getInReferenceToID());
     assertEquals(expected.getOrganizationID(), actual.getOrganizationID());
-    assertEquals(expected.getSourceID(), actual.getSourceID());
+    assertEquals(expected.getOriginID(), actual.getOriginID());
     assertEquals(expected.getAddedByID(), actual.getAddedByID());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());
     assertEquals(expected.getConfidence(), actual.getConfidence(), 0);

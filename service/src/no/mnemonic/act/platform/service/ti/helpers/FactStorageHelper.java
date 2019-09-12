@@ -96,7 +96,7 @@ public class FactStorageHelper {
     FactCommentEntity commentEntity = new FactCommentEntity()
             .setId(UUID.randomUUID()) // Need to provide client-generated ID.
             .setFactID(fact.getId())
-            .setSourceID(fact.getSourceID())
+            .setOriginID(fact.getOriginID())
             .setComment(comment)
             .setTimestamp(System.currentTimeMillis());
 
@@ -109,7 +109,7 @@ public class FactStorageHelper {
       FactAclEntity entry = new FactAclEntity()
               .setId(UUID.randomUUID()) // Need to provide client-generated ID.
               .setFactID(fact.getId())
-              .setSourceID(fact.getSourceID())
+              .setOriginID(fact.getOriginID())
               .setSubjectID(subject)
               .setTimestamp(System.currentTimeMillis());
 

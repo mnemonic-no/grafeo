@@ -24,7 +24,7 @@ public class FactCommentEntity implements CassandraEntity {
   @CqlName("reply_to_id")
   private UUID replyToID;
   @CqlName("source_id")
-  private UUID sourceID;
+  private UUID originID;
   private String comment;
   private long timestamp;
 
@@ -55,12 +55,12 @@ public class FactCommentEntity implements CassandraEntity {
     return this;
   }
 
-  public UUID getSourceID() {
-    return sourceID;
+  public UUID getOriginID() {
+    return originID;
   }
 
-  public FactCommentEntity setSourceID(UUID sourceID) {
-    this.sourceID = sourceID;
+  public FactCommentEntity setOriginID(UUID originID) {
+    this.originID = originID;
     return this;
   }
 

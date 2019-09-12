@@ -34,7 +34,7 @@ public class FactCommentConverter implements Converter<FactCommentEntity, FactCo
     return FactComment.builder()
             .setId(entity.getId())
             .setReplyTo(entity.getReplyToID())
-            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getSourceID()), Origin::toInfo))
+            .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(entity.getOriginID()), Origin::toInfo))
             .setComment(entity.getComment())
             .setTimestamp(entity.getTimestamp())
             .build();

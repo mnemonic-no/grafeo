@@ -124,14 +124,14 @@ public class FactStorageHelperTest {
   private FactEntity createFact() {
     return new FactEntity()
             .setId(UUID.randomUUID())
-            .setSourceID(UUID.randomUUID());
+            .setOriginID(UUID.randomUUID());
   }
 
   private FactAclEntity matchFactAclEntity(FactEntity fact, UUID subjectID) {
     return argThat(entry -> {
       assertNotNull(entry.getId());
       assertEquals(fact.getId(), entry.getFactID());
-      assertEquals(fact.getSourceID(), entry.getSourceID());
+      assertEquals(fact.getOriginID(), entry.getOriginID());
       assertEquals(subjectID, entry.getSubjectID());
       assertTrue(entry.getTimestamp() > 0);
       return true;
@@ -142,7 +142,7 @@ public class FactStorageHelperTest {
     return argThat(entry -> {
       assertNotNull(entry.getId());
       assertEquals(fact.getId(), entry.getFactID());
-      assertEquals(fact.getSourceID(), entry.getSourceID());
+      assertEquals(fact.getOriginID(), entry.getOriginID());
       assertEquals(comment, entry.getComment());
       assertTrue(entry.getTimestamp() > 0);
       assertNull(entry.getReplyToID());

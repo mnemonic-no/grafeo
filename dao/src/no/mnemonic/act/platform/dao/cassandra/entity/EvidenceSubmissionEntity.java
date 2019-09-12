@@ -27,7 +27,7 @@ public class EvidenceSubmissionEntity implements CassandraEntity {
   @CqlName("observation_timestamp")
   private long observationTimestamp;
   @CqlName("source_id")
-  private UUID sourceID;
+  private UUID originID;
   @CqlName("access_mode")
   private AccessMode accessMode;
   private String checksum;
@@ -95,12 +95,12 @@ public class EvidenceSubmissionEntity implements CassandraEntity {
     return this;
   }
 
-  public UUID getSourceID() {
-    return sourceID;
+  public UUID getOriginID() {
+    return originID;
   }
 
-  public EvidenceSubmissionEntity setSourceID(UUID sourceID) {
-    this.sourceID = sourceID;
+  public EvidenceSubmissionEntity setOriginID(UUID originID) {
+    this.originID = originID;
     return this;
   }
 

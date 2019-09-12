@@ -124,8 +124,8 @@ public class SearchObjectRequestConverterTest {
             .addOrigin(id.toString())
             .addOrigin(name)
     );
-    assertEquals(SetUtils.set(id), criteria.getSourceID());
-    assertEquals(SetUtils.set(name), criteria.getSourceName());
+    assertEquals(SetUtils.set(id), criteria.getOriginID());
+    assertEquals(SetUtils.set(name), criteria.getOriginName());
   }
 
   @Test

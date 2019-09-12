@@ -22,7 +22,7 @@ public class FactExistenceSearchCriteria {
 
   private final String factValue;
   private final UUID factTypeID;
-  private final UUID sourceID;
+  private final UUID originID;
   private final UUID organizationID;
   private final AccessMode accessMode;
   private final Float confidence;
@@ -31,7 +31,7 @@ public class FactExistenceSearchCriteria {
 
   private FactExistenceSearchCriteria(String factValue,
                                       UUID factTypeID,
-                                      UUID sourceID,
+                                      UUID originID,
                                       UUID organizationID,
                                       AccessMode accessMode,
                                       Float confidence,
@@ -39,7 +39,7 @@ public class FactExistenceSearchCriteria {
                                       Set<ObjectExistence> objects) {
     this.factValue = factValue; // Field 'factValue' is optional.
     this.factTypeID = ObjectUtils.notNull(factTypeID, "Missing required field 'factTypeID'.");
-    this.sourceID = ObjectUtils.notNull(sourceID, "Missing required field 'sourceID'.");
+    this.originID = ObjectUtils.notNull(originID, "Missing required field 'originID'.");
     this.organizationID = ObjectUtils.notNull(organizationID, "Missing required field 'organizationID'.");
     this.accessMode = ObjectUtils.notNull(accessMode, "Missing required field 'accessMode'.");
     this.confidence = ObjectUtils.notNull(confidence, "Missing required field 'confidence'.");
@@ -73,12 +73,12 @@ public class FactExistenceSearchCriteria {
   }
 
   /**
-   * Source of Fact to verify (by UUID). This field is required.
+   * Origin of Fact to verify (by UUID). This field is required.
    *
-   * @return UUID of Source
+   * @return UUID of Origin
    */
-  public UUID getSourceID() {
-    return sourceID;
+  public UUID getOriginID() {
+    return originID;
   }
 
   /**
@@ -133,7 +133,7 @@ public class FactExistenceSearchCriteria {
   public static class Builder {
     private String factValue;
     private UUID factTypeID;
-    private UUID sourceID;
+    private UUID originID;
     private UUID organizationID;
     private AccessMode accessMode;
     private Float confidence;
@@ -144,7 +144,7 @@ public class FactExistenceSearchCriteria {
     }
 
     public FactExistenceSearchCriteria build() {
-      return new FactExistenceSearchCriteria(factValue, factTypeID, sourceID, organizationID, accessMode, confidence, inReferenceTo, objects);
+      return new FactExistenceSearchCriteria(factValue, factTypeID, originID, organizationID, accessMode, confidence, inReferenceTo, objects);
     }
 
     public Builder setFactValue(String factValue) {
@@ -157,8 +157,8 @@ public class FactExistenceSearchCriteria {
       return this;
     }
 
-    public Builder setSourceID(UUID sourceID) {
-      this.sourceID = sourceID;
+    public Builder setOriginID(UUID originID) {
+      this.originID = originID;
       return this;
     }
 
