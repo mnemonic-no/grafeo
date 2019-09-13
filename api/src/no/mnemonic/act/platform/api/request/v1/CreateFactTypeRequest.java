@@ -1,7 +1,9 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.json.RoundingFloatDeserializer;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -20,6 +22,7 @@ public class CreateFactTypeRequest implements ValidatingRequest {
   private String name;
   @ApiModelProperty(value = "Confidence assigned by default to new Facts of this type (value between 0.0 and 1.0, default 1.0)",
           example = "0.9", required = true)
+  @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)
   private float defaultConfidence = 1.0f;

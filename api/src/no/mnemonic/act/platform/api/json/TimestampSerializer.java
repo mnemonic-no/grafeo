@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
 import java.time.Instant;
 
+/**
+ * {@link JsonSerializer} which writes a timestamp as ISO8601, e.g. "2016-09-28T21:26:22Z".
+ */
 public class TimestampSerializer extends JsonSerializer<Long> {
 
   @Override

@@ -6,6 +6,8 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Set;
 import java.util.UUID;
 
@@ -182,7 +184,11 @@ public class FactDocument implements ElasticDocument {
   public float getCertainty() {
     // This field is only required when storing the document into ElasticSearch in
     // order to have 'certainty' available as a de-normalized field during search.
-    return getConfidence() * getTrust();
+    float certainty = getConfidence() * getTrust();
+    // Round 'certainty' to two decimal points.
+    return BigDecimal.valueOf(certainty)
+            .setScale(2, RoundingMode.HALF_UP)
+            .floatValue();
   }
 
   public long getTimestamp() {

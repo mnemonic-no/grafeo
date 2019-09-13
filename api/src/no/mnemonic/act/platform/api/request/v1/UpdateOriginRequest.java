@@ -1,7 +1,9 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.json.RoundingFloatDeserializer;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 
@@ -23,6 +25,7 @@ public class UpdateOriginRequest implements ValidatingRequest {
   @ApiModelProperty(value = "If set updates the description of the Origin.", example = "John Doe from Doe Inc")
   private String description;
   @ApiModelProperty(value = "If set updates the trust value of the Origin (value between 0.0 and 1.0)", example = "0.8")
+  @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)
   private Float trust;

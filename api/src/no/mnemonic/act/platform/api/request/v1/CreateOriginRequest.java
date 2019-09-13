@@ -1,7 +1,9 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.json.RoundingFloatDeserializer;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 
 import javax.validation.constraints.Max;
@@ -20,6 +22,7 @@ public class CreateOriginRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Longer description about new Origin", example = "John Doe from Doe Inc")
   private String description;
   @ApiModelProperty(value = "How much new Origin is trusted (value between 0.0 and 1.0, default 0.8)", example = "0.8", required = true)
+  @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)
   private float trust = 0.8f;
