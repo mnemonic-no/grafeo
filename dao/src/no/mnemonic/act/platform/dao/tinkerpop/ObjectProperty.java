@@ -8,7 +8,6 @@ import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.apache.tinkerpop.gremlin.structure.Property.Exceptions.propertyRemovalNotSupported;
@@ -82,7 +81,7 @@ abstract class ObjectProperty<V> implements VertexProperty<V> {
     }
 
     @Override
-    public String value() throws NoSuchElementException {
+    public String value() {
       return getObject().getValue();
     }
   }

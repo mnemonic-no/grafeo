@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.dao.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -157,35 +156,21 @@ public class FactEdgeTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testAutotypeEnumProperties() {
-    Edge edge = createEdge();
-    AccessMode accessMode = edge.value("accessMode");
-    assertEquals(AccessMode.Public, accessMode);
-  }
-
-  @Test
-  public void testAutotypeUuidProperties() {
-    Edge edge = createEdge();
-    UUID originID = edge.value("originID");
-    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000003"), originID);
-  }
-
-  @Test
   public void testGetPropertyKeysOnEdge() {
     UUID factID = mockFact(null);
     Edge edge = new FactEdge(getActGraph(), factID, mockObject(), mockObject());
 
     // Test that the following properties exists on the edge.
     Map<String, Object> expected = MapUtils.map(
-            T("factID", factID),
+            T("factID", factID.toString()),
             T("value", "value"),
-            T("inReferenceToID", UUID.fromString("00000000-0000-0000-0000-000000000001")),
-            T("organizationID", UUID.fromString("00000000-0000-0000-0000-000000000002")),
-            T("originID", UUID.fromString("00000000-0000-0000-0000-000000000003")),
+            T("inReferenceToID", "00000000-0000-0000-0000-000000000001"),
+            T("organizationID", "00000000-0000-0000-0000-000000000002"),
+            T("originID", "00000000-0000-0000-0000-000000000003"),
             T("trust", 0.3f),
             T("confidence", 0.5f),
             T("certainty", 0.15f),
-            T("accessMode", AccessMode.Public),
+            T("accessMode", "Public"),
             T("timestamp", 123456789L),
             T("lastSeenTimestamp", 987654321L)
     );

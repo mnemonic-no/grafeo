@@ -6,7 +6,7 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
-import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.apache.tinkerpop.gremlin.structure.Property.Exceptions.propertyRemovalNotSupported;
@@ -51,7 +51,7 @@ abstract class FactProperty<V> implements Property<V> {
     return fact;
   }
 
-  static class FactID extends FactProperty<UUID> {
+  static class FactID extends FactProperty<String> {
     FactID(FactEntity fact, FactEdge owner) {
       super(fact, owner);
     }
@@ -62,8 +62,8 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public UUID value() throws NoSuchElementException {
-      return getFact().getId();
+    public String value() {
+      return ObjectUtils.ifNotNull(getFact().getId(), Objects::toString);
     }
   }
 
@@ -78,12 +78,12 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public String value() throws NoSuchElementException {
+    public String value() {
       return getFact().getValue();
     }
   }
 
-  static class InReferenceToID extends FactProperty<UUID> {
+  static class InReferenceToID extends FactProperty<String> {
     InReferenceToID(FactEntity fact, FactEdge owner) {
       super(fact, owner);
     }
@@ -94,12 +94,12 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public UUID value() throws NoSuchElementException {
-      return getFact().getInReferenceToID();
+    public String value() {
+      return ObjectUtils.ifNotNull(getFact().getInReferenceToID(), UUID::toString);
     }
   }
 
-  static class OrganizationID extends FactProperty<UUID> {
+  static class OrganizationID extends FactProperty<String> {
     OrganizationID(FactEntity fact, FactEdge owner) {
       super(fact, owner);
     }
@@ -110,12 +110,12 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public UUID value() throws NoSuchElementException {
-      return getFact().getOrganizationID();
+    public String value() {
+      return ObjectUtils.ifNotNull(getFact().getOrganizationID(), UUID::toString);
     }
   }
 
-  static class OriginID extends FactProperty<UUID> {
+  static class OriginID extends FactProperty<String> {
     OriginID(FactEntity fact, FactEdge owner) {
       super(fact, owner);
     }
@@ -126,8 +126,8 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public UUID value() throws NoSuchElementException {
-      return getFact().getOriginID();
+    public String value() {
+      return ObjectUtils.ifNotNull(getFact().getOriginID(), UUID::toString);
     }
   }
 
@@ -142,7 +142,7 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public Float value() throws NoSuchElementException {
+    public Float value() {
       return getFact().getTrust();
     }
   }
@@ -158,7 +158,7 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public Float value() throws NoSuchElementException {
+    public Float value() {
       return getFact().getConfidence();
     }
   }
@@ -174,12 +174,12 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public Float value() throws NoSuchElementException {
+    public Float value() {
       return getFact().getTrust() * getFact().getConfidence();
     }
   }
 
-  static class AccessMode extends FactProperty<no.mnemonic.act.platform.dao.cassandra.entity.AccessMode> {
+  static class AccessMode extends FactProperty<String> {
     AccessMode(FactEntity fact, FactEdge owner) {
       super(fact, owner);
     }
@@ -190,8 +190,8 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public no.mnemonic.act.platform.dao.cassandra.entity.AccessMode value() throws NoSuchElementException {
-      return getFact().getAccessMode();
+    public String value() {
+      return ObjectUtils.ifNotNull(getFact().getAccessMode(), Enum::name);
     }
   }
 
@@ -206,7 +206,7 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public Long value() throws NoSuchElementException {
+    public Long value() {
       return getFact().getTimestamp();
     }
   }
@@ -222,7 +222,7 @@ abstract class FactProperty<V> implements Property<V> {
     }
 
     @Override
-    public Long value() throws NoSuchElementException {
+    public Long value() {
       return getFact().getLastSeenTimestamp();
     }
   }
