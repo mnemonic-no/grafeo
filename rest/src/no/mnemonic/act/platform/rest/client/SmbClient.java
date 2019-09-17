@@ -5,7 +5,6 @@ import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.lambda.LambdaUtils;
-import no.mnemonic.messaging.requestsink.jms.ExceptionMessage;
 import no.mnemonic.messaging.requestsink.jms.JMSRequestSink;
 import no.mnemonic.messaging.requestsink.jms.ProtocolVersion;
 import no.mnemonic.messaging.requestsink.jms.serializer.MessageSerializer;
@@ -111,9 +110,6 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
             .addAllowedClass("java.util.Collections\\$EmptyList")
             .addAllowedClass("java.util.Collections\\$UnmodifiableSet")
             .addAllowedClass("java.util.Collections\\$UnmodifiableList")
-            // Classes required for transporting exceptions (including stacktrace).
-            .addAllowedClass(ExceptionMessage.class)
-            .addAllowedClass(StackTraceElement.class)
             // Response messages used by SMB.
             .addAllowedClass(ServiceResponseValueMessage.class)
             .addAllowedClass(ServiceStreamingResultSetResponseMessage.class)
