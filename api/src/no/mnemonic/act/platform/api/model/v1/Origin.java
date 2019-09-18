@@ -1,7 +1,9 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.json.RoundingFloatSerializer;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -33,6 +35,7 @@ public class Origin {
   @ApiModelProperty(value = "Longer description about the Origin", example = "John Doe from Doe Inc")
   private final String description;
   @ApiModelProperty(value = "How much the Origin is trusted", example = "0.8", required = true)
+  @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float trust;
   @ApiModelProperty(value = "Type of the Origin (group or individual user)", required = true)
   private final Type type;

@@ -25,9 +25,9 @@ public class FactTest {
     assertTrue(root.get("organization").isObject());
     assertTrue(root.get("addedBy").isObject());
     assertTrue(root.get("origin").isObject());
-    assertEquals(fact.getTrust(), root.get("trust").floatValue(), 0.0);
-    assertEquals(fact.getConfidence(), root.get("confidence").floatValue(), 0.0);
-    assertEquals(fact.getCertainty(), root.get("certainty").floatValue(), 0.0);
+    assertEquals(fact.getTrust(), root.get("trust").floatValue(), 0.0f);
+    assertEquals(fact.getConfidence(), root.get("confidence").floatValue(), 0.0f);
+    assertEquals(0.02f, root.get("certainty").floatValue(), 0.0f);
     assertEquals(fact.getAccessMode().toString(), root.get("accessMode").textValue());
     assertEquals("2016-11-30T15:47:01Z", root.get("timestamp").textValue());
     assertEquals("2016-11-30T15:47:02Z", root.get("lastSeenTimestamp").textValue());

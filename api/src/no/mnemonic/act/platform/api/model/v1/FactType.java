@@ -1,7 +1,9 @@
 package no.mnemonic.act.platform.api.model.v1;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.json.RoundingFloatSerializer;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
@@ -19,6 +21,7 @@ public class FactType {
   @ApiModelProperty(value = "Name of the FactType. Unique per Namespace", example = "ThreatActorAlias", required = true)
   private final String name;
   @ApiModelProperty(value = "Confidence assigned by default to new Facts of this type", example = "0.9", required = true)
+  @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float defaultConfidence;
   @ApiModelProperty(value = "Validator used to validate new Facts of this type", example = "RegexValidator", required = true)
   private final String validator;

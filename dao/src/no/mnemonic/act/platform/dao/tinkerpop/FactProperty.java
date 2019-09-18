@@ -6,6 +6,8 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -175,7 +177,11 @@ abstract class FactProperty<V> implements Property<V> {
 
     @Override
     public Float value() {
-      return getFact().getTrust() * getFact().getConfidence();
+      float certainty = getFact().getTrust() * getFact().getConfidence();
+      // Round 'certainty' to two decimal points.
+      return BigDecimal.valueOf(certainty)
+              .setScale(2, RoundingMode.HALF_UP)
+              .floatValue();
     }
   }
 

@@ -9,6 +9,10 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 
+/**
+ * {@link JsonDeserializer} which reads a timestamp using ISO8601, e.g. "2016-09-28T21:26:22Z",
+ * and converts it to a long (i.e. milliseconds since start of UNIX epoch).
+ */
 public class TimestampDeserializer extends JsonDeserializer<Long> {
 
   @Override

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.json.RoundingFloatSerializer;
 import no.mnemonic.act.platform.api.json.TimestampSerializer;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -36,8 +37,10 @@ public class Fact {
   @ApiModelProperty(value = "Where the information came from", required = true)
   private final Origin.Info origin;
   @ApiModelProperty(value = "How much the Origin was trusted when the Fact was created", example = "0.8", required = true)
+  @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float trust;
   @ApiModelProperty(value = "How much confidence was given that the Fact is true", example = "0.9", required = true)
+  @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float confidence;
   @ApiModelProperty(value = "Who has access to the Fact", required = true)
   private final AccessMode accessMode;
@@ -128,6 +131,7 @@ public class Fact {
 
   @ApiModelProperty(value = "Certainty = Trust x Confidence", example = "0.72", required = true)
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  @JsonSerialize(using = RoundingFloatSerializer.class)
   public float getCertainty() {
     return getTrust() * getConfidence();
   }
