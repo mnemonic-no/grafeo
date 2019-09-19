@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file. Also see [M
 
 The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Origin, Trust & Confidence] - WIP
+## [Origin, Trust & Confidence] - 2019-09-18
 ### Added
 - REST endpoint for retrieval of an Origin by ID, `GET /v1/origin/uuid/{id}`.
 - REST endpoint for listing Origins, `GET /v1/origin`.
@@ -14,4 +14,5 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 ### Changed
 - Extend FactType API to include `defaultConfidence` field.
 - Extend Fact API to include `trust`, `confidence`, `certainty` and `addedBy` fields.
-- Rename field `source` to `origin` in Fact API (**breaking**).
+- Extend Search APIs to filter on `trust`, `confidence` and `certainty`.
+- Rename field `source` to `origin` in Fact and Search APIs (**breaking**).
