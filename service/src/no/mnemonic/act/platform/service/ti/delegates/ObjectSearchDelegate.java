@@ -9,7 +9,6 @@ import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
@@ -19,6 +18,7 @@ import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
+import no.mnemonic.act.platform.service.ti.converters.SearchObjectRequestConverter;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -35,7 +35,7 @@ public class ObjectSearchDelegate extends AbstractDelegate implements Delegate {
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
   private final FactSearchManager factSearchManager;
-  private final Function<SearchObjectRequest, FactSearchCriteria> requestConverter;
+  private final SearchObjectRequestConverter requestConverter;
   private final Function<UUID, FactType> factTypeConverter;
   private final Function<UUID, ObjectType> objectTypeConverter;
 
@@ -43,7 +43,7 @@ public class ObjectSearchDelegate extends AbstractDelegate implements Delegate {
   public ObjectSearchDelegate(TiSecurityContext securityContext,
                               ObjectManager objectManager,
                               FactSearchManager factSearchManager,
-                              Function<SearchObjectRequest, FactSearchCriteria> requestConverter,
+                              SearchObjectRequestConverter requestConverter,
                               Function<UUID, FactType> factTypeConverter,
                               Function<UUID, ObjectType> objectTypeConverter) {
     this.securityContext = securityContext;

@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
-import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;

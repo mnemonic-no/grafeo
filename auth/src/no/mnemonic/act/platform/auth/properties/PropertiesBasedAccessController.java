@@ -124,6 +124,12 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   }
 
   @Override
+  public no.mnemonic.act.platform.api.model.v1.Organization resolveOrganization(String name) {
+    Organization organization = state.get().getOrganization(name);
+    return ObjectUtils.ifNotNull(organization, o -> createOrganization(IdMapper.toGlobalID(o.getInternalID()), o.getName()));
+  }
+
+  @Override
   public no.mnemonic.act.platform.api.model.v1.Organization resolveCurrentUserAffiliation(Credentials credentials) throws InvalidCredentialsException {
     validate(credentials);
     return resolveOrganization(IdMapper.toGlobalID(getSubject(credentials).getAffiliation()));

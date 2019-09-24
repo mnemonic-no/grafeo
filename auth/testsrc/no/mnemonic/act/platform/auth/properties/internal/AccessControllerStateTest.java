@@ -24,15 +24,20 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetOrganization() {
-    Organization organization = Organization.builder().setInternalID(42).build();
+    Organization organization = Organization.builder()
+            .setInternalID(42)
+            .setName("name")
+            .build();
     AccessControllerState state = AccessControllerState.builder().addOrganization(organization).build();
     assertSame(organization, state.getOrganization(organization.getInternalID()));
+    assertSame(organization, state.getOrganization(organization.getName()));
   }
 
   @Test
   public void testGetOrganizationForUnknownOrganization() {
     AccessControllerState state = AccessControllerState.builder().build();
     assertNull(state.getOrganization(42));
+    assertNull(state.getOrganization("name"));
   }
 
   @Test

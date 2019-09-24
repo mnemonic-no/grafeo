@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.service.ti.helpers;
+package no.mnemonic.act.platform.service.ti.resolvers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;

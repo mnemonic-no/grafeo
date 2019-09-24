@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.service.modules;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
-import no.mnemonic.act.platform.service.ti.helpers.OriginResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 
 import java.util.UUID;
 import java.util.function.Function;

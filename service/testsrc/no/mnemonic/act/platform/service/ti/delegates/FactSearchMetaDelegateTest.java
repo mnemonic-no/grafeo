@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -17,7 +18,6 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
@@ -27,7 +27,7 @@ public class FactSearchMetaDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactSearchHandler factSearchHandler;
   @Mock
-  private Function<SearchMetaFactsRequest, FactSearchCriteria> requestConverter;
+  private SearchMetaFactsRequestConverter requestConverter;
 
   private FactSearchMetaDelegate delegate;
 
@@ -73,7 +73,7 @@ public class FactSearchMetaDelegateTest extends AbstractDelegateTest {
     verify(getSecurityContext()).checkReadPermission(isA(FactEntity.class));
   }
 
-  private void mockSearchMetaFacts() {
+  private void mockSearchMetaFacts() throws Exception {
     when(getFactManager().getFact(any())).thenReturn(new FactEntity());
 
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()

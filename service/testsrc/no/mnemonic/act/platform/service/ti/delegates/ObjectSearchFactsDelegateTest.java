@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -18,7 +19,6 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -28,7 +28,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactSearchHandler factSearchHandler;
   @Mock
-  private Function<SearchObjectFactsRequest, FactSearchCriteria> requestConverter;
+  private SearchObjectFactsRequestConverter requestConverter;
 
   private ObjectSearchFactsDelegate delegate;
 
@@ -148,7 +148,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     verify(getSecurityContext()).checkReadPermission(isA(ObjectEntity.class));
   }
 
-  private void mockSearchObjectFacts() {
+  private void mockSearchObjectFacts() throws Exception {
     when(getObjectManager().getObjectType(isA(String.class))).thenReturn(new ObjectTypeEntity());
     when(getObjectManager().getObject(any())).thenReturn(new ObjectEntity().setId(UUID.randomUUID()));
     when(getObjectManager().getObject(any(), any())).thenReturn(new ObjectEntity().setId(UUID.randomUUID()));

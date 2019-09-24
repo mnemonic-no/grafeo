@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.service.ti.helpers;
+package no.mnemonic.act.platform.service.ti.resolvers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
@@ -10,8 +10,8 @@ import org.mockito.Mock;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
-import static no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver.RETRACTION_FACT_TYPE_ID;
-import static no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver.RETRACTION_FACT_TYPE_NAME;
+import static no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver.RETRACTION_FACT_TYPE_ID;
+import static no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver.RETRACTION_FACT_TYPE_NAME;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;

@@ -6,24 +6,23 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
-import java.util.function.Function;
 
 public class FactSearchMetaDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final Function<SearchMetaFactsRequest, FactSearchCriteria> requestConverter;
+  private final SearchMetaFactsRequestConverter requestConverter;
   private final FactSearchHandler factSearchHandler;
 
   @Inject
   public FactSearchMetaDelegate(TiSecurityContext securityContext,
-                                Function<SearchMetaFactsRequest, FactSearchCriteria> requestConverter,
+                                SearchMetaFactsRequestConverter requestConverter,
                                 FactSearchHandler factSearchHandler) {
     this.securityContext = securityContext;
     this.requestConverter = requestConverter;

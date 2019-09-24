@@ -23,6 +23,14 @@ public interface OrganizationResolver {
   Organization resolveOrganization(UUID id);
 
   /**
+   * Resolves an Organization by its name. Returns NULL if no Organization with the given name exists.
+   *
+   * @param name Organization's name
+   * @return Resolved Organization
+   */
+  Organization resolveOrganization(String name);
+
+  /**
    * Resolves the affiliated Organization for a Subject identified by the given credentials.
    *
    * @param credentials Credentials identifying a Subject

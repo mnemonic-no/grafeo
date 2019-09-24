@@ -1,8 +1,10 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
+import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.act.platform.service.ti.resolvers.SearchByNameResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -10,41 +12,30 @@ import javax.inject.Inject;
 
 import static no.mnemonic.act.platform.dao.api.FactSearchCriteria.KeywordFieldStrategy.*;
 
-public class SearchMetaFactsRequestConverter implements Converter<SearchMetaFactsRequest, FactSearchCriteria> {
+public class SearchMetaFactsRequestConverter {
 
   private static final int DEFAULT_LIMIT = 25;
 
+  private final SearchByNameResolver byNameResolver;
   private final SecurityContext securityContext;
 
   @Inject
-  public SearchMetaFactsRequestConverter(SecurityContext securityContext) {
+  public SearchMetaFactsRequestConverter(SearchByNameResolver byNameResolver,
+                                         SecurityContext securityContext) {
+    this.byNameResolver = byNameResolver;
     this.securityContext = securityContext;
   }
 
-  @Override
-  public Class<SearchMetaFactsRequest> getSourceType() {
-    return SearchMetaFactsRequest.class;
-  }
-
-  @Override
-  public Class<FactSearchCriteria> getTargetType() {
-    return FactSearchCriteria.class;
-  }
-
-  @Override
-  public FactSearchCriteria apply(SearchMetaFactsRequest request) {
+  public FactSearchCriteria apply(SearchMetaFactsRequest request) throws InvalidArgumentException {
     if (request == null) return null;
     return FactSearchCriteria.builder()
             .addInReferenceTo(request.getFact())
             .setKeywords(request.getKeywords())
             .setKeywordFieldStrategy(SetUtils.set(factValue, organization, origin))
-            .setFactTypeID(onlyUUID(request.getFactType()))
-            .setFactTypeName(noneUUID(request.getFactType()))
+            .setFactTypeID(byNameResolver.resolveFactType(request.getFactType()))
             .setFactValue(request.getFactValue())
-            .setOrganizationID(onlyUUID(request.getOrganization()))
-            .setOrganizationName(noneUUID(request.getOrganization()))
-            .setOriginID(onlyUUID(request.getOrigin()))
-            .setOriginName(noneUUID(request.getOrigin()))
+            .setOrganizationID(byNameResolver.resolveOrganization(request.getOrganization()))
+            .setOriginID(byNameResolver.resolveOrigin(request.getOrigin()))
             .setMinNumber(request.getMinimum())
             .setMaxNumber(request.getMaximum())
             .addNumberFieldStrategy(ObjectUtils.ifNotNull(request.getDimension(),
