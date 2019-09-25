@@ -6,7 +6,7 @@ import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.helpers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

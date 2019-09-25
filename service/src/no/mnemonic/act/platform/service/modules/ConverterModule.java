@@ -5,13 +5,8 @@ import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.*;
-import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
-import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
-import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
-import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
@@ -62,16 +57,6 @@ class ConverterModule extends AbstractModule {
     }).to(ObjectTypeByIdConverter.class);
     bind(new TypeLiteral<Function<UUID, Origin>>() {
     }).to(OriginByIdConverter.class);
-
-    // Converters which convert request objects.
-    bind(new TypeLiteral<Function<SearchFactRequest, FactSearchCriteria>>() {
-    }).to(SearchFactRequestConverter.class);
-    bind(new TypeLiteral<Function<SearchMetaFactsRequest, FactSearchCriteria>>() {
-    }).to(SearchMetaFactsRequestConverter.class);
-    bind(new TypeLiteral<Function<SearchObjectFactsRequest, FactSearchCriteria>>() {
-    }).to(SearchObjectFactsRequestConverter.class);
-    bind(new TypeLiteral<Function<SearchObjectRequest, FactSearchCriteria>>() {
-    }).to(SearchObjectRequestConverter.class);
   }
 
   @Provides

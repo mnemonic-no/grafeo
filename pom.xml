@@ -54,8 +54,7 @@
     <guava.version>28.1-jre</guava.version>
     <guice.version>4.2.2</guice.version>
     <hibernate.validator.version>6.0.17.Final</hibernate.validator.version>
-    <jackson.version>2.9.9</jackson.version>
-    <jackson.databind.version>2.9.9.3</jackson.databind.version>
+    <jackson.version>2.9.10</jackson.version>
     <javax.el.version>3.0.1-b11</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>

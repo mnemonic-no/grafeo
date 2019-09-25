@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.service.ti.helpers;
+package no.mnemonic.act.platform.service.ti.resolvers;
 
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.auth.SubjectResolver;

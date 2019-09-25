@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.converters.SearchFactRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -15,7 +16,6 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,12 +26,12 @@ public class FactSearchDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactSearchHandler factSearchHandler;
   @Mock
-  private Function<SearchFactRequest, FactSearchCriteria> requestConverter;
+  private SearchFactRequestConverter requestConverter;
 
   private FactSearchDelegate delegate;
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setCurrentUserID(UUID.randomUUID())
             .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))

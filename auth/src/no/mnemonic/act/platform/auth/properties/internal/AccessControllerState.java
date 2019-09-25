@@ -16,11 +16,13 @@ public class AccessControllerState {
 
   private final Map<String, Function> functionMap;
   private final Map<Long, Organization> organizationMap;
+  private final Map<String, Organization> organizationByNameMap;
   private final Map<Long, Subject> subjectMap;
 
   private AccessControllerState(Map<String, Function> functionMap, Map<Long, Organization> organizationMap, Map<Long, Subject> subjectMap) {
     this.functionMap = ObjectUtils.ifNotNull(functionMap, Collections::unmodifiableMap, Collections.emptyMap());
     this.organizationMap = ObjectUtils.ifNotNull(organizationMap, Collections::unmodifiableMap, Collections.emptyMap());
+    this.organizationByNameMap = Collections.unmodifiableMap(MapUtils.map(this.organizationMap.values(), o -> MapUtils.Pair.T(o.getName(), o)));
     this.subjectMap = ObjectUtils.ifNotNull(subjectMap, Collections::unmodifiableMap, Collections.emptyMap());
   }
 
@@ -46,6 +48,18 @@ public class AccessControllerState {
    */
   public Organization getOrganization(long internalID) {
     return organizationMap.get(internalID);
+  }
+
+  /**
+   * Returns an Organization or OrganizationGroup identified by its name.
+   * <p>
+   * It will return NULL if Organization or OrganizationGroup is not defined.
+   *
+   * @param name Name of Organization or OrganizationGroup
+   * @return Organization or OrganizationGroup identified by name
+   */
+  public Organization getOrganization(String name) {
+    return organizationByNameMap.get(name);
   }
 
   /**

@@ -849,6 +849,24 @@ public class PropertiesBasedAccessControllerTest {
     assertEquals("organization", organization.getName());
   }
 
+  /* resolveOrganization(name) */
+
+  @Test
+  public void testResolveOrganizationByNameNotExistingOrganization() throws Exception {
+    setup("organization.1.name = organization");
+
+    assertNull(accessController.resolveOrganization("something"));
+  }
+
+  @Test
+  public void testResolveOrganizationByNameExistingOrganization() throws Exception {
+    setup("organization.1.name = organization");
+
+    Organization organization = accessController.resolveOrganization("organization");
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), organization.getId());
+    assertEquals("organization", organization.getName());
+  }
+
   /* resolveCurrentUserAffiliation(credentials) */
 
   @Test(expected = InvalidCredentialsException.class)

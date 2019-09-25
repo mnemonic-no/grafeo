@@ -11,6 +11,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.converters.SearchObjectRequestConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -33,7 +34,7 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
   private final UUID objectID = UUID.randomUUID();
 
   @Mock
-  private Function<SearchObjectRequest, FactSearchCriteria> requestConverter;
+  private SearchObjectRequestConverter requestConverter;
   @Mock
   private Function<UUID, FactType> factTypeConverter;
   @Mock
@@ -42,7 +43,7 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
   private ObjectSearchDelegate delegate;
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     // Mocks required for Object search itself.
     when(getFactSearchManager().searchObjects(any())).thenReturn(createSearchResult());
     when(getFactSearchManager().calculateObjectStatistics(any())).thenReturn(ObjectStatisticsResult.builder().build());

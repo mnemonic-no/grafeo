@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.request.v1.Dimension;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.act.platform.service.ti.resolvers.SearchByNameResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,11 +14,15 @@ import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.api.FactSearchCriteria.KeywordFieldStrategy.*;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class SearchObjectFactsRequestConverterTest {
 
+  @Mock
+  private SearchByNameResolver byNameResolver;
   @Mock
   private SecurityContext securityContext;
 
@@ -30,16 +35,16 @@ public class SearchObjectFactsRequestConverterTest {
     when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
 
-    converter = new SearchObjectFactsRequestConverter(securityContext);
+    converter = new SearchObjectFactsRequestConverter(byNameResolver, securityContext);
   }
 
   @Test
-  public void testConvertNullReturnsNull() {
+  public void testConvertNullReturnsNull() throws Exception {
     assertNull(converter.apply(null));
   }
 
   @Test
-  public void testConvertEmptyRequest() {
+  public void testConvertEmptyRequest() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest());
     assertEquals(SetUtils.set(FactSearchCriteria.NumberFieldStrategy.certainty), criteria.getNumberFieldStrategy());
     assertEquals(25, criteria.getLimit());
@@ -48,7 +53,7 @@ public class SearchObjectFactsRequestConverterTest {
   }
 
   @Test
-  public void testConvertRequestFilterByKeywords() {
+  public void testConvertRequestFilterByKeywords() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest().setKeywords("keyword"));
     assertEquals("keyword", criteria.getKeywords());
     assertEquals(SetUtils.set(factValue, organization, origin), criteria.getKeywordFieldStrategy());
@@ -56,65 +61,68 @@ public class SearchObjectFactsRequestConverterTest {
   }
 
   @Test
-  public void testConvertRequestFilterOnObject() {
+  public void testConvertRequestFilterOnObject() throws Exception {
     UUID id = UUID.randomUUID();
-    String type = "type";
-    String value = "value";
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .setObjectID(id)
-            .setObjectType(type)
-            .setObjectValue(value)
     );
     assertEquals(SetUtils.set(id), criteria.getObjectID());
-    assertEquals(SetUtils.set(type), criteria.getObjectTypeName());
-    assertEquals(SetUtils.set(value), criteria.getObjectValue());
   }
 
   @Test
-  public void testConvertRequestFilterOnFactType() {
+  public void testConvertRequestFilterOnFactType() throws Exception {
     UUID id = UUID.randomUUID();
-    String name = "name";
+    UUID idForName = UUID.randomUUID();
+    when(byNameResolver.resolveFactType(notNull())).thenReturn(SetUtils.set(id, idForName));
+
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .addFactType(id.toString())
-            .addFactType(name)
+            .addFactType("name")
     );
-    assertEquals(SetUtils.set(id), criteria.getFactTypeID());
-    assertEquals(SetUtils.set(name), criteria.getFactTypeName());
+
+    assertEquals(SetUtils.set(id, idForName), criteria.getFactTypeID());
+    verify(byNameResolver).resolveFactType(SetUtils.set(id.toString(), "name"));
   }
 
   @Test
-  public void testConvertRequestFilterOnFactValue() {
+  public void testConvertRequestFilterOnFactValue() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .addFactValue("value"));
     assertEquals(SetUtils.set("value"), criteria.getFactValue());
   }
 
   @Test
-  public void testConvertRequestFilterOnOrganization() {
+  public void testConvertRequestFilterOnOrganization() throws Exception {
     UUID id = UUID.randomUUID();
-    String name = "name";
+    UUID idForName = UUID.randomUUID();
+    when(byNameResolver.resolveOrganization(notNull())).thenReturn(SetUtils.set(id, idForName));
+
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .addOrganization(id.toString())
-            .addOrganization(name)
+            .addOrganization("name")
     );
-    assertEquals(SetUtils.set(id), criteria.getOrganizationID());
-    assertEquals(SetUtils.set(name), criteria.getOrganizationName());
+
+    assertEquals(SetUtils.set(id, idForName), criteria.getOrganizationID());
+    verify(byNameResolver).resolveOrganization(SetUtils.set(id.toString(), "name"));
   }
 
   @Test
-  public void testConvertRequestFilterOnOrigin() {
+  public void testConvertRequestFilterOnOrigin() throws Exception {
     UUID id = UUID.randomUUID();
-    String name = "name";
+    UUID idForName = UUID.randomUUID();
+    when(byNameResolver.resolveOrigin(notNull())).thenReturn(SetUtils.set(id, idForName));
+
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .addOrigin(id.toString())
-            .addOrigin(name)
+            .addOrigin("name")
     );
-    assertEquals(SetUtils.set(id), criteria.getOriginID());
-    assertEquals(SetUtils.set(name), criteria.getOriginName());
+
+    assertEquals(SetUtils.set(id, idForName), criteria.getOriginID());
+    verify(byNameResolver).resolveOrigin(SetUtils.set(id.toString(), "name"));
   }
 
   @Test
-  public void testConvertRequestFilterOnMinMax() {
+  public void testConvertRequestFilterOnMinMax() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .setMinimum(0.1f)
             .setMaximum(0.2f)
@@ -127,7 +135,7 @@ public class SearchObjectFactsRequestConverterTest {
   }
 
   @Test
-  public void testConvertRequestFilterOnTimestamp() {
+  public void testConvertRequestFilterOnTimestamp() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .setAfter(123456789L)
             .setBefore(987654321L)
@@ -139,7 +147,7 @@ public class SearchObjectFactsRequestConverterTest {
   }
 
   @Test
-  public void testConvertRequestWithLimit() {
+  public void testConvertRequestWithLimit() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest()
             .setLimit(123));
     assertEquals(123, criteria.getLimit());

@@ -10,24 +10,24 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
-import java.util.function.Function;
 
 public class ObjectSearchFactsDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
-  private final Function<SearchObjectFactsRequest, FactSearchCriteria> requestConverter;
+  private final SearchObjectFactsRequestConverter requestConverter;
   private final FactSearchHandler factSearchHandler;
 
   @Inject
   public ObjectSearchFactsDelegate(TiSecurityContext securityContext,
                                    ObjectManager objectManager,
-                                   Function<SearchObjectFactsRequest, FactSearchCriteria> requestConverter,
+                                   SearchObjectFactsRequestConverter requestConverter,
                                    FactSearchHandler factSearchHandler) {
     this.securityContext = securityContext;
     this.objectManager = objectManager;
@@ -71,7 +71,7 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate implements Deleg
     return object;
   }
 
-  private FactSearchCriteria toCriteria(SearchObjectFactsRequest request, ObjectEntity object) {
+  private FactSearchCriteria toCriteria(SearchObjectFactsRequest request, ObjectEntity object) throws InvalidArgumentException {
     // Make sure to only search by the ID of the resolved Object.
     request = request.setObjectID(object.getId())
             .setObjectType(null)
