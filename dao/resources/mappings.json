@@ -36,9 +36,6 @@
       "typeID": {
         "type": "keyword"
       },
-      "typeName": {
-        "type": "keyword"
-      },
       "value": {
         "type": "keyword",
         "fields": {
@@ -62,35 +59,11 @@
       "organizationID": {
         "type": "keyword"
       },
-      "organizationName": {
-        "type": "keyword",
-        "fields": {
-          "text": {
-            "type": "text"
-          }
-        }
-      },
       "sourceID": {
         "type": "keyword"
       },
-      "sourceName": {
-        "type": "keyword",
-        "fields": {
-          "text": {
-            "type": "text"
-          }
-        }
-      },
       "addedByID": {
         "type": "keyword"
-      },
-      "addedByName": {
-        "type": "keyword",
-        "fields": {
-          "text": {
-            "type": "text"
-          }
-        }
       },
       "accessMode": {
         "type": "keyword"
@@ -123,9 +96,6 @@
             "type": "keyword"
           },
           "typeID": {
-            "type": "keyword"
-          },
-          "typeName": {
             "type": "keyword"
           },
           "value": {

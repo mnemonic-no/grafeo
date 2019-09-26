@@ -10,8 +10,6 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
 
-import static no.mnemonic.act.platform.dao.api.FactSearchCriteria.KeywordFieldStrategy.*;
-
 public class SearchMetaFactsRequestConverter {
 
   private static final int DEFAULT_LIMIT = 25;
@@ -31,7 +29,7 @@ public class SearchMetaFactsRequestConverter {
     return FactSearchCriteria.builder()
             .addInReferenceTo(request.getFact())
             .setKeywords(request.getKeywords())
-            .setKeywordFieldStrategy(SetUtils.set(factValue, organization, origin))
+            .setKeywordFieldStrategy(SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.factValue))
             .setFactTypeID(byNameResolver.resolveFactType(request.getFactType()))
             .setFactValue(request.getFactValue())
             .setOrganizationID(byNameResolver.resolveOrganization(request.getOrganization()))

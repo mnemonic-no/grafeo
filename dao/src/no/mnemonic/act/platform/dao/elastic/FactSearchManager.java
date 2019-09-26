@@ -553,10 +553,6 @@ public class FactSearchManager implements LifecycleAspect {
       rootQuery.filter(termsQuery("typeID", toString(criteria.getFactTypeID())));
     }
 
-    if (!CollectionUtils.isEmpty(criteria.getFactTypeName())) {
-      rootQuery.filter(termsQuery("typeName", criteria.getFactTypeName()));
-    }
-
     if (!CollectionUtils.isEmpty(criteria.getFactValue())) {
       rootQuery.filter(termsQuery("value", criteria.getFactValue()));
     }
@@ -569,16 +565,8 @@ public class FactSearchManager implements LifecycleAspect {
       rootQuery.filter(termsQuery("organizationID", toString(criteria.getOrganizationID())));
     }
 
-    if (!CollectionUtils.isEmpty(criteria.getOrganizationName())) {
-      rootQuery.filter(termsQuery("organizationName", criteria.getOrganizationName()));
-    }
-
     if (!CollectionUtils.isEmpty(criteria.getOriginID())) {
       rootQuery.filter(termsQuery("sourceID", toString(criteria.getOriginID())));
-    }
-
-    if (!CollectionUtils.isEmpty(criteria.getOriginName())) {
-      rootQuery.filter(termsQuery("sourceName", criteria.getOriginName()));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectID())) {
@@ -587,10 +575,6 @@ public class FactSearchManager implements LifecycleAspect {
 
     if (!CollectionUtils.isEmpty(criteria.getObjectTypeID())) {
       rootQuery.filter(nestedQuery("objects", termsQuery("objects.typeID", toString(criteria.getObjectTypeID())), ScoreMode.None));
-    }
-
-    if (!CollectionUtils.isEmpty(criteria.getObjectTypeName())) {
-      rootQuery.filter(nestedQuery("objects", termsQuery("objects.typeName", criteria.getObjectTypeName()), ScoreMode.None));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectValue())) {
@@ -714,10 +698,6 @@ public class FactSearchManager implements LifecycleAspect {
 
     if (!CollectionUtils.isEmpty(criteria.getObjectTypeID())) {
       rootQuery.filter(termsQuery("objects.typeID", toString(criteria.getObjectTypeID())));
-    }
-
-    if (!CollectionUtils.isEmpty(criteria.getObjectTypeName())) {
-      rootQuery.filter(termsQuery("objects.typeName", criteria.getObjectTypeName()));
     }
 
     if (!CollectionUtils.isEmpty(criteria.getObjectValue())) {

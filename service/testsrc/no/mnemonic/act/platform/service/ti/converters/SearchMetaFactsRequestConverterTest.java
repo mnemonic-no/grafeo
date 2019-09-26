@@ -12,7 +12,6 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.api.FactSearchCriteria.KeywordFieldStrategy.*;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.verify;
@@ -65,7 +64,7 @@ public class SearchMetaFactsRequestConverterTest {
   public void testConvertRequestFilterByKeywords() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchMetaFactsRequest().setKeywords("keyword"));
     assertEquals("keyword", criteria.getKeywords());
-    assertEquals(SetUtils.set(factValue, organization, origin), criteria.getKeywordFieldStrategy());
+    assertEquals(SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.factValue), criteria.getKeywordFieldStrategy());
     assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getKeywordMatchStrategy());
   }
 

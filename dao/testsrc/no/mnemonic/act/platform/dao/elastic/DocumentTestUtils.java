@@ -13,7 +13,6 @@ class DocumentTestUtils {
     return new ObjectDocument()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
-            .setTypeName("objectType")
             .setValue("objectValue")
             .setDirection(ObjectDocument.Direction.BiDirectional);
   }
@@ -23,15 +22,11 @@ class DocumentTestUtils {
             .setId(UUID.randomUUID())
             .setRetracted(false)
             .setTypeID(UUID.randomUUID())
-            .setTypeName("factType")
             .setValue("factValue")
             .setInReferenceTo(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
-            .setOrganizationName("organization")
             .setOriginID(UUID.randomUUID())
-            .setOriginName("origin")
             .setAddedByID(UUID.randomUUID())
-            .setAddedByName("addedBy")
             .setAccessMode(FactDocument.AccessMode.Public)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -44,7 +39,6 @@ class DocumentTestUtils {
   static void assertObjectDocument(ObjectDocument expected, ObjectDocument actual) {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getTypeID(), actual.getTypeID());
-    assertEquals(expected.getTypeName(), actual.getTypeName());
     assertEquals(expected.getValue(), actual.getValue());
     assertEquals(expected.getDirection(), actual.getDirection());
   }
@@ -53,15 +47,11 @@ class DocumentTestUtils {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.isRetracted(), actual.isRetracted());
     assertEquals(expected.getTypeID(), actual.getTypeID());
-    assertEquals(expected.getTypeName(), actual.getTypeName());
     assertEquals(expected.getValue(), actual.getValue());
     assertEquals(expected.getInReferenceTo(), actual.getInReferenceTo());
     assertEquals(expected.getOrganizationID(), actual.getOrganizationID());
-    assertEquals(expected.getOrganizationName(), actual.getOrganizationName());
     assertEquals(expected.getOriginID(), actual.getOriginID());
-    assertEquals(expected.getOriginName(), actual.getOriginName());
     assertEquals(expected.getAddedByID(), actual.getAddedByID());
-    assertEquals(expected.getAddedByName(), actual.getAddedByName());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());
     assertEquals(expected.getConfidence(), actual.getConfidence(), 0);
     assertEquals(expected.getTrust(), actual.getTrust(), 0);

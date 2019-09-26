@@ -103,7 +103,7 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
       metaFact = saveFact(request, referencedFact);
       List<UUID> subjectsAddedToAcl = factStorageHelper.saveInitialAclForNewFact(metaFact, request.getAcl());
       // Index new Fact into ElasticSearch.
-      indexCreatedFact(metaFact, requestedFactType, subjectsAddedToAcl);
+      indexCreatedFact(metaFact, subjectsAddedToAcl);
     }
 
     // Always add provided comment.

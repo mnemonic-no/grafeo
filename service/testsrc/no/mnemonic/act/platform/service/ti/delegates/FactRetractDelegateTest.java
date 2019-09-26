@@ -288,7 +288,6 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
       assertNotNull(document.getId());
       assertFalse(document.isRetracted());
       assertNotNull(document.getTypeID());
-      assertEquals("retractionFact", document.getTypeName());
       assertEquals(request.getFact(), document.getInReferenceTo());
       assertEquals(request.getOrganization(), document.getOrganizationID());
       assertNotNull(document.getAddedByID());

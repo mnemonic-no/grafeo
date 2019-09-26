@@ -115,26 +115,6 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testSearchObjectsFilterByObjectTypeNameFromDifferentFacts() {
-    ObjectDocument accessibleObject = createObjectDocument().setTypeName("objectTypeA");
-    indexFact(d -> d.setObjects(set(accessibleObject)));
-    indexFact(d -> d.setObjects(set(createObjectDocument().setTypeName("objectTypeB"))));
-
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.addObjectTypeName(accessibleObject.getTypeName()));
-    testSearchObjects(criteria, accessibleObject);
-  }
-
-  @Test
-  public void testSearchObjectsFilterByObjectTypeNameFromSameFact() {
-    ObjectDocument accessibleObject = createObjectDocument().setTypeName("objectTypeA");
-    ObjectDocument inaccessibleObject = createObjectDocument().setTypeName("objectTypeB");
-    indexFact(d -> d.setObjects(set(accessibleObject, inaccessibleObject)));
-
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.addObjectTypeName(accessibleObject.getTypeName()));
-    testSearchObjects(criteria, accessibleObject);
-  }
-
-  @Test
   public void testSearchObjectsFilterByObjectValueFromDifferentFacts() {
     ObjectDocument accessibleObject = createObjectDocument().setValue("objectValueA");
     indexFact(d -> d.setObjects(set(accessibleObject)));
