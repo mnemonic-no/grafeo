@@ -165,15 +165,13 @@ abstract class AbstractDelegate {
    * persisted to Cassandra.
    *
    * @param fact     Fact to index
-   * @param factType FactType of Fact to index
    * @param acl      Full access control list of Fact to index (list of Subject IDs)
    */
-  void indexCreatedFact(FactEntity fact, FactTypeEntity factType, List<UUID> acl) {
+  void indexCreatedFact(FactEntity fact, List<UUID> acl) {
     FactDocument document = new FactDocument()
             .setId(fact.getId())
             .setRetracted(false) // A newly created Fact isn't retracted by definition.
-            .setTypeID(factType.getId())
-            .setTypeName(factType.getName())
+            .setTypeID(fact.getTypeID())
             .setValue(fact.getValue())
             .setInReferenceTo(fact.getInReferenceToID())
             .setOrganizationID(fact.getOrganizationID())
@@ -188,11 +186,9 @@ abstract class AbstractDelegate {
 
     for (FactEntity.FactObjectBinding objectBinding : SetUtils.set(fact.getBindings())) {
       ObjectEntity object = TiRequestContext.get().getObjectManager().getObject(objectBinding.getObjectID());
-      ObjectTypeEntity objectType = TiRequestContext.get().getObjectManager().getObjectType(object.getTypeID());
       document.addObject(new ObjectDocument()
               .setId(object.getId())
-              .setTypeID(objectType.getId())
-              .setTypeName(objectType.getName())
+              .setTypeID(object.getTypeID())
               .setValue(object.getValue())
               .setDirection(ObjectDocument.Direction.valueOf(objectBinding.getDirection().name()))
       );

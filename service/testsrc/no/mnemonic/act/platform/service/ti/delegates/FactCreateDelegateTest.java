@@ -454,7 +454,6 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
       assertNotNull(document.getId());
       assertFalse(document.isRetracted());
       assertEquals(resolveFactType.getId(), document.getTypeID());
-      assertEquals(resolveFactType.getName(), document.getTypeName());
       assertEquals(request.getValue(), document.getValue());
       assertEquals(request.getOrganization(), document.getOrganizationID());
       assertNotNull(document.getAddedByID());
@@ -474,7 +473,6 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
                 .orElse(null);
         assertNotNull(source);
         assertEquals(ipObjectType.getId(), source.getTypeID());
-        assertEquals(ipObjectType.getName(), source.getTypeName());
         assertEquals(ip.getValue(), source.getValue());
         assertEquals(ObjectDocument.Direction.FactIsDestination, source.getDirection());
       }
@@ -487,7 +485,6 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
                 .orElse(null);
         assertNotNull(destination);
         assertEquals(domainObjectType.getId(), destination.getTypeID());
-        assertEquals(domainObjectType.getName(), destination.getTypeName());
         assertEquals(domain.getValue(), destination.getValue());
         assertEquals(ObjectDocument.Direction.FactIsSource, destination.getDirection());
       }

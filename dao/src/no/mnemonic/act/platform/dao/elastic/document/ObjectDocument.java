@@ -1,7 +1,10 @@
 package no.mnemonic.act.platform.dao.elastic.document;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.UUID;
 
+@JsonIgnoreProperties(ignoreUnknown = true) // Required for backwards compatibility.
 public class ObjectDocument implements ElasticDocument {
 
   public enum Direction {
@@ -11,7 +14,6 @@ public class ObjectDocument implements ElasticDocument {
   // 'id' is indexed as an own field because Objects aren't index separately but as part of Facts.
   private UUID id;
   private UUID typeID;
-  private String typeName;
   private String value;
   private Direction direction;
 
@@ -30,15 +32,6 @@ public class ObjectDocument implements ElasticDocument {
 
   public ObjectDocument setTypeID(UUID typeID) {
     this.typeID = typeID;
-    return this;
-  }
-
-  public String getTypeName() {
-    return typeName;
-  }
-
-  public ObjectDocument setTypeName(String typeName) {
-    this.typeName = typeName;
     return this;
   }
 

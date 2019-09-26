@@ -41,10 +41,7 @@ public class FactSearchCriteria {
   public enum KeywordFieldStrategy implements FieldStrategy {
     factValue("value.text", "value.ip", "value.domain"),
     objectValue("objects.value.text", "objects.value.ip", "objects.value.domain"),
-    organization("organizationName.text"),
-    origin("sourceName.text"),
-    all("value.text", "value.ip", "value.domain", "objects.value.text", "objects.value.ip", "objects.value.domain",
-            "organizationName.text", "sourceName.text");
+    all("value.text", "value.ip", "value.domain", "objects.value.text", "objects.value.ip", "objects.value.domain");
 
     private final Set<String> fields;
 
@@ -79,16 +76,12 @@ public class FactSearchCriteria {
   // Filter returned Facts based on those fields.
   private final Set<UUID> factID;
   private final Set<UUID> factTypeID;
-  private final Set<String> factTypeName;
   private final Set<String> factValue;
   private final Set<UUID> inReferenceTo;
   private final Set<UUID> organizationID;
-  private final Set<String> organizationName;
   private final Set<UUID> originID;
-  private final Set<String> originName;
   private final Set<UUID> objectID;
   private final Set<UUID> objectTypeID;
-  private final Set<String> objectTypeName;
   private final Set<String> objectValue;
 
   // Keywords search.
@@ -117,16 +110,12 @@ public class FactSearchCriteria {
 
   private FactSearchCriteria(Set<UUID> factID,
                              Set<UUID> factTypeID,
-                             Set<String> factTypeName,
                              Set<String> factValue,
                              Set<UUID> inReferenceTo,
                              Set<UUID> organizationID,
-                             Set<String> organizationName,
                              Set<UUID> originID,
-                             Set<String> originName,
                              Set<UUID> objectID,
                              Set<UUID> objectTypeID,
-                             Set<String> objectTypeName,
                              Set<String> objectValue,
                              String keywords,
                              Set<KeywordFieldStrategy> keywordFieldStrategy,
@@ -148,16 +137,12 @@ public class FactSearchCriteria {
 
     this.factID = factID;
     this.factTypeID = factTypeID;
-    this.factTypeName = factTypeName;
     this.factValue = factValue;
     this.inReferenceTo = inReferenceTo;
     this.organizationID = organizationID;
-    this.organizationName = organizationName;
     this.originID = originID;
-    this.originName = originName;
     this.objectID = objectID;
     this.objectTypeID = objectTypeID;
-    this.objectTypeName = objectTypeName;
     this.objectValue = objectValue;
     this.keywords = keywords;
     this.startTimestamp = startTimestamp;
@@ -199,15 +184,6 @@ public class FactSearchCriteria {
   }
 
   /**
-   * Filter Facts by their FactType (by name).
-   *
-   * @return Names of FactTypes
-   */
-  public Set<String> getFactTypeName() {
-    return factTypeName;
-  }
-
-  /**
    * Filter Facts by their value (exact match).
    *
    * @return Values of Facts
@@ -235,30 +211,12 @@ public class FactSearchCriteria {
   }
 
   /**
-   * Filter Facts by their Organization (by name).
-   *
-   * @return Names of Organizations
-   */
-  public Set<String> getOrganizationName() {
-    return organizationName;
-  }
-
-  /**
    * Filter Facts by their Origin (by UUID).
    *
    * @return UUIDs of Origins
    */
   public Set<UUID> getOriginID() {
     return originID;
-  }
-
-  /**
-   * Filter Facts by their Origin (by name).
-   *
-   * @return Names of Origins
-   */
-  public Set<String> getOriginName() {
-    return originName;
   }
 
   /**
@@ -277,15 +235,6 @@ public class FactSearchCriteria {
    */
   public Set<UUID> getObjectTypeID() {
     return objectTypeID;
-  }
-
-  /**
-   * Filter Facts by their bound Objects (by ObjectType name).
-   *
-   * @return Names of ObjectTypes
-   */
-  public Set<String> getObjectTypeName() {
-    return objectTypeName;
   }
 
   /**
@@ -440,16 +389,12 @@ public class FactSearchCriteria {
     // Filter returned Facts based on those fields.
     private Set<UUID> factID;
     private Set<UUID> factTypeID;
-    private Set<String> factTypeName;
     private Set<String> factValue;
     private Set<UUID> inReferenceTo;
     private Set<UUID> organizationID;
-    private Set<String> organizationName;
     private Set<UUID> originID;
-    private Set<String> originName;
     private Set<UUID> objectID;
     private Set<UUID> objectTypeID;
-    private Set<String> objectTypeName;
     private Set<String> objectValue;
 
     // Keywords search.
@@ -480,10 +425,9 @@ public class FactSearchCriteria {
     }
 
     public FactSearchCriteria build() {
-      return new FactSearchCriteria(factID, factTypeID, factTypeName, factValue, inReferenceTo, organizationID, organizationName,
-              originID, originName, objectID, objectTypeID, objectTypeName, objectValue, keywords, keywordFieldStrategy,
-              keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy, timeMatchStrategy, minNumber, maxNumber,
-              numberFieldStrategy, numberMatchStrategy, limit, currentUserID, availableOrganizationID);
+      return new FactSearchCriteria(factID, factTypeID, factValue, inReferenceTo, organizationID, originID, objectID, objectTypeID,
+              objectValue, keywords, keywordFieldStrategy, keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy,
+              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, limit, currentUserID, availableOrganizationID);
     }
 
     public Builder setFactID(Set<UUID> factID) {
@@ -503,16 +447,6 @@ public class FactSearchCriteria {
 
     public Builder addFactTypeID(UUID factTypeID) {
       this.factTypeID = SetUtils.addToSet(this.factTypeID, factTypeID);
-      return this;
-    }
-
-    public Builder setFactTypeName(Set<String> factTypeName) {
-      this.factTypeName = factTypeName;
-      return this;
-    }
-
-    public Builder addFactTypeName(String factTypeName) {
-      this.factTypeName = SetUtils.addToSet(this.factTypeName, factTypeName);
       return this;
     }
 
@@ -546,16 +480,6 @@ public class FactSearchCriteria {
       return this;
     }
 
-    public Builder setOrganizationName(Set<String> organizationName) {
-      this.organizationName = organizationName;
-      return this;
-    }
-
-    public Builder addOrganizationName(String organizationName) {
-      this.organizationName = SetUtils.addToSet(this.organizationName, organizationName);
-      return this;
-    }
-
     public Builder setOriginID(Set<UUID> originID) {
       this.originID = originID;
       return this;
@@ -563,16 +487,6 @@ public class FactSearchCriteria {
 
     public Builder addOriginID(UUID originID) {
       this.originID = SetUtils.addToSet(this.originID, originID);
-      return this;
-    }
-
-    public Builder setOriginName(Set<String> originName) {
-      this.originName = originName;
-      return this;
-    }
-
-    public Builder addOriginName(String originName) {
-      this.originName = SetUtils.addToSet(this.originName, originName);
       return this;
     }
 
@@ -593,16 +507,6 @@ public class FactSearchCriteria {
 
     public Builder addObjectTypeID(UUID objectTypeID) {
       this.objectTypeID = SetUtils.addToSet(this.objectTypeID, objectTypeID);
-      return this;
-    }
-
-    public Builder setObjectTypeName(Set<String> objectTypeName) {
-      this.objectTypeName = objectTypeName;
-      return this;
-    }
-
-    public Builder addObjectTypeName(String objectTypeName) {
-      this.objectTypeName = SetUtils.addToSet(this.objectTypeName, objectTypeName);
       return this;
     }
 

@@ -384,7 +384,6 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
       assertNotNull(document.getId());
       assertFalse(document.isRetracted());
       assertEquals(observationFactType.getId(), document.getTypeID());
-      assertEquals(observationFactType.getName(), document.getTypeName());
       assertEquals(request.getValue(), document.getValue());
       assertEquals(request.getFact(), document.getInReferenceTo());
       assertEquals(request.getOrganization(), document.getOrganizationID());

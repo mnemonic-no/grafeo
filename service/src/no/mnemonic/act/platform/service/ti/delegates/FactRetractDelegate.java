@@ -77,7 +77,7 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
     List<UUID> subjectsAddedToAcl = factStorageHelper.saveInitialAclForNewFact(retractionFact, request.getAcl());
     factStorageHelper.saveCommentForFact(retractionFact, request.getComment());
     // Index everything into ElasticSearch.
-    indexCreatedFact(retractionFact, retractionFactType, subjectsAddedToAcl);
+    indexCreatedFact(retractionFact, subjectsAddedToAcl);
     reindexExistingFact(factToRetract.getId(), d -> d.setRetracted(true));
 
     // Register TriggerEvent before returning Retraction Fact.
