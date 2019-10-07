@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.dao.elastic;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.common.io.CharStreams;
 import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
@@ -93,7 +94,7 @@ public class FactSearchManager implements LifecycleAspect {
 
   private static final Logger LOGGER = Logging.getLogger(FactSearchManager.class);
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = JsonMapper.builder().build();
   private static final ObjectReader FACT_DOCUMENT_READER = MAPPER.readerFor(FactDocument.class);
   private static final ObjectReader OBJECT_DOCUMENT_READER = MAPPER.readerFor(ObjectDocument.class);
   private static final ObjectWriter FACT_DOCUMENT_WRITER = MAPPER.writerFor(FactDocument.class);

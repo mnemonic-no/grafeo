@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.rest.providers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import no.mnemonic.act.platform.rest.api.ResultStash;
 
@@ -10,13 +11,15 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class ObjectMapperResolver implements ContextResolver<ObjectMapper> {
 
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper;
 
   static {
     // Register custom ResultStashSerializer used to serialize ResultStash.
     SimpleModule extensions = new SimpleModule();
     extensions.addSerializer(ResultStash.class, new ResultStash.ResultStashSerializer());
-    mapper.registerModule(extensions);
+    mapper = JsonMapper.builder()
+            .addModule(extensions)
+            .build();
   }
 
   @Override

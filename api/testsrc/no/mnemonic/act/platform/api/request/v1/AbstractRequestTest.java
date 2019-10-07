@@ -1,7 +1,8 @@
 package no.mnemonic.act.platform.api.request.v1;
 
-import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.BeforeClass;
 
 import javax.validation.*;
@@ -18,11 +19,11 @@ public abstract class AbstractRequestTest {
 
   @BeforeClass
   public static void setUp() {
-    // Initialize object mapper for testing.
-    mapper = new ObjectMapper();
-    // With this configuration we save a lot of quotes and escaping when creating JSON strings.
-    mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-    mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+    // Initialize object mapper for testing. With this configuration we save a lot of quotes and escaping when creating JSON strings.
+    mapper = JsonMapper.builder()
+            .enable(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES)
+            .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
+            .build();
     // Initialize validator for testing including custom mappings.
     validator = Validation.byDefaultProvider()
             .configure()

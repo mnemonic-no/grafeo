@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -24,7 +25,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public abstract class AbstractEndpointTest {
 
-  private final static ObjectMapper mapper = new ObjectMapper();
+  private final static ObjectMapper mapper = JsonMapper.builder().build();
   private final static int port = AvailablePortFinder.getAvailablePort(9000);
 
   @Mock

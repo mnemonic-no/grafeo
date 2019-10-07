@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.test.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -47,7 +48,7 @@ public abstract class AbstractIT {
   private static final String RESOURCES_FOLDER = ClassLoader.getSystemResource("").getPath();
   private static final int API_SERVER_PORT = AvailablePortFinder.getAvailablePort(8000);
 
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = JsonMapper.builder().build();
 
   private ComponentContainer serviceContainer;
   private ComponentContainer restContainer;
