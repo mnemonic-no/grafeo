@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.api.model.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -12,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 
 public class FactTest {
 
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = JsonMapper.builder().build();
 
   @Test
   public void testEncodeFact() {

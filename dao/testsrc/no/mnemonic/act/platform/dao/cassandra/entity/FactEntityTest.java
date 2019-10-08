@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.dao.cassandra.entity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
 public class FactEntityTest {
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = JsonMapper.builder().build();
   private static final ObjectReader reader = mapper.reader();
 
   @Test

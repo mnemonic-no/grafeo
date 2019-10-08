@@ -7,6 +7,7 @@ import com.datastax.oss.driver.api.mapper.annotations.Transient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -30,7 +31,7 @@ public class FactTypeEntity implements CassandraEntity {
   public static final String TABLE = "fact_type";
   public static final float DEFAULT_CONFIDENCE = 1.0f;
 
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = JsonMapper.builder().build();
   private static final ObjectReader factObjectBindingDefinitionReader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(Set.class, FactObjectBindingDefinition.class));
   private static final ObjectWriter factObjectBindingDefinitionWriter = mapper.writerFor(mapper.getTypeFactory().constructCollectionType(Set.class, FactObjectBindingDefinition.class));
   private static final ObjectReader metaFactBindingDefinitionReader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(Set.class, MetaFactBindingDefinition.class));
