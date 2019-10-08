@@ -5,11 +5,11 @@ import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.converters.SearchObjectRequestConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -46,7 +46,7 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
   public void setup() throws Exception {
     // Mocks required for Object search itself.
     when(getFactSearchManager().searchObjects(any())).thenReturn(createSearchResult());
-    when(getFactSearchManager().calculateObjectStatistics(any())).thenReturn(ObjectStatisticsResult.builder().build());
+    when(getFactSearchManager().calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
     when(getObjectManager().getObjects(any())).thenReturn(SetUtils.set(new ObjectEntity().setId(objectID)).iterator());
 
     // Mocks required for ElasticSearch access control.

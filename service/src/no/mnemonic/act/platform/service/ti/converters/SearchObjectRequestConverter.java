@@ -2,7 +2,7 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.SearchByNameResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;

@@ -5,7 +5,7 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;

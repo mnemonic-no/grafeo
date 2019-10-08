@@ -6,7 +6,7 @@ import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
+import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
@@ -37,7 +37,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
     when(factTypeConverter.apply(any())).thenReturn(FactType.builder().build());
     when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(getSecurityContext().getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
-    when(getFactSearchManager().calculateObjectStatistics(any())).thenReturn(ObjectStatisticsResult.builder().build());
+    when(getFactSearchManager().calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
 
     // initMocks() will be called by base class.
     delegate = new ObjectGetDelegate(

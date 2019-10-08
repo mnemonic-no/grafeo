@@ -5,7 +5,7 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;

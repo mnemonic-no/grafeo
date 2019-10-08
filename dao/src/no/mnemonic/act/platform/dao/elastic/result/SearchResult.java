@@ -1,5 +1,6 @@
-package no.mnemonic.act.platform.dao.elastic.document;
+package no.mnemonic.act.platform.dao.elastic.result;
 
+import no.mnemonic.act.platform.dao.elastic.document.ElasticDocument;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 

@@ -1,9 +1,9 @@
 package no.mnemonic.act.platform.dao.elastic;
 
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import org.junit.Test;
 
 import java.util.UUID;

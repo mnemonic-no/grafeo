@@ -9,12 +9,12 @@ import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
+import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
+import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
@@ -79,7 +79,7 @@ public class ObjectSearchDelegate extends AbstractDelegate implements Delegate {
             .setCurrentUserID(securityContext.getCurrentUserID())
             .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
             .build();
-    ObjectStatisticsResult statisticsResult = factSearchManager.calculateObjectStatistics(criteria);
+    ObjectStatisticsContainer statisticsResult = factSearchManager.calculateObjectStatistics(criteria);
 
     // Use the Object IDs to look up the authoritative data in Cassandra. This relies exclusively on access control
     // implemented in ElasticSearch. Explicitly checking access to each Object would be too expensive because this
@@ -98,7 +98,7 @@ public class ObjectSearchDelegate extends AbstractDelegate implements Delegate {
             .build();
   }
 
-  private ObjectConverter createObjectConverter(ObjectStatisticsResult statistics) {
+  private ObjectConverter createObjectConverter(ObjectStatisticsContainer statistics) {
     return new ObjectConverter(objectTypeConverter, factTypeConverter, statistics::getStatistics);
   }
 }

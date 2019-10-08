@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.dao.api;
+package no.mnemonic.act.platform.dao.api.result;
 
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -7,11 +7,11 @@ import java.util.*;
 /**
  * Result container holding the calculated statistics about Facts bound to Objects.
  */
-public class ObjectStatisticsResult {
+public class ObjectStatisticsContainer {
 
   private final Map<UUID, Collection<FactStatistic>> objectStatisticsMap;
 
-  private ObjectStatisticsResult(Map<UUID, Collection<FactStatistic>> objectStatisticsMap) {
+  private ObjectStatisticsContainer(Map<UUID, Collection<FactStatistic>> objectStatisticsMap) {
     this.objectStatisticsMap = ObjectUtils.ifNotNull(objectStatisticsMap, Collections::unmodifiableMap, Collections.emptyMap());
   }
 
@@ -47,8 +47,8 @@ public class ObjectStatisticsResult {
     private Builder() {
     }
 
-    public ObjectStatisticsResult build() {
-      return new ObjectStatisticsResult(objectStatisticsMap);
+    public ObjectStatisticsContainer build() {
+      return new ObjectStatisticsContainer(objectStatisticsMap);
     }
 
     public Builder addStatistic(UUID objectID, FactStatistic statistic) {

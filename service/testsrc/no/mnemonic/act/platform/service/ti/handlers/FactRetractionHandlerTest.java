@@ -1,10 +1,10 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
+import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import org.junit.Before;

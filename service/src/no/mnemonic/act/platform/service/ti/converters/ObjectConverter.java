@@ -4,7 +4,7 @@ import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectFactsStatistic;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
+import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
@@ -19,12 +19,12 @@ public class ObjectConverter implements Converter<ObjectEntity, Object> {
 
   private final Function<UUID, ObjectType> objectTypeConverter;
   private final Function<UUID, FactType> factTypeConverter;
-  private final Function<UUID, Collection<ObjectStatisticsResult.FactStatistic>> factStatisticsResolver;
+  private final Function<UUID, Collection<ObjectStatisticsContainer.FactStatistic>> factStatisticsResolver;
 
   @Inject
   public ObjectConverter(Function<UUID, ObjectType> objectTypeConverter,
                          Function<UUID, FactType> factTypeConverter,
-                         Function<UUID, Collection<ObjectStatisticsResult.FactStatistic>> factStatisticsResolver) {
+                         Function<UUID, Collection<ObjectStatisticsContainer.FactStatistic>> factStatisticsResolver) {
     this.objectTypeConverter = objectTypeConverter;
     this.factTypeConverter = factTypeConverter;
     this.factStatisticsResolver = factStatisticsResolver;
@@ -52,7 +52,7 @@ public class ObjectConverter implements Converter<ObjectEntity, Object> {
   }
 
   private List<ObjectFactsStatistic> resolveStatistics(ObjectEntity entity) {
-    Collection<ObjectStatisticsResult.FactStatistic> statistics = factStatisticsResolver.apply(entity.getId());
+    Collection<ObjectStatisticsContainer.FactStatistic> statistics = factStatisticsResolver.apply(entity.getId());
     if (CollectionUtils.isEmpty(statistics)) {
       return null;
     }

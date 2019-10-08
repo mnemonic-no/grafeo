@@ -1,9 +1,9 @@
 package no.mnemonic.act.platform.dao.elastic;
 
-import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
+import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 

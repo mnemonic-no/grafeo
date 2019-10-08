@@ -4,7 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.converters.SearchFactRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;

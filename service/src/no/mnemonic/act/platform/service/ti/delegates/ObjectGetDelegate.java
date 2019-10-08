@@ -8,7 +8,7 @@ import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;

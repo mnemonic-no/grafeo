@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.dao.elastic;
 
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
