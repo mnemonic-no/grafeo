@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.dao.elastic;
 
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
+import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
+import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import org.junit.Test;
@@ -110,7 +110,7 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     indexFact(d -> d.setObjects(set(object1)));
     indexFact(d -> d.setObjects(set(object2)));
 
-    ObjectStatisticsResult result = executeCalculateObjectStatistics(object1.getId(), object2.getId());
+    ObjectStatisticsContainer result = executeCalculateObjectStatistics(object1.getId(), object2.getId());
     assertEquals(2, result.getStatisticsCount());
   }
 
@@ -120,7 +120,7 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     ObjectDocument object2 = createObjectDocument();
     indexFact(d -> d.setObjects(set(object1, object2)));
 
-    ObjectStatisticsResult result = executeCalculateObjectStatistics(object1.getId(), object2.getId());
+    ObjectStatisticsContainer result = executeCalculateObjectStatistics(object1.getId(), object2.getId());
     assertEquals(2, result.getStatisticsCount());
   }
 
@@ -129,8 +129,8 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     ObjectDocument object = createObjectDocument();
     FactDocument fact = indexFact(d -> d.setObjects(set(object)));
 
-    ObjectStatisticsResult result = executeCalculateObjectStatistics(object.getId());
-    ObjectStatisticsResult.FactStatistic statistic = getFirstStatistic(result, object.getId());
+    ObjectStatisticsContainer result = executeCalculateObjectStatistics(object.getId());
+    ObjectStatisticsContainer.FactStatistic statistic = getFirstStatistic(result, object.getId());
     assertEquals(1, statistic.getFactCount());
     assertEquals(fact.getTypeID(), statistic.getFactTypeID());
     assertEquals(fact.getTimestamp(), statistic.getLastAddedTimestamp());
@@ -152,8 +152,8 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
             .setObjects(set(object))
     );
 
-    ObjectStatisticsResult result = executeCalculateObjectStatistics(object.getId());
-    ObjectStatisticsResult.FactStatistic statistic = getFirstStatistic(result, object.getId());
+    ObjectStatisticsContainer result = executeCalculateObjectStatistics(object.getId());
+    ObjectStatisticsContainer.FactStatistic statistic = getFirstStatistic(result, object.getId());
     assertEquals(typeID, statistic.getFactTypeID());
     assertEquals(2, statistic.getFactCount());
     assertEquals(22222, statistic.getLastAddedTimestamp());
@@ -166,18 +166,18 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     indexFact(d -> d.setTypeID(UUID.randomUUID()).setObjects(set(object)));
     indexFact(d -> d.setTypeID(UUID.randomUUID()).setObjects(set(object)));
 
-    ObjectStatisticsResult result = executeCalculateObjectStatistics(object.getId());
+    ObjectStatisticsContainer result = executeCalculateObjectStatistics(object.getId());
     assertEquals(1, result.getStatisticsCount());
     assertEquals(2, result.getStatistics(object.getId()).size());
   }
 
   private void assertSingleStatisticExists(ObjectStatisticsCriteria criteria, UUID objectID) {
-    ObjectStatisticsResult result = getFactSearchManager().calculateObjectStatistics(criteria);
+    ObjectStatisticsContainer result = getFactSearchManager().calculateObjectStatistics(criteria);
     assertEquals(1, result.getStatisticsCount());
     assertNotNull(result.getStatistics(objectID));
   }
 
-  private ObjectStatisticsResult executeCalculateObjectStatistics(UUID... objectID) {
+  private ObjectStatisticsContainer executeCalculateObjectStatistics(UUID... objectID) {
     ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.setObjectID(set(objectID)));
     return getFactSearchManager().calculateObjectStatistics(criteria);
   }
@@ -196,7 +196,7 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     return first(fact.getObjects()).getId();
   }
 
-  private ObjectStatisticsResult.FactStatistic getFirstStatistic(ObjectStatisticsResult result, UUID objectID) {
+  private ObjectStatisticsContainer.FactStatistic getFirstStatistic(ObjectStatisticsContainer result, UUID objectID) {
     return first(result.getStatistics(objectID));
   }
 

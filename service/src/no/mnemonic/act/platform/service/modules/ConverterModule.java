@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
+import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.service.bindings.AccessChecker;
@@ -80,7 +80,7 @@ class ConverterModule extends AbstractModule {
   }
 
   @Provides
-  Function<UUID, Collection<ObjectStatisticsResult.FactStatistic>> provideFactStatisticsResolver() {
+  Function<UUID, Collection<ObjectStatisticsContainer.FactStatistic>> provideFactStatisticsResolver() {
     // Don't include statistics in the default ObjectConverter, e.g. when including Objects as part of Facts.
     // When statistics should be included in responses create a new instance of the ObjectConverter instead.
     return id -> Collections.emptyList();

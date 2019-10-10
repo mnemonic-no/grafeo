@@ -5,14 +5,14 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.common.io.CharStreams;
-import no.mnemonic.act.platform.dao.api.FactExistenceSearchCriteria;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsCriteria;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
+import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
+import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
-import no.mnemonic.act.platform.dao.elastic.document.SearchResult;
+import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
+import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
@@ -307,8 +307,8 @@ public class FactSearchManager implements LifecycleAspect {
    * @param criteria Criteria to specify for which Objects statistics should be calculated
    * @return Result container with the calculated statistics for each Object
    */
-  public ObjectStatisticsResult calculateObjectStatistics(ObjectStatisticsCriteria criteria) {
-    if (criteria == null) return ObjectStatisticsResult.builder().build();
+  public ObjectStatisticsContainer calculateObjectStatistics(ObjectStatisticsCriteria criteria) {
+    if (criteria == null) return ObjectStatisticsContainer.builder().build();
 
     SearchResponse response;
     try {
@@ -319,10 +319,10 @@ public class FactSearchManager implements LifecycleAspect {
 
     if (response.status() != RestStatus.OK) {
       LOGGER.warning("Could not calculate Object statistics (response code %s).", response.status());
-      return ObjectStatisticsResult.builder().build();
+      return ObjectStatisticsContainer.builder().build();
     }
 
-    ObjectStatisticsResult result = retrieveObjectStatisticsResult(response);
+    ObjectStatisticsContainer result = retrieveObjectStatisticsResult(response);
 
     LOGGER.info("Successfully retrieved statistics for %d Objects.", result.getStatisticsCount());
     return result;
@@ -815,20 +815,20 @@ public class FactSearchManager implements LifecycleAspect {
     return result;
   }
 
-  private ObjectStatisticsResult retrieveObjectStatisticsResult(SearchResponse response) {
+  private ObjectStatisticsContainer retrieveObjectStatisticsResult(SearchResponse response) {
     Aggregation uniqueObjectsAggregation = resolveChildAggregation(response.getAggregations(), UNIQUE_OBJECTS_AGGREGATION_NAME);
     if (!(uniqueObjectsAggregation instanceof Terms)) {
       LOGGER.warning("Could not retrieve results when calculating statistics for Objects.");
-      return ObjectStatisticsResult.builder().build();
+      return ObjectStatisticsContainer.builder().build();
     }
 
     List<? extends Terms.Bucket> uniqueObjectBuckets = Terms.class.cast(uniqueObjectsAggregation).getBuckets();
     if (CollectionUtils.isEmpty(uniqueObjectBuckets)) {
       // No buckets means no results.
-      return ObjectStatisticsResult.builder().build();
+      return ObjectStatisticsContainer.builder().build();
     }
 
-    ObjectStatisticsResult.Builder resultBuilder = ObjectStatisticsResult.builder();
+    ObjectStatisticsContainer.Builder resultBuilder = ObjectStatisticsContainer.builder();
 
     // Each bucket contains one unique Object. Calculate the statistics for each Object.
     for (Terms.Bucket objectBucket : uniqueObjectBuckets) {
@@ -847,7 +847,7 @@ public class FactSearchManager implements LifecycleAspect {
         int factCount = (int) factTypeBucket.getDocCount();
         long lastAddedTimestamp = retrieveMaxTimestamp(factTypeBucket, MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME);
         long lastSeenTimestamp = retrieveMaxTimestamp(factTypeBucket, MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME);
-        resultBuilder.addStatistic(objectID, new ObjectStatisticsResult.FactStatistic(factTypeID, factCount, lastAddedTimestamp, lastSeenTimestamp));
+        resultBuilder.addStatistic(objectID, new ObjectStatisticsContainer.FactStatistic(factTypeID, factCount, lastAddedTimestamp, lastSeenTimestamp));
       }
     }
 

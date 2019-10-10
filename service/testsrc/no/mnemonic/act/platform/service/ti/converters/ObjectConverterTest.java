@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.service.ti.converters;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
-import no.mnemonic.act.platform.dao.api.ObjectStatisticsResult;
+import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import org.junit.Test;
 
@@ -18,7 +18,7 @@ public class ObjectConverterTest {
 
   private final Function<UUID, ObjectType> objectTypeConverter = id -> ObjectType.builder().setId(id).build();
   private final Function<UUID, FactType> factTypeConverter = id -> FactType.builder().setId(id).build();
-  private final Function<UUID, Collection<ObjectStatisticsResult.FactStatistic>> factStatisticsResolver = id -> null;
+  private final Function<UUID, Collection<ObjectStatisticsContainer.FactStatistic>> factStatisticsResolver = id -> null;
   private final ObjectConverter converter = new ObjectConverter(objectTypeConverter, factTypeConverter, factStatisticsResolver);
 
   @Test
@@ -30,7 +30,7 @@ public class ObjectConverterTest {
   @Test
   public void testConvertObjectWithStatistics() {
     ObjectConverter converter = new ObjectConverter(objectTypeConverter, factTypeConverter,
-            id -> Collections.singleton(new ObjectStatisticsResult.FactStatistic(UUID.randomUUID(), 42, 123456789, 987654321)));
+            id -> Collections.singleton(new ObjectStatisticsContainer.FactStatistic(UUID.randomUUID(), 42, 123456789, 987654321)));
 
     ObjectEntity entity = createEntity();
     Object model = converter.apply(entity);

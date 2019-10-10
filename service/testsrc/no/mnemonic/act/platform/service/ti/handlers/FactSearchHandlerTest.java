@@ -2,12 +2,12 @@ package no.mnemonic.act.platform.service.ti.handlers;
 
 import com.google.common.collect.Iterators;
 import no.mnemonic.act.platform.api.model.v1.Fact;
-import no.mnemonic.act.platform.dao.api.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ScrollingSearchResult;
+import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;

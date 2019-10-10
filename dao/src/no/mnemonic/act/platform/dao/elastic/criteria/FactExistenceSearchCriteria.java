@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.dao.api;
+package no.mnemonic.act.platform.dao.elastic.criteria;
 
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
