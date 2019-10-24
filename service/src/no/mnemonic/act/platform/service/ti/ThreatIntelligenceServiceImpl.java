@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
@@ -41,6 +42,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   private final FactManager factManager;
   private final ObjectManager objectManager;
   private final FactSearchManager factSearchManager;
+  private final ObjectFactDao objectFactDao;
   private final ValidatorFactory validatorFactory;
   private final DelegateProvider delegateProvider;
 
@@ -52,6 +54,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
                                        FactManager factManager,
                                        ObjectManager objectManager,
                                        FactSearchManager factSearchManager,
+                                       ObjectFactDao objectFactDao,
                                        ValidatorFactory validatorFactory,
                                        DelegateProvider delegateProvider) {
     this.accessController = accessController;
@@ -61,6 +64,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     this.factManager = factManager;
     this.objectManager = objectManager;
     this.factSearchManager = factSearchManager;
+    this.objectFactDao = objectFactDao;
     this.validatorFactory = validatorFactory;
     this.delegateProvider = delegateProvider;
   }
@@ -73,6 +77,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setOrganizationResolver(organizationResolver)
             .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
+            .setObjectFactDao(objectFactDao)
             .setAclResolver(factManager::fetchFactAcl)
             .setFactsBoundToObjectResolver(createFactsBoundToObjectResolver())
             .build();

@@ -1,12 +1,14 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
-import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.UUID;
 
@@ -14,12 +16,17 @@ import static org.mockito.Mockito.*;
 
 public class FactGetByIdDelegateTest extends AbstractDelegateTest {
 
+  @Mock
+  private FactResolver factResolver;
+  @Mock
+  private FactRecordConverter factConverter;
+
   private FactGetByIdDelegate delegate;
 
   @Before
   public void setup() {
     // initMocks() will be called by base class.
-    delegate = new FactGetByIdDelegate(getSecurityContext(), getFactConverter());
+    delegate = new FactGetByIdDelegate(getSecurityContext(), factResolver, factConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -28,20 +35,13 @@ public class FactGetByIdDelegateTest extends AbstractDelegateTest {
     delegate.handle(new GetFactByIdRequest());
   }
 
-  @Test(expected = ObjectNotFoundException.class)
-  public void testFetchFactNotFound() throws Exception {
-    UUID id = UUID.randomUUID();
-    delegate.handle(new GetFactByIdRequest().setId(id));
-    verify(getFactManager()).getFact(id);
-  }
-
   @Test(expected = AccessDeniedException.class)
   public void testFetchFactNoAccess() throws Exception {
     UUID id = UUID.randomUUID();
-    FactEntity entity = new FactEntity();
+    FactRecord record = new FactRecord();
 
-    when(getFactManager().getFact(id)).thenReturn(entity);
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(entity);
+    when(factResolver.resolveFact(id)).thenReturn(record);
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(record);
 
     delegate.handle(new GetFactByIdRequest().setId(id));
   }
@@ -49,10 +49,12 @@ public class FactGetByIdDelegateTest extends AbstractDelegateTest {
   @Test
   public void testFetchFact() throws Exception {
     UUID id = UUID.randomUUID();
-    FactEntity entity = new FactEntity();
+    FactRecord record = new FactRecord();
 
-    when(getFactManager().getFact(id)).thenReturn(entity);
+    when(factResolver.resolveFact(id)).thenReturn(record);
+
     delegate.handle(new GetFactByIdRequest().setId(id));
-    verify(getFactConverter()).apply(entity);
+    verify(getSecurityContext()).checkReadPermission(record);
+    verify(factConverter).apply(record);
   }
 }

@@ -1,27 +1,25 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
-import com.google.common.collect.Iterators;
 import no.mnemonic.act.platform.api.model.v1.Fact;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -30,74 +28,61 @@ public class FactSearchHandlerTest {
   @Mock
   private FactRetractionHandler retractionHandler;
   @Mock
-  private FactSearchManager factSearchManager;
-  @Mock
-  private FactManager factManager;
+  private ObjectFactDao objectFactDao;
   @Mock
   private TiSecurityContext securityContext;
   @Mock
-  private Function<FactEntity, Fact> factConverter;
-
-  private final UUID factID = UUID.randomUUID();
-  private final FactDocument factDocument = new FactDocument().setId(factID);
-  private final FactEntity factEntity = new FactEntity().setId(factID);
-  private final Fact factModel = Fact.builder().setId(factID).build();
+  private FactRecordConverter factConverter;
 
   private FactSearchHandler handler;
 
   @Before
   public void setUp() {
     initMocks(this);
+    when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
 
-    // Common mocks used by most tests.
-    when(securityContext.hasReadPermission(isA(FactEntity.class))).thenReturn(true);
-    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
-    when(factConverter.apply(any())).thenReturn(factModel);
-
-    handler = new FactSearchHandler(retractionHandler, factSearchManager, factManager, securityContext, factConverter);
+    handler = new FactSearchHandler(retractionHandler, objectFactDao, securityContext, factConverter);
   }
 
   @Test
   public void testSearchFactsWithLimit() {
-    mockSimpleSearch();
+    mockSearch(1);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(25));
     ResultSet<Fact> result = handler.search(criteria, null);
 
     assertEquals(25, result.getLimit());
-    assertEquals(100, result.getCount());
+    assertEquals(1, result.getCount());
     assertEquals(1, ListUtils.list(result.iterator()).size());
   }
 
   @Test
   public void testSearchFactsWithoutLimit() {
-    mockSimpleSearch();
+    mockSearch(1);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(0));
     ResultSet<Fact> result = handler.search(criteria, null);
 
     assertEquals(10000, result.getLimit());
-    assertEquals(100, result.getCount());
+    assertEquals(1, result.getCount());
     assertEquals(1, ListUtils.list(result.iterator()).size());
   }
 
   @Test
   public void testSearchFactsWithLimitAboveMaxLimit() {
-    mockSimpleSearch();
+    mockSearch(1);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(10001));
     ResultSet<Fact> result = handler.search(criteria, null);
 
     assertEquals(10000, result.getLimit());
-    assertEquals(100, result.getCount());
+    assertEquals(1, result.getCount());
     assertEquals(1, ListUtils.list(result.iterator()).size());
   }
 
   @Test
   public void testSearchFactsNoResults() {
-    when(factSearchManager.searchFacts(any())).thenReturn(createSearchResult());
-    when(factManager.getFacts(any())).thenReturn(Collections.emptyIterator());
+    mockSearch(0);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(25));
     ResultSet<Fact> result = handler.search(criteria, null);
@@ -105,16 +90,12 @@ public class FactSearchHandlerTest {
     assertEquals(25, result.getLimit());
     assertEquals(0, result.getCount());
     assertEquals(0, ListUtils.list(result.iterator()).size());
-
-    verify(factSearchManager).searchFacts(criteria);
-    verify(factManager, atLeastOnce()).getFacts(argThat(List::isEmpty));
   }
 
   @Test
   public void testSearchFactsFiltersNonAccessibleFacts() {
-    when(factSearchManager.searchFacts(any())).thenReturn(createSearchResult(factDocument, factDocument, factDocument));
-    when(factManager.getFacts(any())).thenReturn(ListUtils.list(factEntity, factEntity, factEntity).iterator());
-    when(securityContext.hasReadPermission(isA(FactEntity.class))).thenReturn(true, false, true);
+    mockSearch(3);
+    when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true, false, true);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(25));
     ResultSet<Fact> result = handler.search(criteria, null);
@@ -123,20 +104,13 @@ public class FactSearchHandlerTest {
     assertEquals(3, result.getCount());
     assertEquals(2, ListUtils.list(result.iterator()).size());
 
-    verify(factSearchManager).searchFacts(criteria);
-    verify(factManager).getFacts(argThat(i -> i.size() == 3));
-    verify(securityContext, times(3)).hasReadPermission(factEntity);
-    verify(factConverter, times(2)).apply(factEntity);
+    verify(securityContext, times(3)).hasReadPermission(isA(FactRecord.class));
+    verify(factConverter, times(2)).apply(isA(FactRecord.class));
   }
 
   @Test
   public void testSearchFactsFetchesUntilLimit() {
-    when(factSearchManager.searchFacts(any())).thenReturn(ScrollingSearchResult.<FactDocument>builder()
-            .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_SCROLL_ID",
-                    Iterators.cycle(factDocument), true))
-            .setCount(100)
-            .build());
-    when(factManager.getFacts(any())).then(i -> Iterators.limit(Iterators.cycle(factEntity), 5));
+    mockSearch(100);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(25));
     ResultSet<Fact> result = handler.search(criteria, null);
@@ -145,68 +119,69 @@ public class FactSearchHandlerTest {
     assertEquals(100, result.getCount());
     assertEquals(25, ListUtils.list(result.iterator()).size());
 
-    verify(factSearchManager).searchFacts(criteria);
-    verify(factManager, times(5)).getFacts(argThat(i -> i.contains(factID)));
-    verify(securityContext, times(25)).hasReadPermission(factEntity);
-    verify(factConverter, times(25)).apply(factEntity);
+    verify(securityContext, times(25)).hasReadPermission(isA(FactRecord.class));
+    verify(factConverter, times(25)).apply(isA(FactRecord.class));
   }
 
   @Test
   public void testSearchFactsIncludeRetracted() {
-    factDocument.setRetracted(true);
+    FactRecord fact = new FactRecord().addFlag(FactRecord.Flag.RetractedHint);
 
-    mockSimpleSearch();
-    when(retractionHandler.isRetracted(factID, true)).thenReturn(true);
+    mockSearch(fact);
+    when(retractionHandler.isRetracted(fact.getId(), true)).thenReturn(true);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
-    ListUtils.list(handler.search(criteria, true).iterator());
+    ResultSet<Fact> result = handler.search(criteria, true);
 
-    verify(factManager).getFacts(argThat(i -> i.contains(factDocument.getId())));
-    verify(retractionHandler).isRetracted(factID, true);
+    assertEquals(1, ListUtils.list(result.iterator()).size());
+    verify(retractionHandler).isRetracted(fact.getId(), true);
   }
 
   @Test
   public void testSearchFactsExcludeRetractedNotRetracted() {
-    factDocument.setRetracted(false);
+    FactRecord fact = new FactRecord();
 
-    mockSimpleSearch();
-    when(retractionHandler.isRetracted(factID, false)).thenReturn(false);
+    mockSearch(fact);
+    when(retractionHandler.isRetracted(fact.getId(), false)).thenReturn(false);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
-    ListUtils.list(handler.search(criteria, false).iterator());
+    ResultSet<Fact> result = handler.search(criteria, false);
 
-    verify(factManager).getFacts(argThat(i -> i.contains(factDocument.getId())));
-    verify(retractionHandler).isRetracted(factID, false);
+    assertEquals(1, ListUtils.list(result.iterator()).size());
+    verify(retractionHandler).isRetracted(fact.getId(), false);
   }
 
   @Test
   public void testSearchFactsExcludeRetracted() {
-    factDocument.setRetracted(true);
+    FactRecord fact = new FactRecord().addFlag(FactRecord.Flag.RetractedHint);
 
-    mockSimpleSearch();
-    when(retractionHandler.isRetracted(factID, true)).thenReturn(true);
+    mockSearch(fact);
+    when(retractionHandler.isRetracted(fact.getId(), true)).thenReturn(true);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
-    ListUtils.list(handler.search(criteria, false).iterator());
+    ResultSet<Fact> result = handler.search(criteria, false);
 
-    verify(factManager, atLeastOnce()).getFacts(argThat(i -> !i.contains(factDocument.getId())));
-    verify(retractionHandler).isRetracted(factID, true);
+    assertEquals(0, ListUtils.list(result.iterator()).size());
+    verify(retractionHandler).isRetracted(fact.getId(), true);
   }
 
-  private void mockSimpleSearch() {
-    when(factSearchManager.searchFacts(any())).thenReturn(ScrollingSearchResult.<FactDocument>builder()
-            .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_SCROLL_ID",
-                    Collections.singleton(factDocument).iterator(), true))
-            .setCount(100)
+  private void mockSearch(int count) {
+    List<FactRecord> records = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      records.add(new FactRecord());
+    }
+
+    when(objectFactDao.searchFacts(notNull())).thenReturn(ResultContainer.<FactRecord>builder()
+            .setCount(count)
+            .setValues(records.iterator())
             .build());
-    when(factManager.getFacts(any())).thenReturn(Collections.singleton(factEntity).iterator());
   }
 
-  private ScrollingSearchResult<FactDocument> createSearchResult(FactDocument... fact) {
-    return ScrollingSearchResult.<FactDocument>builder()
-            .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_SCROLL_ID", ListUtils.list(fact).iterator(), true))
-            .setCount(ListUtils.list(fact).size())
-            .build();
+  private void mockSearch(FactRecord fact) {
+    when(objectFactDao.searchFacts(notNull())).thenReturn(ResultContainer.<FactRecord>builder()
+            .setCount(1)
+            .setValues(ListUtils.list(fact).iterator())
+            .build());
   }
 
   private FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {

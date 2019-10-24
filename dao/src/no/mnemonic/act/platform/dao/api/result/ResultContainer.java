@@ -4,6 +4,8 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * General container holding search results. It is backed by an {@link Iterator} in order to support streaming
@@ -29,6 +31,15 @@ public class ResultContainer<T> implements Iterable<T>, Iterator<T> {
    */
   public int getCount() {
     return count;
+  }
+
+  /**
+   * Return the search results from the underlying {@link Iterator} as a {@link Stream}.
+   *
+   * @return Stream of search results
+   */
+  public Stream<T> stream() {
+    return StreamSupport.stream(spliterator(), false);
   }
 
   @Override

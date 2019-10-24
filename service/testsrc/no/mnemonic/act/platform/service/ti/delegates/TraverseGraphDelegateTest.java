@@ -9,8 +9,13 @@ import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.ObjectRecordConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -23,13 +28,18 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class TraverseGraphDelegateTest extends AbstractDelegateTest {
 
   @Mock
+  private ObjectFactDao objectFactDao;
+  @Mock
   private ObjectSearchDelegate objectSearch;
+  @Mock
+  private ObjectRecordConverter objectConverter;
+  @Mock
+  private FactRecordConverter factConverter;
 
   private TraverseGraphDelegate delegate;
 
@@ -67,11 +77,12 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     // initMocks() will be called by base class.
     delegate = new TraverseGraphDelegate(
             getSecurityContext(),
+            objectFactDao,
             getObjectManager(),
             getFactManager(),
             objectSearch,
-            getObjectConverter(),
-            getFactConverter()
+            objectConverter,
+            factConverter
     ).setScriptExecutionTimeout(2000);
   }
 
@@ -84,14 +95,13 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   @Test
   public void testTraverseGraphByObjectIdWithoutObject() throws Exception {
     TraverseByObjectIdRequest request = new TraverseByObjectIdRequest().setId(UUID.randomUUID());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
-      verify(getObjectManager()).getObject(request.getId());
-      verifyNoMoreInteractions(getObjectManager());
+      verify(objectFactDao).getObject(request.getId());
     }
   }
 
@@ -140,7 +150,6 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
       fail();
     } catch (InvalidArgumentException ignored) {
       verify(getObjectManager()).getObjectType(request.getType());
-      verifyNoMoreInteractions(getObjectManager());
     }
   }
 
@@ -148,15 +157,14 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   public void testTraverseGraphByObjectTypeValueWithoutObject() throws Exception {
     TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest().setType("type").setValue("value");
     when(getObjectManager().getObjectType(request.getType())).thenReturn(new ObjectTypeEntity());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
       verify(getObjectManager()).getObjectType(request.getType());
-      verify(getObjectManager()).getObject(request.getType(), request.getValue());
-      verifyNoMoreInteractions(getObjectManager());
+      verify(objectFactDao).getObject(request.getType(), request.getValue());
     }
   }
 
@@ -236,72 +244,77 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   }
 
   private void testTraverseGraphReturnEdges(TestMethod method) throws Exception {
-    ObjectEntity startObject = mockFullTraversal();
+    ObjectRecord startObject = mockFullTraversal();
     List<?> result = ListUtils.list(method.execute(startObject, "g.outE()").iterator());
     assertEquals(1, result.size());
     assertTrue(result.get(0) instanceof Fact);
     // SecurityContext should be called twice, once during graph traversal and once when creating result.
-    verify(getSecurityContext(), times(2)).hasReadPermission(isA(FactEntity.class));
+    verify(getSecurityContext()).hasReadPermission(isA(FactEntity.class));
+    verify(getSecurityContext()).hasReadPermission(isA(FactRecord.class));
   }
 
   private void testTraverseGraphReturnVertices(TestMethod method) throws Exception {
-    ObjectEntity startObject = mockFullTraversal();
+    ObjectRecord startObject = mockFullTraversal();
     List<?> result = ListUtils.list(method.execute(startObject, "g.out()").iterator());
     assertEquals(1, result.size());
     assertTrue(result.get(0) instanceof Object);
   }
 
   private void testTraverseGraphReturnValue(TestMethod method) throws Exception {
-    ObjectEntity startObject = mockFullTraversal();
+    ObjectRecord startObject = mockFullTraversal();
     List<?> result = ListUtils.list(method.execute(startObject, "g.values('value')").iterator());
     assertEquals(1, result.size());
     assertEquals(startObject.getValue(), result.get(0));
   }
 
   private void testTraverseGraphReturnError(TestMethod method) throws Exception {
-    ObjectEntity startObject = mockFullTraversal();
+    ObjectRecord startObject = mockFullTraversal();
     method.execute(startObject, "g.addE('notAllowed')");
   }
 
   private void testTraverseGraphSandboxed(TestMethod method) throws Exception {
-    ObjectEntity startObject = mockFullTraversal();
+    ObjectRecord startObject = mockFullTraversal();
     method.execute(startObject, "System.exit(0)");
   }
 
   private void testTraverseGraphTimeout(TestMethod method) throws Exception {
-    ObjectEntity startObject = mockFullTraversal();
+    ObjectRecord startObject = mockFullTraversal();
     method.execute(startObject, "while (true) {}");
   }
 
-  private ObjectEntity mockFullTraversal() {
+  private ObjectRecord mockFullTraversal() {
     when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(true);
+    when(getSecurityContext().hasReadPermission(isA(FactRecord.class))).thenReturn(true);
 
-    ObjectEntity otherObject = mockFetchObject();
+    ObjectRecord otherObject = mockFetchObject();
     FactEntity fact = mockFetchFact(otherObject);
 
     return mockFetchObject(fact);
   }
 
-  private ObjectEntity mockFetchObject() {
+  private ObjectRecord mockFetchObject() {
     ObjectTypeEntity objectType = new ObjectTypeEntity()
             .setId(UUID.randomUUID())
             .setName("objectType");
     when(getObjectManager().getObjectType(objectType.getId())).thenReturn(objectType);
     when(getObjectManager().getObjectType(objectType.getName())).thenReturn(objectType);
 
-    ObjectEntity object = new ObjectEntity()
+    ObjectEntity entity = new ObjectEntity()
             .setId(UUID.randomUUID())
             .setTypeID(objectType.getId())
             .setValue("objectValue");
-    when(getObjectManager().getObject(object.getId())).thenReturn(object);
-    when(getObjectManager().getObject(objectType.getName(), object.getValue())).thenReturn(object);
-    when(getObjectConverter().apply(object)).thenReturn(Object.builder().setId(object.getId()).build());
+    ObjectRecord record = toRecord(entity);
+    when(getObjectManager().getObject(entity.getId())).thenReturn(entity);
+    when(getObjectManager().getObject(objectType.getName(), entity.getValue())).thenReturn(entity);
+    when(objectFactDao.getObject(entity.getId())).thenReturn(record);
+    when(objectFactDao.getObject(objectType.getName(), entity.getValue())).thenReturn(record);
+    when(objectConverter.apply(record)).thenReturn(Object.builder().setId(entity.getId()).build());
 
-    return object;
+    return record;
   }
 
-  private ObjectEntity mockFetchObject(FactEntity fact) {
-    ObjectEntity object = mockFetchObject();
+  private ObjectRecord mockFetchObject(FactEntity fact) {
+    ObjectRecord object = mockFetchObject();
 
     when(getObjectManager().fetchObjectFactBindings(object.getId())).thenReturn(ListUtils.list(
             new ObjectFactBindingEntity()
@@ -319,17 +332,19 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
             .setName("factType");
     when(getFactManager().getFactType(factType.getId())).thenReturn(factType);
 
-    FactEntity fact = new FactEntity()
+    FactEntity entity = new FactEntity()
             .setId(UUID.randomUUID())
             .setTypeID(factType.getId())
             .setValue("factValue");
-    when(getFactManager().getFact(fact.getId())).thenReturn(fact);
-    when(getFactConverter().apply(any())).thenReturn(Fact.builder().setId(fact.getId()).build());
+    FactRecord record = toRecord(entity);
+    when(getFactManager().getFact(entity.getId())).thenReturn(entity);
+    when(objectFactDao.getFact(entity.getId())).thenReturn(record);
+    when(factConverter.apply(record)).thenReturn(Fact.builder().setId(entity.getId()).build());
 
-    return fact;
+    return entity;
   }
 
-  private FactEntity mockFetchFact(ObjectEntity object) {
+  private FactEntity mockFetchFact(ObjectRecord object) {
     return mockFetchFact().setBindings(
             ListUtils.list(new FactEntity.FactObjectBinding()
                     .setObjectID(object.getId())
@@ -337,7 +352,21 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     );
   }
 
+  private ObjectRecord toRecord(ObjectEntity entity) {
+    return new ObjectRecord()
+            .setId(entity.getId())
+            .setTypeID(entity.getTypeID())
+            .setValue(entity.getValue());
+  }
+
+  private FactRecord toRecord(FactEntity entity) {
+    return new FactRecord()
+            .setId(entity.getId())
+            .setTypeID(entity.getTypeID())
+            .setValue(entity.getValue());
+  }
+
   private interface TestMethod {
-    ResultSet<?> execute(ObjectEntity object, String query) throws Exception;
+    ResultSet<?> execute(ObjectRecord object, String query) throws Exception;
   }
 }

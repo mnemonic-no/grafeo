@@ -4,21 +4,23 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.OperationTimeoutException;
-import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseByObjectTypeValueRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
 import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.ObjectRecordConverter;
 import no.mnemonic.act.platform.service.ti.helpers.GremlinSandboxExtension;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
@@ -35,7 +37,6 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
@@ -45,11 +46,12 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
   private static final long SCRIPT_EXECUTION_TIMEOUT = 120_000;
 
   private final TiSecurityContext securityContext;
+  private final ObjectFactDao objectFactDao;
   private final ObjectManager objectManager;
   private final FactManager factManager;
   private final ObjectSearchDelegate objectSearch;
-  private final Function<ObjectEntity, Object> objectConverter;
-  private final Function<FactEntity, Fact> factConverter;
+  private final ObjectRecordConverter objectConverter;
+  private final FactRecordConverter factConverter;
 
   private final Collection<java.lang.Object> traversalResult = new ArrayList<>();
 
@@ -57,12 +59,14 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
 
   @Inject
   public TraverseGraphDelegate(TiSecurityContext securityContext,
+                               ObjectFactDao objectFactDao,
                                ObjectManager objectManager,
                                FactManager factManager,
                                ObjectSearchDelegate objectSearch,
-                               Function<ObjectEntity, Object> objectConverter,
-                               Function<FactEntity, Fact> factConverter) {
+                               ObjectRecordConverter objectConverter,
+                               FactRecordConverter factConverter) {
     this.securityContext = securityContext;
+    this.objectFactDao = objectFactDao;
     this.objectManager = objectManager;
     this.factManager = factManager;
     this.objectSearch = objectSearch;
@@ -74,7 +78,7 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
 
-    return handle(objectManager.getObject(request.getId()), request.getQuery());
+    return handle(objectFactDao.getObject(request.getId()), request.getQuery());
   }
 
   public ResultSet<?> handle(TraverseByObjectTypeValueRequest request)
@@ -82,7 +86,7 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
     securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
     assertObjectTypeExists(request.getType(), "type");
 
-    return handle(objectManager.getObject(request.getType(), request.getValue()), request.getQuery());
+    return handle(objectFactDao.getObject(request.getType(), request.getValue()), request.getQuery());
   }
 
   public ResultSet<?> handle(TraverseByObjectSearchRequest request)
@@ -112,7 +116,7 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
     return this;
   }
 
-  private ResultSet<?> handle(ObjectEntity startingObject, String query)
+  private ResultSet<?> handle(ObjectRecord startingObject, String query)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     // Verify that user has access to starting point of graph traversal.
     securityContext.checkReadPermission(startingObject);
@@ -160,15 +164,15 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
     // Iterate result and convert values if necessary. This will perform the actual graph traversal.
     resultIterator.forEachRemaining(value -> {
       if (value instanceof ObjectVertex) {
-        // Fetch ObjectEntity and convert to Object model before adding to result. Avoid explicitly checking access to
+        // Fetch ObjectRecord and convert to Object model before adding to result. Avoid explicitly checking access to
         // Object and rely on access control implemented in graph traversal only. Checking this would be too expensive
         // because it requires fetching Facts for each Object. In addition, accidentally returning non-accessible
         // Objects will only leak the information that the Object exists and will not give further access to any Facts.
-        ObjectEntity object = ObjectVertex.class.cast(value).getObject();
+        ObjectRecord object = objectFactDao.getObject(ObjectVertex.class.cast(value).getObject().getId());
         traversalResult.add(objectConverter.apply(object));
       } else if (value instanceof FactEdge) {
-        // Fetch FactEntity and convert to Fact model before adding to result.
-        FactEntity fact = FactEdge.class.cast(value).getFact();
+        // Fetch FactRecord and convert to Fact model before adding to result.
+        FactRecord fact = objectFactDao.getFact(FactEdge.class.cast(value).getFact().getId());
         // But only add it if user has access to the Fact. Skip Fact otherwise.
         if (securityContext.hasReadPermission(fact)) {
           traversalResult.add(factConverter.apply(fact));

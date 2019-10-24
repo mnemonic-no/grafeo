@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
@@ -40,6 +41,8 @@ public class ThreatIntelligenceServiceImplTest {
   @Mock
   private FactSearchManager factSearchManager;
   @Mock
+  private ObjectFactDao objectFactDao;
+  @Mock
   private ValidatorFactory validatorFactory;
   @Mock
   private DelegateProvider delegateProvider;
@@ -57,6 +60,7 @@ public class ThreatIntelligenceServiceImplTest {
             factManager,
             objectManager,
             factSearchManager,
+            objectFactDao,
             validatorFactory,
             delegateProvider
     );

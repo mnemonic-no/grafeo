@@ -5,9 +5,9 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
@@ -20,17 +20,17 @@ import javax.inject.Inject;
 public class ObjectSearchFactsDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final ObjectManager objectManager;
+  private final ObjectFactDao objectFactDao;
   private final SearchObjectFactsRequestConverter requestConverter;
   private final FactSearchHandler factSearchHandler;
 
   @Inject
   public ObjectSearchFactsDelegate(TiSecurityContext securityContext,
-                                   ObjectManager objectManager,
+                                   ObjectFactDao objectFactDao,
                                    SearchObjectFactsRequestConverter requestConverter,
                                    FactSearchHandler factSearchHandler) {
     this.securityContext = securityContext;
-    this.objectManager = objectManager;
+    this.objectFactDao = objectFactDao;
     this.requestConverter = requestConverter;
     this.factSearchHandler = factSearchHandler;
   }
@@ -40,7 +40,7 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate implements Deleg
     securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
     assertRequest(request);
     // Resolve Object based on parameters set in request.
-    ObjectEntity object = resolveObject(request);
+    ObjectRecord object = resolveObject(request);
     // Check access to Object. This will throw an AccessDeniedException if Object doesn't exist.
     securityContext.checkReadPermission(object);
     // Search for Facts bound to the resolved Object.
@@ -59,19 +59,19 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate implements Deleg
     }
   }
 
-  private ObjectEntity resolveObject(SearchObjectFactsRequest request) {
-    ObjectEntity object;
+  private ObjectRecord resolveObject(SearchObjectFactsRequest request) {
+    ObjectRecord object;
 
     if (request.getObjectID() != null) {
-      object = objectManager.getObject(request.getObjectID());
+      object = objectFactDao.getObject(request.getObjectID());
     } else {
-      object = objectManager.getObject(request.getObjectType(), request.getObjectValue());
+      object = objectFactDao.getObject(request.getObjectType(), request.getObjectValue());
     }
 
     return object;
   }
 
-  private FactSearchCriteria toCriteria(SearchObjectFactsRequest request, ObjectEntity object) throws InvalidArgumentException {
+  private FactSearchCriteria toCriteria(SearchObjectFactsRequest request, ObjectRecord object) throws InvalidArgumentException {
     // Make sure to only search by the ID of the resolved Object.
     request = request.setObjectID(object.getId())
             .setObjectType(null)
