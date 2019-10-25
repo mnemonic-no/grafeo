@@ -6,6 +6,11 @@ import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.auth.AccessController;
@@ -44,6 +49,8 @@ public class TiSecurityContextTest {
   @Mock
   private OrganizationIdentity organization;
   @Mock
+  private ObjectFactDao objectFactDao;
+  @Mock
   private Function<UUID, List<FactAclEntity>> aclResolver;
   @Mock
   private Function<UUID, Iterator<FactEntity>> factsBoundToObjectResolver;
@@ -56,6 +63,20 @@ public class TiSecurityContextTest {
     when(identityResolver.resolveOrganizationIdentity(any())).thenReturn(organization);
 
     context = TiSecurityContext.builder()
+            .setAccessController(accessController)
+            .setIdentityResolver(identityResolver)
+            .setOrganizationResolver(organizationResolver)
+            .setSubjectResolver(subjectResolver)
+            .setCredentials(credentials)
+            .setObjectFactDao(objectFactDao)
+            .setAclResolver(aclResolver)
+            .setFactsBoundToObjectResolver(factsBoundToObjectResolver)
+            .build();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testCreateContextWithoutObjectFactDaoThrowsException() {
+    TiSecurityContext.builder()
             .setAccessController(accessController)
             .setIdentityResolver(identityResolver)
             .setOrganizationResolver(organizationResolver)
@@ -74,6 +95,7 @@ public class TiSecurityContextTest {
             .setOrganizationResolver(organizationResolver)
             .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
+            .setObjectFactDao(objectFactDao)
             .setFactsBoundToObjectResolver(factsBoundToObjectResolver)
             .build();
   }
@@ -86,6 +108,7 @@ public class TiSecurityContextTest {
             .setOrganizationResolver(organizationResolver)
             .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
+            .setObjectFactDao(objectFactDao)
             .setAclResolver(aclResolver)
             .build();
   }
@@ -125,8 +148,7 @@ public class TiSecurityContextTest {
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
-    UUID currentUserID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    when(subjectResolver.resolveCurrentUser(any())).thenReturn(Subject.builder().setId(currentUserID).build());
+    UUID currentUserID = mockCurrentUser();
     when(aclResolver.apply(any())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(currentUserID)));
 
     context.checkReadPermission(fact);
@@ -149,8 +171,7 @@ public class TiSecurityContextTest {
     FactEntity fact = new FactEntity()
             .setId(UUID.randomUUID())
             .setAccessMode(AccessMode.Explicit);
-    UUID currentUserID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    when(subjectResolver.resolveCurrentUser(any())).thenReturn(Subject.builder().setId(currentUserID).build());
+    UUID currentUserID = mockCurrentUser();
     when(aclResolver.apply(any())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(currentUserID)));
 
     context.checkReadPermission(fact);
@@ -190,6 +211,100 @@ public class TiSecurityContextTest {
   public void testHasReadPermissionReturnsFalseOnNoAccess() throws Exception {
     when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false);
     assertFalse(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForFactRecordWithoutFact() throws Exception {
+    context.checkReadPermission((FactRecord) null);
+  }
+
+  @Test
+  public void testCheckReadPermissionForFactRecordWithAccessModePublic() throws Exception {
+    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(true);
+    context.checkReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public));
+    verify(accessController).hasPermission(credentials, viewFactObjects);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForFactRecordWithAccessModePublicNoAccess() throws Exception {
+    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false);
+    context.checkReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public));
+  }
+
+  @Test
+  public void testCheckReadPermissionForFactRecordWithAccessModeRoleBased() throws Exception {
+    FactRecord fact = new FactRecord()
+            .setOrganizationID(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.RoleBased);
+
+    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(true);
+    context.checkReadPermission(fact);
+    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
+  }
+
+  @Test
+  public void testCheckReadPermissionForFactRecordWithAccessModeRoleBasedUserInAcl() throws Exception {
+    FactRecord fact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setOrganizationID(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.RoleBased)
+            .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUser()));
+
+    context.checkReadPermission(fact);
+    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForFactRecordWithAccessModeRoleBasedNoAccess() throws Exception {
+    FactRecord fact = new FactRecord()
+            .setOrganizationID(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.RoleBased);
+
+    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(false);
+    context.checkReadPermission(fact);
+  }
+
+  @Test
+  public void testCheckReadPermissionForFactRecordWithAccessModeExplicit() throws Exception {
+    FactRecord fact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.Explicit)
+            .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUser()));
+
+    context.checkReadPermission(fact);
+    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForFactRecordWithAccessModeExplicitNoAccess() throws Exception {
+    FactRecord fact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.Explicit);
+
+    context.checkReadPermission(fact);
+  }
+
+  @Test
+  public void testCheckReadPermissionForFactRecordFallbackToRoleBased() throws Exception {
+    FactRecord fact = new FactRecord()
+            .setOrganizationID(UUID.randomUUID())
+            .setAccessMode(null);
+
+    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(true);
+    context.checkReadPermission(fact);
+    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
+  }
+
+  @Test
+  public void testHasReadPermissionForFactRecordReturnsTrueOnAccess() throws Exception {
+    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(true);
+    assertTrue(context.hasReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public)));
+  }
+
+  @Test
+  public void testHasReadPermissionForFactRecordReturnsFalseOnNoAccess() throws Exception {
+    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false);
+    assertFalse(context.hasReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public)));
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -236,6 +351,59 @@ public class TiSecurityContextTest {
   @Test
   public void testHasReadPermissionForObjectReturnsFalseOnNoAccess() throws Exception {
     ObjectEntity object = mockCheckPermissionForObject(false);
+    assertFalse(context.hasReadPermission(object));
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForObjectRecordWithoutObject() throws Exception {
+    context.checkReadPermission((ObjectRecord) null);
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForObjectRecordWithoutBoundFact() throws Exception {
+    mockCurrentUser();
+    mockAvailableOrganization();
+    when(objectFactDao.searchFacts(notNull())).thenReturn(ResultContainer.<FactRecord>builder().build());
+
+    context.checkReadPermission(new ObjectRecord().setId(UUID.randomUUID()));
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testCheckReadPermissionForObjectRecordWithoutAccessToFact() throws Exception {
+    ObjectRecord object = mockCheckPermissionForObjectRecord(false);
+    context.checkReadPermission(object);
+  }
+
+  @Test
+  public void testCheckReadPermissionForObjectRecordWithAccessToFact() throws Exception {
+    ObjectRecord object = mockCheckPermissionForObjectRecord(true);
+    context.checkReadPermission(object);
+    verify(accessController).hasPermission(credentials, viewFactObjects);
+  }
+
+  @Test
+  public void testCheckReadPermissionForObjectRecordWithAccessToSecondFact() throws Exception {
+    FactRecord fact = new FactRecord().setAccessMode(FactRecord.AccessMode.Public);
+
+    mockCurrentUser();
+    mockAvailableOrganization();
+    when(objectFactDao.searchFacts(notNull()))
+            .thenReturn(ResultContainer.<FactRecord>builder().setValues(ListUtils.list(fact, fact, fact).iterator()).build());
+    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false, true, false);
+
+    context.checkReadPermission(new ObjectRecord().setId(UUID.randomUUID()));
+    verify(accessController, times(2)).hasPermission(credentials, viewFactObjects);
+  }
+
+  @Test
+  public void testHasReadPermissionForObjectRecordReturnsTrueOnAccess() throws Exception {
+    ObjectRecord object = mockCheckPermissionForObjectRecord(true);
+    assertTrue(context.hasReadPermission(object));
+  }
+
+  @Test
+  public void testHasReadPermissionForObjectRecordReturnsFalseOnNoAccess() throws Exception {
+    ObjectRecord object = mockCheckPermissionForObjectRecord(false);
     assertFalse(context.hasReadPermission(object));
   }
 
@@ -295,14 +463,14 @@ public class TiSecurityContextTest {
 
   @Test
   public void testCheckReadPermissionForOrganizationWithAccess() throws Exception {
-    Organization org = mockCheckPermissionForOrganization();
+    Organization org = mockAvailableOrganization();
     context.checkReadPermission(org);
     verify(accessController).getAvailableOrganizations(credentials);
   }
 
   @Test
   public void testHasReadPermissionForOrganizationReturnsTrueOnAccess() throws Exception {
-    Organization org = mockCheckPermissionForOrganization();
+    Organization org = mockAvailableOrganization();
     assertTrue(context.hasReadPermission(org));
   }
 
@@ -320,7 +488,28 @@ public class TiSecurityContextTest {
     return object;
   }
 
-  private Organization mockCheckPermissionForOrganization() throws Exception {
+  private ObjectRecord mockCheckPermissionForObjectRecord(boolean result) throws Exception {
+    ObjectRecord object = new ObjectRecord().setId(UUID.randomUUID());
+    FactRecord fact = new FactRecord().setAccessMode(FactRecord.AccessMode.Public);
+
+    // Mock search for bound Facts.
+    mockCurrentUser();
+    mockAvailableOrganization();
+    when(objectFactDao.searchFacts(notNull()))
+            .thenReturn(ResultContainer.<FactRecord>builder().setValues(ListUtils.list(fact).iterator()).build());
+    // Mock access to bound Facts.
+    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(result);
+
+    return object;
+  }
+
+  private UUID mockCurrentUser() throws Exception {
+    UUID currentUserID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    when(subjectResolver.resolveCurrentUser(any())).thenReturn(Subject.builder().setId(currentUserID).build());
+    return currentUserID;
+  }
+
+  private Organization mockAvailableOrganization() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(accessController.getAvailableOrganizations(credentials)).thenReturn(Collections.singleton(organization));
     when(identityResolver.resolveOrganizationUUID(organization)).thenReturn(organizationID);

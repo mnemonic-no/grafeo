@@ -5,8 +5,9 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectFactsRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.*;
 public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
   @Mock
+  private ObjectFactDao objectFactDao;
+  @Mock
   private FactSearchHandler factSearchHandler;
   @Mock
   private SearchObjectFactsRequestConverter requestConverter;
@@ -35,7 +38,7 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   @Before
   public void setup() {
     // initMocks() will be called by base class.
-    delegate = new ObjectSearchFactsDelegate(getSecurityContext(), getObjectManager(), requestConverter, factSearchHandler);
+    delegate = new ObjectSearchFactsDelegate(getSecurityContext(), objectFactDao, requestConverter, factSearchHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -58,21 +61,19 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
       fail();
     } catch (InvalidArgumentException ignored) {
       verify(getObjectManager()).getObjectType(request.getObjectType());
-      verifyNoMoreInteractions(getObjectManager());
     }
   }
 
   @Test
   public void testSearchObjectFactsByNonExistingId() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(UUID.randomUUID());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
-      verify(getObjectManager()).getObject(request.getObjectID());
-      verifyNoMoreInteractions(getObjectManager());
+      verify(objectFactDao).getObject(request.getObjectID());
     }
   }
 
@@ -80,15 +81,14 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   public void testSearchObjectFactsByNonExistingTypeValue() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
     when(getObjectManager().getObjectType(request.getObjectType())).thenReturn(new ObjectTypeEntity());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectEntity) isNull());
+    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
       verify(getObjectManager()).getObjectType(request.getObjectType());
-      verify(getObjectManager()).getObject(request.getObjectType(), request.getObjectValue());
-      verifyNoMoreInteractions(getObjectManager());
+      verify(objectFactDao).getObject(request.getObjectType(), request.getObjectValue());
     }
   }
 
@@ -145,13 +145,13 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
     verify(requestConverter).apply(isNotNull());
     verify(factSearchHandler).search(isNotNull(), eq(request.getIncludeRetracted()));
-    verify(getSecurityContext()).checkReadPermission(isA(ObjectEntity.class));
+    verify(getSecurityContext()).checkReadPermission(isA(ObjectRecord.class));
   }
 
   private void mockSearchObjectFacts() throws Exception {
     when(getObjectManager().getObjectType(isA(String.class))).thenReturn(new ObjectTypeEntity());
-    when(getObjectManager().getObject(any())).thenReturn(new ObjectEntity().setId(UUID.randomUUID()));
-    when(getObjectManager().getObject(any(), any())).thenReturn(new ObjectEntity().setId(UUID.randomUUID()));
+    when(objectFactDao.getObject(any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
+    when(objectFactDao.getObject(any(), any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
 
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setCurrentUserID(UUID.randomUUID())

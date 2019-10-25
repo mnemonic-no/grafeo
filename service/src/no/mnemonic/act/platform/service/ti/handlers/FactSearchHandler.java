@@ -1,23 +1,19 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
-import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.utilities.FactsFetchingIterator;
+import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
 import java.util.Iterator;
-import java.util.UUID;
-import java.util.function.Function;
 
 /**
  * Handler class implementing search for Facts.
@@ -27,20 +23,17 @@ public class FactSearchHandler {
   private static final int MAXIMUM_SEARCH_LIMIT = 10_000;
 
   private final FactRetractionHandler retractionHandler;
-  private final FactSearchManager factSearchManager;
-  private final FactManager factManager;
+  private final ObjectFactDao objectFactDao;
   private final TiSecurityContext securityContext;
-  private final Function<FactEntity, Fact> factConverter;
+  private final FactRecordConverter factConverter;
 
   @Inject
   public FactSearchHandler(FactRetractionHandler retractionHandler,
-                           FactSearchManager factSearchManager,
-                           FactManager factManager,
+                           ObjectFactDao objectFactDao,
                            TiSecurityContext securityContext,
-                           Function<FactEntity, Fact> factConverter) {
+                           FactRecordConverter factConverter) {
     this.retractionHandler = retractionHandler;
-    this.factSearchManager = factSearchManager;
-    this.factManager = factManager;
+    this.objectFactDao = objectFactDao;
     this.securityContext = securityContext;
     this.factConverter = factConverter;
   }
@@ -57,18 +50,12 @@ public class FactSearchHandler {
     // Restrict the number of results returned from search. Right now everything above MAXIMUM_SEARCH_LIMIT will put too
     // much load onto the application and will be very slow. Implements same logic as previously done in ElasticSearch.
     int limit = criteria.getLimit() > 0 && criteria.getLimit() < MAXIMUM_SEARCH_LIMIT ? criteria.getLimit() : MAXIMUM_SEARCH_LIMIT;
+    ResultContainer<FactRecord> searchResult = objectFactDao.searchFacts(criteria);
 
-    // Search for Facts in ElasticSearch, stream out documents and pick out all Fact IDs.
-    // Also, apply filter to include or exclude retracted Fact.
-    ScrollingSearchResult<FactDocument> searchResult = factSearchManager.searchFacts(criteria);
-    Iterator<UUID> factID = Streams.stream(searchResult)
+    // When consuming the search result apply filter to include or exclude retracted Facts.
+    // Additionally, make sure that the user has access to all returned Facts.
+    Iterator<Fact> facts = searchResult.stream()
             .filter(fact -> includeRetracted(fact, includeRetracted))
-            .map(FactDocument::getId)
-            .iterator();
-
-    // Use the Fact IDs to look up the authoritative data in Cassandra, and make sure that user has access to all
-    // returned Facts. Facts are fetched batch-wise from Cassandra while iterating over the result from ElasticSearch.
-    Iterator<Fact> facts = Streams.stream(new FactsFetchingIterator(factManager, factID))
             .filter(securityContext::hasReadPermission)
             .map(factConverter)
             .limit(limit)
@@ -84,12 +71,11 @@ public class FactSearchHandler {
             .build();
   }
 
-  private boolean includeRetracted(FactDocument fact, Boolean includeRetracted) {
-    // Call FactRetractionHandler for every Fact in order to populate the cache which is re-used by the FactConverter.
-    // On FactDocument it's stored whether a Fact has ever been retracted. Populating the cache with this information
-    // here saves a lot of calls to ElasticSearch by the FactConverter which doesn't have the same information (as it's
-    // not stored on FactEntity).
-    boolean isRetracted = retractionHandler.isRetracted(fact.getId(), fact.isRetracted());
+  private boolean includeRetracted(FactRecord fact, Boolean includeRetracted) {
+    // Call FactRetractionHandler for every Fact in order to populate the cache which is re-used by the converter.
+    // Because of that, it's only calculated once whether a Fact is retracted from the user's point of view.
+    boolean retractedHint = SetUtils.set(fact.getFlags()).contains(FactRecord.Flag.RetractedHint);
+    boolean isRetracted = retractionHandler.isRetracted(fact.getId(), retractedHint);
     return ObjectUtils.ifNull(includeRetracted, false) || !isRetracted;
   }
 }

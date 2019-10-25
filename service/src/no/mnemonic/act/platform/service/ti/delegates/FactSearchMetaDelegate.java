@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
@@ -18,14 +19,17 @@ public class FactSearchMetaDelegate extends AbstractDelegate implements Delegate
 
   private final TiSecurityContext securityContext;
   private final SearchMetaFactsRequestConverter requestConverter;
+  private final FactResolver factResolver;
   private final FactSearchHandler factSearchHandler;
 
   @Inject
   public FactSearchMetaDelegate(TiSecurityContext securityContext,
                                 SearchMetaFactsRequestConverter requestConverter,
+                                FactResolver factResolver,
                                 FactSearchHandler factSearchHandler) {
     this.securityContext = securityContext;
     this.requestConverter = requestConverter;
+    this.factResolver = factResolver;
     this.factSearchHandler = factSearchHandler;
   }
 
@@ -34,7 +38,7 @@ public class FactSearchMetaDelegate extends AbstractDelegate implements Delegate
     // Verify that user is allowed to view Facts.
     securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
     // Fetch referenced Fact, verify that it exists and that user is allowed to access the Fact.
-    securityContext.checkReadPermission(fetchExistingFact(request.getFact()));
+    securityContext.checkReadPermission(factResolver.resolveFact(request.getFact()));
     // Search for meta Facts bound to the referenced Fact.
     return factSearchHandler.search(requestConverter.apply(request), request.getIncludeRetracted());
   }
