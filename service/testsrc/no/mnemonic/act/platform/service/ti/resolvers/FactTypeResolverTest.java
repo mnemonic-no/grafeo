@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service.ti.resolvers;
 
+import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
@@ -61,6 +62,13 @@ public class FactTypeResolverTest {
   @Test(expected = InvalidArgumentException.class)
   public void testResolveFactTypeByNameThrowsException() throws Exception {
     resolver.resolveFactType("FactType");
+  }
+
+  @Test(expected = AccessDeniedException.class)
+  public void testResolveFactTypeRetractionThrowsException() throws Exception {
+    FactTypeEntity retraction = new FactTypeEntity().setId(RETRACTION_FACT_TYPE_ID);
+    when(factManager.getFactType(retraction.getId())).thenReturn(retraction);
+    resolver.resolveFactType(retraction.getId().toString());
   }
 
   @Test

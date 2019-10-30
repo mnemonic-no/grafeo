@@ -7,34 +7,32 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.MetaFactBindingEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
-import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
+import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class FactRetractDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final TriggerContext triggerContext;
-  private final FactManager factManager;
+  private final ObjectFactDao objectFactDao;
   private final FactTypeResolver factTypeResolver;
+  private final FactResolver factResolver;
   private final FactCreateHelper factCreateHelper;
-  private final FactStorageHelper factStorageHelper;
-  private final Function<FactEntity, Fact> factConverter;
+  private final FactRecordConverter factConverter;
 
   private FactTypeEntity retractionFactType;
   private OriginEntity requestedOrigin;
@@ -43,24 +41,24 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
   @Inject
   public FactRetractDelegate(TiSecurityContext securityContext,
                              TriggerContext triggerContext,
-                             FactManager factManager,
+                             ObjectFactDao objectFactDao,
                              FactTypeResolver factTypeResolver,
+                             FactResolver factResolver,
                              FactCreateHelper factCreateHelper,
-                             FactStorageHelper factStorageHelper,
-                             Function<FactEntity, Fact> factConverter) {
+                             FactRecordConverter factConverter) {
     this.securityContext = securityContext;
     this.triggerContext = triggerContext;
-    this.factManager = factManager;
+    this.objectFactDao = objectFactDao;
     this.factTypeResolver = factTypeResolver;
+    this.factResolver = factResolver;
     this.factCreateHelper = factCreateHelper;
-    this.factStorageHelper = factStorageHelper;
     this.factConverter = factConverter;
   }
 
   public Fact handle(RetractFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Fetch Fact to retract and verify that it exists.
-    FactEntity factToRetract = fetchExistingFact(request.getFact());
+    FactRecord factToRetract = factResolver.resolveFact(request.getFact());
     // Verify that user is allowed to access the Fact to retract.
     securityContext.checkReadPermission(factToRetract);
 
@@ -73,12 +71,8 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
     securityContext.checkPermission(TiFunctionConstants.addFactObjects, requestedOrganization.getId());
 
     // Save everything in database.
-    FactEntity retractionFact = saveRetractionFact(request, factToRetract);
-    List<UUID> subjectsAddedToAcl = factStorageHelper.saveInitialAclForNewFact(retractionFact, request.getAcl());
-    factStorageHelper.saveCommentForFact(retractionFact, request.getComment());
-    // Index everything into ElasticSearch.
-    indexCreatedFact(retractionFact, subjectsAddedToAcl);
-    reindexExistingFact(factToRetract.getId(), d -> d.setRetracted(true));
+    FactRecord retractionFact = saveRetractionFact(request, factToRetract);
+    factToRetract = objectFactDao.retractFact(factToRetract);
 
     // Register TriggerEvent before returning Retraction Fact.
     Fact retractionFactParameter = factConverter.apply(retractionFact);
@@ -88,9 +82,9 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
     return retractionFactParameter;
   }
 
-  private FactEntity saveRetractionFact(RetractFactRequest request, FactEntity factToRetract) throws InvalidArgumentException {
-    FactEntity retractionFact = new FactEntity()
-            .setId(UUID.randomUUID()) // Need to provide client-generated ID.
+  private FactRecord saveRetractionFact(RetractFactRequest request, FactRecord factToRetract) throws InvalidArgumentException {
+    FactRecord retractionFact = new FactRecord()
+            .setId(UUID.randomUUID())
             .setTypeID(retractionFactType.getId())
             .setInReferenceToID(factToRetract.getId())
             .setOrganizationID(requestedOrganization.getId())
@@ -98,18 +92,13 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
             .setOriginID(requestedOrigin.getId())
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), retractionFactType.getDefaultConfidence()))
-            .setAccessMode(resolveAccessMode(factToRetract, request.getAccessMode()))
+            .setAccessMode(factCreateHelper.resolveAccessMode(factToRetract, request.getAccessMode()))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
-    retractionFact = factManager.saveFact(retractionFact);
+    retractionFact = factCreateHelper.withAcl(retractionFact, request.getAcl());
+    retractionFact = factCreateHelper.withComment(retractionFact, request.getComment());
 
-    // Save retraction Fact as a meta Fact of the retracted Fact.
-    factManager.saveMetaFactBinding(new MetaFactBindingEntity()
-            .setFactID(factToRetract.getId())
-            .setMetaFactID(retractionFact.getId())
-    );
-
-    return retractionFact;
+    return objectFactDao.storeFact(retractionFact);
   }
 
   private void registerTriggerEvent(Fact retractionFact, Fact retractedFact) {

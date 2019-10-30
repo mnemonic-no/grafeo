@@ -1,8 +1,9 @@
 package no.mnemonic.act.platform.service.ti.resolvers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -22,6 +23,8 @@ public class ObjectResolverTest {
   @Mock
   private ObjectManager objectManager;
   @Mock
+  private ObjectFactDao objectFactDao;
+  @Mock
   private ValidatorFactory validatorFactory;
 
   private ObjectResolver resolver;
@@ -29,7 +32,7 @@ public class ObjectResolverTest {
   @Before
   public void initialize() {
     initMocks(this);
-    resolver = new ObjectResolver(objectManager, validatorFactory);
+    resolver = new ObjectResolver(objectManager, objectFactDao, validatorFactory);
   }
 
   @Test
@@ -43,30 +46,28 @@ public class ObjectResolverTest {
   @Test
   public void testResolveObjectById() throws Exception {
     UUID id = UUID.randomUUID();
-    ObjectEntity object = new ObjectEntity();
+    ObjectRecord object = new ObjectRecord();
 
-    when(objectManager.getObject(id)).thenReturn(object);
+    when(objectFactDao.getObject(id)).thenReturn(object);
 
     assertSame(object, resolver.resolveObject(id.toString()));
 
-    verify(objectManager).getObject(id);
-    verifyNoMoreInteractions(objectManager);
+    verify(objectFactDao).getObject(id);
   }
 
   @Test
   public void testResolveObjectByTypeValue() throws Exception {
     String type = "ObjectType";
     String value = "ObjectValue";
-    ObjectEntity object = new ObjectEntity();
+    ObjectRecord object = new ObjectRecord();
 
     when(objectManager.getObjectType(type)).thenReturn(new ObjectTypeEntity());
-    when(objectManager.getObject(type, value)).thenReturn(object);
+    when(objectFactDao.getObject(type, value)).thenReturn(object);
 
     assertSame(object, resolver.resolveObject(String.format("%s/%s", type, value)));
 
     verify(objectManager).getObjectType(type);
-    verify(objectManager).getObject(type, value);
-    verifyNoMoreInteractions(objectManager);
+    verify(objectFactDao).getObject(type, value);
   }
 
   @Test
@@ -75,15 +76,12 @@ public class ObjectResolverTest {
     ObjectTypeEntity type = mockFetchObjectType();
     mockValidator(true);
 
-    when(objectManager.saveObject(any())).thenAnswer(i -> i.getArgument(0));
+    when(objectFactDao.storeObject(any())).thenAnswer(i -> i.getArgument(0));
 
-    ObjectEntity resolvedObject = resolver.resolveObject(String.format("%s/%s", type.getName(), value));
-    assertObjectEntity(resolvedObject, type.getId(), value);
+    ObjectRecord resolvedObject = resolver.resolveObject(String.format("%s/%s", type.getName(), value));
+    assertObjectRecord(resolvedObject, type.getId(), value);
 
-    verify(objectManager).saveObject(argThat(e -> {
-      assertObjectEntity(e, type.getId(), value);
-      return true;
-    }));
+    verify(objectFactDao).storeObject(argThat(record -> assertObjectRecord(record, type.getId(), value)));
   }
 
   @Test
@@ -93,7 +91,7 @@ public class ObjectResolverTest {
       fail();
     } catch (InvalidArgumentException ex) {
       assertEquals("object.type.not.exist", ex.getValidationErrors().iterator().next().getMessageTemplate());
-      verify(objectManager, never()).saveObject(any());
+      verify(objectFactDao, never()).storeObject(any());
     }
   }
 
@@ -107,7 +105,7 @@ public class ObjectResolverTest {
       fail();
     } catch (InvalidArgumentException ex) {
       assertEquals("object.not.valid", ex.getValidationErrors().iterator().next().getMessageTemplate());
-      verify(objectManager, never()).saveObject(any());
+      verify(objectFactDao, never()).storeObject(any());
     }
   }
 
@@ -127,10 +125,11 @@ public class ObjectResolverTest {
     return type;
   }
 
-  private void assertObjectEntity(ObjectEntity object, UUID type, String value) {
+  private boolean assertObjectRecord(ObjectRecord object, UUID type, String value) {
     assertNotNull(object.getId());
     assertEquals(type, object.getTypeID());
     assertEquals(value, object.getValue());
+    return true;
   }
 
 }

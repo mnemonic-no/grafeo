@@ -1,10 +1,12 @@
 package no.mnemonic.act.platform.service.ti.resolvers;
 
+import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 
 import javax.inject.Inject;
+import java.util.Objects;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
@@ -29,9 +31,10 @@ public class FactTypeResolver {
    *
    * @param type Type UUID or type name
    * @return Resolved FactTypeEntity
+   * @throws AccessDeniedException    If system-defined Retraction FactType is resolved
    * @throws InvalidArgumentException If FactType cannot be resolved
    */
-  public FactTypeEntity resolveFactType(String type) throws InvalidArgumentException {
+  public FactTypeEntity resolveFactType(String type) throws AccessDeniedException, InvalidArgumentException {
     FactTypeEntity typeEntity;
 
     try {
@@ -43,6 +46,10 @@ public class FactTypeResolver {
 
     if (typeEntity == null) {
       throw new InvalidArgumentException().addValidationError("FactType does not exist.", "fact.type.not.exist", "type", type);
+    }
+
+    if (Objects.equals(typeEntity.getId(), RETRACTION_FACT_TYPE_ID)) {
+      throw new AccessDeniedException("Not allowed to manually use system-defined Retraction FactType. Use /retract endpoint instead.");
     }
 
     return typeEntity;

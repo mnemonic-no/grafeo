@@ -5,15 +5,17 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
-import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
-import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.api.result.ResultContainer;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
-import no.mnemonic.act.platform.service.ti.helpers.FactStorageHelper;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.ObjectResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
@@ -32,13 +34,15 @@ import static org.mockito.Mockito.*;
 public class FactCreateDelegateTest extends AbstractDelegateTest {
 
   @Mock
+  private ObjectFactDao objectFactDao;
+  @Mock
   private FactTypeResolver factTypeResolver;
   @Mock
   private ObjectResolver objectResolver;
   @Mock
   private FactCreateHelper factCreateHelper;
   @Mock
-  private FactStorageHelper factStorageHelper;
+  private FactRecordConverter factConverter;
 
   private FactCreateDelegate delegate;
 
@@ -56,9 +60,6 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   private final ObjectTypeEntity domainObjectType = new ObjectTypeEntity()
           .setId(UUID.randomUUID())
           .setName("domain");
-  private final FactTypeEntity retractionFactType = new FactTypeEntity()
-          .setId(UUID.randomUUID())
-          .setName("Retraction");
   private final FactTypeEntity resolveFactType = new FactTypeEntity()
           .setId(UUID.randomUUID())
           .setName("resolve")
@@ -71,15 +72,15 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
                   new FactTypeEntity.FactObjectBindingDefinition().setSourceObjectTypeID(ipObjectType.getId()),
                   new FactTypeEntity.FactObjectBindingDefinition().setDestinationObjectTypeID(domainObjectType.getId())
           ));
-  private final ObjectEntity ip = new ObjectEntity()
+  private final ObjectRecord ip = new ObjectRecord()
           .setId(UUID.randomUUID())
           .setTypeID(ipObjectType.getId())
           .setValue("1.2.3.4");
-  private final ObjectEntity domain = new ObjectEntity()
+  private final ObjectRecord domain = new ObjectRecord()
           .setId(UUID.randomUUID())
           .setTypeID(domainObjectType.getId())
           .setValue("test.example.org");
-  private final ObjectEntity threatActor = new ObjectEntity()
+  private final ObjectRecord threatActor = new ObjectRecord()
           .setId(UUID.randomUUID())
           .setTypeID(UUID.randomUUID())
           .setValue("APT1");
@@ -90,21 +91,12 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     delegate = new FactCreateDelegate(
             getSecurityContext(),
             getTriggerContext(),
-            getFactManager(),
-            getFactSearchManager(),
-            getObjectManager(),
+            objectFactDao,
             factTypeResolver,
             objectResolver,
             factCreateHelper,
-            factStorageHelper,
-            getFactConverter()
+            factConverter
     );
-  }
-
-  @Test(expected = AccessDeniedException.class)
-  public void testCreateFactWithRetractionFactTypeThrowsException() throws Exception {
-    mockFetchingFactType();
-    delegate.handle(new CreateFactRequest().setType(retractionFactType.getName()));
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -184,9 +176,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(matchFactEntity(request));
-    verify(getObjectManager()).saveObjectFactBinding(matchObjectFactBindingEntity());
-    verify(getFactSearchManager()).indexFact(matchFactDocument(request));
+    verify(objectFactDao).storeFact(matchFactRecord(request));
+    verify(factConverter).apply(matchFactRecord(request));
   }
 
   @Test
@@ -197,9 +188,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(matchFactEntity(request));
-    verify(getObjectManager()).saveObjectFactBinding(matchObjectFactBindingEntity());
-    verify(getFactSearchManager()).indexFact(matchFactDocument(request));
+    verify(objectFactDao).storeFact(matchFactRecord(request));
+    verify(factConverter).apply(matchFactRecord(request));
   }
 
   @Test
@@ -209,12 +199,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(matchFactEntity(request));
-    verify(getObjectManager(), times(2)).saveObjectFactBinding(matchObjectFactBindingEntity());
-    verify(factStorageHelper).saveInitialAclForNewFact(matchFactEntity(request), eq(request.getAcl()));
-    verify(factStorageHelper).saveCommentForFact(matchFactEntity(request), eq(request.getComment()));
-    verify(getFactSearchManager()).indexFact(matchFactDocument(request));
-    verify(getFactConverter()).apply(matchFactEntity(request));
+    verify(objectFactDao).storeFact(matchFactRecord(request));
+    verify(factConverter).apply(matchFactRecord(request));
   }
 
   @Test
@@ -231,9 +217,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> e.getBindings().stream().allMatch(b -> b.getDirection().equals(Direction.BiDirectional))));
-    verify(getObjectManager(), times(2)).saveObjectFactBinding(argThat(e -> e.getDirection().equals(Direction.BiDirectional)));
-    verify(getFactSearchManager()).indexFact(argThat(e -> e.getObjects().stream().allMatch(o -> o.getDirection().equals(ObjectDocument.Direction.BiDirectional))));
+    verify(objectFactDao).storeFact(matchFactRecord(request));
+    verify(factConverter).apply(matchFactRecord(request));
   }
 
   @Test
@@ -248,8 +233,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> organizationID.equals(e.getOrganizationID())));
-    verify(getFactConverter()).apply(argThat(e -> organizationID.equals(e.getOrganizationID())));
+    verify(objectFactDao).storeFact(argThat(e -> organizationID.equals(e.getOrganizationID())));
+    verify(factConverter).apply(argThat(e -> organizationID.equals(e.getOrganizationID())));
   }
 
   @Test
@@ -264,8 +249,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> originID.equals(e.getOriginID())));
-    verify(getFactConverter()).apply(argThat(e -> originID.equals(e.getOriginID())));
+    verify(objectFactDao).storeFact(argThat(e -> originID.equals(e.getOriginID())));
+    verify(factConverter).apply(argThat(e -> originID.equals(e.getOriginID())));
   }
 
   @Test
@@ -276,8 +261,19 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(getFactManager()).saveFact(argThat(e -> Objects.equals(resolveFactType.getDefaultConfidence(), e.getConfidence())));
-    verify(getFactConverter()).apply(argThat(e -> Objects.equals(resolveFactType.getDefaultConfidence(), e.getConfidence())));
+    verify(objectFactDao).storeFact(argThat(e -> Objects.equals(resolveFactType.getDefaultConfidence(), e.getConfidence())));
+    verify(factConverter).apply(argThat(e -> Objects.equals(resolveFactType.getDefaultConfidence(), e.getConfidence())));
+  }
+
+  @Test
+  public void testCreateFactStoresAclAndComment() throws Exception {
+    CreateFactRequest request = createRequest();
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(factCreateHelper).withComment(matchFactRecord(request), eq(request.getComment()));
+    verify(factCreateHelper).withAcl(matchFactRecord(request), eq(request.getAcl()));
   }
 
   @Test
@@ -302,43 +298,25 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     CreateFactRequest request = createRequest();
     mockCreateNewFact();
 
-    FactEntity existingFact = new FactEntity()
-            .setId(UUID.randomUUID())
-            .setTypeID(resolveFactType.getId())
-            .setValue(request.getValue())
-            .setOriginID(request.getOrigin())
-            .setOrganizationID(request.getOrganization())
-            .setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.valueOf(request.getAccessMode().name()))
-            .setConfidence(request.getConfidence())
-            .setLastSeenTimestamp(123)
-            .setBindings(ListUtils.list(
-                    new FactEntity.FactObjectBinding().setObjectID(UUID.fromString(request.getSourceObject())).setDirection(Direction.FactIsDestination),
-                    new FactEntity.FactObjectBinding().setObjectID(UUID.fromString(request.getDestinationObject())).setDirection(Direction.FactIsSource)
-            ));
-
     // Mock fetching of existing Fact.
-    when(getFactSearchManager().retrieveExistingFacts(matchFactExistenceSearchCriteria(request)))
-            .thenReturn(SearchResult.<FactDocument>builder()
-                    .setCount(1)
-                    .addValue(new FactDocument().setId(existingFact.getId()))
-                    .build());
-    when(getFactManager().getFacts(ListUtils.list(existingFact.getId()))).thenReturn(ListUtils.list(existingFact).iterator());
+    FactRecord existingFact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.RoleBased)
+            .setOrganizationID(request.getOrganization());
+    when(objectFactDao.retrieveExistingFacts(matchFactRecord(request)))
+            .thenReturn(ResultContainer.<FactRecord>builder().setValues(ListUtils.list(existingFact).iterator()).build());
     when(getSecurityContext().hasReadPermission(existingFact)).thenReturn(true);
 
     // Mock stuff needed for refreshing Fact.
-    when(getFactManager().refreshFact(existingFact.getId())).thenReturn(existingFact);
-    when(getFactSearchManager().getFact(existingFact.getId())).thenReturn(new FactDocument());
-    when(factStorageHelper.saveAdditionalAclForFact(existingFact, request.getAcl())).thenReturn(request.getAcl());
+    when(objectFactDao.refreshFact(existingFact)).thenReturn(existingFact);
 
     delegate.handle(request);
 
-    verify(getFactManager()).refreshFact(existingFact.getId());
-    verify(factStorageHelper).saveAdditionalAclForFact(same(existingFact), eq(request.getAcl()));
-    verify(factStorageHelper).saveCommentForFact(same(existingFact), eq(request.getComment()));
-    verify(getFactSearchManager()).indexFact(argThat(document -> document.getLastSeenTimestamp() > 0 &&
-            Objects.equals(document.getAcl(), SetUtils.set(request.getAcl()))));
-    verify(getFactManager(), never()).saveFact(any());
-    verify(getFactConverter()).apply(same(existingFact));
+    verify(factCreateHelper).withComment(same(existingFact), eq(request.getComment()));
+    verify(factCreateHelper).withAcl(same(existingFact), eq(request.getAcl()));
+    verify(objectFactDao).refreshFact(existingFact);
+    verify(objectFactDao, never()).storeFact(any());
+    verify(factConverter).apply(same(existingFact));
   }
 
   private void mockCreateNewFact() throws Exception {
@@ -350,13 +328,12 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
     // Mock fetching of current user.
     when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
-
     // Mock fetching of existing Fact.
-    when(getFactSearchManager().retrieveExistingFacts(any())).thenReturn(SearchResult.<FactDocument>builder().build());
-
+    when(objectFactDao.retrieveExistingFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
     // Mock stuff needed for saving Fact.
-    when(getFactManager().saveFact(any())).thenAnswer(i -> i.getArgument(0));
-    when(factStorageHelper.saveInitialAclForNewFact(any(), any())).thenAnswer(i -> i.getArgument(1));
+    when(objectFactDao.storeFact(any())).thenAnswer(i -> i.getArgument(0));
+    when(factCreateHelper.withAcl(any(), any())).thenAnswer(i -> i.getArgument(0));
+    when(factCreateHelper.withComment(any(), any())).thenAnswer(i -> i.getArgument(0));
   }
 
   private void mockFetchingOrganization() throws Exception {
@@ -366,21 +343,11 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
   private void mockFetchingFactType() throws Exception {
     when(factTypeResolver.resolveFactType(resolveFactType.getName())).thenReturn(resolveFactType);
-    when(factTypeResolver.resolveFactType(retractionFactType.getName())).thenReturn(retractionFactType);
-    when(factTypeResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
   }
 
   private void mockFetchingObjects() throws Exception {
-    when(getObjectManager().getObjectType(ipObjectType.getId())).thenReturn(ipObjectType);
-    when(getObjectManager().getObjectType(domainObjectType.getId())).thenReturn(domainObjectType);
-
-    when(getObjectManager().getObject(ip.getId())).thenReturn(ip);
     when(objectResolver.resolveObject(ip.getId().toString())).thenReturn(ip);
-
-    when(getObjectManager().getObject(domain.getId())).thenReturn(domain);
     when(objectResolver.resolveObject(domain.getId().toString())).thenReturn(domain);
-
-    when(getObjectManager().getObject(threatActor.getId())).thenReturn(threatActor);
     when(objectResolver.resolveObject(threatActor.getId().toString())).thenReturn(threatActor);
   }
 
@@ -395,12 +362,12 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
   private void mockFactConverter() {
     // Mock FactConverter needed for registering TriggerEvent.
-    when(getFactConverter().apply(any())).then(i -> {
-      FactEntity entity = i.getArgument(0);
+    when(factConverter.apply(any())).then(i -> {
+      FactRecord record = i.getArgument(0);
       return Fact.builder()
-              .setId(entity.getId())
-              .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(entity.getAccessMode().name()))
-              .setOrganization(Organization.builder().setId(entity.getOrganizationID()).build().toInfo())
+              .setId(record.getId())
+              .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(record.getAccessMode().name()))
+              .setOrganization(Organization.builder().setId(record.getOrganizationID()).build().toInfo())
               .build();
     });
   }
@@ -419,108 +386,27 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
             .setDestinationObject(domain.getId().toString());
   }
 
-  private FactEntity matchFactEntity(CreateFactRequest request) {
-    return argThat(entity -> {
-      assertNotNull(entity.getId());
-      assertEquals(resolveFactType.getId(), entity.getTypeID());
-      assertEquals(request.getValue(), entity.getValue());
-      assertEquals(request.getOrganization(), entity.getOrganizationID());
-      assertNotNull(entity.getAddedByID());
-      assertEquals(request.getOrigin(), entity.getOriginID());
-      assertEquals(origin.getTrust(), entity.getTrust(), 0.0);
-      assertEquals(request.getConfidence(), entity.getConfidence(), 0.0);
-      assertEquals(request.getAccessMode().name(), entity.getAccessMode().name());
-      assertTrue(entity.getTimestamp() > 0);
-      assertTrue(entity.getLastSeenTimestamp() > 0);
+  private FactRecord matchFactRecord(CreateFactRequest request) {
+    return argThat(record -> {
+      assertNotNull(record.getId());
+      assertEquals(resolveFactType.getId(), record.getTypeID());
+      assertEquals(request.getValue(), record.getValue());
+      assertEquals(request.getOrganization(), record.getOrganizationID());
+      assertNotNull(record.getAddedByID());
+      assertEquals(request.getOrigin(), record.getOriginID());
+      assertEquals(origin.getTrust(), record.getTrust(), 0.0);
+      assertEquals(request.getConfidence(), record.getConfidence(), 0.0);
+      assertEquals(request.getAccessMode().name(), record.getAccessMode().name());
+      assertTrue(record.getTimestamp() > 0);
+      assertTrue(record.getLastSeenTimestamp() > 0);
+      assertEquals(request.isBidirectionalBinding(), record.isBidirectionalBinding());
 
       if (request.getSourceObject() != null) {
-        assertTrue(entity.getBindings().stream()
-                .anyMatch(b -> Objects.equals(b.getObjectID(), UUID.fromString(request.getSourceObject()))
-                        && b.getDirection() == Direction.FactIsDestination));
+        assertEquals(UUID.fromString(request.getSourceObject()), record.getSourceObject().getId());
       }
 
       if (request.getDestinationObject() != null) {
-        assertTrue(entity.getBindings().stream()
-                .anyMatch(b -> Objects.equals(b.getObjectID(), UUID.fromString(request.getDestinationObject()))
-                        && b.getDirection() == Direction.FactIsSource));
-      }
-
-      return true;
-    });
-  }
-
-  private FactDocument matchFactDocument(CreateFactRequest request) {
-    return argThat(document -> {
-      assertNotNull(document.getId());
-      assertFalse(document.isRetracted());
-      assertEquals(resolveFactType.getId(), document.getTypeID());
-      assertEquals(request.getValue(), document.getValue());
-      assertEquals(request.getOrganization(), document.getOrganizationID());
-      assertNotNull(document.getAddedByID());
-      assertEquals(request.getOrigin(), document.getOriginID());
-      assertEquals(origin.getTrust(), document.getTrust(), 0.0);
-      assertEquals(request.getConfidence(), document.getConfidence(), 0.0);
-      assertEquals(request.getAccessMode().name(), document.getAccessMode().name());
-      assertTrue(document.getTimestamp() > 0);
-      assertTrue(document.getLastSeenTimestamp() > 0);
-      assertTrue(document.getAcl().size() > 0);
-
-      if (request.getSourceObject() != null) {
-        ObjectDocument source = document.getObjects()
-                .stream()
-                .filter(o -> Objects.equals(o.getId(), UUID.fromString(request.getSourceObject())))
-                .findFirst()
-                .orElse(null);
-        assertNotNull(source);
-        assertEquals(ipObjectType.getId(), source.getTypeID());
-        assertEquals(ip.getValue(), source.getValue());
-        assertEquals(ObjectDocument.Direction.FactIsDestination, source.getDirection());
-      }
-
-      if (request.getDestinationObject() != null) {
-        ObjectDocument destination = document.getObjects()
-                .stream()
-                .filter(o -> Objects.equals(o.getId(), UUID.fromString(request.getDestinationObject())))
-                .findFirst()
-                .orElse(null);
-        assertNotNull(destination);
-        assertEquals(domainObjectType.getId(), destination.getTypeID());
-        assertEquals(domain.getValue(), destination.getValue());
-        assertEquals(ObjectDocument.Direction.FactIsSource, destination.getDirection());
-      }
-
-      return true;
-    });
-  }
-
-  private ObjectFactBindingEntity matchObjectFactBindingEntity() {
-    return argThat(entity -> {
-      assertNotNull(entity.getFactID());
-      assertNotNull(entity.getObjectID());
-      assertNotNull(entity.getDirection());
-      return true;
-    });
-  }
-
-  private FactExistenceSearchCriteria matchFactExistenceSearchCriteria(CreateFactRequest request) {
-    return argThat(criteria -> {
-      assertEquals(request.getValue(), criteria.getFactValue());
-      assertEquals(resolveFactType.getId(), criteria.getFactTypeID());
-      assertEquals(request.getOrigin(), criteria.getOriginID());
-      assertEquals(request.getOrganization(), criteria.getOrganizationID());
-      assertEquals(request.getAccessMode().name(), criteria.getAccessMode().name());
-      assertEquals(request.getConfidence(), criteria.getConfidence(), 0.0);
-
-      if (request.getSourceObject() != null) {
-        assertTrue(criteria.getObjects().stream()
-                .anyMatch(o -> Objects.equals(o.getObjectID(), UUID.fromString(request.getSourceObject()))
-                        && o.getDirection() == FactExistenceSearchCriteria.Direction.FactIsDestination));
-      }
-
-      if (request.getDestinationObject() != null) {
-        assertTrue(criteria.getObjects().stream()
-                .anyMatch(o -> Objects.equals(o.getObjectID(), UUID.fromString(request.getDestinationObject()))
-                        && o.getDirection() == FactExistenceSearchCriteria.Direction.FactIsSource));
+        assertEquals(UUID.fromString(request.getDestinationObject()), record.getDestinationObject().getId());
       }
 
       return true;

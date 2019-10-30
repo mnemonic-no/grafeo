@@ -2,32 +2,21 @@ package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.MapUtils;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
-
-import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
 /**
  * The AbstractDelegate provides common methods used by multiple delegates.
  */
 abstract class AbstractDelegate {
-
-  private static final Map<AccessMode, Integer> ACCESS_MODE_ORDER = MapUtils.map(
-          T(AccessMode.Public, 0),
-          T(AccessMode.RoleBased, 1),
-          T(AccessMode.Explicit, 2)
-  );
 
   /**
    * Fetch an existing FactType by ID.
@@ -134,67 +123,6 @@ abstract class AbstractDelegate {
       throw new InvalidArgumentException()
               .addValidationError("Fact did not pass validation against FactType.", "fact.not.valid", "value", value);
     }
-  }
-
-  /**
-   * Resolve AccessMode from a request and verify that it's not less restrictive than the AccessMode from another Fact.
-   * Falls back to AccessMode from referenced Fact if requested AccessMode is not given.
-   *
-   * @param referencedFact      Fact to validate AccessMode against
-   * @param requestedAccessMode Requested AccessMode (might be NULL)
-   * @return Resolved AccessMode
-   * @throws InvalidArgumentException Thrown if requested AccessMode is less restrictive than AccessMode of referenced Fact
-   */
-  AccessMode resolveAccessMode(FactEntity referencedFact, no.mnemonic.act.platform.api.request.v1.AccessMode requestedAccessMode)
-          throws InvalidArgumentException {
-    // If no AccessMode provided fall back to the AccessMode from the referenced Fact.
-    AccessMode mode = ObjectUtils.ifNotNull(requestedAccessMode, m -> AccessMode.valueOf(m.name()), referencedFact.getAccessMode());
-
-    // The requested AccessMode of a new Fact should not be less restrictive than the AccessMode of the referenced Fact.
-    if (ACCESS_MODE_ORDER.get(mode) < ACCESS_MODE_ORDER.get(referencedFact.getAccessMode())) {
-      throw new InvalidArgumentException()
-              .addValidationError(String.format("Requested AccessMode cannot be less restrictive than AccessMode of Fact with id = %s.", referencedFact.getId()),
-                      "access.mode.too.wide", "accessMode", mode.name());
-    }
-
-    return mode;
-  }
-
-  /**
-   * Index a newly created Fact into ElasticSearch. Only call this method after a Fact and its related data were
-   * persisted to Cassandra.
-   *
-   * @param fact     Fact to index
-   * @param acl      Full access control list of Fact to index (list of Subject IDs)
-   */
-  void indexCreatedFact(FactEntity fact, List<UUID> acl) {
-    FactDocument document = new FactDocument()
-            .setId(fact.getId())
-            .setRetracted(false) // A newly created Fact isn't retracted by definition.
-            .setTypeID(fact.getTypeID())
-            .setValue(fact.getValue())
-            .setInReferenceTo(fact.getInReferenceToID())
-            .setOrganizationID(fact.getOrganizationID())
-            .setOriginID(fact.getOriginID())
-            .setAddedByID(fact.getAddedByID())
-            .setAccessMode(FactDocument.AccessMode.valueOf(fact.getAccessMode().name()))
-            .setTrust(fact.getTrust())
-            .setConfidence(fact.getConfidence())
-            .setTimestamp(fact.getTimestamp())
-            .setLastSeenTimestamp(fact.getLastSeenTimestamp())
-            .setAcl(SetUtils.set(acl));
-
-    for (FactEntity.FactObjectBinding objectBinding : SetUtils.set(fact.getBindings())) {
-      ObjectEntity object = TiRequestContext.get().getObjectManager().getObject(objectBinding.getObjectID());
-      document.addObject(new ObjectDocument()
-              .setId(object.getId())
-              .setTypeID(object.getTypeID())
-              .setValue(object.getValue())
-              .setDirection(ObjectDocument.Direction.valueOf(objectBinding.getDirection().name()))
-      );
-    }
-
-    TiRequestContext.get().getFactSearchManager().indexFact(document);
   }
 
   /**
