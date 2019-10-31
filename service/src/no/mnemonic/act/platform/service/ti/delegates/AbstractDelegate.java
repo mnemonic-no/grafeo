@@ -2,16 +2,13 @@ package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.util.UUID;
-import java.util.function.Function;
 
 /**
  * The AbstractDelegate provides common methods used by multiple delegates.
@@ -46,22 +43,6 @@ abstract class AbstractDelegate {
     if (entity == null) {
       throw new ObjectNotFoundException(String.format("ObjectType with id = %s does not exist.", id),
               "object.type.not.exist", "id", ObjectUtils.ifNotNull(id, Object::toString, "NULL"));
-    }
-    return entity;
-  }
-
-  /**
-   * Fetch an existing Fact by ID.
-   *
-   * @param id UUID of Fact
-   * @return Existing Fact
-   * @throws ObjectNotFoundException Thrown if Fact cannot be found
-   */
-  FactEntity fetchExistingFact(UUID id) throws ObjectNotFoundException {
-    FactEntity entity = TiRequestContext.get().getFactManager().getFact(id);
-    if (entity == null) {
-      throw new ObjectNotFoundException(String.format("Fact with id = %s does not exist.", id),
-              "fact.not.exist", "id", ObjectUtils.ifNotNull(id, Object::toString, "NULL"));
     }
     return entity;
   }
@@ -124,17 +105,4 @@ abstract class AbstractDelegate {
               .addValidationError("Fact did not pass validation against FactType.", "fact.not.valid", "value", value);
     }
   }
-
-  /**
-   * Re-index an already existing Fact in ElasticSearch. If Fact is not found in ElasticSearch the Fact won't be indexed.
-   *
-   * @param factID          UUID of Fact to re-index
-   * @param documentUpdater Callback for updating the indexed document before re-indexing
-   */
-  void reindexExistingFact(UUID factID, Function<FactDocument, FactDocument> documentUpdater) {
-    FactDocument document = TiRequestContext.get().getFactSearchManager().getFact(factID);
-    // 'document' should usually not be NULL. In this case skip updating Fact because it isn't indexed.
-    ObjectUtils.ifNotNullDo(document, d -> TiRequestContext.get().getFactSearchManager().indexFact(documentUpdater.apply(d)));
-  }
-
 }
