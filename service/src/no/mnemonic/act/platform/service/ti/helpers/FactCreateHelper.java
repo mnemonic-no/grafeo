@@ -5,23 +5,39 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
+import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
+import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.StringUtils;
+import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
 public class FactCreateHelper {
 
   private static final float ORIGIN_DEFAULT_TRUST = 0.8f;
+  private static final Map<FactRecord.AccessMode, Integer> ACCESS_MODE_ORDER = MapUtils.map(
+          T(FactRecord.AccessMode.Public, 0),
+          T(FactRecord.AccessMode.RoleBased, 1),
+          T(FactRecord.AccessMode.Explicit, 2)
+  );
 
   private final TiSecurityContext securityContext;
   private final SubjectResolver subjectResolver;
@@ -114,6 +130,93 @@ public class FactCreateHelper {
             .setTrust(ORIGIN_DEFAULT_TRUST)
             .setType(OriginEntity.Type.User)
     );
+  }
+
+  /**
+   * Resolve AccessMode from a request and verify that it is not less restrictive than the AccessMode from another Fact.
+   * Falls back to AccessMode from referenced Fact if requested AccessMode is not given.
+   *
+   * @param referencedFact      Fact to validate AccessMode against
+   * @param requestedAccessMode Requested AccessMode (can be null)
+   * @return Resolved AccessMode
+   * @throws InvalidArgumentException Thrown if requested AccessMode is less restrictive than AccessMode of referenced Fact
+   */
+  public FactRecord.AccessMode resolveAccessMode(FactRecord referencedFact, AccessMode requestedAccessMode) throws InvalidArgumentException {
+    if (referencedFact == null || referencedFact.getAccessMode() == null) return null;
+
+    // If no AccessMode provided fall back to the AccessMode from the referenced Fact.
+    FactRecord.AccessMode mode = ObjectUtils.ifNotNull(requestedAccessMode, m -> FactRecord.AccessMode.valueOf(m.name()), referencedFact.getAccessMode());
+
+    // The requested AccessMode of a new Fact should not be less restrictive than the AccessMode of the referenced Fact.
+    if (ACCESS_MODE_ORDER.get(mode) < ACCESS_MODE_ORDER.get(referencedFact.getAccessMode())) {
+      throw new InvalidArgumentException()
+              .addValidationError(String.format("Requested AccessMode cannot be less restrictive than AccessMode of Fact with id = %s.", referencedFact.getId()),
+                      "access.mode.too.wide", "accessMode", mode.name());
+    }
+
+    return mode;
+  }
+
+  /**
+   * Add additional ACL entries to a FactRecord. It will omit any entries already in the Fact's ACL
+   * and makes sure that the current user is in the ACL with AccessMode 'Explicit'.
+   *
+   * @param fact Fact the ACL belongs to
+   * @param acl  List of Subject IDs
+   * @return Fact with updated ACL
+   */
+  public FactRecord withAcl(FactRecord fact, List<UUID> acl) {
+    if (fact == null) return null;
+    // It doesn't make sense to have an ACL when Fact is public.
+    if (fact.getAccessMode() == FactRecord.AccessMode.Public) return fact;
+
+    // Fetch any existing entries ...
+    Set<UUID> existingAcl = SetUtils.set(fact.getAcl())
+            .stream()
+            .map(FactAclEntryRecord::getSubjectID)
+            .collect(Collectors.toSet());
+    // ... and make sure not to add any duplicates.
+    Set<UUID> subjectsToAdd = SetUtils.set(acl)
+            .stream()
+            .filter(subject -> !existingAcl.contains(subject))
+            .collect(Collectors.toSet());
+
+    UUID currentUser = securityContext.getCurrentUserID();
+    if (fact.getAccessMode() == FactRecord.AccessMode.Explicit && !existingAcl.contains(currentUser)) {
+      // Make sure that current user is in the ACL with 'Explicit' AccessMode.
+      // With 'RoleBased' AccessMode current user has access to Fact via the Organization.
+      subjectsToAdd.add(currentUser);
+    }
+
+    // Add all new ACL entries to Fact.
+    for (UUID subject : subjectsToAdd) {
+      fact.addAclEntry(new FactAclEntryRecord()
+              .setId(UUID.randomUUID())
+              .setOriginID(fact.getOriginID())
+              .setSubjectID(subject)
+              .setTimestamp(System.currentTimeMillis())
+      );
+    }
+
+    return fact;
+  }
+
+  /**
+   * Add an additional comment to a FactRecord.
+   *
+   * @param fact    Fact the comment belongs to
+   * @param comment Comment to add
+   * @return Fact with added comment
+   */
+  public FactRecord withComment(FactRecord fact, String comment) {
+    if (fact == null) return null;
+    if (StringUtils.isBlank(comment)) return fact;
+
+    return fact.addComment(new FactCommentRecord()
+            .setId(UUID.randomUUID())
+            .setOriginID(fact.getOriginID())
+            .setComment(comment)
+            .setTimestamp(System.currentTimeMillis()));
   }
 
   private Organization fetchOrganization(UUID organizationID) throws InvalidArgumentException {
