@@ -15,7 +15,7 @@ import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
-import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
@@ -32,7 +32,7 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
   private final FactTypeResolver factTypeResolver;
   private final FactResolver factResolver;
   private final FactCreateHelper factCreateHelper;
-  private final FactRecordConverter factConverter;
+  private final FactConverter factConverter;
 
   private FactTypeEntity retractionFactType;
   private OriginEntity requestedOrigin;
@@ -45,7 +45,7 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
                              FactTypeResolver factTypeResolver,
                              FactResolver factResolver,
                              FactCreateHelper factCreateHelper,
-                             FactRecordConverter factConverter) {
+                             FactConverter factConverter) {
     this.securityContext = securityContext;
     this.triggerContext = triggerContext;
     this.objectFactDao = objectFactDao;

@@ -4,7 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class FactGetByIdDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactResolver factResolver;
   @Mock
-  private FactRecordConverter factConverter;
+  private FactConverter factConverter;
 
   private FactGetByIdDelegate delegate;
 

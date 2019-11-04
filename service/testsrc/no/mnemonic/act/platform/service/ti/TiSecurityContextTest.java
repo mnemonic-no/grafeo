@@ -11,7 +11,10 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
@@ -21,7 +24,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -52,8 +54,6 @@ public class TiSecurityContextTest {
   private ObjectFactDao objectFactDao;
   @Mock
   private Function<UUID, List<FactAclEntity>> aclResolver;
-  @Mock
-  private Function<UUID, Iterator<FactEntity>> factsBoundToObjectResolver;
 
   private TiSecurityContext context;
 
@@ -70,7 +70,6 @@ public class TiSecurityContextTest {
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
             .setAclResolver(aclResolver)
-            .setFactsBoundToObjectResolver(factsBoundToObjectResolver)
             .build();
   }
 
@@ -83,7 +82,6 @@ public class TiSecurityContextTest {
             .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
             .setAclResolver(aclResolver)
-            .setFactsBoundToObjectResolver(factsBoundToObjectResolver)
             .build();
   }
 
@@ -96,20 +94,6 @@ public class TiSecurityContextTest {
             .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
-            .setFactsBoundToObjectResolver(factsBoundToObjectResolver)
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateContextWithoutFactsBoundToObjectResolverThrowsException() {
-    TiSecurityContext.builder()
-            .setAccessController(accessController)
-            .setIdentityResolver(identityResolver)
-            .setOrganizationResolver(organizationResolver)
-            .setSubjectResolver(subjectResolver)
-            .setCredentials(credentials)
-            .setObjectFactDao(objectFactDao)
-            .setAclResolver(aclResolver)
             .build();
   }
 
@@ -308,53 +292,6 @@ public class TiSecurityContextTest {
   }
 
   @Test(expected = AccessDeniedException.class)
-  public void testCheckReadPermissionForObjectWithoutObject() throws Exception {
-    context.checkReadPermission((ObjectEntity) null);
-  }
-
-  @Test(expected = AccessDeniedException.class)
-  public void testCheckReadPermissionForObjectWithoutBoundFact() throws Exception {
-    ObjectEntity object = new ObjectEntity().setId(UUID.randomUUID());
-    when(factsBoundToObjectResolver.apply(object.getId())).thenReturn(Collections.emptyIterator());
-    context.checkReadPermission(object);
-  }
-
-  @Test(expected = AccessDeniedException.class)
-  public void testCheckReadPermissionForObjectWithoutAccessToFact() throws Exception {
-    ObjectEntity object = mockCheckPermissionForObject(false);
-    context.checkReadPermission(object);
-  }
-
-  @Test
-  public void testCheckReadPermissionForObjectWithAccessToFact() throws Exception {
-    ObjectEntity object = mockCheckPermissionForObject(true);
-    context.checkReadPermission(object);
-    verify(accessController).hasPermission(credentials, viewFactObjects);
-  }
-
-  @Test
-  public void testCheckReadPermissionForObjectWithAccessToSecondFact() throws Exception {
-    ObjectEntity object = new ObjectEntity().setId(UUID.randomUUID());
-    FactEntity fact = new FactEntity().setAccessMode(AccessMode.Public);
-    when(factsBoundToObjectResolver.apply(object.getId())).thenReturn(ListUtils.list(fact, fact, fact).iterator());
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false, true, false);
-    context.checkReadPermission(object);
-    verify(accessController, times(2)).hasPermission(credentials, viewFactObjects);
-  }
-
-  @Test
-  public void testHasReadPermissionForObjectReturnsTrueOnAccess() throws Exception {
-    ObjectEntity object = mockCheckPermissionForObject(true);
-    assertTrue(context.hasReadPermission(object));
-  }
-
-  @Test
-  public void testHasReadPermissionForObjectReturnsFalseOnNoAccess() throws Exception {
-    ObjectEntity object = mockCheckPermissionForObject(false);
-    assertFalse(context.hasReadPermission(object));
-  }
-
-  @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionForObjectRecordWithoutObject() throws Exception {
     context.checkReadPermission((ObjectRecord) null);
   }
@@ -478,14 +415,6 @@ public class TiSecurityContextTest {
   public void testHasReadPermissionForOrganizationReturnsFalseOnNoAccess() throws Exception {
     when(accessController.getAvailableOrganizations(credentials)).thenReturn(Collections.emptySet());
     assertFalse(context.hasReadPermission(Organization.builder().setId(UUID.randomUUID()).build()));
-  }
-
-  private ObjectEntity mockCheckPermissionForObject(boolean result) throws Exception {
-    ObjectEntity object = new ObjectEntity().setId(UUID.randomUUID());
-    FactEntity fact = new FactEntity().setAccessMode(AccessMode.Public);
-    when(factsBoundToObjectResolver.apply(object.getId())).thenReturn(ListUtils.list(fact).iterator());
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(result); // Mock access to public Fact.
-    return object;
   }
 
   private ObjectRecord mockCheckPermissionForObjectRecord(boolean result) throws Exception {

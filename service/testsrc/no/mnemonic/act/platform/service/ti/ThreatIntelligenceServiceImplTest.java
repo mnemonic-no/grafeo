@@ -8,7 +8,6 @@ import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.service.ti.delegates.*;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.common.auth.AccessController;
@@ -39,8 +38,6 @@ public class ThreatIntelligenceServiceImplTest {
   @Mock
   private ObjectManager objectManager;
   @Mock
-  private FactSearchManager factSearchManager;
-  @Mock
   private ObjectFactDao objectFactDao;
   @Mock
   private ValidatorFactory validatorFactory;
@@ -59,7 +56,6 @@ public class ThreatIntelligenceServiceImplTest {
             subjectResolver,
             factManager,
             objectManager,
-            factSearchManager,
             objectFactDao,
             validatorFactory,
             delegateProvider
@@ -77,7 +73,6 @@ public class ThreatIntelligenceServiceImplTest {
     assertNotNull(context);
     assertSame(factManager, context.getFactManager());
     assertSame(objectManager, context.getObjectManager());
-    assertSame(factSearchManager, context.getFactSearchManager());
     assertSame(validatorFactory, context.getValidatorFactory());
   }
 

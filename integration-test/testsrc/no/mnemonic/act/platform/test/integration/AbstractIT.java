@@ -7,13 +7,15 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.rest.modules.TiClientModule;
 import no.mnemonic.act.platform.rest.modules.TiRestModule;
 import no.mnemonic.act.platform.service.modules.TiServerModule;
@@ -25,7 +27,6 @@ import no.mnemonic.commons.junit.docker.DockerResource;
 import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +56,7 @@ public abstract class AbstractIT {
   private OriginManager originManager;
   private ObjectManager objectManager;
   private FactManager factManager;
-  private FactSearchManager factSearchManager;
+  private ObjectFactDao objectFactDao;
 
   private static CassandraDockerResource cassandra = CassandraDockerResource.builder()
           .setImageName("cassandra")
@@ -105,8 +106,13 @@ public abstract class AbstractIT {
     originManager = serviceBeanProvider.getBean(OriginManager.class).orElseThrow(IllegalStateException::new);
     objectManager = serviceBeanProvider.getBean(ObjectManager.class).orElseThrow(IllegalStateException::new);
     factManager = serviceBeanProvider.getBean(FactManager.class).orElseThrow(IllegalStateException::new);
-    factSearchManager = serviceBeanProvider.getBean(FactSearchManager.class).orElseThrow(IllegalStateException::new);
-    factSearchManager.setTestEnvironment(true);
+    // GuiceBeanProvider only returns singleton objects, thus, an ObjectFactDao instance must be fetched directly from Guice.
+    objectFactDao = serviceBeanProvider.getInjector().getInstance(ObjectFactDao.class);
+
+    // Configure FactSearchManager with test environment in order to make indexed documents available for search immediately.
+    serviceBeanProvider.getBean(FactSearchManager.class)
+            .orElseThrow(IllegalStateException::new)
+            .setTestEnvironment(true);
   }
 
   @After
@@ -134,8 +140,8 @@ public abstract class AbstractIT {
     return factManager;
   }
 
-  FactSearchManager getFactSearchManager() {
-    return factSearchManager;
+  ObjectFactDao getObjectFactDao() {
+    return objectFactDao;
   }
 
   /* Helpers for REST */
@@ -223,114 +229,67 @@ public abstract class AbstractIT {
     return getFactManager().saveFactType(entity);
   }
 
-  FactEntity createFact() {
+  FactRecord createFact() {
     return createFact(createObject(createObjectType().getId()));
   }
 
-  FactEntity createFact(ObjectEntity object) {
+  FactRecord createFact(ObjectRecord object) {
     return createFact(object, createFactType(object.getTypeID()), f -> f);
   }
 
-  FactEntity createFact(ObjectEntity object, FactTypeEntity factType, ObjectPreparation<FactEntity> preparation) {
-    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
-            .setObjectID(object.getId())
-            .setDirection(Direction.BiDirectional);
-
-    FactEntity fact = new FactEntity()
+  FactRecord createFact(ObjectRecord object, FactTypeEntity factType, ObjectPreparation<FactRecord> preparation) {
+    FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(factType.getId())
             .setValue("factValue")
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOriginID(UUID.randomUUID())
-            .setAccessMode(AccessMode.RoleBased)
+            .setAccessMode(FactRecord.AccessMode.RoleBased)
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321)
-            .setBindings(ListUtils.list(binding));
+            .setSourceObject(object)
+            .setBidirectionalBinding(true);
 
-    getObjectManager().saveObjectFactBinding(new ObjectFactBindingEntity()
-            .setObjectID(object.getId())
-            .setFactID(fact.getId())
-            .setDirection(Direction.BiDirectional));
-
-    fact = getFactManager().saveFact(preparation.prepare(fact));
-
-    getFactSearchManager().indexFact(new FactDocument()
-            .setId(fact.getId())
-            .setTypeID(factType.getId())
-            .setValue(fact.getValue())
-            .setInReferenceTo(fact.getInReferenceToID())
-            .setOrganizationID(fact.getOrganizationID())
-            .setOriginID(fact.getOriginID())
-            .setAccessMode(FactDocument.AccessMode.valueOf(fact.getAccessMode().name()))
-            .setTimestamp(fact.getTimestamp())
-            .setLastSeenTimestamp(fact.getLastSeenTimestamp())
-            .addObject(new ObjectDocument()
-                    .setId(object.getId())
-                    .setTypeID(object.getTypeID())
-                    .setValue(object.getValue())
-                    .setDirection(ObjectDocument.Direction.valueOf(binding.getDirection().name()))
-            )
-    );
-
-    return fact;
+    return getObjectFactDao().storeFact(preparation.prepare(fact));
   }
 
-  FactEntity createMetaFact(FactEntity referencedFact, FactTypeEntity metaFactType, ObjectPreparation<FactEntity> preparation) {
-    FactEntity meta = new FactEntity()
+  FactRecord createMetaFact(FactRecord referencedFact, FactTypeEntity metaFactType, ObjectPreparation<FactRecord> preparation) {
+    FactRecord meta = new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(metaFactType.getId())
             .setValue("factValue")
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOriginID(UUID.randomUUID())
-            .setAccessMode(AccessMode.RoleBased)
+            .setAccessMode(FactRecord.AccessMode.RoleBased)
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321)
             .setInReferenceToID(referencedFact.getId());
 
-    getFactManager().saveMetaFactBinding(new MetaFactBindingEntity()
-            .setFactID(referencedFact.getId())
-            .setMetaFactID(meta.getId())
-    );
-
-    meta = getFactManager().saveFact(preparation.prepare(meta));
-
-    getFactSearchManager().indexFact(new FactDocument()
-            .setId(meta.getId())
-            .setTypeID(metaFactType.getId())
-            .setValue(meta.getValue())
-            .setInReferenceTo(meta.getInReferenceToID())
-            .setOrganizationID(meta.getOrganizationID())
-            .setOriginID(meta.getOriginID())
-            .setAccessMode(FactDocument.AccessMode.valueOf(meta.getAccessMode().name()))
-            .setTimestamp(meta.getTimestamp())
-            .setLastSeenTimestamp(meta.getLastSeenTimestamp())
-    );
-
-    return meta;
+    return getObjectFactDao().storeFact(preparation.prepare(meta));
   }
 
-  ObjectEntity createObject() {
+  ObjectRecord createObject() {
     return createObject(createObjectType().getId());
   }
 
-  ObjectEntity createObject(UUID objectTypeID) {
+  ObjectRecord createObject(UUID objectTypeID) {
     return createObject(objectTypeID, o -> o);
   }
 
-  ObjectEntity createObject(UUID objectTypeID, ObjectPreparation<ObjectEntity> preparation) {
-    ObjectEntity object = new ObjectEntity()
+  ObjectRecord createObject(UUID objectTypeID, ObjectPreparation<ObjectRecord> preparation) {
+    ObjectRecord object = new ObjectRecord()
             .setId(UUID.randomUUID())
             .setTypeID(objectTypeID)
             .setValue("objectValue");
 
-    return getObjectManager().saveObject(preparation.prepare(object));
+    return getObjectFactDao().storeObject(preparation.prepare(object));
   }
 
   interface ObjectPreparation<T> {
     T prepare(T e);
   }
 
-  private class ServiceModuleIT extends AbstractModule {
+  private static class ServiceModuleIT extends AbstractModule {
     @Override
     protected void configure() {
       install(new TiServiceModule());
@@ -352,7 +311,7 @@ public abstract class AbstractIT {
     }
   }
 
-  private class RestModuleIT extends AbstractModule {
+  private static class RestModuleIT extends AbstractModule {
     @Override
     protected void configure() {
       install(new TiRestModule());

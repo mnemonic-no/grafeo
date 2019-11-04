@@ -19,8 +19,8 @@ import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
 import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
+import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
 import no.mnemonic.act.platform.service.ti.helpers.GremlinSandboxExtension;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
@@ -50,8 +50,8 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
   private final ObjectManager objectManager;
   private final FactManager factManager;
   private final ObjectSearchDelegate objectSearch;
-  private final ObjectRecordConverter objectConverter;
-  private final FactRecordConverter factConverter;
+  private final ObjectConverter objectConverter;
+  private final FactConverter factConverter;
 
   private final Collection<java.lang.Object> traversalResult = new ArrayList<>();
 
@@ -63,8 +63,8 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
                                ObjectManager objectManager,
                                FactManager factManager,
                                ObjectSearchDelegate objectSearch,
-                               ObjectRecordConverter objectConverter,
-                               FactRecordConverter factConverter) {
+                               ObjectConverter objectConverter,
+                               FactConverter factConverter) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.objectManager = objectManager;

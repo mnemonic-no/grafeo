@@ -218,24 +218,6 @@ public class FactEntity implements CassandraEntity {
     throw new UncheckedIOException(msg, ex);
   }
 
-  @Override
-  public FactEntity clone() {
-    return new FactEntity()
-            .setId(getId())
-            .setTypeID(getTypeID())
-            .setValue(getValue())
-            .setInReferenceToID(getInReferenceToID())
-            .setOrganizationID(getOrganizationID())
-            .setOriginID(getOriginID())
-            .setAddedByID(getAddedByID())
-            .setAccessMode(getAccessMode())
-            .setConfidence(getConfidence())
-            .setTrust(getTrust())
-            .setTimestamp(getTimestamp())
-            .setLastSeenTimestamp(getLastSeenTimestamp())
-            .setBindingsStored(getBindingsStored());
-  }
-
   public static class FactObjectBinding {
 
     private UUID objectID;
