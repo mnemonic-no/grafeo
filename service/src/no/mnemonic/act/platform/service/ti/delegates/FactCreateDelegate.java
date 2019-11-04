@@ -100,6 +100,13 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
               .addValidationError("Requested destination Object could not be resolved.", "invalid.destination.object", "destinationObject", request.getDestinationObject());
     }
 
+    // Disallow creating Facts where source and destination are the same Object. Users should create one-legged Facts instead.
+    if (source != null && destination != null && Objects.equals(source.getId(), destination.getId())) {
+      throw new InvalidArgumentException()
+              .addValidationError("Requested source Object is the same as destination Object.", "invalid.source.object", "sourceObject", request.getSourceObject())
+              .addValidationError("Requested destination Object is the same as source Object.", "invalid.destination.object", "destinationObject", request.getDestinationObject());
+    }
+
     // Validate that the binding between source Object, Fact and destination Object is valid according to the FactType.
     // Both source and destination ObjectTypes must be the same plus the bidirectional binding flag must match.
     boolean valid = !CollectionUtils.isEmpty(requestedFactType.getRelevantObjectBindings()) && requestedFactType.getRelevantObjectBindings()
