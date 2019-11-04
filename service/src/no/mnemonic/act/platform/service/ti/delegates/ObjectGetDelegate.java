@@ -12,7 +12,7 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeByIdConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeByIdConverter;
 
 import javax.inject.Inject;
@@ -52,8 +52,8 @@ public class ObjectGetDelegate extends AbstractDelegate implements Delegate {
     return createObjectConverter().apply(object);
   }
 
-  private ObjectRecordConverter createObjectConverter() {
-    return new ObjectRecordConverter(objectTypeConverter, factTypeConverter, id -> {
+  private ObjectConverter createObjectConverter() {
+    return new ObjectConverter(objectTypeConverter, factTypeConverter, id -> {
       ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
               .addObjectID(id)
               .setCurrentUserID(securityContext.getCurrentUserID())

@@ -14,8 +14,8 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
-import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
+import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -37,9 +37,9 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   @Mock
   private ObjectSearchDelegate objectSearch;
   @Mock
-  private ObjectRecordConverter objectConverter;
+  private ObjectConverter objectConverter;
   @Mock
-  private FactRecordConverter factConverter;
+  private FactConverter factConverter;
 
   private TraverseGraphDelegate delegate;
 

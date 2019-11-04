@@ -2,31 +2,66 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.*;
-import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
-import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.commons.utilities.collections.SetUtils;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
-import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 public class FactConverterTest {
 
-  private final Function<UUID, FactType> factTypeConverter = id -> FactType.builder().setId(id).build();
-  private final Function<UUID, Organization> organizationConverter = id -> Organization.builder().setId(id).build();
-  private final Function<UUID, Subject> subjectConverter = id -> Subject.builder().setId(id).build();
-  private final Function<UUID, Origin> originConverter = id -> Origin.builder().setId(id).build();
-  private final Function<UUID, Object> objectConverter = id -> Object.builder().setId(id).build();
-  private final Function<UUID, FactEntity> factEntityResolver = id -> createEntity().setId(id);
-  private final Predicate<FactEntity> accessChecker = fact -> true;
-  private final Predicate<FactEntity> retractionChecker = fact -> false;
-  private final FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, subjectConverter,
-          originConverter, objectConverter, factEntityResolver, accessChecker, retractionChecker);
+  @Mock
+  private FactTypeByIdConverter factTypeConverter;
+  @Mock
+  private OriginByIdConverter originConverter;
+  @Mock
+  private ObjectConverter objectConverter;
+  @Mock
+  private Function<UUID, Organization> organizationConverter;
+  @Mock
+  private Function<UUID, Subject> subjectConverter;
+  @Mock
+  private FactRetractionHandler factRetractionHandler;
+  @Mock
+  private ObjectFactDao objectFactDao;
+  @Mock
+  private TiSecurityContext securityContext;
+
+  private FactConverter converter;
+
+  @Before
+  public void setUp() {
+    initMocks(this);
+
+    when(factTypeConverter.apply(notNull())).thenAnswer(i -> FactType.builder().setId(i.getArgument(0)).build());
+    when(originConverter.apply(notNull())).thenAnswer(i -> Origin.builder().setId(i.getArgument(0)).build());
+    when(organizationConverter.apply(notNull())).thenAnswer(i -> Organization.builder().setId(i.getArgument(0)).build());
+    when(subjectConverter.apply(notNull())).thenAnswer(i -> Subject.builder().setId(i.getArgument(0)).build());
+
+    converter = new FactConverter(
+            factTypeConverter,
+            originConverter,
+            objectConverter,
+            organizationConverter,
+            subjectConverter,
+            factRetractionHandler,
+            objectFactDao,
+            securityContext
+    );
+  }
 
   @Test
   public void testConvertNullReturnsNull() {
@@ -34,197 +69,154 @@ public class FactConverterTest {
   }
 
   @Test
-  public void testConvertFactWithBindingOfCardinalityTwo() {
-    FactEntity.FactObjectBinding source = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.FactIsDestination);
-    FactEntity.FactObjectBinding destination = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.FactIsSource);
-    FactEntity entity = createEntity().setBindings(ListUtils.list(source, destination));
-
-    Fact model = converter.apply(entity);
-
-    assertModelCommon(entity, model);
-    assertFalse(model.isBidirectionalBinding());
-    assertNotNull(model.getSourceObject());
-    assertEquals(source.getObjectID(), model.getSourceObject().getId());
-    assertNotNull(model.getDestinationObject());
-    assertEquals(destination.getObjectID(), model.getDestinationObject().getId());
+  public void testConvertFactEmpty() {
+    assertNotNull(converter.apply(new FactRecord()));
   }
 
   @Test
-  public void testConvertFactWithBindingOfCardinalityTwoBidirectional() {
-    FactEntity.FactObjectBinding source = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.BiDirectional);
-    FactEntity.FactObjectBinding destination = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.BiDirectional);
-    FactEntity entity = createEntity().setBindings(ListUtils.list(source, destination));
+  public void testConvertFactBothSourceAndDestination() {
+    ObjectRecord source = new ObjectRecord().setId(UUID.randomUUID());
+    ObjectRecord destination = new ObjectRecord().setId(UUID.randomUUID());
+    FactRecord record = createRecord()
+            .setSourceObject(source)
+            .setDestinationObject(destination)
+            .setBidirectionalBinding(true);
+    when(objectConverter.apply(source)).thenReturn(Object.builder().setId(source.getId()).build());
+    when(objectConverter.apply(destination)).thenReturn(Object.builder().setId(destination.getId()).build());
 
-    Fact model = converter.apply(entity);
+    Fact model = converter.apply(record);
 
-    assertModelCommon(entity, model);
+    assertModelCommon(record, model);
     assertTrue(model.isBidirectionalBinding());
     assertNotNull(model.getSourceObject());
-    assertEquals(source.getObjectID(), model.getSourceObject().getId());
+    assertEquals(source.getId(), model.getSourceObject().getId());
     assertNotNull(model.getDestinationObject());
-    assertEquals(destination.getObjectID(), model.getDestinationObject().getId());
+    assertEquals(destination.getId(), model.getDestinationObject().getId());
   }
 
   @Test
-  public void testConvertFactWithBindingOfCardinalityOneFactIsSource() {
-    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.FactIsSource);
-    FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
+  public void testConvertFactOnlySource() {
+    ObjectRecord source = new ObjectRecord().setId(UUID.randomUUID());
+    FactRecord record = createRecord().setSourceObject(source);
+    when(objectConverter.apply(source)).thenReturn(Object.builder().setId(source.getId()).build());
 
-    Fact model = converter.apply(entity);
+    Fact model = converter.apply(record);
 
-    assertModelCommon(entity, model);
-    assertFalse(model.isBidirectionalBinding());
+    assertModelCommon(record, model);
+    assertNotNull(model.getSourceObject());
+    assertEquals(source.getId(), model.getSourceObject().getId());
+    assertNull(model.getDestinationObject());
+  }
+
+  @Test
+  public void testConvertFactOnlyDestination() {
+    ObjectRecord destination = new ObjectRecord().setId(UUID.randomUUID());
+    FactRecord record = createRecord().setDestinationObject(destination);
+    when(objectConverter.apply(destination)).thenReturn(Object.builder().setId(destination.getId()).build());
+
+    Fact model = converter.apply(record);
+
+    assertModelCommon(record, model);
     assertNull(model.getSourceObject());
     assertNotNull(model.getDestinationObject());
-    assertEquals(binding.getObjectID(), model.getDestinationObject().getId());
-  }
-
-  @Test
-  public void testConvertFactWithBindingOfCardinalityOneFactIsDestination() {
-    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.FactIsDestination);
-    FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
-
-    Fact model = converter.apply(entity);
-
-    assertModelCommon(entity, model);
-    assertFalse(model.isBidirectionalBinding());
-    assertNull(model.getDestinationObject());
-    assertNotNull(model.getSourceObject());
-    assertEquals(binding.getObjectID(), model.getSourceObject().getId());
-  }
-
-  @Test
-  public void testConvertFactWithBindingOfCardinalityOneBiDirectional() {
-    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.BiDirectional);
-    FactEntity entity = createEntity().setBindings(ListUtils.list(binding));
-
-    Fact model = converter.apply(entity);
-
-    assertModelCommon(entity, model);
-    assertTrue(model.isBidirectionalBinding());
-    assertNotNull(model.getSourceObject());
-    assertEquals(binding.getObjectID(), model.getSourceObject().getId());
-    assertNotNull(model.getDestinationObject());
-    assertEquals(binding.getObjectID(), model.getDestinationObject().getId());
+    assertEquals(destination.getId(), model.getDestinationObject().getId());
   }
 
   @Test
   public void testConvertFactWithoutBinding() {
-    FactEntity entity = createEntity();
+    FactRecord record = createRecord();
+    Fact model = converter.apply(record);
 
-    Fact model = converter.apply(entity);
-
-    assertModelCommon(entity, model);
-    assertNull(model.getSourceObject());
-    assertNull(model.getDestinationObject());
-  }
-
-  @Test
-  public void testConvertFactWithBindingOfCardinalityTwoAndSameDirectionFactIsDestination() {
-    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.FactIsDestination);
-    FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding));
-
-    Fact model = converter.apply(entity);
-
-    assertModelCommon(entity, model);
-    assertNull(model.getSourceObject());
-    assertNull(model.getDestinationObject());
-  }
-
-  @Test
-  public void testConvertFactWithBindingOfCardinalityTwoAndSameDirectionFactIsSource() {
-    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.FactIsSource);
-    FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding));
-
-    Fact model = converter.apply(entity);
-
-    assertModelCommon(entity, model);
-    assertNull(model.getSourceObject());
-    assertNull(model.getDestinationObject());
-  }
-
-  @Test
-  public void testConvertFactWithBindingOfCardinalityTree() {
-    FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(Direction.BiDirectional);
-    FactEntity entity = createEntity().setBindings(ListUtils.list(binding, binding, binding));
-
-    Fact model = converter.apply(entity);
-
-    assertModelCommon(entity, model);
+    assertModelCommon(record, model);
+    assertFalse(model.isBidirectionalBinding());
     assertNull(model.getSourceObject());
     assertNull(model.getDestinationObject());
   }
 
   @Test
   public void testConvertFactCannotResolveInReferenceToFact() {
-    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, subjectConverter, originConverter,
-            objectConverter, id -> null, accessChecker, retractionChecker);
-    assertNull(converter.apply(createEntity()).getInReferenceTo());
+    FactRecord record = createRecord().setInReferenceToID(UUID.randomUUID());
+    Fact model = converter.apply(record);
+
+    assertNull(model.getInReferenceTo());
+    verify(objectFactDao).getFact(record.getInReferenceToID());
   }
 
   @Test
   public void testConvertFactNoAccessToInReferenceToFact() {
-    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, subjectConverter, originConverter,
-            objectConverter, factEntityResolver, fact -> false, retractionChecker);
-    assertNull(converter.apply(createEntity()).getInReferenceTo());
+    FactRecord record = createRecord().setInReferenceToID(UUID.randomUUID());
+    FactRecord inReferenceTo = new FactRecord().setId(record.getInReferenceToID());
+    when(objectFactDao.getFact(record.getInReferenceToID())).thenReturn(inReferenceTo);
+    when(securityContext.hasReadPermission(inReferenceTo)).thenReturn(false);
+
+    Fact model = converter.apply(record);
+
+    assertNull(model.getInReferenceTo());
+    verify(securityContext).hasReadPermission(inReferenceTo);
   }
 
   @Test
-  public void testConvertRetractedFact() {
-    FactConverter converter = new FactConverter(factTypeConverter, organizationConverter, subjectConverter, originConverter,
-            objectConverter, factEntityResolver, accessChecker, fact -> true);
-    assertEquals(set(Fact.Flag.Retracted), converter.apply(createEntity()).getFlags());
+  public void testConvertFactWithInReferenceToFact() {
+    FactRecord record = createRecord().setInReferenceToID(UUID.randomUUID());
+    FactRecord inReferenceTo = new FactRecord().setId(record.getInReferenceToID());
+    when(objectFactDao.getFact(record.getInReferenceToID())).thenReturn(inReferenceTo);
+    when(securityContext.hasReadPermission(inReferenceTo)).thenReturn(true);
+
+    Fact model = converter.apply(record);
+
+    assertNotNull(model.getInReferenceTo());
+    assertEquals(record.getInReferenceToID(), model.getInReferenceTo().getId());
+    verify(securityContext).hasReadPermission(inReferenceTo);
   }
 
-  private FactEntity createEntity() {
-    return new FactEntity()
+  @Test
+  public void testConvertFactNotRetracted() {
+    FactRecord record = createRecord();
+    when(factRetractionHandler.isRetracted(record.getId(), false)).thenReturn(false);
+
+    Fact model = converter.apply(record);
+
+    assertEquals(SetUtils.set(), model.getFlags());
+    verify(factRetractionHandler).isRetracted(record.getId(), false);
+  }
+
+  @Test
+  public void testConvertFactIsRetracted() {
+    FactRecord record = createRecord().addFlag(FactRecord.Flag.RetractedHint);
+    when(factRetractionHandler.isRetracted(record.getId(), true)).thenReturn(true);
+
+    Fact model = converter.apply(record);
+
+    assertEquals(SetUtils.set(Fact.Flag.Retracted), model.getFlags());
+    verify(factRetractionHandler).isRetracted(record.getId(), true);
+  }
+
+  private FactRecord createRecord() {
+    return new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
             .setValue("value")
-            .setInReferenceToID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setTrust(0.1f)
             .setConfidence(0.2f)
-            .setAccessMode(AccessMode.Explicit)
+            .setAccessMode(FactRecord.AccessMode.Explicit)
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321);
   }
 
-  private void assertModelCommon(FactEntity entity, Fact model) {
-    assertEquals(entity.getId(), model.getId());
-    assertEquals(entity.getTypeID(), model.getType().getId());
-    assertEquals(entity.getValue(), model.getValue());
-    assertEquals(entity.getInReferenceToID(), model.getInReferenceTo().getId());
-    assertEquals(entity.getOrganizationID(), model.getOrganization().getId());
-    assertEquals(entity.getAddedByID(), model.getAddedBy().getId());
-    assertEquals(entity.getOriginID(), model.getOrigin().getId());
-    assertEquals(entity.getTrust(), model.getTrust(), 0.0);
-    assertEquals(entity.getConfidence(), model.getConfidence(), 0.0);
-    assertEquals(entity.getAccessMode().name(), model.getAccessMode().name());
-    assertEquals(entity.getTimestamp(), (long) model.getTimestamp());
-    assertEquals(entity.getLastSeenTimestamp(), (long) model.getLastSeenTimestamp());
-    assertEquals(set(), model.getFlags());
+  private void assertModelCommon(FactRecord record, Fact model) {
+    assertEquals(record.getId(), model.getId());
+    assertEquals(record.getTypeID(), model.getType().getId());
+    assertEquals(record.getValue(), model.getValue());
+    assertEquals(record.getOrganizationID(), model.getOrganization().getId());
+    assertEquals(record.getAddedByID(), model.getAddedBy().getId());
+    assertEquals(record.getOriginID(), model.getOrigin().getId());
+    assertEquals(record.getTrust(), model.getTrust(), 0.0);
+    assertEquals(record.getConfidence(), model.getConfidence(), 0.0);
+    assertEquals(record.getAccessMode().name(), model.getAccessMode().name());
+    assertEquals(record.getTimestamp(), (long) model.getTimestamp());
+    assertEquals(record.getLastSeenTimestamp(), (long) model.getLastSeenTimestamp());
   }
 }

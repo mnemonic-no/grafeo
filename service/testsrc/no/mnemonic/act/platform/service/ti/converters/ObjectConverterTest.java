@@ -3,38 +3,63 @@ package no.mnemonic.act.platform.service.ti.converters;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 public class ObjectConverterTest {
 
-  private final Function<UUID, ObjectType> objectTypeConverter = id -> ObjectType.builder().setId(id).build();
-  private final Function<UUID, FactType> factTypeConverter = id -> FactType.builder().setId(id).build();
-  private final Function<UUID, Collection<ObjectStatisticsContainer.FactStatistic>> factStatisticsResolver = id -> null;
-  private final ObjectConverter converter = new ObjectConverter(objectTypeConverter, factTypeConverter, factStatisticsResolver);
+  @Mock
+  private ObjectTypeByIdConverter objectTypeConverter;
+  @Mock
+  private FactTypeByIdConverter factTypeConverter;
 
-  @Test
-  public void testConvertObject() {
-    ObjectEntity entity = createEntity();
-    assertModel(entity, converter.apply(entity));
+  private ObjectConverter converter;
+
+  @Before
+  public void setUp() {
+    initMocks(this);
+
+    when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).build());
+    when(factTypeConverter.apply(notNull())).thenAnswer(i -> FactType.builder().setId(i.getArgument(0)).build());
+
+    converter = new ObjectConverter(objectTypeConverter, factTypeConverter, id -> null);
   }
 
   @Test
-  public void testConvertObjectWithStatistics() {
+  public void testConvertNull() {
+    assertNull(converter.apply(null));
+  }
+
+  @Test
+  public void testConvertEmpty() {
+    assertNotNull(converter.apply(new ObjectRecord()));
+  }
+
+  @Test
+  public void testConvertWithoutStatistics() {
+    ObjectRecord record = createRecord();
+    assertModel(record, converter.apply(record));
+  }
+
+  @Test
+  public void testConvertWithStatistics() {
     ObjectConverter converter = new ObjectConverter(objectTypeConverter, factTypeConverter,
             id -> Collections.singleton(new ObjectStatisticsContainer.FactStatistic(UUID.randomUUID(), 42, 123456789, 987654321)));
 
-    ObjectEntity entity = createEntity();
-    Object model = converter.apply(entity);
-    assertModel(entity, model);
+    ObjectRecord record = createRecord();
+    Object model = converter.apply(record);
+    assertModel(record, model);
     assertEquals(1, model.getStatistics().size());
     assertNotNull(model.getStatistics().get(0).getType());
     assertEquals(42, model.getStatistics().get(0).getCount());
@@ -42,21 +67,16 @@ public class ObjectConverterTest {
     assertEquals(987654321, (long) model.getStatistics().get(0).getLastSeenTimestamp());
   }
 
-  @Test
-  public void testConvertNullReturnsNull() {
-    assertNull(converter.apply(null));
-  }
-
-  private ObjectEntity createEntity() {
-    return new ObjectEntity()
+  private ObjectRecord createRecord() {
+    return new ObjectRecord()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
             .setValue("value");
   }
 
-  private void assertModel(ObjectEntity entity, Object model) {
-    assertEquals(entity.getId(), model.getId());
-    assertEquals(entity.getTypeID(), model.getType().getId());
-    assertEquals(entity.getValue(), model.getValue());
+  private void assertModel(ObjectRecord record, Object model) {
+    assertEquals(record.getId(), model.getId());
+    assertEquals(record.getTypeID(), model.getType().getId());
+    assertEquals(record.getValue(), model.getValue());
   }
 }

@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service.ti;
 
-import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.exceptions.*;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.model.v1.*;
@@ -13,23 +12,17 @@ import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.service.Service;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.delegates.*;
-import no.mnemonic.act.platform.service.ti.utilities.FactsFetchingIterator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.common.api.ResultSet;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 
 import javax.inject.Inject;
-import java.util.Iterator;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenceService {
 
@@ -41,7 +34,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   private final SubjectResolver subjectResolver;
   private final FactManager factManager;
   private final ObjectManager objectManager;
-  private final FactSearchManager factSearchManager;
   private final ObjectFactDao objectFactDao;
   private final ValidatorFactory validatorFactory;
   private final DelegateProvider delegateProvider;
@@ -53,7 +45,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
                                        SubjectResolver subjectResolver,
                                        FactManager factManager,
                                        ObjectManager objectManager,
-                                       FactSearchManager factSearchManager,
                                        ObjectFactDao objectFactDao,
                                        ValidatorFactory validatorFactory,
                                        DelegateProvider delegateProvider) {
@@ -63,7 +54,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     this.subjectResolver = subjectResolver;
     this.factManager = factManager;
     this.objectManager = objectManager;
-    this.factSearchManager = factSearchManager;
     this.objectFactDao = objectFactDao;
     this.validatorFactory = validatorFactory;
     this.delegateProvider = delegateProvider;
@@ -79,7 +69,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
             .setAclResolver(factManager::fetchFactAcl)
-            .setFactsBoundToObjectResolver(createFactsBoundToObjectResolver())
             .build();
   }
 
@@ -88,7 +77,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return TiRequestContext.builder()
             .setFactManager(factManager)
             .setObjectManager(objectManager)
-            .setFactSearchManager(factSearchManager)
             .setValidatorFactory(validatorFactory)
             .build();
   }
@@ -271,16 +259,5 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   public Origin deleteOrigin(RequestHeader rh, DeleteOriginRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return delegateProvider.get(OriginDeleteDelegate.class).handle(request);
-  }
-
-  private Function<UUID, Iterator<FactEntity>> createFactsBoundToObjectResolver() {
-    return objectID -> {
-      // Look up bindings for the given Object ID ...
-      Iterator<UUID> factID = Streams.stream(objectManager.fetchObjectFactBindings(objectID))
-              .map(ObjectFactBindingEntity::getFactID)
-              .iterator();
-      // ... and use those to fetch the bound Facts.
-      return new FactsFetchingIterator(factManager, factID);
-    };
   }
 }

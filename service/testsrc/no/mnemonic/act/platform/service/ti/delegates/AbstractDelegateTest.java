@@ -3,15 +3,12 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -34,17 +31,11 @@ abstract class AbstractDelegateTest {
   @Mock
   private FactManager factManager;
   @Mock
-  private FactSearchManager factSearchManager;
-  @Mock
   private ValidatorFactory validatorFactory;
   @Mock
   private ObjectTypeConverter objectTypeConverter;
   @Mock
-  private ObjectConverter objectConverter;
-  @Mock
   private FactTypeConverter factTypeConverter;
-  @Mock
-  private FactConverter factConverter;
 
   @Before
   public void initialize() {
@@ -53,7 +44,6 @@ abstract class AbstractDelegateTest {
     TiRequestContext requestContext = TiRequestContext.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
-            .setFactSearchManager(factSearchManager)
             .setValidatorFactory(validatorFactory)
             .build();
 
@@ -85,10 +75,6 @@ abstract class AbstractDelegateTest {
     return factManager;
   }
 
-  FactSearchManager getFactSearchManager() {
-    return factSearchManager;
-  }
-
   ValidatorFactory getValidatorFactory() {
     return validatorFactory;
   }
@@ -97,16 +83,8 @@ abstract class AbstractDelegateTest {
     return objectTypeConverter;
   }
 
-  ObjectConverter getObjectConverter() {
-    return objectConverter;
-  }
-
   FactTypeConverter getFactTypeConverter() {
     return factTypeConverter;
-  }
-
-  FactConverter getFactConverter() {
-    return factConverter;
   }
 
   void expectInvalidArgumentException(InvalidArgumentExceptionTest test, String... messageTemplate) throws Exception {

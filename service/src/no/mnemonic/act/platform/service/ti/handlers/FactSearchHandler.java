@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -25,13 +25,13 @@ public class FactSearchHandler {
   private final FactRetractionHandler retractionHandler;
   private final ObjectFactDao objectFactDao;
   private final TiSecurityContext securityContext;
-  private final FactRecordConverter factConverter;
+  private final FactConverter factConverter;
 
   @Inject
   public FactSearchHandler(FactRetractionHandler retractionHandler,
                            ObjectFactDao objectFactDao,
                            TiSecurityContext securityContext,
-                           FactRecordConverter factConverter) {
+                           FactConverter factConverter) {
     this.retractionHandler = retractionHandler;
     this.objectFactDao = objectFactDao;
     this.securityContext = securityContext;

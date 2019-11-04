@@ -14,7 +14,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
-import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.ObjectResolver;
@@ -42,7 +42,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactCreateHelper factCreateHelper;
   @Mock
-  private FactRecordConverter factConverter;
+  private FactConverter factConverter;
 
   private FactCreateDelegate delegate;
 

@@ -6,7 +6,7 @@ import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -32,7 +32,7 @@ public class FactSearchHandlerTest {
   @Mock
   private TiSecurityContext securityContext;
   @Mock
-  private FactRecordConverter factConverter;
+  private FactConverter factConverter;
 
   private FactSearchHandler handler;
 

@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 
 import javax.inject.Inject;
@@ -18,12 +18,12 @@ public class FactGetByIdDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactResolver factResolver;
-  private final FactRecordConverter factConverter;
+  private final FactConverter factConverter;
 
   @Inject
   public FactGetByIdDelegate(TiSecurityContext securityContext,
                              FactResolver factResolver,
-                             FactRecordConverter factConverter) {
+                             FactConverter factConverter) {
     this.securityContext = securityContext;
     this.factResolver = factResolver;
     this.factConverter = factConverter;

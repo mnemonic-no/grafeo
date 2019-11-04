@@ -15,7 +15,7 @@ import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeByIdConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeByIdConverter;
 import no.mnemonic.act.platform.service.ti.converters.SearchObjectRequestConverter;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -125,7 +125,7 @@ public class ObjectSearchDelegate extends AbstractDelegate implements Delegate {
       // the information that the Object exists (plus potentially the Fact statistics) and will not give further access
       // to any Facts.
       return currentBatch.stream()
-              .map(new ObjectRecordConverter(objectTypeConverter, factTypeConverter, statistics::getStatistics))
+              .map(new ObjectConverter(objectTypeConverter, factTypeConverter, statistics::getStatistics))
               .iterator();
     }
   }

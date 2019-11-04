@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service.ti;
 
-import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
@@ -11,14 +10,20 @@ import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 
 /**
@@ -28,7 +33,6 @@ public class TiSecurityContext extends SecurityContext {
 
   private final ObjectFactDao objectFactDao;
   private final Function<UUID, List<FactAclEntity>> aclResolver;
-  private final Function<UUID, Iterator<FactEntity>> factsBoundToObjectResolver;
 
   private TiSecurityContext(AccessController accessController,
                             IdentityResolver identityResolver,
@@ -36,12 +40,10 @@ public class TiSecurityContext extends SecurityContext {
                             SubjectResolver subjectResolver,
                             Credentials credentials,
                             ObjectFactDao objectFactDao,
-                            Function<UUID, List<FactAclEntity>> aclResolver,
-                            Function<UUID, Iterator<FactEntity>> factsBoundToObjectResolver) {
+                            Function<UUID, List<FactAclEntity>> aclResolver) {
     super(accessController, identityResolver, organizationResolver, subjectResolver, credentials);
     this.objectFactDao = objectFactDao;
     this.aclResolver = aclResolver;
-    this.factsBoundToObjectResolver = factsBoundToObjectResolver;
   }
 
   public static TiSecurityContext get() {
@@ -58,7 +60,9 @@ public class TiSecurityContext extends SecurityContext {
    * @param fact Fact to verify access to.
    * @throws AccessDeniedException         If the user is not allowed to view the Fact.
    * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @deprecated Use {@link #checkReadPermission(FactRecord)} instead.
    */
+  @Deprecated
   public void checkReadPermission(FactEntity fact) throws AccessDeniedException, AuthenticationFailedException {
     if (fact == null) throw new AccessDeniedException("No access to Fact.");
 
@@ -115,30 +119,6 @@ public class TiSecurityContext extends SecurityContext {
     // Fallback to role-based access control and verify that user has access to Facts of a specific organization.
     // This also catches the case where AccessMode == RoleBased and user is not in the Fact's ACL.
     checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
-  }
-
-  /**
-   * Check if a user is allowed to view a specific Object. The user needs access to at least one Fact bound to the Object.
-   *
-   * @param object Object to verify access to.
-   * @throws AccessDeniedException         If the user is not allowed to view the Object.
-   * @throws AuthenticationFailedException If the user could not be authenticated.
-   */
-  public void checkReadPermission(ObjectEntity object) throws AccessDeniedException, AuthenticationFailedException {
-    if (object == null) {
-      // User should not get a different response if an Object is not in the system or if user does not have access to it.
-      throw new AccessDeniedException("No access to Object.");
-    }
-
-    // Iterate through all bound Facts and return the first accessible Fact.
-    // The user needs access to at least one bound Fact to have access to the Object.
-    Optional<FactEntity> accessibleFact = Streams.stream(factsBoundToObjectResolver.apply(object.getId()))
-            .filter(this::hasReadPermission)
-            .findFirst();
-    if (!accessibleFact.isPresent()) {
-      // User does not have access to any Facts bound to this Object.
-      throw new AccessDeniedException("No access to Object.");
-    }
   }
 
   /**
@@ -211,7 +191,9 @@ public class TiSecurityContext extends SecurityContext {
    *
    * @param fact Fact to verify access to.
    * @return True if user has access to the Fact.
+   * @deprecated Use {@link #hasReadPermission(FactRecord)} instead.
    */
+  @Deprecated
   public boolean hasReadPermission(FactEntity fact) {
     try {
       checkReadPermission(fact);
@@ -230,21 +212,6 @@ public class TiSecurityContext extends SecurityContext {
   public boolean hasReadPermission(FactRecord fact) {
     try {
       checkReadPermission(fact);
-      return true;
-    } catch (AccessDeniedException | AuthenticationFailedException ignored) {
-      return false;
-    }
-  }
-
-  /**
-   * Check if a user is allowed to view a specific Object. The user needs access to at least one Fact bound to the Object.
-   *
-   * @param object Object to verify access to.
-   * @return True if user has access to the Object.
-   */
-  public boolean hasReadPermission(ObjectEntity object) {
-    try {
-      checkReadPermission(object);
       return true;
     } catch (AccessDeniedException | AuthenticationFailedException ignored) {
       return false;
@@ -309,7 +276,6 @@ public class TiSecurityContext extends SecurityContext {
     private Credentials credentials;
     private ObjectFactDao objectFactDao;
     private Function<UUID, List<FactAclEntity>> aclResolver;
-    private Function<UUID, Iterator<FactEntity>> factsBoundToObjectResolver;
 
     private Builder() {
     }
@@ -317,8 +283,7 @@ public class TiSecurityContext extends SecurityContext {
     public TiSecurityContext build() {
       ObjectUtils.notNull(objectFactDao, "'objectFactDao' not set in SecurityContext.");
       ObjectUtils.notNull(aclResolver, "'aclResolver' not set in SecurityContext.");
-      ObjectUtils.notNull(factsBoundToObjectResolver, "'factsBoundToObjectResolver' not set in SecurityContext.");
-      return new TiSecurityContext(accessController, identityResolver, organizationResolver, subjectResolver, credentials, objectFactDao, aclResolver, factsBoundToObjectResolver);
+      return new TiSecurityContext(accessController, identityResolver, organizationResolver, subjectResolver, credentials, objectFactDao, aclResolver);
     }
 
     public Builder setAccessController(AccessController accessController) {
@@ -353,11 +318,6 @@ public class TiSecurityContext extends SecurityContext {
 
     public Builder setAclResolver(Function<UUID, List<FactAclEntity>> aclResolver) {
       this.aclResolver = aclResolver;
-      return this;
-    }
-
-    public Builder setFactsBoundToObjectResolver(Function<UUID, Iterator<FactEntity>> factsBoundToObjectResolver) {
-      this.factsBoundToObjectResolver = factsBoundToObjectResolver;
       return this;
     }
   }
