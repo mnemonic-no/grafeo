@@ -19,5 +19,7 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Changed
+- (2019-11-04) Creating a new Fact where `source` and `destination` are the same Object will fail with a 412 response.
+For this use case one-legged Facts with bi-directional binding should be created instead.
 - (2019-09-25) In Search APIs resolve entities by name for `factType`, `objectType`, `origin` and `organization` before querying
 ElasticSearch in order to avoid outdated names in the index. If an entity cannot be resolved a 412 response will be returned.
