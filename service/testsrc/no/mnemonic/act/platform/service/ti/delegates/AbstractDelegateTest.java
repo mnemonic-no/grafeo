@@ -9,7 +9,10 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.*;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
+import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
+import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.After;
@@ -42,10 +45,6 @@ abstract class AbstractDelegateTest {
   private FactTypeConverter factTypeConverter;
   @Mock
   private FactConverter factConverter;
-  @Mock
-  private AclEntryConverter aclEntryConverter;
-  @Mock
-  private FactCommentConverter factCommentConverter;
 
   @Before
   public void initialize() {
@@ -108,14 +107,6 @@ abstract class AbstractDelegateTest {
 
   FactConverter getFactConverter() {
     return factConverter;
-  }
-
-  AclEntryConverter getAclEntryConverter() {
-    return aclEntryConverter;
-  }
-
-  FactCommentConverter getFactCommentConverter() {
-    return factCommentConverter;
   }
 
   void expectInvalidArgumentException(InvalidArgumentExceptionTest test, String... messageTemplate) throws Exception {

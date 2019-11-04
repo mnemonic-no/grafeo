@@ -31,10 +31,6 @@ class ConverterModule extends AbstractModule {
   @Override
   protected void configure() {
     // Converters which convert from entity to model.
-    bind(new TypeLiteral<Function<FactAclEntity, AclEntry>>() {
-    }).to(AclEntryConverter.class);
-    bind(new TypeLiteral<Function<FactCommentEntity, FactComment>>() {
-    }).to(FactCommentConverter.class);
     bind(new TypeLiteral<Function<FactEntity, Fact>>() {
     }).to(FactConverter.class);
     bind(new TypeLiteral<Function<FactTypeEntity, FactType>>() {
