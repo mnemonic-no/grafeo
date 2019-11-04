@@ -1,9 +1,13 @@
 package no.mnemonic.act.platform.test.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.*;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
+import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.triggers.action.TriggerAction;
 import no.mnemonic.services.triggers.action.exceptions.ParameterException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
@@ -39,19 +43,19 @@ public class FactIT extends AbstractIT {
   @Test
   public void testFetchFact() throws Exception {
     // Create a Fact in the database ...
-    FactEntity entity = createFact();
+    FactRecord fact = createFact();
 
     // ... and check that it can be received via the REST API.
-    fetchAndAssertSingle("/v1/fact/uuid/" + entity.getId(), entity.getId());
+    fetchAndAssertSingle("/v1/fact/uuid/" + fact.getId(), fact.getId());
   }
 
   @Test
   public void testSearchFacts() throws Exception {
     // Create a Fact in the database ...
-    FactEntity entity = createFact();
+    FactRecord fact = createFact();
 
     // ... and check that it can be found via the REST API.
-    fetchAndAssertList("/v1/fact/search", new SearchFactRequest(), entity.getId());
+    fetchAndAssertList("/v1/fact/search", new SearchFactRequest(), fact.getId());
   }
 
   @Test
@@ -59,8 +63,8 @@ public class FactIT extends AbstractIT {
     // Create multiple Facts in the database ...
     ObjectTypeEntity objectType = createObjectType();
     FactTypeEntity factType = createFactType(objectType.getId());
-    ObjectEntity object = createObject(objectType.getId());
-    FactEntity fact = createFact(object, factType, f -> f.setValue("fact1"));
+    ObjectRecord object = createObject(objectType.getId());
+    FactRecord fact = createFact(object, factType, f -> f.setValue("fact1"));
     createFact(object, factType, f -> f.setValue("fact2"));
 
     // ... and check that only one Fact after filtering is found via the REST API.
@@ -78,10 +82,8 @@ public class FactIT extends AbstractIT {
     assertEquals(201, response.getStatus());
 
     // ... and check that both Fact and Object end up in the database.
-    UUID id = getIdFromModel(getPayload(response));
-    assertNotNull(getFactManager().getFact(id));
-    assertNotNull(getFactSearchManager().getFact(id));
-    assertNotNull(getObjectManager().getObject(objectType.getName(), "objectValue"));
+    assertNotNull(getObjectFactDao().getFact(getIdFromModel(getPayload(response))));
+    assertNotNull(getObjectFactDao().getObject(objectType.getName(), "objectValue"));
   }
 
   @Test
@@ -119,9 +121,9 @@ public class FactIT extends AbstractIT {
     assertEquals(201, response.getStatus());
 
     // ... and check that both ACL and the comment end up in the database.
-    UUID id = getIdFromModel(getPayload(response));
-    assertEquals(request.getAcl().size(), getFactManager().fetchFactAcl(id).size());
-    assertEquals(1, getFactManager().fetchFactComments(id).size());
+    FactRecord fact = getObjectFactDao().getFact(getIdFromModel(getPayload(response)));
+    assertEquals(request.getAcl().size(), fact.getAcl().size());
+    assertEquals(1, fact.getComments().size());
   }
 
   @Test
@@ -140,9 +142,9 @@ public class FactIT extends AbstractIT {
   @Test
   public void testFetchMetaFacts() throws Exception {
     // Create a Fact and a related meta Fact in the database ...
-    FactEntity referencedFact = createFact();
+    FactRecord referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
-    FactEntity metaFact = createMetaFact(referencedFact, metaFactType, f -> f);
+    FactRecord metaFact = createMetaFact(referencedFact, metaFactType, f -> f);
 
     // ... and check that the meta Fact can be found via the REST API.
     fetchAndAssertList("/v1/fact/uuid/" + referencedFact.getId() + "/meta", metaFact.getId());
@@ -151,10 +153,10 @@ public class FactIT extends AbstractIT {
   @Test
   public void testFetchMetaFactsWithFiltering() throws Exception {
     // Create a Fact and multiple related meta Facts in the database ...
-    FactEntity referencedFact = createFact();
+    FactRecord referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
     createMetaFact(referencedFact, metaFactType, f -> f.setTimestamp(111111111));
-    FactEntity metaFact = createMetaFact(referencedFact, metaFactType, f -> f.setTimestamp(333333333));
+    FactRecord metaFact = createMetaFact(referencedFact, metaFactType, f -> f.setTimestamp(333333333));
 
     // ... and check that only one meta Fact after filtering is found via the REST API.
     fetchAndAssertList("/v1/fact/uuid/" + referencedFact.getId() + "/meta?after=" + Instant.ofEpochMilli(222222222), metaFact.getId());
@@ -162,7 +164,7 @@ public class FactIT extends AbstractIT {
 
   @Test
   public void testCreateMetaFact() throws Exception {
-    FactEntity referencedFact = createFact();
+    FactRecord referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
 
     // Create a meta Fact via the REST API ...
@@ -171,15 +173,14 @@ public class FactIT extends AbstractIT {
     assertEquals(201, response.getStatus());
 
     // ... and check that meta Fact ends up in the database.
-    FactEntity metaFact = getFactManager().getFact(getIdFromModel(getPayload(response)));
+    FactRecord metaFact = getObjectFactDao().getFact(getIdFromModel(getPayload(response)));
     assertNotNull(metaFact);
-    assertNotNull(getFactSearchManager().getFact(metaFact.getId()));
     assertEquals(referencedFact.getId(), metaFact.getInReferenceToID());
   }
 
   @Test
   public void testCreateMetaFactTwice() throws Exception {
-    FactEntity referencedFact = createFact();
+    FactRecord referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
 
     // Create the same meta Fact twice ...
@@ -199,7 +200,7 @@ public class FactIT extends AbstractIT {
 
   @Test
   public void testCreateMetaFactWithAclAndComment() throws Exception {
-    FactEntity referencedFact = createFact();
+    FactRecord referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
 
     // Create a meta Fact with ACL and a comment via the REST API ...
@@ -212,14 +213,14 @@ public class FactIT extends AbstractIT {
     assertEquals(201, response.getStatus());
 
     // ... and check that both ACL and the comment end up in the database.
-    UUID id = getIdFromModel(getPayload(response));
-    assertEquals(request.getAcl().size(), getFactManager().fetchFactAcl(id).size());
-    assertEquals(1, getFactManager().fetchFactComments(id).size());
+    FactRecord metaFact = getObjectFactDao().getFact(getIdFromModel(getPayload(response)));
+    assertEquals(request.getAcl().size(), metaFact.getAcl().size());
+    assertEquals(1, metaFact.getComments().size());
   }
 
   @Test
   public void testCreateMetaFactTriggersAction() throws Exception {
-    FactEntity referencedFact = createFact();
+    FactRecord referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
 
     // Create a meta Fact via the REST API ...
@@ -236,23 +237,22 @@ public class FactIT extends AbstractIT {
   @Test
   public void testRetractFact() throws Exception {
     // Create a Fact in the database ...
-    FactEntity factToRetract = createFact();
+    FactRecord factToRetract = createFact();
 
     // ... retract it via the REST API ...
     Response response = request("/v1/fact/uuid/" + factToRetract.getId() + "/retract").post(Entity.json(new RetractFactRequest()));
     assertEquals(201, response.getStatus());
 
     // ... and check that retraction Fact was created correctly.
-    FactEntity retractionFact = getFactManager().getFact(getIdFromModel(getPayload(response)));
+    FactRecord retractionFact = getObjectFactDao().getFact(getIdFromModel(getPayload(response)));
     assertNotNull(retractionFact);
-    assertNotNull(getFactSearchManager().getFact(retractionFact.getId()));
     assertEquals(factToRetract.getId(), retractionFact.getInReferenceToID());
   }
 
   @Test
   public void testRetractFactTriggersAction() throws Exception {
     // Create a Fact in the database ...
-    FactEntity factToRetract = createFact();
+    FactRecord factToRetract = createFact();
 
     // ... retract it via the REST API ...
     Response response = request("/v1/fact/uuid/" + factToRetract.getId() + "/retract").post(Entity.json(new RetractFactRequest()));
@@ -270,8 +270,8 @@ public class FactIT extends AbstractIT {
   @Test
   public void testFetchAcl() throws Exception {
     // Create a Fact with ACL in the database ...
-    FactEntity fact = createFact();
-    FactAclEntity entry = createAclEntry(fact);
+    FactRecord fact = createFact();
+    FactAclEntryRecord entry = createAclEntry(fact);
 
     // ... and check that the ACL can be received via the REST API.
     fetchAndAssertList("/v1/fact/uuid/" + fact.getId() + "/access", entry.getId());
@@ -280,7 +280,7 @@ public class FactIT extends AbstractIT {
   @Test
   public void testGrantAccess() {
     // Create a Fact in the database ...
-    FactEntity fact = createFact();
+    FactRecord fact = createFact();
 
     // ... grant access to it via the REST API ...
     UUID subject = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -288,7 +288,7 @@ public class FactIT extends AbstractIT {
     assertEquals(201, response.getStatus());
 
     // ... and check that the ACL entry ends up in the database.
-    List<FactAclEntity> acl = getFactManager().fetchFactAcl(fact.getId());
+    List<FactAclEntryRecord> acl = getObjectFactDao().getFact(fact.getId()).getAcl();
     assertEquals(1, acl.size());
     assertEquals(subject, acl.get(0).getSubjectID());
   }
@@ -296,8 +296,8 @@ public class FactIT extends AbstractIT {
   @Test
   public void testFetchComments() throws Exception {
     // Create a Fact with a comment in the database ...
-    FactEntity fact = createFact();
-    FactCommentEntity comment = createComment(fact);
+    FactRecord fact = createFact();
+    FactCommentRecord comment = createComment(fact);
 
     // ... and check that the comment can be received via the REST API.
     fetchAndAssertList("/v1/fact/uuid/" + fact.getId() + "/comments", comment.getId());
@@ -306,7 +306,7 @@ public class FactIT extends AbstractIT {
   @Test
   public void testCreateComment() {
     // Create a Fact in the database ...
-    FactEntity fact = createFact();
+    FactRecord fact = createFact();
 
     // ... create a comment via the REST API ...
     CreateFactCommentRequest request = new CreateFactCommentRequest().setComment("Hello World!");
@@ -314,7 +314,7 @@ public class FactIT extends AbstractIT {
     assertEquals(201, response.getStatus());
 
     // ... and check that the comment ends up in the database.
-    List<FactCommentEntity> comments = getFactManager().fetchFactComments(fact.getId());
+    List<FactCommentRecord> comments = getObjectFactDao().getFact(fact.getId()).getComments();
     assertEquals(1, comments.size());
     assertEquals(request.getComment(), comments.get(0).getComment());
   }
@@ -369,11 +369,11 @@ public class FactIT extends AbstractIT {
   public void testFetchFactSanitizeInReferenceToFact() throws Exception {
     ObjectTypeEntity objectType = createObjectType();
     FactTypeEntity factType = createFactType(objectType.getId());
-    ObjectEntity object = createObject(objectType.getId());
+    ObjectRecord object = createObject(objectType.getId());
     // Create a referenced Fact with explicit access ...
-    FactEntity referencedFact = createFact(object, factType, f -> f.setAccessMode(no.mnemonic.act.platform.dao.cassandra.entity.AccessMode.Explicit));
+    FactRecord referencedFact = createFact(object, factType, f -> f.setAccessMode(FactRecord.AccessMode.Explicit));
     // ... and reference this Fact from another Fact ...
-    FactEntity referencingFact = createFact(object, factType, f -> f.setInReferenceToID(referencedFact.getId()));
+    FactRecord referencingFact = createFact(object, factType, f -> f.setInReferenceToID(referencedFact.getId()));
 
     // ... and check that the referenced Fact is not returned by the REST API.
     Response response = request("/v1/fact/uuid/" + referencingFact.getId()).get();
@@ -381,27 +381,25 @@ public class FactIT extends AbstractIT {
     assertTrue(getPayload(response).get("inReferenceTo").isNull());
   }
 
-  private FactAclEntity createAclEntry(FactEntity fact) {
-    FactAclEntity entry = new FactAclEntity()
+  private FactAclEntryRecord createAclEntry(FactRecord fact) {
+    FactAclEntryRecord entry = new FactAclEntryRecord()
             .setId(UUID.randomUUID())
-            .setFactID(fact.getId())
             .setSubjectID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOriginID(UUID.randomUUID())
             .setTimestamp(123456789);
 
-    return getFactManager().saveFactAclEntry(entry);
+    return getObjectFactDao().storeFactAclEntry(fact, entry);
   }
 
-  private FactCommentEntity createComment(FactEntity fact) {
-    FactCommentEntity comment = new FactCommentEntity()
+  private FactCommentRecord createComment(FactRecord fact) {
+    FactCommentRecord comment = new FactCommentRecord()
             .setId(UUID.randomUUID())
-            .setFactID(fact.getId())
             .setComment("Hello World!")
             .setReplyToID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setTimestamp(123456789);
 
-    return getFactManager().saveFactComment(comment);
+    return getObjectFactDao().storeFactComment(fact, comment);
   }
 
   private CreateFactRequest createCreateFactRequest() {
