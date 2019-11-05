@@ -230,6 +230,22 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   @Test
+  public void testRetractFact() {
+    FactEntity fact = createAndSaveFact();
+
+    assertEquals(Collections.emptySet(), getFactManager().getFact(fact.getId()).getFlags());
+    FactEntity retractedFact = getFactManager().retractFact(fact.getId());
+    assertEquals(fact.getId(), retractedFact.getId());
+    assertEquals(Collections.singleton(FactEntity.Flag.RetractedHint), retractedFact.getFlags());
+    assertEquals(Collections.singleton(FactEntity.Flag.RetractedHint), getFactManager().getFact(fact.getId()).getFlags());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testRetractFactWithNonExistingFact() {
+    getFactManager().retractFact(UUID.randomUUID());
+  }
+
+  @Test
   public void testSaveAndFetchFactAcl() {
     FactEntity fact = createAndSaveFact();
     FactAclEntity entry = createAndSaveFactAclEntry(fact.getId());

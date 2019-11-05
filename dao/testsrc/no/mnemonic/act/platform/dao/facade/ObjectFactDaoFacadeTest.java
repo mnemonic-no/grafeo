@@ -357,12 +357,10 @@ public class ObjectFactDaoFacadeTest {
   @Test
   public void testRetractFactUpdatesEntity() {
     FactRecord record = new FactRecord().setId(UUID.randomUUID());
-    when(factSearchManager.getFact(record.getId())).thenReturn(new FactDocument());
     mockReindexingOfFact(record);
 
     assertNotNull(dao.retractFact(record));
-    verify(factSearchManager).getFact(record.getId());
-    verify(factSearchManager).indexFact(argThat(FactDocument::isRetracted));
+    verify(factManager).retractFact(record.getId());
     verifyReindexingOfFact(record);
   }
 
@@ -372,7 +370,6 @@ public class ObjectFactDaoFacadeTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .addAclEntry(entry);
-    when(factSearchManager.getFact(fact.getId())).thenReturn(new FactDocument());
     when(factAclEntryRecordConverter.toEntity(entry, fact.getId())).thenReturn(new FactAclEntity());
 
     dao.retractFact(fact);
@@ -387,7 +384,6 @@ public class ObjectFactDaoFacadeTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .addAclEntry(entry);
-    when(factSearchManager.getFact(fact.getId())).thenReturn(new FactDocument());
     when(factManager.fetchFactAcl(fact.getId()))
             .thenReturn(ListUtils.list(new FactAclEntity().setId(entry.getId())));
 
@@ -402,7 +398,6 @@ public class ObjectFactDaoFacadeTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .addComment(comment);
-    when(factSearchManager.getFact(fact.getId())).thenReturn(new FactDocument());
     when(factCommentRecordConverter.toEntity(comment, fact.getId())).thenReturn(new FactCommentEntity());
 
     dao.retractFact(fact);
@@ -417,7 +412,6 @@ public class ObjectFactDaoFacadeTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .addComment(comment);
-    when(factSearchManager.getFact(fact.getId())).thenReturn(new FactDocument());
     when(factManager.fetchFactComments(fact.getId()))
             .thenReturn(ListUtils.list(new FactCommentEntity().setId(comment.getId())));
 

@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS act.fact (
   timestamp BIGINT,
   last_seen_timestamp BIGINT,
   bindings VARCHAR,
+  flags SET<INT>,
   PRIMARY KEY (id)
 );
 

@@ -20,7 +20,6 @@ class DocumentTestUtils {
   static FactDocument createFactDocument() {
     return new FactDocument()
             .setId(UUID.randomUUID())
-            .setRetracted(false)
             .setTypeID(UUID.randomUUID())
             .setValue("factValue")
             .setInReferenceTo(UUID.randomUUID())
@@ -45,7 +44,6 @@ class DocumentTestUtils {
 
   static void assertFactDocument(FactDocument expected, FactDocument actual) {
     assertEquals(expected.getId(), actual.getId());
-    assertEquals(expected.isRetracted(), actual.isRetracted());
     assertEquals(expected.getTypeID(), actual.getTypeID());
     assertEquals(expected.getValue(), actual.getValue());
     assertEquals(expected.getInReferenceTo(), actual.getInReferenceTo());

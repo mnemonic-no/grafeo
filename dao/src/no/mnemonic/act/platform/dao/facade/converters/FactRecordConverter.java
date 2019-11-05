@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
@@ -29,7 +28,6 @@ public class FactRecordConverter {
 
   private static final Logger LOGGER = Logging.getLogger(FactRecordConverter.class);
 
-  private final FactSearchManager factSearchManager;
   private final FactManager factManager;
   private final ObjectManager objectManager;
   private final ObjectRecordConverter objectRecordConverter;
@@ -37,13 +35,11 @@ public class FactRecordConverter {
   private final FactCommentRecordConverter factCommentRecordConverter;
 
   @Inject
-  public FactRecordConverter(FactSearchManager factSearchManager,
-                             FactManager factManager,
+  public FactRecordConverter(FactManager factManager,
                              ObjectManager objectManager,
                              ObjectRecordConverter objectRecordConverter,
                              FactAclEntryRecordConverter factAclEntryRecordConverter,
                              FactCommentRecordConverter factCommentRecordConverter) {
-    this.factSearchManager = factSearchManager;
     this.factManager = factManager;
     this.objectManager = objectManager;
     this.objectRecordConverter = objectRecordConverter;
@@ -73,11 +69,11 @@ public class FactRecordConverter {
             .setConfidence(entity.getConfidence())
             .setTrust(entity.getTrust())
             .setTimestamp(entity.getTimestamp())
-            .setLastSeenTimestamp(entity.getLastSeenTimestamp());
+            .setLastSeenTimestamp(entity.getLastSeenTimestamp())
+            .setFlags(SetUtils.set(entity.getFlags(), flag -> FactRecord.Flag.valueOf(flag.name())));
 
     // Populate with records from related entities.
     populateObjects(record, entity);
-    populateFlags(record);
     populateFactAcl(record);
     populateFactComments(record);
 
@@ -105,7 +101,8 @@ public class FactRecordConverter {
             .setConfidence(record.getConfidence())
             .setTrust(record.getTrust())
             .setTimestamp(record.getTimestamp())
-            .setLastSeenTimestamp(record.getLastSeenTimestamp());
+            .setLastSeenTimestamp(record.getLastSeenTimestamp())
+            .setFlags(SetUtils.set(record.getFlags(), flag -> FactEntity.Flag.valueOf(flag.name())));
 
     if (record.getSourceObject() != null) {
       entity.addBinding(new FactEntity.FactObjectBinding()
@@ -144,7 +141,6 @@ public class FactRecordConverter {
             .setTrust(record.getTrust())
             .setTimestamp(record.getTimestamp())
             .setLastSeenTimestamp(record.getLastSeenTimestamp())
-            .setRetracted(SetUtils.set(record.getFlags()).contains(FactRecord.Flag.RetractedHint))
             .setAcl(SetUtils.set(record.getAcl(), FactAclEntryRecord::getSubjectID));
 
     if (record.getSourceObject() != null) {
@@ -242,15 +238,6 @@ public class FactRecordConverter {
       record.setSourceObject(convertObject(first.getObjectID()))
               .setDestinationObject(convertObject(second.getObjectID()))
               .setBidirectionalBinding(true);
-    }
-  }
-
-  private void populateFlags(FactRecord record) {
-    // For historic reasons the indicator whether a Fact has been retracted is only stored in ElasticSearch.
-    // This should be moved to Cassandra in order to avoid the call to ElasticSearch and to simplify the code.
-    FactDocument document = factSearchManager.getFact(record.getId());
-    if (document != null && document.isRetracted()) {
-      record.addFlag(FactRecord.Flag.RetractedHint);
     }
   }
 

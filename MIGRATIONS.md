@@ -2,6 +2,36 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Move retracted hint to Cassandra] - 2019-11-05
+Moving the retracted hint from ElasticSearch to Cassandra requires changes to the Cassandra schema.
+
+### Cassandra
+Execute the following CQL command against your Cassandra cluster (e.g. using cqlsh).
+
+```
+ALTER TABLE act.fact ADD flags SET<INT>;
+```
+
+### Migrate data
+In order to migrate existing data execute the following command. It fetches all documents from ElasticSearch where
+the `retracted` flag is set and produces a text file with CQL commands to update the new `flags` field in Cassandra.
+
+```
+curl -XGET "http://localhost:9200/act/_search" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "term": {
+      "retracted": {
+        "value": "true"
+      }
+    }
+  },
+  "size": 10000
+}' | jq -r '.hits.hits | .[]._id | "UPDATE act.fact SET flags = {0} WHERE id = \(.) ;"' > retracted.txt
+```
+
+Update Cassandra using `cqlsh -f retracted.txt`.
+
 ## [Origin, Trust & Confidence] - 2019-07-29
 The support for origin, trust and confidence requires changes to the database schemas.
 

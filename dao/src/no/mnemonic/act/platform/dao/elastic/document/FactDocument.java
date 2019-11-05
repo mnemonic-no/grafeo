@@ -24,7 +24,6 @@ public class FactDocument implements ElasticDocument {
 
   @JsonIgnore // 'id' won't be indexed separately, '_id' is used instead.
   private UUID id;
-  private boolean retracted;
   private UUID typeID;
   private String value;
   private UUID inReferenceTo;
@@ -46,15 +45,6 @@ public class FactDocument implements ElasticDocument {
 
   public FactDocument setId(UUID id) {
     this.id = id;
-    return this;
-  }
-
-  public boolean isRetracted() {
-    return retracted;
-  }
-
-  public FactDocument setRetracted(boolean retracted) {
-    this.retracted = retracted;
     return this;
   }
 

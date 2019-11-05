@@ -7,7 +7,6 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
@@ -26,8 +25,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class FactRecordConverterTest {
 
-  @Mock
-  private FactSearchManager factSearchManager;
   @Mock
   private FactManager factManager;
   @Mock
@@ -49,7 +46,6 @@ public class FactRecordConverterTest {
     when(objectRecordConverter.fromEntity(notNull())).thenReturn(new ObjectRecord());
 
     converter = new FactRecordConverter(
-            factSearchManager,
             factManager,
             objectManager,
             objectRecordConverter,
@@ -82,7 +78,8 @@ public class FactRecordConverterTest {
             .setConfidence(0.1f)
             .setTrust(0.2f)
             .setTimestamp(123456789L)
-            .setLastSeenTimestamp(987654321L);
+            .setLastSeenTimestamp(987654321L)
+            .addFlag(FactEntity.Flag.RetractedHint);
 
     FactRecord record = converter.fromEntity(entity);
     assertEquals(entity.getId(), record.getId());
@@ -97,6 +94,7 @@ public class FactRecordConverterTest {
     assertEquals(entity.getTrust(), record.getTrust(), 0.0f);
     assertEquals(entity.getTimestamp(), record.getTimestamp());
     assertEquals(entity.getLastSeenTimestamp(), record.getLastSeenTimestamp());
+    assertEquals(SetUtils.set(FactRecord.Flag.RetractedHint), record.getFlags());
   }
 
   @Test
@@ -231,17 +229,6 @@ public class FactRecordConverterTest {
   }
 
   @Test
-  public void testFromEntityWithRetractedHintFlag() {
-    FactEntity entity = new FactEntity().setId(UUID.randomUUID());
-    when(factSearchManager.getFact(entity.getId())).thenReturn(new FactDocument().setRetracted(true));
-
-    FactRecord record = converter.fromEntity(entity);
-    assertEquals(SetUtils.set(FactRecord.Flag.RetractedHint), record.getFlags());
-
-    verify(factSearchManager).getFact(entity.getId());
-  }
-
-  @Test
   public void testFromEntityWithAcl() {
     FactEntity entity = new FactEntity().setId(UUID.randomUUID());
     when(factManager.fetchFactAcl(entity.getId()))
@@ -293,7 +280,8 @@ public class FactRecordConverterTest {
             .setConfidence(0.1f)
             .setTrust(0.2f)
             .setTimestamp(123456789L)
-            .setLastSeenTimestamp(987654321L);
+            .setLastSeenTimestamp(987654321L)
+            .addFlag(FactRecord.Flag.RetractedHint);
 
     FactEntity entity = converter.toEntity(record);
     assertEquals(record.getId(), entity.getId());
@@ -308,6 +296,7 @@ public class FactRecordConverterTest {
     assertEquals(record.getTrust(), entity.getTrust(), 0.0f);
     assertEquals(record.getTimestamp(), entity.getTimestamp());
     assertEquals(record.getLastSeenTimestamp(), entity.getLastSeenTimestamp());
+    assertEquals(SetUtils.set(FactEntity.Flag.RetractedHint), entity.getFlags());
   }
 
   @Test
@@ -384,12 +373,6 @@ public class FactRecordConverterTest {
     assertEquals(record.getTrust(), document.getTrust(), 0.0f);
     assertEquals(record.getTimestamp(), document.getTimestamp());
     assertEquals(record.getLastSeenTimestamp(), document.getLastSeenTimestamp());
-  }
-
-  @Test
-  public void testToDocumentWithFlagRetractedHint() {
-    FactRecord record = new FactRecord().addFlag(FactRecord.Flag.RetractedHint);
-    assertTrue(converter.toDocument(record).isRetracted());
   }
 
   @Test

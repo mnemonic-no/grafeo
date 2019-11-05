@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.triggers.action.TriggerAction;
 import no.mnemonic.services.triggers.action.exceptions.ParameterException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
@@ -379,6 +380,23 @@ public class FactIT extends AbstractIT {
     Response response = request("/v1/fact/uuid/" + referencingFact.getId()).get();
     assertEquals(200, response.getStatus());
     assertTrue(getPayload(response).get("inReferenceTo").isNull());
+  }
+
+  @Test
+  public void testFetchFactWithRetractedFlag() throws Exception {
+    // Create a Fact in the database ...
+    FactRecord factToRetract = createFact();
+
+    // ... retract it via the REST API using a more restrictive access mode ...
+    RetractFactRequest request = new RetractFactRequest()
+            .setAccessMode(AccessMode.Explicit);
+    assertEquals(201, request("/v1/fact/uuid/" + factToRetract.getId() + "/retract").post(Entity.json(request)).getStatus());
+
+    // ... and check that the 'Retracted' flag is calculated based on access to the retraction Fact.
+    JsonNode payload1 = getPayload(request("/v1/fact/uuid/" + factToRetract.getId(), 1).get());
+    assertEquals(SetUtils.set("Retracted"), SetUtils.set(payload1.get("flags").iterator(), JsonNode::asText));
+    JsonNode payload2 = getPayload(request("/v1/fact/uuid/" + factToRetract.getId(), 3).get());
+    assertTrue(payload2.get("flags").isEmpty());
   }
 
   private FactAclEntryRecord createAclEntry(FactRecord fact) {
