@@ -19,6 +19,8 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Changed
+- (2019-11-06) If a user has the `unlimitedSearch` permission an unlimited number of results can be fetched when
+searching for Facts. Otherwise the maximum number of returned results is capped at 10.000.
 - (2019-11-04) Creating a new Fact where `source` and `destination` are the same Object will fail with a 412 response.
 For this use case one-legged Facts with bi-directional binding should be created instead.
 - (2019-09-25) In Search APIs resolve entities by name for `factType`, `objectType`, `origin` and `organization` before querying

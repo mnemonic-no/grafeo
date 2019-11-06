@@ -1,11 +1,14 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
+import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
+import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
+import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -41,15 +44,16 @@ public class FactSearchHandler {
   /**
    * Search for Facts based on the given {@link FactSearchCriteria}. It will make sure that only Facts a user has
    * access to will be returned. Facts are streamed out from the database while the returned ResultSet is consumed.
+   * <p>
+   * If the user has the 'unlimitedSearch' permission the result size won't be limited, otherwise the maximum number
+   * of returned results will be capped at 10.000.
    *
    * @param criteria         Search criteria matched against existing Facts
    * @param includeRetracted Whether retracted Facts should be included in the result (false by default)
    * @return Facts wrapped inside a ResultSet
    */
   public ResultSet<Fact> search(FactSearchCriteria criteria, Boolean includeRetracted) {
-    // Restrict the number of results returned from search. Right now everything above MAXIMUM_SEARCH_LIMIT will put too
-    // much load onto the application and will be very slow. Implements same logic as previously done in ElasticSearch.
-    int limit = criteria.getLimit() > 0 && criteria.getLimit() < MAXIMUM_SEARCH_LIMIT ? criteria.getLimit() : MAXIMUM_SEARCH_LIMIT;
+    int limit = calculateLimit(criteria);
     ResultContainer<FactRecord> searchResult = objectFactDao.searchFacts(criteria);
 
     // When consuming the search result apply filter to include or exclude retracted Facts.
@@ -58,7 +62,7 @@ public class FactSearchHandler {
             .filter(fact -> includeRetracted(fact, includeRetracted))
             .filter(securityContext::hasReadPermission)
             .map(factConverter)
-            .limit(limit)
+            .limit(limit > 0 ? limit : Long.MAX_VALUE)
             .iterator();
 
     // Note that 'count' might be slightly off when retracted Facts are excluded from the result, because retracted
@@ -69,6 +73,16 @@ public class FactSearchHandler {
             .setLimit(limit)
             .setValues(facts)
             .build();
+  }
+
+  private int calculateLimit(FactSearchCriteria criteria) {
+    try {
+      securityContext.checkPermission(TiFunctionConstants.unlimitedSearch);
+      return Math.max(criteria.getLimit(), 0);
+    } catch (AccessDeniedException | AuthenticationFailedException ignored) {
+      // User isn't allowed to return unlimited search results, thus, apply system-defined maximum limit.
+      return criteria.getLimit() > 0 && criteria.getLimit() < MAXIMUM_SEARCH_LIMIT ? criteria.getLimit() : MAXIMUM_SEARCH_LIMIT;
+    }
   }
 
   private boolean includeRetracted(FactRecord fact, Boolean includeRetracted) {
