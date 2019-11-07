@@ -1,10 +1,12 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
+import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
+import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -57,8 +59,10 @@ public class FactSearchHandlerTest {
   }
 
   @Test
-  public void testSearchFactsWithoutLimit() {
+  public void testSearchFactsWithoutLimit() throws Exception {
     mockSearch(1);
+
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.unlimitedSearch);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(0));
     ResultSet<Fact> result = handler.search(criteria, null);
@@ -69,8 +73,10 @@ public class FactSearchHandlerTest {
   }
 
   @Test
-  public void testSearchFactsWithLimitAboveMaxLimit() {
+  public void testSearchFactsWithLimitAboveMaxLimit() throws Exception {
     mockSearch(1);
+
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.unlimitedSearch);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(10001));
     ResultSet<Fact> result = handler.search(criteria, null);
@@ -78,6 +84,20 @@ public class FactSearchHandlerTest {
     assertEquals(10000, result.getLimit());
     assertEquals(1, result.getCount());
     assertEquals(1, ListUtils.list(result.iterator()).size());
+  }
+
+  @Test
+  public void testSearchFactsUnlimited() throws Exception {
+    mockSearch(10001);
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(0));
+    ResultSet<Fact> result = handler.search(criteria, null);
+
+    assertEquals(0, result.getLimit());
+    assertEquals(10001, result.getCount());
+    assertEquals(10001, ListUtils.list(result.iterator()).size());
+
+    verify(securityContext).checkPermission(TiFunctionConstants.unlimitedSearch);
   }
 
   @Test

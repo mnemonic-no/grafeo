@@ -16,7 +16,8 @@ public enum TiFunctionConstants implements NamedFunction {
   addFactComments,
   viewFactComments,
   grantFactAccess,
-  viewFactAccess;
+  viewFactAccess,
+  unlimitedSearch;
 
   @Override
   public String getName() {
