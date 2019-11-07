@@ -175,7 +175,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("something"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("matching")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueText));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -185,7 +185,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("2.2.2.2"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("1.1.1.0/24")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueIp));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -195,7 +195,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("www.test.com"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("example.org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -205,7 +205,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("www.test.org"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("example.org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -215,7 +215,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("www.example.com"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("example.org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -227,7 +227,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("www.test.com"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, 2);
   }
 
@@ -238,7 +238,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("nx.example.org"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("example.org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, 3);
   }
 
@@ -249,7 +249,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("nx.example.org"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("www.example.org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -260,7 +260,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("c.www.example.org"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("www.example.org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, 3);
   }
 
@@ -271,7 +271,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("c.www.example.org"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("a.www.example.org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -282,7 +282,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setValue("WWW.example.ORG"));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("WWW.EXAMPLE.ORG")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueDomain));
     testSearchFacts(criteria, 3);
   }
 
@@ -292,7 +292,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setObjects(set(createObjectDocument().setValue("something"))));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("matching")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValueText));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -302,7 +302,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setObjects(set(createObjectDocument().setValue("2.2.2.2"))));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("1.1.1.0/24")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValueIp));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -312,7 +312,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setObjects(set(createObjectDocument().setValue("www.test.com"))));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("example.org")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValueDomain));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -324,6 +324,18 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("matching")
             .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.all));
     testSearchFacts(criteria, 2);
+  }
+
+  @Test
+  public void testSearchFactsFilterByKeywordsMatchStrategyAll() {
+    FactDocument accessibleFact = indexFact(d -> d.setValue("matching").setObjects(set(createObjectDocument().setValue("matching"))));
+    indexFact(d -> d.setValue("matching").setObjects(set(createObjectDocument().setValue("something"))));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("matching")
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.factValueText)
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValueText)
+            .setKeywordMatchStrategy(FactSearchCriteria.MatchStrategy.all));
+    testSearchFacts(criteria, accessibleFact);
   }
 
   @Test

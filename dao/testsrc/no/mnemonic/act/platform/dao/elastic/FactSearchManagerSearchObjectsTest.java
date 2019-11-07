@@ -141,7 +141,7 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
     indexFact(d -> d.setObjects(set(createObjectDocument().setValue("something"))));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("matching")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValueText));
     testSearchObjects(criteria, accessibleObject);
   }
 
@@ -152,7 +152,7 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
     indexFact(d -> d.setObjects(set(accessibleObject, inaccessibleObject)));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setKeywords("matching")
-            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValue));
+            .addKeywordFieldStrategy(FactSearchCriteria.KeywordFieldStrategy.objectValueText));
     testSearchObjects(criteria, accessibleObject);
   }
 
