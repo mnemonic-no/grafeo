@@ -17,14 +17,20 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
+import static java.util.Collections.unmodifiableMap;
 import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.FactEntity.TABLE;
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+import static no.mnemonic.commons.utilities.collections.MapUtils.map;
 
 @Entity(defaultKeyspace = KEY_SPACE)
 @CqlName(TABLE)
@@ -38,6 +44,26 @@ public class FactEntity implements CassandraEntity {
   private static final ObjectReader reader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBinding.class));
   private static final ObjectWriter writer = mapper.writerFor(mapper.getTypeFactory().constructCollectionType(List.class, FactObjectBinding.class));
   private static final Logger logger = Logging.getLogger(FactEntity.class);
+
+  public enum Flag implements CassandraEnum<Flag> {
+    RetractedHint(0);
+
+    private static final Map<Integer, Flag> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
+    private int value;
+
+    Flag(int value) {
+      this.value = value;
+    }
+
+    @Override
+    public int value() {
+      return value;
+    }
+
+    public static Map<Integer, Flag> getValueMap() {
+      return enumValues;
+    }
+  }
 
   @PartitionKey
   private UUID id;
@@ -65,6 +91,7 @@ public class FactEntity implements CassandraEntity {
   // But they are also available as objects.
   @Transient
   private List<FactObjectBinding> bindings;
+  private Set<Flag> flags;
 
   public UUID getId() {
     return id;
@@ -211,6 +238,20 @@ public class FactEntity implements CassandraEntity {
   public FactEntity addBinding(FactObjectBinding binding) {
     // Need to call setBindings() in order to store JSON blob.
     return setBindings(ListUtils.addToList(bindings, binding));
+  }
+
+  public Set<Flag> getFlags() {
+    return flags;
+  }
+
+  public FactEntity setFlags(Set<Flag> flags) {
+    this.flags = flags;
+    return this;
+  }
+
+  public FactEntity addFlag(Flag flag) {
+    this.flags = SetUtils.addToSet(this.flags, flag);
+    return this;
   }
 
   private void logAndRethrow(IOException ex, String msg) {

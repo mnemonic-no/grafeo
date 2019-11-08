@@ -123,10 +123,19 @@ public class FactManager implements LifecycleAspect {
   }
 
   public FactEntity refreshFact(UUID id) {
-    if (getFact(id) == null) throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", id));
-    factDao.refreshLastSeenTimestamp(id, Instant.now(clock).toEpochMilli());
+    FactEntity fact = getFact(id);
+    if (fact == null) throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", id));
+    factDao.save(fact.setLastSeenTimestamp(Instant.now(clock).toEpochMilli()));
 
-    return getFact(id);
+    return fact;
+  }
+
+  public FactEntity retractFact(UUID id) {
+    FactEntity fact = getFact(id);
+    if (fact == null) throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", id));
+    factDao.save(fact.addFlag(FactEntity.Flag.RetractedHint));
+
+    return fact;
   }
 
   /* FactAclEntity-related methods */

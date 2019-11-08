@@ -30,9 +30,6 @@
   "mappings": {
     "dynamic": false,
     "properties": {
-      "retracted": {
-        "type": "boolean"
-      },
       "typeID": {
         "type": "keyword"
       },

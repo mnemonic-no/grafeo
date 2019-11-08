@@ -160,12 +160,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   public FactRecord retractFact(FactRecord record) {
     if (record == null) return null;
 
-    // For historic reasons the indicator whether a Fact has been retracted is only stored in ElasticSearch. This
-    // should be moved to Cassandra as the authoritative data store. Update the indicator in ElasticSearch for now.
-    FactDocument document = factSearchManager.getFact(record.getId());
-    if (document != null) {
-      factSearchManager.indexFact(document.setRetracted(true));
-    }
+    factManager.retractFact(record.getId());
 
     // Save new ACL entries and comments in Cassandra.
     saveAclEntries(record);

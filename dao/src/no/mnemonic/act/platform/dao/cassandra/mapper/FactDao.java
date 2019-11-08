@@ -28,9 +28,6 @@ public interface FactDao {
   @Query("SELECT * FROM " + KEY_SPACE + "." + FactEntity.TABLE + " WHERE id IN :id")
   PagingIterable<FactEntity> fetchByID(List<UUID> id);
 
-  @Query("UPDATE " + KEY_SPACE + "." + FactEntity.TABLE + " SET last_seen_timestamp = :timestamp WHERE id = :id")
-  void refreshLastSeenTimestamp(UUID id, long timestamp);
-
   /* MetaFactBindingEntity-related methods */
 
   @Insert
