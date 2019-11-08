@@ -39,8 +39,12 @@ public class FactSearchCriteria {
   }
 
   public enum KeywordFieldStrategy implements FieldStrategy {
-    factValue("value.text", "value.ip", "value.domain"),
-    objectValue("objects.value.text", "objects.value.ip", "objects.value.domain"),
+    factValueText("value.text"),
+    factValueIp("value.ip"),
+    factValueDomain("value.domain"),
+    objectValueText("objects.value.text"),
+    objectValueIp("objects.value.ip"),
+    objectValueDomain("objects.value.domain"),
     all("value.text", "value.ip", "value.domain", "objects.value.text", "objects.value.ip", "objects.value.domain");
 
     private final Set<String> fields;

@@ -29,7 +29,10 @@ public class SearchMetaFactsRequestConverter {
     return FactSearchCriteria.builder()
             .addInReferenceTo(request.getFact())
             .setKeywords(request.getKeywords())
-            .setKeywordFieldStrategy(SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.factValue))
+            .setKeywordFieldStrategy(SetUtils.set(
+                    FactSearchCriteria.KeywordFieldStrategy.factValueText,
+                    FactSearchCriteria.KeywordFieldStrategy.factValueIp,
+                    FactSearchCriteria.KeywordFieldStrategy.factValueDomain))
             .setFactTypeID(byNameResolver.resolveFactType(request.getFactType()))
             .setFactValue(request.getFactValue())
             .setOrganizationID(byNameResolver.resolveOrganization(request.getOrganization()))

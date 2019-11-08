@@ -55,7 +55,11 @@ public class SearchObjectFactsRequestConverterTest {
   public void testConvertRequestFilterByKeywords() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchObjectFactsRequest().setKeywords("keyword"));
     assertEquals("keyword", criteria.getKeywords());
-    assertEquals(SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.factValue), criteria.getKeywordFieldStrategy());
+    assertEquals(SetUtils.set(
+            FactSearchCriteria.KeywordFieldStrategy.factValueText,
+            FactSearchCriteria.KeywordFieldStrategy.factValueIp,
+            FactSearchCriteria.KeywordFieldStrategy.factValueDomain
+    ), criteria.getKeywordFieldStrategy());
     assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getKeywordMatchStrategy());
   }
 

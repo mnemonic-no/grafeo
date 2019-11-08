@@ -706,15 +706,34 @@ public class FactSearchManager implements LifecycleAspect {
     }
 
     // Apply keyword search on Object values if necessary.
-    if (!StringUtils.isBlank(criteria.getKeywords()) &&
-            (criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.objectValue) ||
-                    criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.all))) {
+    Set<FactSearchCriteria.KeywordFieldStrategy> objectFieldStrategy = onlyObjectFieldStrategy(criteria);
+    if (!StringUtils.isBlank(criteria.getKeywords()) && !CollectionUtils.isEmpty(objectFieldStrategy)) {
       // Values are indexed differently. Avoid errors by setting 'lenient' to true.
       applyFieldStrategy(rootQuery, field -> simpleQueryStringQuery(criteria.getKeywords()).field(field).lenient(true),
-              SetUtils.set(FactSearchCriteria.KeywordFieldStrategy.objectValue), criteria.getKeywordMatchStrategy());
+              objectFieldStrategy, criteria.getKeywordMatchStrategy());
     }
 
     return rootQuery;
+  }
+
+  private Set<FactSearchCriteria.KeywordFieldStrategy> onlyObjectFieldStrategy(FactSearchCriteria criteria) {
+    Set<FactSearchCriteria.KeywordFieldStrategy> strategy = SetUtils.set();
+
+    // When keyword search is performed directly on Objects only consider the relevant field strategies.
+    if (criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.all) ||
+            criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.objectValueText)) {
+      strategy.add(FactSearchCriteria.KeywordFieldStrategy.objectValueText);
+    }
+    if (criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.all) ||
+            criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.objectValueIp)) {
+      strategy.add(FactSearchCriteria.KeywordFieldStrategy.objectValueIp);
+    }
+    if (criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.all) ||
+            criteria.getKeywordFieldStrategy().contains(FactSearchCriteria.KeywordFieldStrategy.objectValueDomain)) {
+      strategy.add(FactSearchCriteria.KeywordFieldStrategy.objectValueDomain);
+    }
+
+    return strategy;
   }
 
   private int calculateMaximumSize(FactSearchCriteria criteria) {
