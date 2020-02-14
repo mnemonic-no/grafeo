@@ -105,11 +105,11 @@
   <distributionManagement>
     <repository>
       <id>mnemonic</id>
-      <url>http://artifactory.mnemonic.no/artifactory/mnemonic</url>
+      <url>https://artifactory.mnemonic.no/artifactory/mnemonic</url>
     </repository>
     <snapshotRepository>
       <id>mnemonic-snapshots</id>
-      <url>http://artifactory.mnemonic.no/artifactory/mnemonic-snapshots</url>
+      <url>https://artifactory.mnemonic.no/artifactory/mnemonic-snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 
