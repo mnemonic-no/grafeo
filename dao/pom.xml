@@ -86,6 +86,27 @@
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-annotations</artifactId>
         </exclusion>
+        <!-- Exclude dependencies for unused features in order to minimize dependencies and to avoid conflicts. -->
+        <exclusion>
+          <groupId>com.esri.geometry</groupId>
+          <artifactId>esri-geometry-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.tinkerpop</groupId>
+          <artifactId>gremlin-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.tinkerpop</groupId>
+          <artifactId>tinkergraph-gremlin</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -104,6 +125,12 @@
           <artifactId>spotbugs-annotations</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <!-- Force a newer version of netty (used by Cassandra driver) in order to fix vulnerability warnings. -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
+      <version>${netty.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
