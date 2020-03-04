@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -12,12 +13,22 @@ import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class OriginConverterTest {
 
-  private final Function<UUID, Namespace> namespaceConverter = id -> Namespace.builder().setId(id).build();
-  private final Function<UUID, Organization> organizationConverter = id -> Organization.builder().setId(id).build();
-  private final OriginConverter converter = new OriginConverter(namespaceConverter, organizationConverter);
+  private OriginConverter converter;
+
+  @Before
+  public void setUp() {
+    NamespaceByIdConverter namespaceConverter = mock(NamespaceByIdConverter.class);
+    when(namespaceConverter.apply(notNull())).thenAnswer(i -> Namespace.builder().setId(i.getArgument(0)).build());
+
+    Function<UUID, Organization> organizationConverter = id -> Organization.builder().setId(id).build();
+    converter = new OriginConverter(namespaceConverter, organizationConverter);
+  }
 
   @Test
   public void testConvertOrigin() {

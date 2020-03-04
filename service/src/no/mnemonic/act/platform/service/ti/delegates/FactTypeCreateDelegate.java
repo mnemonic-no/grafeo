@@ -9,12 +9,12 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import javax.inject.Inject;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
 
@@ -23,13 +23,13 @@ public class FactTypeCreateDelegate extends AbstractDelegate implements Delegate
   private final TiSecurityContext securityContext;
   private final FactManager factManager;
   private final FactTypeHelper factTypeHelper;
-  private final Function<FactTypeEntity, FactType> factTypeConverter;
+  private final FactTypeConverter factTypeConverter;
 
   @Inject
   public FactTypeCreateDelegate(TiSecurityContext securityContext,
                                 FactManager factManager,
                                 FactTypeHelper factTypeHelper,
-                                Function<FactTypeEntity, FactType> factTypeConverter) {
+                                FactTypeConverter factTypeConverter) {
     this.securityContext = securityContext;
     this.factManager = factManager;
     this.factTypeHelper = factTypeHelper;

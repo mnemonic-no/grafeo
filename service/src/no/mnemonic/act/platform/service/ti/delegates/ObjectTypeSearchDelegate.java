@@ -7,26 +7,25 @@ import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObjectTypeSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
-  private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+  private final ObjectTypeConverter objectTypeConverter;
 
   @Inject
   public ObjectTypeSearchDelegate(TiSecurityContext securityContext,
                                   ObjectManager objectManager,
-                                  Function<ObjectTypeEntity, ObjectType> objectTypeConverter) {
+                                  ObjectTypeConverter objectTypeConverter) {
     this.securityContext = securityContext;
     this.objectManager = objectManager;
     this.objectTypeConverter = objectTypeConverter;

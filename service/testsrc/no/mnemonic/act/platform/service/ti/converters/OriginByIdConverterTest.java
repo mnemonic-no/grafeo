@@ -2,12 +2,12 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -16,9 +16,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class OriginByIdConverterTest {
 
   @Mock
-  private Function<UUID, OriginEntity> originResolver;
+  private OriginResolver originResolver;
   @Mock
-  private Function<OriginEntity, Origin> originConverter;
+  private OriginConverter originConverter;
 
   private OriginByIdConverter converter;
 

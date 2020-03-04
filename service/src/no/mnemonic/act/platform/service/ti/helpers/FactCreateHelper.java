@@ -14,6 +14,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
@@ -42,14 +42,14 @@ public class FactCreateHelper {
   private final TiSecurityContext securityContext;
   private final SubjectResolver subjectResolver;
   private final OrganizationResolver organizationResolver;
-  private final Function<UUID, OriginEntity> originResolver;
+  private final OriginResolver originResolver;
   private final OriginManager originManager;
 
   @Inject
   public FactCreateHelper(TiSecurityContext securityContext,
                           SubjectResolver subjectResolver,
                           OrganizationResolver organizationResolver,
-                          Function<UUID, OriginEntity> originResolver,
+                          OriginResolver originResolver,
                           OriginManager originManager) {
     this.securityContext = securityContext;
     this.subjectResolver = subjectResolver;

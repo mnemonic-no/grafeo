@@ -24,7 +24,6 @@ public class TiServiceModule extends AbstractModule {
     // Install all dependencies for the service (DAO, access controller, converters, aspects).
     install(new DaoModule());
     install(new PropertiesBasedAccessControllerModule());
-    install(new ResolverModule());
     install(new ConverterModule());
     install(new AuthenticationAspect());
     install(new RequestContextAspect());

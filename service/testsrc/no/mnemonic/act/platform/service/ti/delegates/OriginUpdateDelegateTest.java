@@ -3,12 +3,13 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
-import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.request.v1.UpdateOriginRequest;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -16,7 +17,6 @@ import org.mockito.Mock;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -28,9 +28,9 @@ public class OriginUpdateDelegateTest {
   @Mock
   private OriginManager originManager;
   @Mock
-  private Function<UUID, OriginEntity> originResolver;
+  private OriginResolver originResolver;
   @Mock
-  private Function<OriginEntity, Origin> originConverter;
+  private OriginConverter originConverter;
 
   private OriginUpdateDelegate delegate;
 

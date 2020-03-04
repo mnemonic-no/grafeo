@@ -1,30 +1,18 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
-import no.mnemonic.act.platform.api.model.v1.Namespace;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 
 import javax.inject.Inject;
-import java.util.UUID;
 import java.util.function.Function;
 
-public class ObjectTypeConverter implements Converter<ObjectTypeEntity, ObjectType> {
+public class ObjectTypeConverter implements Function<ObjectTypeEntity, ObjectType> {
 
-  private final Function<UUID, Namespace> namespaceConverter;
+  private final NamespaceByIdConverter namespaceConverter;
 
   @Inject
-  public ObjectTypeConverter(Function<UUID, Namespace> namespaceConverter) {
+  public ObjectTypeConverter(NamespaceByIdConverter namespaceConverter) {
     this.namespaceConverter = namespaceConverter;
-  }
-
-  @Override
-  public Class<ObjectTypeEntity> getSourceType() {
-    return ObjectTypeEntity.class;
-  }
-
-  @Override
-  public Class<ObjectType> getTargetType() {
-    return ObjectType.class;
   }
 
   @Override

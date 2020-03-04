@@ -10,21 +10,21 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
 import no.mnemonic.commons.utilities.StringUtils;
 
 import javax.inject.Inject;
-import java.util.function.Function;
 
 public class ObjectTypeUpdateDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
-  private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+  private final ObjectTypeConverter objectTypeConverter;
 
   @Inject
   public ObjectTypeUpdateDelegate(TiSecurityContext securityContext,
                                   ObjectManager objectManager,
-                                  Function<ObjectTypeEntity, ObjectType> objectTypeConverter) {
+                                  ObjectTypeConverter objectTypeConverter) {
     this.securityContext = securityContext;
     this.objectManager = objectManager;
     this.objectTypeConverter = objectTypeConverter;
