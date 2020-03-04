@@ -16,7 +16,7 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
+import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -31,7 +31,7 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
   private final ObjectFactDao objectFactDao;
   private final FactTypeResolver factTypeResolver;
   private final FactResolver factResolver;
-  private final FactCreateHelper factCreateHelper;
+  private final FactCreateHandler factCreateHandler;
   private final FactConverter factConverter;
 
   private FactTypeEntity retractionFactType;
@@ -44,14 +44,14 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
                              ObjectFactDao objectFactDao,
                              FactTypeResolver factTypeResolver,
                              FactResolver factResolver,
-                             FactCreateHelper factCreateHelper,
+                             FactCreateHandler factCreateHandler,
                              FactConverter factConverter) {
     this.securityContext = securityContext;
     this.triggerContext = triggerContext;
     this.objectFactDao = objectFactDao;
     this.factTypeResolver = factTypeResolver;
     this.factResolver = factResolver;
-    this.factCreateHelper = factCreateHelper;
+    this.factCreateHandler = factCreateHandler;
     this.factConverter = factConverter;
   }
 
@@ -64,8 +64,8 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
 
     // Resolve some objects which are required later on. This will also validate those request parameters.
     retractionFactType = factTypeResolver.resolveRetractionFactType();
-    requestedOrigin = factCreateHelper.resolveOrigin(request.getOrigin());
-    requestedOrganization = factCreateHelper.resolveOrganization(request.getOrganization(), requestedOrigin);
+    requestedOrigin = factCreateHandler.resolveOrigin(request.getOrigin());
+    requestedOrganization = factCreateHandler.resolveOrganization(request.getOrganization(), requestedOrigin);
 
     // Verify that user is allowed to add Facts for the requested organization.
     securityContext.checkPermission(TiFunctionConstants.addFactObjects, requestedOrganization.getId());
@@ -92,11 +92,11 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
             .setOriginID(requestedOrigin.getId())
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), retractionFactType.getDefaultConfidence()))
-            .setAccessMode(factCreateHelper.resolveAccessMode(factToRetract, request.getAccessMode()))
+            .setAccessMode(factCreateHandler.resolveAccessMode(factToRetract, request.getAccessMode()))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
-    retractionFact = factCreateHelper.withAcl(retractionFact, request.getAcl());
-    retractionFact = factCreateHelper.withComment(retractionFact, request.getComment());
+    retractionFact = factCreateHandler.withAcl(retractionFact, request.getAcl());
+    retractionFact = factCreateHandler.withComment(retractionFact, request.getComment());
 
     return objectFactDao.storeFact(retractionFact);
   }

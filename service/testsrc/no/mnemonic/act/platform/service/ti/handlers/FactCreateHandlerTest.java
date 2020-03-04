@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.service.ti.helpers;
+package no.mnemonic.act.platform.service.ti.handlers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
@@ -9,11 +9,15 @@ import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
+import no.mnemonic.act.platform.service.validators.Validator;
+import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -26,7 +30,7 @@ import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactCreateHelperTest {
+public class FactCreateHandlerTest {
 
   @Mock
   private TiSecurityContext securityContext;
@@ -38,18 +42,20 @@ public class FactCreateHelperTest {
   private OriginResolver originResolver;
   @Mock
   private OriginManager originManager;
+  @Mock
+  private ValidatorFactory validatorFactory;
 
-  private FactCreateHelper helper;
+  private FactCreateHandler handler;
 
   @Before
   public void setUp() {
     initMocks(this);
-    helper = new FactCreateHelper(securityContext, subjectResolver, organizationResolver, originResolver, originManager);
+    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originResolver, originManager, validatorFactory);
   }
 
   @Test(expected = InvalidArgumentException.class)
   public void testResolveOrganizationProvidedOrganizationNotExists() throws Exception {
-    helper.resolveOrganization(UUID.randomUUID(), null);
+    handler.resolveOrganization(UUID.randomUUID(), null);
   }
 
   @Test
@@ -58,14 +64,14 @@ public class FactCreateHelperTest {
     Organization organization = Organization.builder().build();
     when(organizationResolver.resolveOrganization(organizationID)).thenReturn(organization);
 
-    assertSame(organization, helper.resolveOrganization(organizationID, null));
+    assertSame(organization, handler.resolveOrganization(organizationID, null));
     verify(organizationResolver).resolveOrganization(organizationID);
     verify(securityContext).checkReadPermission(organization);
   }
 
   @Test(expected = InvalidArgumentException.class)
   public void testResolveOrganizationFallbackToOriginOrganizationNotExists() throws Exception {
-    helper.resolveOrganization(null, new OriginEntity().setOrganizationID(UUID.randomUUID()));
+    handler.resolveOrganization(null, new OriginEntity().setOrganizationID(UUID.randomUUID()));
   }
 
   @Test
@@ -74,14 +80,14 @@ public class FactCreateHelperTest {
     Organization organization = Organization.builder().build();
     when(organizationResolver.resolveOrganization(origin.getOrganizationID())).thenReturn(organization);
 
-    assertSame(organization, helper.resolveOrganization(null, origin));
+    assertSame(organization, handler.resolveOrganization(null, origin));
     verify(organizationResolver).resolveOrganization(origin.getOrganizationID());
   }
 
   @Test(expected = InvalidArgumentException.class)
   public void testResolveOrganizationFallbackToCurrentUserOrganizationNotExists() throws Exception {
     when(securityContext.getCurrentUserOrganizationID()).thenReturn(UUID.randomUUID());
-    helper.resolveOrganization(null, new OriginEntity());
+    handler.resolveOrganization(null, new OriginEntity());
   }
 
   @Test
@@ -91,14 +97,14 @@ public class FactCreateHelperTest {
     when(securityContext.getCurrentUserOrganizationID()).thenReturn(currentUserOrganizationID);
     when(organizationResolver.resolveOrganization(currentUserOrganizationID)).thenReturn(organization);
 
-    assertSame(organization, helper.resolveOrganization(null, new OriginEntity()));
+    assertSame(organization, handler.resolveOrganization(null, new OriginEntity()));
     verify(securityContext).getCurrentUserOrganizationID();
     verify(organizationResolver).resolveOrganization(currentUserOrganizationID);
   }
 
   @Test(expected = InvalidArgumentException.class)
   public void testResolveOriginProvidedOriginNotExists() throws Exception {
-    helper.resolveOrigin(UUID.randomUUID());
+    handler.resolveOrigin(UUID.randomUUID());
   }
 
   @Test
@@ -107,7 +113,7 @@ public class FactCreateHelperTest {
     OriginEntity origin = new OriginEntity().setId(originID);
     when(originResolver.apply(originID)).thenReturn(origin);
 
-    assertSame(origin, helper.resolveOrigin(originID));
+    assertSame(origin, handler.resolveOrigin(originID));
     verify(originResolver).apply(originID);
     verify(securityContext).checkReadPermission(origin);
     verifyNoInteractions(originManager);
@@ -121,7 +127,7 @@ public class FactCreateHelperTest {
             .addFlag(OriginEntity.Flag.Deleted);
     when(originResolver.apply(originID)).thenReturn(origin);
 
-    helper.resolveOrigin(originID);
+    handler.resolveOrigin(originID);
   }
 
   @Test
@@ -131,7 +137,7 @@ public class FactCreateHelperTest {
     when(securityContext.getCurrentUserID()).thenReturn(currentUserID);
     when(originResolver.apply(currentUserID)).thenReturn(origin);
 
-    assertSame(origin, helper.resolveOrigin(null));
+    assertSame(origin, handler.resolveOrigin(null));
     verify(originResolver).apply(currentUserID);
     verifyNoInteractions(originManager);
   }
@@ -145,7 +151,7 @@ public class FactCreateHelperTest {
     when(securityContext.getCurrentUserID()).thenReturn(currentUserID);
     when(originResolver.apply(currentUserID)).thenReturn(origin);
 
-    helper.resolveOrigin(null);
+    handler.resolveOrigin(null);
   }
 
   @Test
@@ -161,7 +167,7 @@ public class FactCreateHelperTest {
     when(subjectResolver.resolveSubject(currentUserID)).thenReturn(currentUser);
     when(originManager.saveOrigin(notNull())).thenReturn(newOrigin);
 
-    assertSame(newOrigin, helper.resolveOrigin(null));
+    assertSame(newOrigin, handler.resolveOrigin(null));
     verify(originResolver).apply(currentUserID);
     verify(subjectResolver).resolveSubject(currentUserID);
     verify(originManager).saveOrigin(argThat(entity -> {
@@ -189,7 +195,7 @@ public class FactCreateHelperTest {
             .setId(UUID.randomUUID())
             .setName(currentUser.getName()));
 
-    helper.resolveOrigin(null);
+    handler.resolveOrigin(null);
     verify(originManager).getOrigin(currentUser.getName());
     verify(originManager).saveOrigin(argThat(entity -> {
       assertEquals(currentUserID, entity.getId());
@@ -201,45 +207,44 @@ public class FactCreateHelperTest {
 
   @Test
   public void testResolveAccessModeWithNull() throws Exception {
-    assertNull(helper.resolveAccessMode(null, AccessMode.Public));
-    assertNull(helper.resolveAccessMode(new FactRecord(), AccessMode.Public));
+    assertNull(handler.resolveAccessMode(null, AccessMode.Public));
+    assertNull(handler.resolveAccessMode(new FactRecord(), AccessMode.Public));
   }
 
   @Test
   public void testResolveAccessModeFallsBackToReferencedFact() throws Exception {
     FactRecord referencedFact = new FactRecord().setAccessMode(FactRecord.AccessMode.Public);
-    assertEquals(referencedFact.getAccessMode(), helper.resolveAccessMode(referencedFact, null));
+    assertEquals(referencedFact.getAccessMode(), handler.resolveAccessMode(referencedFact, null));
   }
 
   @Test
   public void testResolveAccessModeAllowsEqualOrMoreRestrictive() throws Exception {
-    assertEquals(FactRecord.AccessMode.Public, helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Public), AccessMode.Public));
-    assertEquals(FactRecord.AccessMode.RoleBased, helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Public), AccessMode.RoleBased));
-    assertEquals(FactRecord.AccessMode.Explicit, helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Public), AccessMode.Explicit));
+    assertEquals(FactRecord.AccessMode.Public, handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Public), AccessMode.Public));
+    assertEquals(FactRecord.AccessMode.RoleBased, handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Public), AccessMode.RoleBased));
+    assertEquals(FactRecord.AccessMode.Explicit, handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Public), AccessMode.Explicit));
 
-    assertEquals(FactRecord.AccessMode.RoleBased, helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.RoleBased), AccessMode.RoleBased));
-    assertEquals(FactRecord.AccessMode.Explicit, helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.RoleBased), AccessMode.Explicit));
+    assertEquals(FactRecord.AccessMode.RoleBased, handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.RoleBased), AccessMode.RoleBased));
+    assertEquals(FactRecord.AccessMode.Explicit, handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.RoleBased), AccessMode.Explicit));
 
-    assertEquals(FactRecord.AccessMode.Explicit, helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit), AccessMode.Explicit));
+    assertEquals(FactRecord.AccessMode.Explicit, handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit), AccessMode.Explicit));
   }
 
   @Test
   public void testResolveAccessModeDisallowsLessRestrictive() {
-    expectInvalidArgumentException(() -> helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit), AccessMode.RoleBased));
-    expectInvalidArgumentException(() -> helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit), AccessMode.Public));
-
-    expectInvalidArgumentException(() -> helper.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.RoleBased), AccessMode.Public));
+    assertThrows(InvalidArgumentException.class, () -> handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit), AccessMode.RoleBased));
+    assertThrows(InvalidArgumentException.class, () -> handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit), AccessMode.Public));
+    assertThrows(InvalidArgumentException.class, () -> handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.RoleBased), AccessMode.Public));
   }
 
   @Test
   public void testWithAclNullFact() {
-    assertNull(helper.withAcl(null, ListUtils.list(UUID.randomUUID())));
+    assertNull(handler.withAcl(null, ListUtils.list(UUID.randomUUID())));
   }
 
   @Test
   public void testWithAclSkipsEmptyAcl() {
-    assertTrue(CollectionUtils.isEmpty(helper.withAcl(new FactRecord(), null).getAcl()));
-    assertTrue(CollectionUtils.isEmpty(helper.withAcl(new FactRecord(), ListUtils.list()).getAcl()));
+    assertTrue(CollectionUtils.isEmpty(handler.withAcl(new FactRecord(), null).getAcl()));
+    assertTrue(CollectionUtils.isEmpty(handler.withAcl(new FactRecord(), ListUtils.list()).getAcl()));
   }
 
   @Test
@@ -247,7 +252,7 @@ public class FactCreateHelperTest {
     UUID subjectID = UUID.randomUUID();
     FactRecord fact = new FactRecord().setOriginID(UUID.randomUUID());
 
-    helper.withAcl(fact, ListUtils.list(subjectID));
+    handler.withAcl(fact, ListUtils.list(subjectID));
     assertEquals(1, fact.getAcl().size());
     assertNotNull(fact.getAcl().get(0).getId());
     assertEquals(fact.getOriginID(), fact.getAcl().get(0).getOriginID());
@@ -260,7 +265,7 @@ public class FactCreateHelperTest {
     UUID subjectID = UUID.randomUUID();
     FactRecord fact = new FactRecord().addAclEntry(new FactAclEntryRecord().setSubjectID(UUID.randomUUID()));
 
-    helper.withAcl(fact, ListUtils.list(subjectID));
+    handler.withAcl(fact, ListUtils.list(subjectID));
     assertEquals(2, fact.getAcl().size());
   }
 
@@ -269,7 +274,7 @@ public class FactCreateHelperTest {
     UUID subjectID = UUID.randomUUID();
     FactRecord fact = new FactRecord().addAclEntry(new FactAclEntryRecord().setSubjectID(subjectID));
 
-    helper.withAcl(fact, ListUtils.list(subjectID));
+    handler.withAcl(fact, ListUtils.list(subjectID));
     assertEquals(1, fact.getAcl().size());
   }
 
@@ -279,7 +284,7 @@ public class FactCreateHelperTest {
     FactRecord fact = new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit);
     when(securityContext.getCurrentUserID()).thenReturn(currentUser);
 
-    helper.withAcl(fact, null);
+    handler.withAcl(fact, null);
     assertEquals(1, fact.getAcl().size());
     assertEquals(currentUser, fact.getAcl().get(0).getSubjectID());
   }
@@ -292,21 +297,21 @@ public class FactCreateHelperTest {
             .addAclEntry(new FactAclEntryRecord().setSubjectID(currentUser));
     when(securityContext.getCurrentUserID()).thenReturn(currentUser);
 
-    helper.withAcl(fact, null);
+    handler.withAcl(fact, null);
     assertEquals(1, fact.getAcl().size());
     assertEquals(currentUser, fact.getAcl().get(0).getSubjectID());
   }
 
   @Test
   public void testWithCommentNullFact() {
-    assertNull(helper.withComment(null, "Hello World!"));
+    assertNull(handler.withComment(null, "Hello World!"));
   }
 
   @Test
   public void testWithCommentSkipsBlankComment() {
-    assertTrue(CollectionUtils.isEmpty(helper.withComment(new FactRecord(), null).getComments()));
-    assertTrue(CollectionUtils.isEmpty(helper.withComment(new FactRecord(), "").getComments()));
-    assertTrue(CollectionUtils.isEmpty(helper.withComment(new FactRecord(), " ").getComments()));
+    assertTrue(CollectionUtils.isEmpty(handler.withComment(new FactRecord(), null).getComments()));
+    assertTrue(CollectionUtils.isEmpty(handler.withComment(new FactRecord(), "").getComments()));
+    assertTrue(CollectionUtils.isEmpty(handler.withComment(new FactRecord(), " ").getComments()));
   }
 
   @Test
@@ -314,7 +319,7 @@ public class FactCreateHelperTest {
     FactRecord fact = new FactRecord()
             .setOriginID(UUID.randomUUID());
 
-    helper.withComment(fact, "Hello World!");
+    handler.withComment(fact, "Hello World!");
     assertEquals(1, fact.getComments().size());
     assertNotNull(fact.getComments().get(0).getId());
     assertEquals(fact.getOriginID(), fact.getComments().get(0).getOriginID());
@@ -322,15 +327,15 @@ public class FactCreateHelperTest {
     assertTrue(fact.getComments().get(0).getTimestamp() > 0);
   }
 
-  private void expectInvalidArgumentException(InvalidArgumentExceptionTest test) {
-    try {
-      test.execute();
-      fail("Expected InvalidArgumentException!");
-    } catch (InvalidArgumentException ignored) {
-    }
-  }
+  @Test
+  public void testAssertValidFactValue() {
+    FactTypeEntity factType = new FactTypeEntity().setValidator("SomeValidator").setValidatorParameter("SomeParam");
+    Validator validator = mock(Validator.class);
+    when(validator.validate(eq("test"))).thenReturn(false);
+    when(validatorFactory.get(factType.getValidator(), factType.getValidatorParameter())).thenReturn(validator);
 
-  private interface InvalidArgumentExceptionTest {
-    void execute() throws InvalidArgumentException;
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
+      () -> handler.assertValidFactValue(factType, "test"));
+    assertEquals(SetUtils.set("fact.not.valid"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 }

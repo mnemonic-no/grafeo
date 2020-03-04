@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.service.ti.helpers;
+package no.mnemonic.act.platform.service.ti.handlers;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
@@ -12,9 +12,12 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
+import no.mnemonic.act.platform.service.validators.Validator;
+import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
@@ -30,7 +33,7 @@ import java.util.stream.Collectors;
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
-public class FactCreateHelper {
+public class FactCreateHandler {
 
   private static final float ORIGIN_DEFAULT_TRUST = 0.8f;
   private static final Map<FactRecord.AccessMode, Integer> ACCESS_MODE_ORDER = MapUtils.map(
@@ -44,18 +47,21 @@ public class FactCreateHelper {
   private final OrganizationResolver organizationResolver;
   private final OriginResolver originResolver;
   private final OriginManager originManager;
+  private final ValidatorFactory validatorFactory;
 
   @Inject
-  public FactCreateHelper(TiSecurityContext securityContext,
-                          SubjectResolver subjectResolver,
-                          OrganizationResolver organizationResolver,
-                          OriginResolver originResolver,
-                          OriginManager originManager) {
+  public FactCreateHandler(TiSecurityContext securityContext,
+                           SubjectResolver subjectResolver,
+                           OrganizationResolver organizationResolver,
+                           OriginResolver originResolver,
+                           OriginManager originManager,
+                           ValidatorFactory validatorFactory) {
     this.securityContext = securityContext;
     this.subjectResolver = subjectResolver;
     this.organizationResolver = organizationResolver;
     this.originResolver = originResolver;
     this.originManager = originManager;
+    this.validatorFactory = validatorFactory;
   }
 
   /**
@@ -217,6 +223,22 @@ public class FactCreateHelper {
             .setOriginID(fact.getOriginID())
             .setComment(comment)
             .setTimestamp(System.currentTimeMillis()));
+  }
+
+  /**
+   * Assert that a Fact value is valid according to a FactType's validator.
+   *
+   * @param type  FactType to validate against
+   * @param value Value to validate
+   * @throws InvalidArgumentException Thrown if value is not valid for the given FactType
+   */
+  public void assertValidFactValue(FactTypeEntity type, String value) throws InvalidArgumentException {
+    Validator validator = validatorFactory.get(type.getValidator(), type.getValidatorParameter());
+
+    if (!validator.validate(value)) {
+      throw new InvalidArgumentException()
+        .addValidationError("Fact did not pass validation against FactType.", "fact.not.valid", "value", value);
+    }
   }
 
   private Organization fetchOrganization(UUID organizationID) throws InvalidArgumentException {

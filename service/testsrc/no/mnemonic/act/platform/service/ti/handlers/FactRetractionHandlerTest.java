@@ -75,7 +75,7 @@ public class FactRetractionHandlerTest {
   @Test
   public void testIsRetractedWithRetractedHintFalse() {
     assertFalse(handler.isRetracted(UUID.randomUUID(), false));
-    verifyZeroInteractions(factSearchManager);
+    verifyNoMoreInteractions(factSearchManager);
   }
 
   @Test

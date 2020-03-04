@@ -5,7 +5,6 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiRequestContext;
-import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import java.util.UUID;
@@ -87,22 +86,7 @@ abstract class AbstractDelegate {
     } catch (IllegalArgumentException ex) {
       // An IllegalArgumentException will be thrown if a Validator cannot be found.
       throw new InvalidArgumentException()
-              .addValidationError(ex.getMessage(), "validator.not.exist", "validator", validator);
-    }
-  }
-
-  /**
-   * Assert that a Fact value is valid according to a FactType's validator.
-   *
-   * @param type  FactType to validate against
-   * @param value Value to validate
-   * @throws InvalidArgumentException Thrown if value is not valid for the given FactType
-   */
-  void assertValidFactValue(FactTypeEntity type, String value) throws InvalidArgumentException {
-    Validator validator = TiRequestContext.get().getValidatorFactory().get(type.getValidator(), type.getValidatorParameter());
-    if (!validator.validate(value)) {
-      throw new InvalidArgumentException()
-              .addValidationError("Fact did not pass validation against FactType.", "fact.not.valid", "value", value);
+        .addValidationError(ex.getMessage(), "validator.not.exist", "validator", validator);
     }
   }
 }

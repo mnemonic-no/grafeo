@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
-import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.service.contexts.RequestContext;
@@ -11,13 +10,10 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.mockito.Mock;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 abstract class AbstractDelegateTest {
@@ -85,18 +81,5 @@ abstract class AbstractDelegateTest {
 
   FactTypeConverter getFactTypeConverter() {
     return factTypeConverter;
-  }
-
-  void expectInvalidArgumentException(InvalidArgumentExceptionTest test, String... messageTemplate) throws Exception {
-    try {
-      test.execute();
-      fail();
-    } catch (InvalidArgumentException ex) {
-      assertEquals(SetUtils.set(messageTemplate), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
-    }
-  }
-
-  interface InvalidArgumentExceptionTest {
-    void execute() throws Exception;
   }
 }

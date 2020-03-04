@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
+import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.act.platform.api.request.v1.MetaFactBindingDefinition;
@@ -14,8 +15,7 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
@@ -40,28 +40,31 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
-  public void testCreateFactTypeWithoutBindings() throws Exception {
+  public void testCreateFactTypeWithoutBindings() {
     CreateFactTypeRequest request = new CreateFactTypeRequest()
             .setName("FactType")
             .setValidator("Validator");
-    expectInvalidArgumentException(() -> delegate.handle(request), "invalid.fact.type.definition");
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
+    assertEquals(SetUtils.set("invalid.fact.type.definition"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 
   @Test
-  public void testCreateFactTypeWithBothObjectAndFactBindings() throws Exception {
+  public void testCreateFactTypeWithBothObjectAndFactBindings() {
     CreateFactTypeRequest request = new CreateFactTypeRequest()
             .setName("FactType")
             .setValidator("Validator")
             .addRelevantObjectBinding(new FactObjectBindingDefinition())
             .addRelevantFactBinding(new MetaFactBindingDefinition());
-    expectInvalidArgumentException(() -> delegate.handle(request), "invalid.fact.type.definition");
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
+    assertEquals(SetUtils.set("invalid.fact.type.definition"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 
   @Test
-  public void testCreateFactTypeValidatorNotFound() throws Exception {
+  public void testCreateFactTypeValidatorNotFound() {
     CreateFactTypeRequest request = createFactTypeRequest();
     when(getValidatorFactory().get(request.getValidator(), request.getValidatorParameter())).thenThrow(IllegalArgumentException.class);
-    expectInvalidArgumentException(() -> delegate.handle(request), "validator.not.exist");
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
+    assertEquals(SetUtils.set("validator.not.exist"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 
   @Test

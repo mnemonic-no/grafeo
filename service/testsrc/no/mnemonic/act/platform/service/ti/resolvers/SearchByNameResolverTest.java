@@ -18,8 +18,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -66,15 +65,22 @@ public class SearchByNameResolverTest {
     assertEquals(set(id), resolver.resolveOrigin(set(id.toString())));
     assertEquals(set(id), resolver.resolveOrganization(set(id.toString())));
 
-    verifyZeroInteractions(factManager, objectManager, originManager, organizationResolver);
+    verifyNoMoreInteractions(factManager, objectManager, originManager, organizationResolver);
   }
 
   @Test
-  public void testResolveWithOnlyNameNotFound() throws Exception {
-    expectInvalidArgumentException(() -> resolver.resolveFactType(set("name1")), "factType");
-    expectInvalidArgumentException(() -> resolver.resolveObjectType(set("name2")), "objectType");
-    expectInvalidArgumentException(() -> resolver.resolveOrigin(set("name3")), "origin");
-    expectInvalidArgumentException(() -> resolver.resolveOrganization(set("name4")), "organization");
+  public void testResolveWithOnlyNameNotFound() {
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> resolver.resolveFactType(set("name1")));
+    assertEquals(SetUtils.set("factType"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getProperty));
+
+    InvalidArgumentException ex2 = assertThrows(InvalidArgumentException.class, () -> resolver.resolveObjectType(set("name2")));
+    assertEquals(SetUtils.set("objectType"), SetUtils.set(ex2.getValidationErrors(), InvalidArgumentException.ValidationError::getProperty));
+
+    InvalidArgumentException ex3 = assertThrows(InvalidArgumentException.class, () -> resolver.resolveOrigin(set("name3")));
+    assertEquals(SetUtils.set("origin"), SetUtils.set(ex3.getValidationErrors(), InvalidArgumentException.ValidationError::getProperty));
+
+    InvalidArgumentException ex4 = assertThrows(InvalidArgumentException.class, () -> resolver.resolveOrganization(set("name4")));
+    assertEquals(SetUtils.set("organization"), SetUtils.set(ex4.getValidationErrors(), InvalidArgumentException.ValidationError::getProperty));
 
     verify(factManager).getFactType("name1");
     verify(objectManager).getObjectType("name2");
@@ -114,18 +120,5 @@ public class SearchByNameResolverTest {
     assertEquals(set(id1, id2), resolver.resolveObjectType(set(id1.toString(), "name")));
     assertEquals(set(id1, id2), resolver.resolveOrigin(set(id1.toString(), "name")));
     assertEquals(set(id1, id2), resolver.resolveOrganization(set(id1.toString(), "name")));
-  }
-
-  private void expectInvalidArgumentException(InvalidArgumentExceptionTest test, String property) throws Exception {
-    try {
-      test.execute();
-      fail();
-    } catch (InvalidArgumentException ex) {
-      assertEquals(SetUtils.set(property), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getProperty));
-    }
-  }
-
-  private interface InvalidArgumentExceptionTest {
-    void execute() throws Exception;
   }
 }

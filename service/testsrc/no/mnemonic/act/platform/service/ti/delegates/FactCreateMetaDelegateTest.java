@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
+import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
@@ -13,11 +14,12 @@ import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
+import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -38,7 +40,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactResolver factResolver;
   @Mock
-  private FactCreateHelper factCreateHelper;
+  private FactCreateHandler factCreateHandler;
   @Mock
   private FactConverter factConverter;
 
@@ -77,7 +79,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             objectFactDao,
             factTypeResolver,
             factResolver,
-            factCreateHelper,
+      factCreateHandler,
             factConverter
     );
   }
@@ -100,17 +102,13 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
-  public void testValidateFactValueThrowsException() throws Exception {
+  public void testFactValueIsValidated() throws Exception {
     CreateMetaFactRequest request = createRequest();
+    mockCreateNewFact();
 
-    when(factResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
-    mockFetchingOrganization();
-    mockFetchingFactType();
-    Validator validatorMock = mockValidator(false);
+    delegate.handle(request);
 
-    expectInvalidArgumentException(() -> delegate.handle(request), "fact.not.valid");
-
-    verify(validatorMock).validate(request.getValue());
+    verify(factCreateHandler).assertValidFactValue(any(), eq(request.getValue()));
   }
 
   @Test
@@ -123,7 +121,8 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     mockFetchingFactType();
     mockValidator(true);
 
-    expectInvalidArgumentException(() -> delegate.handle(request), "invalid.meta.fact.binding");
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
+    assertEquals(SetUtils.set("invalid.meta.fact.binding"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 
   @Test
@@ -139,7 +138,8 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     mockFetchingFactType();
     mockValidator(true);
 
-    expectInvalidArgumentException(() -> delegate.handle(request), "invalid.meta.fact.binding");
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
+    assertEquals(SetUtils.set("invalid.meta.fact.binding"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 
   @Test
@@ -160,7 +160,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setOrganization(null);
     mockCreateNewFact();
 
-    when(factCreateHelper.resolveOrganization(isNull(), eq(origin)))
+    when(factCreateHandler.resolveOrganization(isNull(), eq(origin)))
             .thenReturn(Organization.builder().setId(organizationID).build());
 
     delegate.handle(request);
@@ -176,8 +176,8 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setOrigin(null);
     mockCreateNewFact();
 
-    when(factCreateHelper.resolveOrigin(isNull())).thenReturn(new OriginEntity().setId(originID));
-    when(factCreateHelper.resolveOrganization(notNull(), notNull())).thenReturn(organization);
+    when(factCreateHandler.resolveOrigin(isNull())).thenReturn(new OriginEntity().setId(originID));
+    when(factCreateHandler.resolveOrganization(notNull(), notNull())).thenReturn(organization);
 
     delegate.handle(request);
 
@@ -203,7 +203,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setAccessMode(null);
     mockCreateNewFact();
 
-    when(factCreateHelper.resolveAccessMode(eq(seenIn), isNull())).thenReturn(seenIn.getAccessMode());
+    when(factCreateHandler.resolveAccessMode(eq(seenIn), isNull())).thenReturn(seenIn.getAccessMode());
 
     delegate.handle(request);
 
@@ -218,8 +218,8 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHelper).withComment(matchFactRecord(request), eq(request.getComment()));
-    verify(factCreateHelper).withAcl(matchFactRecord(request), eq(request.getAcl()));
+    verify(factCreateHandler).withComment(matchFactRecord(request), eq(request.getComment()));
+    verify(factCreateHandler).withAcl(matchFactRecord(request), eq(request.getAcl()));
   }
 
   @Test
@@ -258,8 +258,8 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHelper).withComment(same(existingFact), eq(request.getComment()));
-    verify(factCreateHelper).withAcl(same(existingFact), eq(request.getAcl()));
+    verify(factCreateHandler).withComment(same(existingFact), eq(request.getComment()));
+    verify(factCreateHandler).withAcl(same(existingFact), eq(request.getAcl()));
     verify(objectFactDao).refreshFact(existingFact);
     verify(objectFactDao, never()).storeFact(any());
     verify(factConverter).apply(same(existingFact));
@@ -288,18 +288,18 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
     // Mock fetching of referenced Fact.
     when(factResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
-    when(factCreateHelper.resolveAccessMode(eq(seenIn), any())).thenReturn(FactRecord.AccessMode.Explicit);
+    when(factCreateHandler.resolveAccessMode(eq(seenIn), any())).thenReturn(FactRecord.AccessMode.Explicit);
     // Mock fetching of existing Fact.
     when(objectFactDao.retrieveExistingFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
     // Mock stuff needed for saving Fact.
     when(objectFactDao.storeFact(any())).thenAnswer(i -> i.getArgument(0));
-    when(factCreateHelper.withAcl(any(), any())).thenAnswer(i -> i.getArgument(0));
-    when(factCreateHelper.withComment(any(), any())).thenAnswer(i -> i.getArgument(0));
+    when(factCreateHandler.withAcl(any(), any())).thenAnswer(i -> i.getArgument(0));
+    when(factCreateHandler.withComment(any(), any())).thenAnswer(i -> i.getArgument(0));
   }
 
   private void mockFetchingOrganization() throws Exception {
-    when(factCreateHelper.resolveOrigin(origin.getId())).thenReturn(origin);
-    when(factCreateHelper.resolveOrganization(organization.getId(), origin)).thenReturn(organization);
+    when(factCreateHandler.resolveOrigin(origin.getId())).thenReturn(origin);
+    when(factCreateHandler.resolveOrganization(organization.getId(), origin)).thenReturn(organization);
   }
 
   private void mockFetchingFactType() throws Exception {

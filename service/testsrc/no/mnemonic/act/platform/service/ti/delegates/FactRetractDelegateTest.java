@@ -12,7 +12,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.helpers.FactCreateHelper;
+import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -36,7 +36,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   @Mock
   private FactResolver factResolver;
   @Mock
-  private FactCreateHelper factCreateHelper;
+  private FactCreateHandler factCreateHandler;
   @Mock
   private FactConverter factConverter;
 
@@ -51,7 +51,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
             objectFactDao,
             factTypeResolver,
             factResolver,
-            factCreateHelper,
+      factCreateHandler,
             factConverter
     );
   }
@@ -88,7 +88,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     UUID organizationID = UUID.randomUUID();
     RetractFactRequest request = mockRetractingFact().setOrganization(null);
 
-    when(factCreateHelper.resolveOrganization(isNull(), notNull()))
+    when(factCreateHandler.resolveOrganization(isNull(), notNull()))
             .thenReturn(Organization.builder().setId(organizationID).build());
 
     Fact fact = delegate.handle(request);
@@ -104,8 +104,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
     UUID originID = UUID.randomUUID();
     RetractFactRequest request = mockRetractingFact().setOrigin(null);
 
-    when(factCreateHelper.resolveOrigin(isNull())).thenReturn(new OriginEntity().setId(originID));
-    when(factCreateHelper.resolveOrganization(notNull(), notNull()))
+    when(factCreateHandler.resolveOrigin(isNull())).thenReturn(new OriginEntity().setId(originID));
+    when(factCreateHandler.resolveOrganization(notNull(), notNull()))
             .thenReturn(Organization.builder().setId(request.getOrganization()).build());
 
     Fact fact = delegate.handle(request);
@@ -132,7 +132,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   public void testRetractFactSetMissingAccessMode() throws Exception {
     RetractFactRequest request = mockRetractingFact().setAccessMode(null);
 
-    when(factCreateHelper.resolveAccessMode(notNull(), isNull())).thenReturn(FactRecord.AccessMode.RoleBased);
+    when(factCreateHandler.resolveAccessMode(notNull(), isNull())).thenReturn(FactRecord.AccessMode.RoleBased);
 
     Fact fact = delegate.handle(request);
 
@@ -148,8 +148,8 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHelper).withComment(matchFactRecord(request), eq(request.getComment()));
-    verify(factCreateHelper).withAcl(matchFactRecord(request), eq(request.getAcl()));
+    verify(factCreateHandler).withComment(matchFactRecord(request), eq(request.getComment()));
+    verify(factCreateHandler).withAcl(matchFactRecord(request), eq(request.getAcl()));
   }
 
   @Test
@@ -189,18 +189,18 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
             .setAccessMode(FactRecord.AccessMode.RoleBased);
 
     when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(factCreateHelper.resolveOrigin(request.getOrigin())).thenReturn(origin);
-    when(factCreateHelper.resolveOrganization(request.getOrganization(), origin)).thenReturn(organization);
+    when(factCreateHandler.resolveOrigin(request.getOrigin())).thenReturn(origin);
+    when(factCreateHandler.resolveOrganization(request.getOrganization(), origin)).thenReturn(organization);
 
     when(factTypeResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
     // Mock fetching of Fact to retract.
     when(factResolver.resolveFact(request.getFact())).thenReturn(factToRetract);
-    when(factCreateHelper.resolveAccessMode(eq(factToRetract), any())).thenReturn(FactRecord.AccessMode.Explicit);
+    when(factCreateHandler.resolveAccessMode(eq(factToRetract), any())).thenReturn(FactRecord.AccessMode.Explicit);
     // Mock stuff needed for saving Facts.
     when(objectFactDao.storeFact(any())).thenAnswer(i -> i.getArgument(0));
     when(objectFactDao.retractFact(any())).thenAnswer(i -> i.getArgument(0));
-    when(factCreateHelper.withAcl(any(), any())).thenAnswer(i -> i.getArgument(0));
-    when(factCreateHelper.withComment(any(), any())).thenAnswer(i -> i.getArgument(0));
+    when(factCreateHandler.withAcl(any(), any())).thenAnswer(i -> i.getArgument(0));
+    when(factCreateHandler.withComment(any(), any())).thenAnswer(i -> i.getArgument(0));
 
     // Mock FactConverter needed for registering TriggerEvent.
     when(factConverter.apply(any())).then(i -> {
