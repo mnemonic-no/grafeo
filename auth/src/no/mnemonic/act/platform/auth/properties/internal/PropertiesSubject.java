@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * Internal representation of a single Subject which holds the permissions this Subject has to Organizations.
  */
-public class Subject {
+public class PropertiesSubject {
 
   private final long internalID;
   private final String name;
@@ -20,7 +20,7 @@ public class Subject {
   // Key is internalID of organization and value is a set of function/function group names.
   private final Map<Long, Set<String>> permissions;
 
-  Subject(long internalID, String name, long affiliation, Map<Long, Set<String>> permissions) {
+  PropertiesSubject(long internalID, String name, long affiliation, Map<Long, Set<String>> permissions) {
     this.internalID = internalID;
     this.name = name;
     this.affiliation = affiliation;
@@ -51,7 +51,7 @@ public class Subject {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    Subject other = (Subject) o;
+    PropertiesSubject other = (PropertiesSubject) o;
     return internalID == other.getInternalID();
   }
 
@@ -71,8 +71,8 @@ public class Subject {
     long affiliation;
     Map<Long, Set<String>> permissions;
 
-    public Subject build() {
-      return new Subject(internalID, name, affiliation, permissions);
+    public PropertiesSubject build() {
+      return new PropertiesSubject(internalID, name, affiliation, permissions);
     }
 
     public T setInternalID(long internalID) {

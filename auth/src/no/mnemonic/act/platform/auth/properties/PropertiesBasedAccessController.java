@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.auth.properties;
 
+import no.mnemonic.act.platform.api.model.v1.Organization;
+import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.auth.properties.internal.*;
@@ -42,7 +44,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
       throw new InvalidCredentialsException("Cannot handle the type of provided credentials.");
     }
 
-    Subject subject = getSubject(credentials);
+    PropertiesSubject subject = getSubject(credentials);
     if (subject == null || subject.isGroup()) {
       throw new InvalidCredentialsException("The presented credentials are not valid.");
     }
@@ -76,8 +78,8 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   public Set<SubjectIdentity> getSubjectIdentities(Credentials credentials) throws InvalidCredentialsException {
     validate(credentials);
 
-    Subject subject = getSubject(credentials);
-    Set<Subject> parents = state.get().getParentSubjects(subject.getInternalID());
+    PropertiesSubject subject = getSubject(credentials);
+    Set<PropertiesSubject> parents = state.get().getParentSubjects(subject.getInternalID());
 
     // Return subject itself and its parents.
     return SetUtils.addToSet(parents, subject)
@@ -99,7 +101,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   public Set<OrganizationIdentity> getDescendingOrganizations(Credentials credentials, OrganizationIdentity topLevelOrg) throws InvalidCredentialsException {
     validate(credentials);
 
-    Subject subject = getSubject(credentials);
+    PropertiesSubject subject = getSubject(credentials);
     long organizationID = getOrganizationID(topLevelOrg);
 
     // Subject has no access to organization.
@@ -108,7 +110,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
     }
 
     // Resolve children for organization.
-    Set<Long> children = SetUtils.set(state.get().getChildOrganizations(organizationID), Organization::getInternalID);
+    Set<Long> children = SetUtils.set(state.get().getChildOrganizations(organizationID), PropertiesOrganization::getInternalID);
 
     // Return organization itself and its children.
     return SetUtils.addToSet(children, organizationID)
@@ -118,26 +120,26 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   }
 
   @Override
-  public no.mnemonic.act.platform.api.model.v1.Organization resolveOrganization(UUID id) {
-    Organization organization = state.get().getOrganization(IdMapper.toInternalID(id));
+  public Organization resolveOrganization(UUID id) {
+    PropertiesOrganization organization = state.get().getOrganization(IdMapper.toInternalID(id));
     return ObjectUtils.ifNotNull(organization, o -> createOrganization(id, o.getName()), createOrganization(id, NOT_AVAILABLE_NAME));
   }
 
   @Override
-  public no.mnemonic.act.platform.api.model.v1.Organization resolveOrganization(String name) {
-    Organization organization = state.get().getOrganization(name);
+  public Organization resolveOrganization(String name) {
+    PropertiesOrganization organization = state.get().getOrganization(name);
     return ObjectUtils.ifNotNull(organization, o -> createOrganization(IdMapper.toGlobalID(o.getInternalID()), o.getName()));
   }
 
   @Override
-  public no.mnemonic.act.platform.api.model.v1.Organization resolveCurrentUserAffiliation(Credentials credentials) throws InvalidCredentialsException {
+  public Organization resolveCurrentUserAffiliation(Credentials credentials) throws InvalidCredentialsException {
     validate(credentials);
     return resolveOrganization(IdMapper.toGlobalID(getSubject(credentials).getAffiliation()));
   }
 
   @Override
-  public no.mnemonic.act.platform.api.model.v1.Subject resolveSubject(UUID id) {
-    Subject subject = state.get().getSubject(IdMapper.toInternalID(id));
+  public Subject resolveSubject(UUID id) {
+    PropertiesSubject subject = state.get().getSubject(IdMapper.toInternalID(id));
     return ObjectUtils.ifNotNull(
             subject,
             s -> createSubject(id, s.getName(), state.get().getOrganization(s.getAffiliation())),
@@ -146,7 +148,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   }
 
   @Override
-  public no.mnemonic.act.platform.api.model.v1.Subject resolveCurrentUser(Credentials credentials) throws InvalidCredentialsException {
+  public Subject resolveCurrentUser(Credentials credentials) throws InvalidCredentialsException {
     validate(credentials);
     return resolveSubject(IdMapper.toGlobalID(getSubject(credentials).getInternalID()));
   }
@@ -190,7 +192,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
     state.set(newState);
   }
 
-  private Subject getSubject(Credentials credentials) {
+  private PropertiesSubject getSubject(Credentials credentials) {
     SubjectIdentifier identifier = (SubjectIdentifier) SubjectCredentials.class.cast(credentials).getUserID();
     return state.get().getSubject(identifier.getInternalID());
   }
@@ -219,7 +221,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
     return function.getName();
   }
 
-  private boolean hasPermission(Subject subject, String requestedFunction) {
+  private boolean hasPermission(PropertiesSubject subject, String requestedFunction) {
     boolean found = false;
 
     // Check permissions directly granted to requesting subject regardless of organization.
@@ -234,7 +236,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
 
     if (!found) {
       // Check if permission was granted to any parent subject group of the requesting subject.
-      for (Subject parent : state.get().getParentSubjects(subject.getInternalID())) {
+      for (PropertiesSubject parent : state.get().getParentSubjects(subject.getInternalID())) {
         if (hasPermission(parent, requestedFunction)) {
           found = true;
           break;
@@ -245,7 +247,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
     return found;
   }
 
-  private boolean hasPermission(Subject subject, String requestedFunction, long requestedOrganizationID) {
+  private boolean hasPermission(PropertiesSubject subject, String requestedFunction, long requestedOrganizationID) {
     boolean found = false;
 
     // Check permissions directly granted to requesting subject for the requested organization.
@@ -255,7 +257,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
 
     if (!found) {
       // Check if permission was granted to any parent organization group of the requested organization.
-      for (Organization parent : state.get().getParentOrganizations(requestedOrganizationID)) {
+      for (PropertiesOrganization parent : state.get().getParentOrganizations(requestedOrganizationID)) {
         if (hasPermission(subject, requestedFunction, parent.getInternalID())) {
           found = true;
           break;
@@ -265,7 +267,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
 
     if (!found) {
       // Check if permission was granted to any parent subject group of the requesting subject.
-      for (Subject parent : state.get().getParentSubjects(subject.getInternalID())) {
+      for (PropertiesSubject parent : state.get().getParentSubjects(subject.getInternalID())) {
         if (hasPermission(parent, requestedFunction, requestedOrganizationID)) {
           found = true;
           break;
@@ -288,8 +290,8 @@ public class PropertiesBasedAccessController implements AccessController, Organi
 
       // If 'grantedFunction' is a group check child functions recursively.
       // If 'group' isn't defined it will just be skipped (i.e. it's not a group but a single function).
-      Function group = state.get().getFunction(grantedFunction);
-      if (group != null && group.isGroup() && checkFunctionTree(FunctionGroup.class.cast(group).getMembers(), requestedFunction)) {
+      PropertiesFunction group = state.get().getFunction(grantedFunction);
+      if (group != null && group.isGroup() && checkFunctionTree(PropertiesFunctionGroup.class.cast(group).getMembers(), requestedFunction)) {
         // Found a function or function group granted to subject indirectly via resolved function tree.
         found = true;
         break;
@@ -299,34 +301,34 @@ public class PropertiesBasedAccessController implements AccessController, Organi
     return found;
   }
 
-  private Set<Long> resolveAvailableOrganizations(Subject subject) {
+  private Set<Long> resolveAvailableOrganizations(PropertiesSubject subject) {
     // All organizations the subject has direct access to.
     Set<Long> directAccessibleOrganizations = SetUtils.set(subject.getPermissions().keySet());
 
     // All child organizations for the directly accessible organizations.
     Set<Long> childOrganizations = SetUtils.set();
     for (Long id : directAccessibleOrganizations) {
-      childOrganizations = SetUtils.union(childOrganizations, SetUtils.set(state.get().getChildOrganizations(id), Organization::getInternalID));
+      childOrganizations = SetUtils.union(childOrganizations, SetUtils.set(state.get().getChildOrganizations(id), PropertiesOrganization::getInternalID));
     }
 
     // Also resolve all organizations for all parent subject groups.
     Set<Long> parentSubjectsOrganizations = SetUtils.set();
-    for (Subject parent : state.get().getParentSubjects(subject.getInternalID())) {
+    for (PropertiesSubject parent : state.get().getParentSubjects(subject.getInternalID())) {
       parentSubjectsOrganizations = SetUtils.union(parentSubjectsOrganizations, resolveAvailableOrganizations(parent));
     }
 
     return SetUtils.union(directAccessibleOrganizations, childOrganizations, parentSubjectsOrganizations);
   }
 
-  private no.mnemonic.act.platform.api.model.v1.Organization createOrganization(UUID id, String name) {
-    return no.mnemonic.act.platform.api.model.v1.Organization.builder()
+  private Organization createOrganization(UUID id, String name) {
+    return Organization.builder()
             .setId(id)
             .setName(name)
             .build();
   }
 
-  private no.mnemonic.act.platform.api.model.v1.Subject createSubject(UUID id, String name, Organization organization) {
-    return no.mnemonic.act.platform.api.model.v1.Subject.builder()
+  private Subject createSubject(UUID id, String name, PropertiesOrganization organization) {
+    return Subject.builder()
             .setId(id)
             .setName(name)
             .setOrganization(ObjectUtils.ifNotNull(

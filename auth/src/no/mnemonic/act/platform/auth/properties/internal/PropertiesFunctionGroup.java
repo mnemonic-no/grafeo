@@ -9,12 +9,12 @@ import java.util.Set;
 /**
  * Internal representation of a FunctionGroup which holds a set of child Functions/FunctionGroups.
  */
-public class FunctionGroup extends Function {
+public class PropertiesFunctionGroup extends PropertiesFunction {
 
   // Refer to members by function name.
   private final Set<String> members;
 
-  private FunctionGroup(String name, Set<String> members) {
+  private PropertiesFunctionGroup(String name, Set<String> members) {
     super(name);
     this.members = ObjectUtils.ifNotNull(members, Collections::unmodifiableSet, Collections.emptySet());
   }
@@ -32,12 +32,12 @@ public class FunctionGroup extends Function {
     return new Builder();
   }
 
-  public static class Builder extends Function.Builder<Builder> {
+  public static class Builder extends PropertiesFunction.Builder<Builder> {
     private Set<String> members;
 
     @Override
-    public FunctionGroup build() {
-      return new FunctionGroup(name, members);
+    public PropertiesFunctionGroup build() {
+      return new PropertiesFunctionGroup(name, members);
     }
 
     public Builder setMembers(Set<String> members) {

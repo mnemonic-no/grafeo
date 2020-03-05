@@ -4,19 +4,18 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 /**
- * Internal representation of a SubjectGroup which holds a set of child Subjects/SubjectGroups.
+ * Internal representation of an OrganizationGroup which holds a set of child Organizations/OrganizationGroups.
  */
-public class SubjectGroup extends Subject {
+public class PropertiesOrganizationGroup extends PropertiesOrganization {
 
   // Refer to members by internalID.
   private final Set<Long> members;
 
-  private SubjectGroup(long internalID, String name, long affiliation, Set<Long> members, Map<Long, Set<String>> permissions) {
-    super(internalID, name, affiliation, permissions);
+  private PropertiesOrganizationGroup(long internalID, String name, Set<Long> members) {
+    super(internalID, name);
     this.members = ObjectUtils.ifNotNull(members, Collections::unmodifiableSet, Collections.emptySet());
   }
 
@@ -33,12 +32,12 @@ public class SubjectGroup extends Subject {
     return new Builder();
   }
 
-  public static class Builder extends Subject.Builder<Builder> {
+  public static class Builder extends PropertiesOrganization.Builder<Builder> {
     private Set<Long> members;
 
     @Override
-    public SubjectGroup build() {
-      return new SubjectGroup(internalID, name, affiliation, members, permissions);
+    public PropertiesOrganizationGroup build() {
+      return new PropertiesOrganizationGroup(internalID, name, members);
     }
 
     public Builder setMembers(Set<Long> members) {

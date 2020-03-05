@@ -11,7 +11,7 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetFunction() {
-    Function function = Function.builder().setName("test").build();
+    PropertiesFunction function = PropertiesFunction.builder().setName("test").build();
     AccessControllerState state = AccessControllerState.builder().addFunction(function).build();
     assertSame(function, state.getFunction(function.getName()));
   }
@@ -24,7 +24,7 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetOrganization() {
-    Organization organization = Organization.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder()
             .setInternalID(42)
             .setName("name")
             .build();
@@ -42,7 +42,7 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetSubject() {
-    Subject subject = Subject.builder().setInternalID(42).build();
+    PropertiesSubject subject = PropertiesSubject.builder().setInternalID(42).build();
     AccessControllerState state = AccessControllerState.builder().addSubject(subject).build();
     assertSame(subject, state.getSubject(subject.getInternalID()));
   }
@@ -61,15 +61,15 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentOrganizationsNoParentsFound() {
-    Organization organization = Organization.builder().setInternalID(42).build();
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(42).build();
     AccessControllerState state = AccessControllerState.builder().addOrganization(organization).build();
     assertEmpty(state.getParentOrganizations(organization.getInternalID()));
   }
 
   @Test
   public void testGetParentOrganizationsDirectParent() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    OrganizationGroup parent = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganizationGroup parent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .addMember(organization.getInternalID())
             .build();
@@ -82,12 +82,12 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentOrganizationsRecursively() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    OrganizationGroup directParent = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganizationGroup directParent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .addMember(organization.getInternalID())
             .build();
-    OrganizationGroup indirectParent = OrganizationGroup.builder()
+    PropertiesOrganizationGroup indirectParent = PropertiesOrganizationGroup.builder()
             .setInternalID(11)
             .addMember(directParent.getInternalID())
             .build();
@@ -100,16 +100,16 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentOrganizationsMultiplePaths() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    OrganizationGroup directParent1 = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganizationGroup directParent1 = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .addMember(organization.getInternalID())
             .build();
-    OrganizationGroup directParent2 = OrganizationGroup.builder()
+    PropertiesOrganizationGroup directParent2 = PropertiesOrganizationGroup.builder()
             .setInternalID(11)
             .addMember(organization.getInternalID())
             .build();
-    OrganizationGroup indirectParent = OrganizationGroup.builder()
+    PropertiesOrganizationGroup indirectParent = PropertiesOrganizationGroup.builder()
             .setInternalID(12)
             .setMembers(SetUtils.set(directParent1.getInternalID(), directParent2.getInternalID()))
             .build();
@@ -122,10 +122,10 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentOrganizationsSkipOtherOrganizations() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    Organization otherOrganization1 = Organization.builder().setInternalID(2).build();
-    Organization otherOrganization2 = Organization.builder().setInternalID(3).build();
-    OrganizationGroup parent = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganization otherOrganization1 = PropertiesOrganization.builder().setInternalID(2).build();
+    PropertiesOrganization otherOrganization2 = PropertiesOrganization.builder().setInternalID(3).build();
+    PropertiesOrganizationGroup parent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .setMembers(SetUtils.set(organization.getInternalID(), otherOrganization1.getInternalID(), otherOrganization2.getInternalID()))
             .build();
@@ -138,13 +138,13 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentOrganizationsSkipOtherGroup() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    Organization otherOrganization = Organization.builder().setInternalID(2).build();
-    OrganizationGroup parent = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganization otherOrganization = PropertiesOrganization.builder().setInternalID(2).build();
+    PropertiesOrganizationGroup parent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .setMembers(SetUtils.set(organization.getInternalID(), otherOrganization.getInternalID()))
             .build();
-    OrganizationGroup otherGroup = OrganizationGroup.builder()
+    PropertiesOrganizationGroup otherGroup = PropertiesOrganizationGroup.builder()
             .setInternalID(11)
             .addMember(otherOrganization.getInternalID())
             .build();
@@ -163,22 +163,22 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetChildOrganizationsNoGroup() {
-    Organization organization = Organization.builder().setInternalID(42).build();
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(42).build();
     AccessControllerState state = AccessControllerState.builder().addOrganization(organization).build();
     assertEmpty(state.getChildOrganizations(organization.getInternalID()));
   }
 
   @Test
   public void testGetChildOrganizationsNoChildrenFound() {
-    OrganizationGroup organization = OrganizationGroup.builder().setInternalID(42).build();
+    PropertiesOrganizationGroup organization = PropertiesOrganizationGroup.builder().setInternalID(42).build();
     AccessControllerState state = AccessControllerState.builder().addOrganization(organization).build();
     assertEmpty(state.getChildOrganizations(organization.getInternalID()));
   }
 
   @Test
   public void testGetChildOrganizationsDirectChildren() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    OrganizationGroup parent = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganizationGroup parent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .addMember(organization.getInternalID())
             .build();
@@ -191,9 +191,9 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetChildOrganizationsMultipleChildren() {
-    Organization child1 = Organization.builder().setInternalID(1).build();
-    Organization child2 = Organization.builder().setInternalID(2).build();
-    OrganizationGroup parent = OrganizationGroup.builder()
+    PropertiesOrganization child1 = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganization child2 = PropertiesOrganization.builder().setInternalID(2).build();
+    PropertiesOrganizationGroup parent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .setMembers(SetUtils.set(child1.getInternalID(), child2.getInternalID()))
             .build();
@@ -206,12 +206,12 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetChildOrganizationsRecursively() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    OrganizationGroup directParent = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganizationGroup directParent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .addMember(organization.getInternalID())
             .build();
-    OrganizationGroup indirectParent = OrganizationGroup.builder()
+    PropertiesOrganizationGroup indirectParent = PropertiesOrganizationGroup.builder()
             .setInternalID(11)
             .addMember(directParent.getInternalID())
             .build();
@@ -224,16 +224,16 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetChildOrganizationsMultiplePaths() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    OrganizationGroup directParent1 = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganizationGroup directParent1 = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .addMember(organization.getInternalID())
             .build();
-    OrganizationGroup directParent2 = OrganizationGroup.builder()
+    PropertiesOrganizationGroup directParent2 = PropertiesOrganizationGroup.builder()
             .setInternalID(11)
             .addMember(organization.getInternalID())
             .build();
-    OrganizationGroup indirectParent = OrganizationGroup.builder()
+    PropertiesOrganizationGroup indirectParent = PropertiesOrganizationGroup.builder()
             .setInternalID(12)
             .setMembers(SetUtils.set(directParent1.getInternalID(), directParent2.getInternalID()))
             .build();
@@ -246,12 +246,12 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetChildOrganizationsSkipParent() {
-    Organization organization = Organization.builder().setInternalID(1).build();
-    OrganizationGroup directParent = OrganizationGroup.builder()
+    PropertiesOrganization organization = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganizationGroup directParent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .addMember(organization.getInternalID())
             .build();
-    OrganizationGroup indirectParent = OrganizationGroup.builder()
+    PropertiesOrganizationGroup indirectParent = PropertiesOrganizationGroup.builder()
             .setInternalID(11)
             .addMember(directParent.getInternalID())
             .build();
@@ -264,14 +264,14 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetChildOrganizationsSkipOtherGroup() {
-    Organization child1 = Organization.builder().setInternalID(1).build();
-    Organization child2 = Organization.builder().setInternalID(2).build();
-    Organization child3 = Organization.builder().setInternalID(3).build();
-    OrganizationGroup parent = OrganizationGroup.builder()
+    PropertiesOrganization child1 = PropertiesOrganization.builder().setInternalID(1).build();
+    PropertiesOrganization child2 = PropertiesOrganization.builder().setInternalID(2).build();
+    PropertiesOrganization child3 = PropertiesOrganization.builder().setInternalID(3).build();
+    PropertiesOrganizationGroup parent = PropertiesOrganizationGroup.builder()
             .setInternalID(10)
             .setMembers(SetUtils.set(child1.getInternalID(), child2.getInternalID()))
             .build();
-    OrganizationGroup otherGroup = OrganizationGroup.builder()
+    PropertiesOrganizationGroup otherGroup = PropertiesOrganizationGroup.builder()
             .setInternalID(11)
             .setMembers(SetUtils.set(child2.getInternalID(), child3.getInternalID()))
             .build();
@@ -290,15 +290,15 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentSubjectsNoParentsFound() {
-    Subject subject = Subject.builder().setInternalID(42).build();
+    PropertiesSubject subject = PropertiesSubject.builder().setInternalID(42).build();
     AccessControllerState state = AccessControllerState.builder().addSubject(subject).build();
     assertEmpty(state.getParentSubjects(subject.getInternalID()));
   }
 
   @Test
   public void testGetParentSubjectsDirectParent() {
-    Subject subject = Subject.builder().setInternalID(1).build();
-    SubjectGroup parent = SubjectGroup.builder()
+    PropertiesSubject subject = PropertiesSubject.builder().setInternalID(1).build();
+    PropertiesSubjectGroup parent = PropertiesSubjectGroup.builder()
             .setInternalID(10)
             .addMember(subject.getInternalID())
             .build();
@@ -311,12 +311,12 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentSubjectsRecursively() {
-    Subject subject = Subject.builder().setInternalID(1).build();
-    SubjectGroup directParent = SubjectGroup.builder()
+    PropertiesSubject subject = PropertiesSubject.builder().setInternalID(1).build();
+    PropertiesSubjectGroup directParent = PropertiesSubjectGroup.builder()
             .setInternalID(10)
             .addMember(subject.getInternalID())
             .build();
-    SubjectGroup indirectParent = SubjectGroup.builder()
+    PropertiesSubjectGroup indirectParent = PropertiesSubjectGroup.builder()
             .setInternalID(11)
             .addMember(directParent.getInternalID())
             .build();
@@ -329,16 +329,16 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentSubjectsMultiplePaths() {
-    Subject subject = Subject.builder().setInternalID(1).build();
-    SubjectGroup directParent1 = SubjectGroup.builder()
+    PropertiesSubject subject = PropertiesSubject.builder().setInternalID(1).build();
+    PropertiesSubjectGroup directParent1 = PropertiesSubjectGroup.builder()
             .setInternalID(10)
             .addMember(subject.getInternalID())
             .build();
-    SubjectGroup directParent2 = SubjectGroup.builder()
+    PropertiesSubjectGroup directParent2 = PropertiesSubjectGroup.builder()
             .setInternalID(11)
             .addMember(subject.getInternalID())
             .build();
-    SubjectGroup indirectParent = SubjectGroup.builder()
+    PropertiesSubjectGroup indirectParent = PropertiesSubjectGroup.builder()
             .setInternalID(12)
             .setMembers(SetUtils.set(directParent1.getInternalID(), directParent2.getInternalID()))
             .build();
@@ -351,10 +351,10 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentSubjectsSkipOtherSubjects() {
-    Subject subject = Subject.builder().setInternalID(1).build();
-    Subject otherSubject1 = Subject.builder().setInternalID(2).build();
-    Subject otherSubject2 = Subject.builder().setInternalID(3).build();
-    SubjectGroup parent = SubjectGroup.builder()
+    PropertiesSubject subject = PropertiesSubject.builder().setInternalID(1).build();
+    PropertiesSubject otherSubject1 = PropertiesSubject.builder().setInternalID(2).build();
+    PropertiesSubject otherSubject2 = PropertiesSubject.builder().setInternalID(3).build();
+    PropertiesSubjectGroup parent = PropertiesSubjectGroup.builder()
             .setInternalID(10)
             .setMembers(SetUtils.set(subject.getInternalID(), otherSubject1.getInternalID(), otherSubject2.getInternalID()))
             .build();
@@ -367,13 +367,13 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetParentSubjectsSkipOtherGroup() {
-    Subject subject = Subject.builder().setInternalID(1).build();
-    Subject otherSubject = Subject.builder().setInternalID(2).build();
-    SubjectGroup parent = SubjectGroup.builder()
+    PropertiesSubject subject = PropertiesSubject.builder().setInternalID(1).build();
+    PropertiesSubject otherSubject = PropertiesSubject.builder().setInternalID(2).build();
+    PropertiesSubjectGroup parent = PropertiesSubjectGroup.builder()
             .setInternalID(10)
             .setMembers(SetUtils.set(subject.getInternalID(), otherSubject.getInternalID()))
             .build();
-    SubjectGroup otherGroup = SubjectGroup.builder()
+    PropertiesSubjectGroup otherGroup = PropertiesSubjectGroup.builder()
             .setInternalID(11)
             .addMember(otherSubject.getInternalID())
             .build();
