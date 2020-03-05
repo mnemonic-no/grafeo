@@ -10,24 +10,24 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
-import java.util.UUID;
-import java.util.function.Function;
 
 public class OriginDeleteDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final OriginManager originManager;
-  private final Function<UUID, OriginEntity> originResolver;
-  private final Function<OriginEntity, Origin> originConverter;
+  private final OriginResolver originResolver;
+  private final OriginConverter originConverter;
 
   @Inject
   public OriginDeleteDelegate(TiSecurityContext securityContext,
                               OriginManager originManager,
-                              Function<UUID, OriginEntity> originResolver,
-                              Function<OriginEntity, Origin> originConverter) {
+                              OriginResolver originResolver,
+                              OriginConverter originConverter) {
     this.securityContext = securityContext;
     this.originManager = originManager;
     this.originResolver = originResolver;

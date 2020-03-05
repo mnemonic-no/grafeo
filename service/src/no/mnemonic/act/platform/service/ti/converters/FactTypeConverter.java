@@ -1,8 +1,6 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.FactType;
-import no.mnemonic.act.platform.api.model.v1.Namespace;
-import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -13,29 +11,19 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class FactTypeConverter implements Converter<FactTypeEntity, FactType> {
+public class FactTypeConverter implements Function<FactTypeEntity, FactType> {
 
-  private final Function<UUID, Namespace> namespaceConverter;
-  private final Function<UUID, ObjectType> objectTypeConverter;
+  private final NamespaceByIdConverter namespaceConverter;
+  private final ObjectTypeByIdConverter objectTypeConverter;
   private final Function<UUID, FactTypeEntity> factTypeEntityResolver;
 
   @Inject
-  public FactTypeConverter(Function<UUID, Namespace> namespaceConverter,
-                           Function<UUID, ObjectType> objectTypeConverter,
+  public FactTypeConverter(NamespaceByIdConverter namespaceConverter,
+                           ObjectTypeByIdConverter objectTypeConverter,
                            Function<UUID, FactTypeEntity> factTypeEntityResolver) {
     this.namespaceConverter = namespaceConverter;
     this.objectTypeConverter = objectTypeConverter;
     this.factTypeEntityResolver = factTypeEntityResolver;
-  }
-
-  @Override
-  public Class<FactTypeEntity> getSourceType() {
-    return FactTypeEntity.class;
-  }
-
-  @Override
-  public Class<FactType> getTargetType() {
-    return FactType.class;
   }
 
   @Override

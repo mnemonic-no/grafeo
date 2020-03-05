@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -19,7 +18,7 @@ public class FactTypeByIdConverterTest {
   @Mock
   private FactManager factManager;
   @Mock
-  private Function<FactTypeEntity, FactType> factTypeConverter;
+  private FactTypeConverter factTypeConverter;
 
   private FactTypeByIdConverter converter;
 

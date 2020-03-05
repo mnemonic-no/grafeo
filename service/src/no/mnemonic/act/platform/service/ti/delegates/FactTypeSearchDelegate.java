@@ -7,26 +7,25 @@ import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class FactTypeSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactManager factManager;
-  private final Function<FactTypeEntity, FactType> factTypeConverter;
+  private final FactTypeConverter factTypeConverter;
 
   @Inject
   public FactTypeSearchDelegate(TiSecurityContext securityContext,
                                 FactManager factManager,
-                                Function<FactTypeEntity, FactType> factTypeConverter) {
+                                FactTypeConverter factTypeConverter) {
     this.securityContext = securityContext;
     this.factManager = factManager;
     this.factTypeConverter = factTypeConverter;

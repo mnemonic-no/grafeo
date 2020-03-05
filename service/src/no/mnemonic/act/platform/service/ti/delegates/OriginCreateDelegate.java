@@ -9,10 +9,10 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
 
 import javax.inject.Inject;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
 
@@ -20,12 +20,12 @@ public class OriginCreateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final OriginManager originManager;
-  private final Function<OriginEntity, Origin> originConverter;
+  private final OriginConverter originConverter;
 
   @Inject
   public OriginCreateDelegate(TiSecurityContext securityContext,
                               OriginManager originManager,
-                              Function<OriginEntity, Origin> originConverter) {
+                              OriginConverter originConverter) {
     this.securityContext = securityContext;
     this.originManager = originManager;
     this.originConverter = originConverter;

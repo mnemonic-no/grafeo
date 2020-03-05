@@ -11,6 +11,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;
@@ -18,7 +19,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -35,7 +35,7 @@ public class FactCreateHelperTest {
   @Mock
   private OrganizationResolver organizationResolver;
   @Mock
-  private Function<UUID, OriginEntity> originResolver;
+  private OriginResolver originResolver;
   @Mock
   private OriginManager originManager;
 

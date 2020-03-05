@@ -1,32 +1,22 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.Origin;
-import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class OriginByIdConverter implements Converter<UUID, Origin> {
+public class OriginByIdConverter implements Function<UUID, Origin> {
 
-  private final Function<UUID, OriginEntity> originResolver;
-  private final Function<OriginEntity, Origin> originConverter;
+  private final OriginResolver originResolver;
+  private final OriginConverter originConverter;
 
   @Inject
-  public OriginByIdConverter(Function<UUID, OriginEntity> originResolver, Function<OriginEntity, Origin> originConverter) {
+  public OriginByIdConverter(OriginResolver originResolver, OriginConverter originConverter) {
     this.originResolver = originResolver;
     this.originConverter = originConverter;
-  }
-
-  @Override
-  public Class<UUID> getSourceType() {
-    return UUID.class;
-  }
-
-  @Override
-  public Class<Origin> getTargetType() {
-    return Origin.class;
   }
 
   @Override

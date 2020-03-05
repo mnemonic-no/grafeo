@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
@@ -17,7 +18,6 @@ import javax.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -27,12 +27,12 @@ public class OriginSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final OriginManager originManager;
-  private final Function<OriginEntity, Origin> originConverter;
+  private final OriginConverter originConverter;
 
   @Inject
   public OriginSearchDelegate(TiSecurityContext securityContext,
                               OriginManager originManager,
-                              Function<OriginEntity, Origin> originConverter) {
+                              OriginConverter originConverter) {
     this.securityContext = securityContext;
     this.originManager = originManager;
     this.originConverter = originConverter;

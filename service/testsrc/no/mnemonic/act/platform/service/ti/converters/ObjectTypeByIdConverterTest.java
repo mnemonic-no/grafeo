@@ -19,7 +19,7 @@ public class ObjectTypeByIdConverterTest {
   @Mock
   private ObjectManager objectManager;
   @Mock
-  private Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+  private ObjectTypeConverter objectTypeConverter;
 
   private ObjectTypeByIdConverter converter;
 

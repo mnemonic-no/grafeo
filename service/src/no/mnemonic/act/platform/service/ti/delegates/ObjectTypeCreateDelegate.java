@@ -9,10 +9,10 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
 
 import javax.inject.Inject;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
 
@@ -20,12 +20,12 @@ public class ObjectTypeCreateDelegate extends AbstractDelegate implements Delega
 
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
-  private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+  private final ObjectTypeConverter objectTypeConverter;
 
   @Inject
   public ObjectTypeCreateDelegate(TiSecurityContext securityContext,
                                   ObjectManager objectManager,
-                                  Function<ObjectTypeEntity, ObjectType> objectTypeConverter) {
+                                  ObjectTypeConverter objectTypeConverter) {
     this.securityContext = securityContext;
     this.objectManager = objectManager;
     this.objectTypeConverter = objectTypeConverter;

@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -16,7 +17,6 @@ import org.mockito.Mock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
@@ -29,7 +29,7 @@ public class OriginSearchDelegateTest {
   @Mock
   private OriginManager originManager;
   @Mock
-  private Function<OriginEntity, Origin> originConverter;
+  private OriginConverter originConverter;
 
   private OriginSearchDelegate delegate;
 

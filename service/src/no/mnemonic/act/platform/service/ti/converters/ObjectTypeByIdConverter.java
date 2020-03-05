@@ -2,32 +2,21 @@ package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class ObjectTypeByIdConverter implements Converter<UUID, ObjectType> {
+public class ObjectTypeByIdConverter implements Function<UUID, ObjectType> {
 
   private final ObjectManager objectManager;
-  private final Function<ObjectTypeEntity, ObjectType> objectTypeConverter;
+  private final ObjectTypeConverter objectTypeConverter;
 
   @Inject
-  public ObjectTypeByIdConverter(ObjectManager objectManager, Function<ObjectTypeEntity, ObjectType> objectTypeConverter) {
+  public ObjectTypeByIdConverter(ObjectManager objectManager, ObjectTypeConverter objectTypeConverter) {
     this.objectManager = objectManager;
     this.objectTypeConverter = objectTypeConverter;
-  }
-
-  @Override
-  public Class<UUID> getSourceType() {
-    return UUID.class;
-  }
-
-  @Override
-  public Class<ObjectType> getTargetType() {
-    return ObjectType.class;
   }
 
   @Override

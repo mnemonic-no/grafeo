@@ -9,21 +9,21 @@ import no.mnemonic.act.platform.api.request.v1.GetOriginByIdRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 
 import javax.inject.Inject;
-import java.util.UUID;
-import java.util.function.Function;
 
 public class OriginGetByIdDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final Function<UUID, OriginEntity> originResolver;
-  private final Function<OriginEntity, Origin> originConverter;
+  private final OriginResolver originResolver;
+  private final OriginConverter originConverter;
 
   @Inject
   public OriginGetByIdDelegate(TiSecurityContext securityContext,
-                               Function<UUID, OriginEntity> originResolver,
-                               Function<OriginEntity, Origin> originConverter) {
+                               OriginResolver originResolver,
+                               OriginConverter originConverter) {
     this.securityContext = securityContext;
     this.originResolver = originResolver;
     this.originConverter = originConverter;

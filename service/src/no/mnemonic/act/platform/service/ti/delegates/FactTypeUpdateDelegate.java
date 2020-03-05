@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.commons.utilities.StringUtils;
@@ -18,7 +19,6 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
 import java.util.Objects;
-import java.util.function.Function;
 
 public class FactTypeUpdateDelegate extends AbstractDelegate implements Delegate {
 
@@ -26,14 +26,14 @@ public class FactTypeUpdateDelegate extends AbstractDelegate implements Delegate
   private final FactManager factManager;
   private final FactTypeHelper factTypeHelper;
   private final FactTypeResolver factTypeResolver;
-  private final Function<FactTypeEntity, FactType> factTypeConverter;
+  private final FactTypeConverter factTypeConverter;
 
   @Inject
   public FactTypeUpdateDelegate(TiSecurityContext securityContext,
                                 FactManager factManager,
                                 FactTypeHelper factTypeHelper,
                                 FactTypeResolver factTypeResolver,
-                                Function<FactTypeEntity, FactType> factTypeConverter) {
+                                FactTypeConverter factTypeConverter) {
     this.securityContext = securityContext;
     this.factManager = factManager;
     this.factTypeHelper = factTypeHelper;
