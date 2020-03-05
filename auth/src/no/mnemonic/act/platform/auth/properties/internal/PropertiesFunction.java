@@ -5,11 +5,11 @@ import java.util.Objects;
 /**
  * Internal representation of a single Function.
  */
-public class Function {
+public class PropertiesFunction {
 
   private final String name;
 
-  Function(String name) {
+  PropertiesFunction(String name) {
     this.name = name;
   }
 
@@ -25,7 +25,7 @@ public class Function {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    Function other = (Function) o;
+    PropertiesFunction other = (PropertiesFunction) o;
     return Objects.equals(name, other.getName());
   }
 
@@ -42,8 +42,8 @@ public class Function {
   public static class Builder<T extends Builder> {
     String name;
 
-    public Function build() {
-      return new Function(name);
+    public PropertiesFunction build() {
+      return new PropertiesFunction(name);
     }
 
     public T setName(String name) {

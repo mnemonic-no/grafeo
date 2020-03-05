@@ -52,10 +52,10 @@ public class PropertiesFileParserTest {
 
   @Test
   public void testParsingFunctionGroupWithoutMembers() throws Exception {
-    Set<Function> functions = parseFunctions("function.name.members = ");
+    Set<PropertiesFunction> functions = parseFunctions("function.name.members = ");
 
     assertEquals(1, functions.size());
-    FunctionGroup group = (FunctionGroup) functions.iterator().next();
+    PropertiesFunctionGroup group = (PropertiesFunctionGroup) functions.iterator().next();
     assertEquals("name", group.getName());
     assertTrue(CollectionUtils.isEmpty(group.getMembers()));
   }
@@ -242,7 +242,7 @@ public class PropertiesFileParserTest {
             "subject.123.permission.2 = function1 , function2 , function3\n" +
             "subject.123.permission.3 = ,function1, ,function2, ,function3, ";
 
-    Subject subject = parseSubjects(content).iterator().next();
+    PropertiesSubject subject = parseSubjects(content).iterator().next();
     assertEquals(3, subject.getPermissions().size());
     for (long i = 1; i <= subject.getPermissions().size(); i++) {
       assertEquals(SetUtils.set("function1", "function2", "function3"), subject.getPermissions().get(i));
@@ -254,7 +254,7 @@ public class PropertiesFileParserTest {
     String content = "subject.123.name = test\n" +
             "subject.123.permission.1 = ";
 
-    Subject subject = parseSubjects(content).iterator().next();
+    PropertiesSubject subject = parseSubjects(content).iterator().next();
     assertEquals(1, subject.getPermissions().size());
     assertTrue(CollectionUtils.isEmpty(subject.getPermissions().get(1L)));
   }
@@ -264,23 +264,23 @@ public class PropertiesFileParserTest {
     String content = "subject.123.name = test\n" +
             "subject.123.permission.-1 = function1,function2,function3";
 
-    Subject subject = parseSubjects(content).iterator().next();
+    PropertiesSubject subject = parseSubjects(content).iterator().next();
     assertEquals(0, subject.getPermissions().size());
   }
 
-  private Set<Function> parseFunctions(String content) throws Exception {
+  private Set<PropertiesFunction> parseFunctions(String content) throws Exception {
     createPropertiesFile(content);
     parser.parse(propertiesFile.toString());
     return parser.getFunctions();
   }
 
-  private Set<Organization> parseOrganizations(String content) throws Exception {
+  private Set<PropertiesOrganization> parseOrganizations(String content) throws Exception {
     createPropertiesFile(content);
     parser.parse(propertiesFile.toString());
     return parser.getOrganizations();
   }
 
-  private Set<Subject> parseSubjects(String content) throws Exception {
+  private Set<PropertiesSubject> parseSubjects(String content) throws Exception {
     createPropertiesFile(content);
     parser.parse(propertiesFile.toString());
     return parser.getSubjects();
@@ -293,54 +293,54 @@ public class PropertiesFileParserTest {
     }
   }
 
-  private void assertFunction(Set<Function> functions) {
+  private void assertFunction(Set<PropertiesFunction> functions) {
     assertEquals(1, functions.size());
-    Function function = functions.iterator().next();
+    PropertiesFunction function = functions.iterator().next();
     assertEquals("name", function.getName());
 
     if (function.isGroup()) {
-      assertEquals(SetUtils.set("function1", "function2", "function3"), FunctionGroup.class.cast(function).getMembers());
+      assertEquals(SetUtils.set("function1", "function2", "function3"), PropertiesFunctionGroup.class.cast(function).getMembers());
     }
   }
 
-  private void assertOrganization(Set<Organization> organizations) {
+  private void assertOrganization(Set<PropertiesOrganization> organizations) {
     assertEquals(1, organizations.size());
-    Organization organization = organizations.iterator().next();
+    PropertiesOrganization organization = organizations.iterator().next();
     assertEquals("test", organization.getName());
     assertEquals(123, organization.getInternalID());
 
     if (organization.isGroup()) {
-      assertEquals(SetUtils.set(1L, 2L, 3L), OrganizationGroup.class.cast(organization).getMembers());
+      assertEquals(SetUtils.set(1L, 2L, 3L), PropertiesOrganizationGroup.class.cast(organization).getMembers());
     }
   }
 
-  private void assertEmptyOrganizationGroup(Set<Organization> organizations) {
+  private void assertEmptyOrganizationGroup(Set<PropertiesOrganization> organizations) {
     assertEquals(1, organizations.size());
-    OrganizationGroup group = (OrganizationGroup) organizations.iterator().next();
+    PropertiesOrganizationGroup group = (PropertiesOrganizationGroup) organizations.iterator().next();
     assertEquals("test", group.getName());
     assertEquals(123, group.getInternalID());
     assertTrue(CollectionUtils.isEmpty(group.getMembers()));
   }
 
-  private void assertSubject(Set<Subject> subjects) {
+  private void assertSubject(Set<PropertiesSubject> subjects) {
     assertEquals(1, subjects.size());
-    Subject subject = subjects.iterator().next();
+    PropertiesSubject subject = subjects.iterator().next();
     assertEquals("test", subject.getName());
     assertEquals(123, subject.getInternalID());
 
     if (subject.isGroup()) {
-      assertEquals(SetUtils.set(1L, 2L, 3L), SubjectGroup.class.cast(subject).getMembers());
+      assertEquals(SetUtils.set(1L, 2L, 3L), PropertiesSubjectGroup.class.cast(subject).getMembers());
     }
   }
 
-  private void assertSubjectWithAffiliation(Set<Subject> subjects, int affiliation) throws Exception {
+  private void assertSubjectWithAffiliation(Set<PropertiesSubject> subjects, int affiliation) throws Exception {
     assertSubject(subjects);
     assertEquals(affiliation, subjects.iterator().next().getAffiliation());
   }
 
-  private void assertEmptySubjectGroup(Set<Subject> subjects) {
+  private void assertEmptySubjectGroup(Set<PropertiesSubject> subjects) {
     assertEquals(1, subjects.size());
-    SubjectGroup group = (SubjectGroup) subjects.iterator().next();
+    PropertiesSubjectGroup group = (PropertiesSubjectGroup) subjects.iterator().next();
     assertEquals("test", group.getName());
     assertEquals(123, group.getInternalID());
     assertTrue(CollectionUtils.isEmpty(group.getMembers()));

@@ -30,16 +30,16 @@ public class PropertiesFileParser {
   private static final String SUBJECT_AFFILIATION_KEY = "subject.{id}.affiliation";
   private static final String SUBJECT_PERMISSION_KEY = "subject.{id}.permission.(\\d+)";
 
-  private Set<Function> functions = new HashSet<>();
-  private Set<Organization> organizations = new HashSet<>();
-  private Set<Subject> subjects = new HashSet<>();
+  private Set<PropertiesFunction> functions = new HashSet<>();
+  private Set<PropertiesOrganization> organizations = new HashSet<>();
+  private Set<PropertiesSubject> subjects = new HashSet<>();
 
   /**
    * Returns the Functions and FunctionGroups defined in the properties file after parsing it.
    *
    * @return Defined Functions and FunctionGroups
    */
-  public Set<Function> getFunctions() {
+  public Set<PropertiesFunction> getFunctions() {
     return functions;
   }
 
@@ -48,7 +48,7 @@ public class PropertiesFileParser {
    *
    * @return Defined Organizations and OrganizationGroups
    */
-  public Set<Organization> getOrganizations() {
+  public Set<PropertiesOrganization> getOrganizations() {
     return organizations;
   }
 
@@ -57,7 +57,7 @@ public class PropertiesFileParser {
    *
    * @return Defined Subjects and SubjectGroups
    */
-  public Set<Subject> getSubjects() {
+  public Set<PropertiesSubject> getSubjects() {
     return subjects;
   }
 
@@ -94,7 +94,7 @@ public class PropertiesFileParser {
     if (!matcher.matches()) return false;
 
     // Extract function group name from key and parse members.
-    functions.add(FunctionGroup.builder()
+    functions.add(PropertiesFunctionGroup.builder()
             .setName(matcher.group(1))
             .setMembers(parseStringMembers(properties, key))
             .build()
@@ -113,9 +113,9 @@ public class PropertiesFileParser {
     String name = properties.getProperty(key, "").trim();
     boolean isGroup = isGroup(properties, internalID, ORGANIZATION_TYPE_KEY);
 
-    Organization.Builder builder = isGroup ? OrganizationGroup.builder() : Organization.builder();
+    PropertiesOrganization.Builder builder = isGroup ? PropertiesOrganizationGroup.builder() : PropertiesOrganization.builder();
     if (isGroup) {
-      OrganizationGroup.Builder.class.cast(builder).setMembers(parseNumericMembers(properties, internalID, ORGANIZATION_MEMBERS_KEY));
+      PropertiesOrganizationGroup.Builder.class.cast(builder).setMembers(parseNumericMembers(properties, internalID, ORGANIZATION_MEMBERS_KEY));
     }
 
     organizations.add(builder
@@ -138,9 +138,9 @@ public class PropertiesFileParser {
     Long affiliation = parseNumericId(getPropertyForID(properties, internalID, SUBJECT_AFFILIATION_KEY));
     boolean isGroup = isGroup(properties, internalID, SUBJECT_TYPE_KEY);
 
-    Subject.Builder builder = isGroup ? SubjectGroup.builder() : Subject.builder();
+    PropertiesSubject.Builder builder = isGroup ? PropertiesSubjectGroup.builder() : PropertiesSubject.builder();
     if (isGroup) {
-      SubjectGroup.Builder.class.cast(builder).setMembers(parseNumericMembers(properties, internalID, SUBJECT_MEMBERS_KEY));
+      PropertiesSubjectGroup.Builder.class.cast(builder).setMembers(parseNumericMembers(properties, internalID, SUBJECT_MEMBERS_KEY));
     }
 
     subjects.add(builder

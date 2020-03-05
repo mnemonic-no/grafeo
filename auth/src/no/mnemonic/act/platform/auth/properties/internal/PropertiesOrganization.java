@@ -5,12 +5,12 @@ import java.util.Objects;
 /**
  * Internal representation of a single Organization.
  */
-public class Organization {
+public class PropertiesOrganization {
 
   private final long internalID;
   private final String name;
 
-  Organization(long internalID, String name) {
+  PropertiesOrganization(long internalID, String name) {
     this.internalID = internalID;
     this.name = name;
   }
@@ -31,7 +31,7 @@ public class Organization {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    Organization other = (Organization) o;
+    PropertiesOrganization other = (PropertiesOrganization) o;
     return internalID == other.getInternalID();
   }
 
@@ -49,8 +49,8 @@ public class Organization {
     long internalID;
     String name;
 
-    public Organization build() {
-      return new Organization(internalID, name);
+    public PropertiesOrganization build() {
+      return new PropertiesOrganization(internalID, name);
     }
 
     public T setInternalID(long internalID) {
