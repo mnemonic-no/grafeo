@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.rest.providers.ObjectMapperResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.services.common.api.ResultSet;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -63,6 +64,20 @@ public class ResultStash<T> {
 
   public T getData() {
     return data;
+  }
+
+  public static <T> Response buildResponse(T model) {
+    return ResultStash.builder()
+            .setData(model)
+            .buildResponse();
+  }
+
+  public static <T> Response buildResponse(ResultSet<T> result) {
+    return ResultStash.builder()
+            .setLimit(result.getLimit())
+            .setCount(result.getCount())
+            .setData(result)
+            .buildResponse();
   }
 
   public static <T> Builder<T> builder() {

@@ -36,7 +36,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getFactType(any(), isA(GetFactTypeByIdRequest.class));
+    verify(getTiService(), times(1)).getFactType(notNull(), isA(GetFactTypeByIdRequest.class));
   }
 
   @Test
@@ -49,7 +49,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchFactTypes(any(), isA(SearchFactTypeRequest.class));
+    verify(getTiService(), times(1)).searchFactTypes(notNull(), isA(SearchFactTypeRequest.class));
   }
 
   @Test
@@ -61,7 +61,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createFactType(any(), isA(CreateFactTypeRequest.class));
+    verify(getTiService(), times(1)).createFactType(notNull(), isA(CreateFactTypeRequest.class));
   }
 
   @Test
@@ -76,7 +76,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).updateFactType(any(), isA(UpdateFactTypeRequest.class));
+    verify(getTiService(), times(1)).updateFactType(notNull(), isA(UpdateFactTypeRequest.class));
   }
 
   private Collection<FactType> createFactTypes() {

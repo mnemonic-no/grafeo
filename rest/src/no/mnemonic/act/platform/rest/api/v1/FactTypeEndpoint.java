@@ -11,8 +11,8 @@ import no.mnemonic.act.platform.api.request.v1.GetFactTypeByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
+import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -22,14 +22,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
+
 @Path("/v1/factType")
 @Api(tags = {"experimental"})
-public class FactTypeEndpoint extends AbstractEndpoint {
+public class FactTypeEndpoint {
 
+  private final CredentialsResolver credentialsResolver;
   private final ThreatIntelligenceService service;
 
   @Inject
-  public FactTypeEndpoint(ThreatIntelligenceService service) {
+  public FactTypeEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+    this.credentialsResolver = credentialsResolver;
     this.service = service;
   }
 
@@ -50,7 +54,7 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   public Response getFactTypeById(
           @PathParam("id") @ApiParam(value = "UUID of the requested FactType.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.getFactType(getHeader(), new GetFactTypeByIdRequest().setId(id)));
+    return buildResponse(service.getFactType(credentialsResolver.getRequestHeader(), new GetFactTypeByIdRequest().setId(id)));
   }
 
   @GET
@@ -68,7 +72,7 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   })
   public Response searchFactTypes()
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.searchFactTypes(getHeader(), new SearchFactTypeRequest()));
+    return buildResponse(service.searchFactTypes(credentialsResolver.getRequestHeader(), new SearchFactTypeRequest()));
   }
 
   @POST
@@ -103,7 +107,7 @@ public class FactTypeEndpoint extends AbstractEndpoint {
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
-            .setData(service.createFactType(getHeader(), request))
+            .setData(service.createFactType(credentialsResolver.getRequestHeader(), request))
             .buildResponse();
   }
 
@@ -131,7 +135,7 @@ public class FactTypeEndpoint extends AbstractEndpoint {
           @PathParam("id") @ApiParam(value = "UUID of FactType.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to update FactType.") @NotNull @Valid UpdateFactTypeRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.updateFactType(getHeader(), request.setId(id)));
+    return buildResponse(service.updateFactType(credentialsResolver.getRequestHeader(), request.setId(id)));
   }
 
 }

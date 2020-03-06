@@ -33,7 +33,7 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getOrigin(any(), isA(GetOriginByIdRequest.class));
+    verify(getTiService(), times(1)).getOrigin(notNull(), isA(GetOriginByIdRequest.class));
   }
 
   @Test
@@ -55,7 +55,7 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchOrigins(any(), isA(SearchOriginRequest.class));
+    verify(getTiService(), times(1)).searchOrigins(notNull(), isA(SearchOriginRequest.class));
   }
 
   @Test
@@ -67,7 +67,7 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createOrigin(any(), isA(CreateOriginRequest.class));
+    verify(getTiService(), times(1)).createOrigin(notNull(), isA(CreateOriginRequest.class));
   }
 
   @Test
@@ -82,7 +82,7 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).updateOrigin(any(), isA(UpdateOriginRequest.class));
+    verify(getTiService(), times(1)).updateOrigin(notNull(), isA(UpdateOriginRequest.class));
   }
 
   @Test
@@ -97,7 +97,7 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).deleteOrigin(any(), isA(DeleteOriginRequest.class));
+    verify(getTiService(), times(1)).deleteOrigin(notNull(), isA(DeleteOriginRequest.class));
   }
 
   private Collection<Origin> createOrigins() {

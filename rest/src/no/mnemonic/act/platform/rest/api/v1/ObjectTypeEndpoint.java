@@ -11,8 +11,8 @@ import no.mnemonic.act.platform.api.request.v1.GetObjectTypeByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.UpdateObjectTypeRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
+import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -22,14 +22,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
+
 @Path("/v1/objectType")
 @Api(tags = {"experimental"})
-public class ObjectTypeEndpoint extends AbstractEndpoint {
+public class ObjectTypeEndpoint {
 
+  private final CredentialsResolver credentialsResolver;
   private final ThreatIntelligenceService service;
 
   @Inject
-  public ObjectTypeEndpoint(ThreatIntelligenceService service) {
+  public ObjectTypeEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+    this.credentialsResolver = credentialsResolver;
     this.service = service;
   }
 
@@ -50,7 +54,7 @@ public class ObjectTypeEndpoint extends AbstractEndpoint {
   public Response getObjectTypeById(
           @PathParam("id") @ApiParam(value = "UUID of the requested ObjectType.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.getObjectType(getHeader(), new GetObjectTypeByIdRequest().setId(id)));
+    return buildResponse(service.getObjectType(credentialsResolver.getRequestHeader(), new GetObjectTypeByIdRequest().setId(id)));
   }
 
   @GET
@@ -68,7 +72,7 @@ public class ObjectTypeEndpoint extends AbstractEndpoint {
   })
   public Response searchObjectTypes()
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.searchObjectTypes(getHeader(), new SearchObjectTypeRequest()));
+    return buildResponse(service.searchObjectTypes(credentialsResolver.getRequestHeader(), new SearchObjectTypeRequest()));
   }
 
   @POST
@@ -99,7 +103,7 @@ public class ObjectTypeEndpoint extends AbstractEndpoint {
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
-            .setData(service.createObjectType(getHeader(), request))
+            .setData(service.createObjectType(credentialsResolver.getRequestHeader(), request))
             .buildResponse();
   }
 
@@ -122,7 +126,7 @@ public class ObjectTypeEndpoint extends AbstractEndpoint {
           @PathParam("id") @ApiParam(value = "UUID of ObjectType.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to update ObjectType.") @NotNull @Valid UpdateObjectTypeRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.updateObjectType(getHeader(), request.setId(id)));
+    return buildResponse(service.updateObjectType(credentialsResolver.getRequestHeader(), request.setId(id)));
   }
 
 }

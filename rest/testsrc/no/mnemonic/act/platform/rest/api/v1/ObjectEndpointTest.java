@@ -35,7 +35,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getObject(any(), isA(GetObjectByIdRequest.class));
+    verify(getTiService(), times(1)).getObject(notNull(), isA(GetObjectByIdRequest.class));
   }
 
   @Test
@@ -54,7 +54,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getObject(any(), isA(GetObjectByTypeValueRequest.class));
+    verify(getTiService(), times(1)).getObject(notNull(), isA(GetObjectByTypeValueRequest.class));
   }
 
   @Test
@@ -71,7 +71,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchObjectFacts(any(), isA(SearchObjectFactsRequest.class));
+    verify(getTiService(), times(1)).searchObjectFacts(notNull(), isA(SearchObjectFactsRequest.class));
   }
 
   @Test
@@ -91,7 +91,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchObjectFacts(any(), isA(SearchObjectFactsRequest.class));
+    verify(getTiService(), times(1)).searchObjectFacts(notNull(), isA(SearchObjectFactsRequest.class));
   }
 
   @Test
@@ -111,7 +111,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
 
-    verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectIdRequest.class));
+    verify(getTiService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectIdRequest.class));
   }
 
   @Test
@@ -134,7 +134,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
 
-    verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectTypeValueRequest.class));
+    verify(getTiService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectTypeValueRequest.class));
   }
 
   @Test
@@ -147,7 +147,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchObjects(any(), isA(SearchObjectRequest.class));
+    verify(getTiService(), times(1)).searchObjects(notNull(), isA(SearchObjectRequest.class));
   }
 
   @Test
@@ -164,7 +164,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
 
-    verify(getTiService(), times(1)).traverseGraph(any(), isA(TraverseByObjectSearchRequest.class));
+    verify(getTiService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectSearchRequest.class));
   }
 
   private Collection<Fact> createFacts() {

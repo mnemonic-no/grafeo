@@ -9,8 +9,8 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
+import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -21,14 +21,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
+
 @Path("/v1/object")
 @Api(tags = {"experimental"})
-public class ObjectEndpoint extends AbstractEndpoint {
+public class ObjectEndpoint {
 
+  private final CredentialsResolver credentialsResolver;
   private final ThreatIntelligenceService service;
 
   @Inject
-  public ObjectEndpoint(ThreatIntelligenceService service) {
+  public ObjectEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+    this.credentialsResolver = credentialsResolver;
     this.service = service;
   }
 
@@ -50,7 +54,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
   public Response getObjectById(
           @PathParam("id") @ApiParam(value = "UUID of the requested Object.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.getObject(getHeader(), new GetObjectByIdRequest().setId(id)));
+    return buildResponse(service.getObject(credentialsResolver.getRequestHeader(), new GetObjectByIdRequest().setId(id)));
   }
 
   @GET
@@ -73,7 +77,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
           @PathParam("type") @ApiParam(value = "Type name of the requested Object.") @NotBlank String type,
           @PathParam("value") @ApiParam(value = "Value of the requested Object.") @NotBlank String value
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.getObject(getHeader(), new GetObjectByTypeValueRequest().setType(type).setValue(value)));
+    return buildResponse(service.getObject(credentialsResolver.getRequestHeader(), new GetObjectByTypeValueRequest().setType(type).setValue(value)));
   }
 
   @POST
@@ -100,7 +104,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to limit the returned Facts.") @NotNull @Valid SearchObjectFactsRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.searchObjectFacts(getHeader(), request.setObjectID(id)));
+    return buildResponse(service.searchObjectFacts(credentialsResolver.getRequestHeader(), request.setObjectID(id)));
   }
 
   @POST
@@ -128,7 +132,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
           @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
           @ApiParam(value = "Request to limit the returned Facts.") @NotNull @Valid SearchObjectFactsRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.searchObjectFacts(getHeader(), request.setObjectType(type).setObjectValue(value)));
+    return buildResponse(service.searchObjectFacts(credentialsResolver.getRequestHeader(), request.setObjectType(type).setObjectValue(value)));
   }
 
   @POST
@@ -162,7 +166,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectIdRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return buildResponse(service.traverseGraph(getHeader(), request.setId(id)));
+    return buildResponse(service.traverseGraph(credentialsResolver.getRequestHeader(), request.setId(id)));
   }
 
   @POST
@@ -197,7 +201,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
           @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectTypeValueRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return buildResponse(service.traverseGraph(getHeader(), request.setType(type).setValue(value)));
+    return buildResponse(service.traverseGraph(credentialsResolver.getRequestHeader(), request.setType(type).setValue(value)));
   }
 
   @POST
@@ -239,7 +243,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
   public Response searchObjects(
           @ApiParam(value = "Request to search for Objects.") @NotNull @Valid SearchObjectRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.searchObjects(getHeader(), request));
+    return buildResponse(service.searchObjects(credentialsResolver.getRequestHeader(), request));
   }
 
   @POST
@@ -265,7 +269,7 @@ public class ObjectEndpoint extends AbstractEndpoint {
   public Response traverseObjects(
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectSearchRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return buildResponse(service.traverseGraph(getHeader(), request));
+    return buildResponse(service.traverseGraph(credentialsResolver.getRequestHeader(), request));
   }
 
 }

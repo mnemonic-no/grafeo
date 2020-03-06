@@ -35,7 +35,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getFact(any(), isA(GetFactByIdRequest.class));
+    verify(getTiService(), times(1)).getFact(notNull(), isA(GetFactByIdRequest.class));
   }
 
   @Test
@@ -48,7 +48,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchFacts(any(), isA(SearchFactRequest.class));
+    verify(getTiService(), times(1)).searchFacts(notNull(), isA(SearchFactRequest.class));
   }
 
   @Test
@@ -60,7 +60,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createFact(any(), isA(CreateFactRequest.class));
+    verify(getTiService(), times(1)).createFact(notNull(), isA(CreateFactRequest.class));
   }
 
   @Test
@@ -88,7 +88,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchMetaFacts(any(), isA(SearchMetaFactsRequest.class));
+    verify(getTiService(), times(1)).searchMetaFacts(notNull(), isA(SearchMetaFactsRequest.class));
   }
 
   @Test
@@ -104,7 +104,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(newFact.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createMetaFact(any(), isA(CreateMetaFactRequest.class));
+    verify(getTiService(), times(1)).createMetaFact(notNull(), isA(CreateMetaFactRequest.class));
   }
 
   @Test
@@ -120,7 +120,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(newFact.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).retractFact(any(), isA(RetractFactRequest.class));
+    verify(getTiService(), times(1)).retractFact(notNull(), isA(RetractFactRequest.class));
   }
 
   @Test
@@ -137,7 +137,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).getFactAcl(any(), isA(GetFactAclRequest.class));
+    verify(getTiService(), times(1)).getFactAcl(notNull(), isA(GetFactAclRequest.class));
   }
 
   @Test
@@ -156,7 +156,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(entry.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).grantFactAccess(any(), isA(GrantFactAccessRequest.class));
+    verify(getTiService(), times(1)).grantFactAccess(notNull(), isA(GrantFactAccessRequest.class));
   }
 
   @Test
@@ -180,7 +180,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).getFactComments(any(), isA(GetFactCommentsRequest.class));
+    verify(getTiService(), times(1)).getFactComments(notNull(), isA(GetFactCommentsRequest.class));
   }
 
   @Test
@@ -196,7 +196,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(comment.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createFactComment(any(), isA(CreateFactCommentRequest.class));
+    verify(getTiService(), times(1)).createFactComment(notNull(), isA(CreateFactCommentRequest.class));
   }
 
   private Collection<Fact> createFacts() {

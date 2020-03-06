@@ -10,8 +10,8 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.FactComment;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
+import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 
@@ -26,14 +26,18 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
+
 @Path("/v1/fact")
 @Api(tags = {"experimental"})
-public class FactEndpoint extends AbstractEndpoint {
+public class FactEndpoint {
 
+  private final CredentialsResolver credentialsResolver;
   private final ThreatIntelligenceService service;
 
   @Inject
-  public FactEndpoint(ThreatIntelligenceService service) {
+  public FactEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+    this.credentialsResolver = credentialsResolver;
     this.service = service;
   }
 
@@ -59,7 +63,7 @@ public class FactEndpoint extends AbstractEndpoint {
   public Response getFactById(
           @PathParam("id") @ApiParam(value = "UUID of the requested Fact.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.getFact(getHeader(), new GetFactByIdRequest().setId(id)));
+    return buildResponse(service.getFact(credentialsResolver.getRequestHeader(), new GetFactByIdRequest().setId(id)));
   }
 
   @POST
@@ -100,7 +104,7 @@ public class FactEndpoint extends AbstractEndpoint {
   public Response searchFacts(
           @ApiParam(value = "Request to search for Facts.") @NotNull @Valid SearchFactRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.searchFacts(getHeader(), request));
+    return buildResponse(service.searchFacts(credentialsResolver.getRequestHeader(), request));
   }
 
   @POST
@@ -134,7 +138,7 @@ public class FactEndpoint extends AbstractEndpoint {
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
-            .setData(service.createFact(getHeader(), request))
+            .setData(service.createFact(credentialsResolver.getRequestHeader(), request))
             .buildResponse();
   }
 
@@ -161,7 +165,7 @@ public class FactEndpoint extends AbstractEndpoint {
           @QueryParam("after") @ApiParam(value = "Only return meta Facts added after a specific timestamp.") String after,
           @QueryParam("limit") @ApiParam(value = "Limit the number of returned meta Facts (default 25, 0 means all)") @Min(0) Integer limit
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.searchMetaFacts(getHeader(), new SearchMetaFactsRequest()
+    return buildResponse(service.searchMetaFacts(credentialsResolver.getRequestHeader(), new SearchMetaFactsRequest()
             .setFact(fact)
             .setIncludeRetracted(includeRetracted)
             .setBefore(parseTimestamp("before", before))
@@ -202,7 +206,7 @@ public class FactEndpoint extends AbstractEndpoint {
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
-            .setData(service.createMetaFact(getHeader(), request.setFact(fact)))
+            .setData(service.createMetaFact(credentialsResolver.getRequestHeader(), request.setFact(fact)))
             .buildResponse();
   }
 
@@ -234,7 +238,7 @@ public class FactEndpoint extends AbstractEndpoint {
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
-            .setData(service.retractFact(getHeader(), request.setFact(fact)))
+            .setData(service.retractFact(credentialsResolver.getRequestHeader(), request.setFact(fact)))
             .buildResponse();
   }
 
@@ -258,7 +262,7 @@ public class FactEndpoint extends AbstractEndpoint {
   public Response getFactAcl(
           @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.getFactAcl(getHeader(), new GetFactAclRequest().setFact(fact)));
+    return buildResponse(service.getFactAcl(credentialsResolver.getRequestHeader(), new GetFactAclRequest().setFact(fact)));
   }
 
   @POST
@@ -288,7 +292,7 @@ public class FactEndpoint extends AbstractEndpoint {
 
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
-            .setData(service.grantFactAccess(getHeader(), request.setFact(fact).setSubject(subject)))
+            .setData(service.grantFactAccess(credentialsResolver.getRequestHeader(), request.setFact(fact).setSubject(subject)))
             .buildResponse();
   }
 
@@ -313,7 +317,7 @@ public class FactEndpoint extends AbstractEndpoint {
           @QueryParam("before") @ApiParam(value = "Only return comments added before the given timestamp.") String before,
           @QueryParam("after") @ApiParam(value = "Only return comments added after the given timestamp.") String after
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.getFactComments(getHeader(), new GetFactCommentsRequest()
+    return buildResponse(service.getFactComments(credentialsResolver.getRequestHeader(), new GetFactCommentsRequest()
             .setFact(fact)
             .setBefore(parseTimestamp("before", before))
             .setAfter(parseTimestamp("after", after))
@@ -343,7 +347,7 @@ public class FactEndpoint extends AbstractEndpoint {
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
-            .setData(service.createFactComment(getHeader(), request.setFact(fact)))
+            .setData(service.createFactComment(credentialsResolver.getRequestHeader(), request.setFact(fact)))
             .buildResponse();
   }
 

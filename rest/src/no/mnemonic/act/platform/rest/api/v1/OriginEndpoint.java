@@ -8,8 +8,8 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.rest.api.AbstractEndpoint;
 import no.mnemonic.act.platform.rest.api.ResultStash;
+import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -20,14 +20,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
+
 @Path("/v1/origin")
 @Api(tags = {"experimental"})
-public class OriginEndpoint extends AbstractEndpoint {
+public class OriginEndpoint {
 
+  private final CredentialsResolver credentialsResolver;
   private final ThreatIntelligenceService service;
 
   @Inject
-  public OriginEndpoint(ThreatIntelligenceService service) {
+  public OriginEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+    this.credentialsResolver = credentialsResolver;
     this.service = service;
   }
 
@@ -48,7 +52,7 @@ public class OriginEndpoint extends AbstractEndpoint {
   public Response getOriginById(
           @PathParam("id") @ApiParam(value = "UUID of the requested Origin.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.getOrigin(getHeader(), new GetOriginByIdRequest().setId(id)));
+    return buildResponse(service.getOrigin(credentialsResolver.getRequestHeader(), new GetOriginByIdRequest().setId(id)));
   }
 
   @GET
@@ -68,7 +72,7 @@ public class OriginEndpoint extends AbstractEndpoint {
           @QueryParam("includeDeleted") @ApiParam(value = "Include deleted Origins (default false)") Boolean includeDeleted,
           @QueryParam("limit") @ApiParam(value = "Limit the number of returned Origins (default 25, 0 means all)") @Min(0) Integer limit
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.searchOrigins(getHeader(), new SearchOriginRequest()
+    return buildResponse(service.searchOrigins(credentialsResolver.getRequestHeader(), new SearchOriginRequest()
             .setIncludeDeleted(includeDeleted)
             .setLimit(limit)
     ));
@@ -98,7 +102,7 @@ public class OriginEndpoint extends AbstractEndpoint {
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
-            .setData(service.createOrigin(getHeader(), request))
+            .setData(service.createOrigin(credentialsResolver.getRequestHeader(), request))
             .buildResponse();
   }
 
@@ -124,7 +128,7 @@ public class OriginEndpoint extends AbstractEndpoint {
           @PathParam("id") @ApiParam(value = "UUID of Origin.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to update Origin.") @NotNull @Valid UpdateOriginRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.updateOrigin(getHeader(), request.setId(id)));
+    return buildResponse(service.updateOrigin(credentialsResolver.getRequestHeader(), request.setId(id)));
   }
 
   @DELETE
@@ -144,6 +148,6 @@ public class OriginEndpoint extends AbstractEndpoint {
   public Response deleteOrigin(
           @PathParam("id") @ApiParam(value = "UUID of Origin.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    return buildResponse(service.deleteOrigin(getHeader(), new DeleteOriginRequest().setId(id)));
+    return buildResponse(service.deleteOrigin(credentialsResolver.getRequestHeader(), new DeleteOriginRequest().setId(id)));
   }
 }

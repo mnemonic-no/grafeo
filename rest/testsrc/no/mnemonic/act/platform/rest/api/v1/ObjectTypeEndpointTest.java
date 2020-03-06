@@ -36,7 +36,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getObjectType(any(), isA(GetObjectTypeByIdRequest.class));
+    verify(getTiService(), times(1)).getObjectType(notNull(), isA(GetObjectTypeByIdRequest.class));
   }
 
   @Test
@@ -49,7 +49,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchObjectTypes(any(), isA(SearchObjectTypeRequest.class));
+    verify(getTiService(), times(1)).searchObjectTypes(notNull(), isA(SearchObjectTypeRequest.class));
   }
 
   @Test
@@ -61,7 +61,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createObjectType(any(), isA(CreateObjectTypeRequest.class));
+    verify(getTiService(), times(1)).createObjectType(notNull(), isA(CreateObjectTypeRequest.class));
   }
 
   @Test
@@ -76,7 +76,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).updateObjectType(any(), isA(UpdateObjectTypeRequest.class));
+    verify(getTiService(), times(1)).updateObjectType(notNull(), isA(UpdateObjectTypeRequest.class));
   }
 
   private Collection<ObjectType> createObjectTypes() {
