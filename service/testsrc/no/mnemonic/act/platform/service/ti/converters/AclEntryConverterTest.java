@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -21,7 +20,7 @@ public class AclEntryConverterTest {
   @Mock
   private OriginByIdConverter originConverter;
   @Mock
-  private Function<UUID, Subject> subjectConverter;
+  private SubjectByIdConverter subjectConverter;
 
   private AclEntryConverter converter;
 

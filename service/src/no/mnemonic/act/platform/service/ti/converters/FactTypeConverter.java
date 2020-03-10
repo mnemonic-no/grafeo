@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.service.ti.converters;
 
 import no.mnemonic.act.platform.api.model.v1.FactType;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -15,15 +16,15 @@ public class FactTypeConverter implements Function<FactTypeEntity, FactType> {
 
   private final NamespaceByIdConverter namespaceConverter;
   private final ObjectTypeByIdConverter objectTypeConverter;
-  private final Function<UUID, FactTypeEntity> factTypeEntityResolver;
+  private final FactManager factManager;
 
   @Inject
   public FactTypeConverter(NamespaceByIdConverter namespaceConverter,
                            ObjectTypeByIdConverter objectTypeConverter,
-                           Function<UUID, FactTypeEntity> factTypeEntityResolver) {
+                           FactManager factManager) {
     this.namespaceConverter = namespaceConverter;
     this.objectTypeConverter = objectTypeConverter;
-    this.factTypeEntityResolver = factTypeEntityResolver;
+    this.factManager = factManager;
   }
 
   @Override
@@ -63,7 +64,7 @@ public class FactTypeConverter implements Function<FactTypeEntity, FactType> {
   }
 
   private FactType.Info convertFactTypeInfo(UUID factTypeID) {
-    FactTypeEntity entity = factTypeEntityResolver.apply(factTypeID);
+    FactTypeEntity entity = factManager.getFactType(factTypeID);
     // Skip converting bindings in order to avoid infinite recursive resolving of FactTypes.
     return ObjectUtils.ifNotNull(convertFactType(entity, true), FactType::toInfo);
   }

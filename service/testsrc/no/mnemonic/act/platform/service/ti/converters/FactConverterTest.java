@@ -13,7 +13,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -30,9 +29,9 @@ public class FactConverterTest {
   @Mock
   private ObjectConverter objectConverter;
   @Mock
-  private Function<UUID, Organization> organizationConverter;
+  private OrganizationByIdConverter organizationConverter;
   @Mock
-  private Function<UUID, Subject> subjectConverter;
+  private SubjectByIdConverter subjectConverter;
   @Mock
   private FactRetractionHandler factRetractionHandler;
   @Mock

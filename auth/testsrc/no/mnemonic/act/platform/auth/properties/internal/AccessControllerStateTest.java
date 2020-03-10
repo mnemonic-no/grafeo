@@ -42,15 +42,20 @@ public class AccessControllerStateTest {
 
   @Test
   public void testGetSubject() {
-    PropertiesSubject subject = PropertiesSubject.builder().setInternalID(42).build();
+    PropertiesSubject subject = PropertiesSubject.builder()
+            .setInternalID(42)
+            .setName("name")
+            .build();
     AccessControllerState state = AccessControllerState.builder().addSubject(subject).build();
     assertSame(subject, state.getSubject(subject.getInternalID()));
+    assertSame(subject, state.getSubject(subject.getName()));
   }
 
   @Test
   public void testGetSubjectForUnknownSubject() {
     AccessControllerState state = AccessControllerState.builder().build();
     assertNull(state.getSubject(42));
+    assertNull(state.getSubject("name"));
   }
 
   @Test

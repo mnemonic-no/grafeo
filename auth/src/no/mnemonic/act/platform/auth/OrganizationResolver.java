@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface OrganizationResolver {
 
   /**
-   * Resolves an Organization by its UUID.
+   * Resolves an Organization by its UUID. Returns NULL if no Organization with the given UUID exists.
    *
    * @param id Organization's unique ID
    * @return Resolved Organization

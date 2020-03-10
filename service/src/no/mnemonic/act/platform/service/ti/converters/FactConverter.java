@@ -23,8 +23,8 @@ public class FactConverter implements Function<FactRecord, Fact> {
   private final FactTypeByIdConverter factTypeConverter;
   private final OriginByIdConverter originConverter;
   private final ObjectConverter objectConverter;
-  private final Function<UUID, Organization> organizationConverter;
-  private final Function<UUID, Subject> subjectConverter;
+  private final OrganizationByIdConverter organizationConverter;
+  private final SubjectByIdConverter subjectConverter;
   private final FactRetractionHandler factRetractionHandler;
   private final ObjectFactDao objectFactDao;
   private final TiSecurityContext securityContext;
@@ -33,8 +33,8 @@ public class FactConverter implements Function<FactRecord, Fact> {
   public FactConverter(FactTypeByIdConverter factTypeConverter,
                        OriginByIdConverter originConverter,
                        ObjectConverter objectConverter,
-                       Function<UUID, Organization> organizationConverter,
-                       Function<UUID, Subject> subjectConverter,
+                       OrganizationByIdConverter organizationConverter,
+                       SubjectByIdConverter subjectConverter,
                        FactRetractionHandler factRetractionHandler,
                        ObjectFactDao objectFactDao,
                        TiSecurityContext securityContext) {

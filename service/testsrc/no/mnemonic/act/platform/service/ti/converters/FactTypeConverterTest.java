@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.service.ti.converters;
 import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.model.v1.Namespace;
 import no.mnemonic.act.platform.api.model.v1.ObjectType;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
@@ -11,9 +12,9 @@ import org.junit.Test;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -30,8 +31,10 @@ public class FactTypeConverterTest {
     ObjectTypeByIdConverter objectTypeConverter = mock(ObjectTypeByIdConverter.class);
     when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).setName("ObjectType").build());
 
-    Function<UUID, FactTypeEntity> factTypeEntityResolver = id -> new FactTypeEntity().setId(id);
-    converter = new FactTypeConverter(namespaceConverter, objectTypeConverter, factTypeEntityResolver);
+    FactManager factManager = mock(FactManager.class);
+    when(factManager.getFactType(isA(UUID.class))).thenAnswer(i -> new FactTypeEntity().setId(i.getArgument(0)));
+
+    converter = new FactTypeConverter(namespaceConverter, objectTypeConverter, factManager);
   }
 
   @Test

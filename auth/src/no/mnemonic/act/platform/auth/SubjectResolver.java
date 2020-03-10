@@ -15,12 +15,20 @@ import java.util.UUID;
 public interface SubjectResolver {
 
   /**
-   * Resolves a Subject by its UUID.
+   * Resolves a Subject by its UUID. Returns NULL if no Subject with the given UUID exists.
    *
    * @param id Subject's unique ID
    * @return Resolved Subject
    */
   Subject resolveSubject(UUID id);
+
+  /**
+   * Resolves a Subject by its name. Returns NULL if no Subject with the given name exists.
+   *
+   * @param name Subject's name
+   * @return Resolved Subject
+   */
+  Subject resolveSubject(String name);
 
   /**
    * Resolves the current user as a Subject from given credentials.

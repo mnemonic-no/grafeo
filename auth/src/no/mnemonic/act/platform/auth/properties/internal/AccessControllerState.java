@@ -18,12 +18,14 @@ public class AccessControllerState {
   private final Map<Long, PropertiesOrganization> organizationMap;
   private final Map<String, PropertiesOrganization> organizationByNameMap;
   private final Map<Long, PropertiesSubject> subjectMap;
+  private final Map<String, PropertiesSubject> subjectByNameMap;
 
   private AccessControllerState(Map<String, PropertiesFunction> functionMap, Map<Long, PropertiesOrganization> organizationMap, Map<Long, PropertiesSubject> subjectMap) {
     this.functionMap = ObjectUtils.ifNotNull(functionMap, Collections::unmodifiableMap, Collections.emptyMap());
     this.organizationMap = ObjectUtils.ifNotNull(organizationMap, Collections::unmodifiableMap, Collections.emptyMap());
     this.organizationByNameMap = Collections.unmodifiableMap(MapUtils.map(this.organizationMap.values(), o -> MapUtils.Pair.T(o.getName(), o)));
     this.subjectMap = ObjectUtils.ifNotNull(subjectMap, Collections::unmodifiableMap, Collections.emptyMap());
+    this.subjectByNameMap = Collections.unmodifiableMap(MapUtils.map(this.subjectMap.values(), s -> MapUtils.Pair.T(s.getName(), s)));
   }
 
   /**
@@ -72,6 +74,18 @@ public class AccessControllerState {
    */
   public PropertiesSubject getSubject(long internalID) {
     return subjectMap.get(internalID);
+  }
+
+  /**
+   * Returns a Subject or SubjectGroup identified by its name.
+   * <p>
+   * It will return NULL if Subject or SubjectGroup is not defined.
+   *
+   * @param name Name of Subject or SubjectGroup
+   * @return Subject or SubjectGroup identified by name
+   */
+  public PropertiesSubject getSubject(String name) {
+    return subjectByNameMap.get(name);
   }
 
   /**

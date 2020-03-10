@@ -833,10 +833,7 @@ public class PropertiesBasedAccessControllerTest {
   public void testResolveOrganizationNotExistingOrganization() throws Exception {
     setup("organization.1.name = organization");
 
-    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000002");
-    Organization organization = accessController.resolveOrganization(id);
-    assertEquals(id, organization.getId());
-    assertEquals("N/A", organization.getName());
+    assertNull(accessController.resolveOrganization(UUID.fromString("00000000-0000-0000-0000-000000000002")));
   }
 
   @Test
@@ -908,11 +905,7 @@ public class PropertiesBasedAccessControllerTest {
   public void testResolveSubjectNotExistingSubject() throws Exception {
     setup("subject.1.name = subject");
 
-    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000002");
-    Subject subject = accessController.resolveSubject(id);
-    assertEquals(id, subject.getId());
-    assertEquals("N/A", subject.getName());
-    assertNull(subject.getOrganization());
+    assertNull(accessController.resolveSubject(UUID.fromString("00000000-0000-0000-0000-000000000002")));
   }
 
   @Test
@@ -937,6 +930,43 @@ public class PropertiesBasedAccessControllerTest {
 
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
     Subject subject = accessController.resolveSubject(id);
+    assertEquals(id, subject.getId());
+    assertEquals("subject", subject.getName());
+    assertNotNull(subject.getOrganization());
+    assertEquals(id, subject.getOrganization().getId());
+    assertEquals("organization", subject.getOrganization().getName());
+  }
+
+  /* resolveSubject(name) */
+
+  @Test
+  public void testResolveSubjectByNameNotExistingSubject() throws Exception {
+    setup("subject.1.name = subject");
+
+    assertNull(accessController.resolveSubject("something"));
+  }
+
+  @Test
+  public void testResolveSubjectByNameExistingSubjectWithoutAffiliation() throws Exception {
+    setup("subject.1.name = subject");
+
+    Subject subject = accessController.resolveSubject("subject");
+    assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), subject.getId());
+    assertEquals("subject", subject.getName());
+    assertNull(subject.getOrganization());
+  }
+
+  @Test
+  public void testResolveSubjectByNameExistingSubjectWithAffiliation() throws Exception {
+    String content = "" +
+            "subject.1.name = subject\n" +
+            "subject.1.affiliation = 1\n" +
+            "organization.1.name = organization\n" +
+            "";
+    setup(content);
+
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    Subject subject = accessController.resolveSubject("subject");
     assertEquals(id, subject.getId());
     assertEquals("subject", subject.getName());
     assertNotNull(subject.getOrganization());

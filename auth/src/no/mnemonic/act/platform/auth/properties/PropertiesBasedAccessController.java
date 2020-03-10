@@ -122,7 +122,7 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   @Override
   public Organization resolveOrganization(UUID id) {
     PropertiesOrganization organization = state.get().getOrganization(IdMapper.toInternalID(id));
-    return ObjectUtils.ifNotNull(organization, o -> createOrganization(id, o.getName()), createOrganization(id, NOT_AVAILABLE_NAME));
+    return ObjectUtils.ifNotNull(organization, o -> createOrganization(id, o.getName()));
   }
 
   @Override
@@ -134,17 +134,20 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   @Override
   public Organization resolveCurrentUserAffiliation(Credentials credentials) throws InvalidCredentialsException {
     validate(credentials);
-    return resolveOrganization(IdMapper.toGlobalID(getSubject(credentials).getAffiliation()));
+    UUID id = IdMapper.toGlobalID(getSubject(credentials).getAffiliation());
+    return ObjectUtils.ifNull(resolveOrganization(id), createOrganization(id, NOT_AVAILABLE_NAME));
   }
 
   @Override
   public Subject resolveSubject(UUID id) {
     PropertiesSubject subject = state.get().getSubject(IdMapper.toInternalID(id));
-    return ObjectUtils.ifNotNull(
-            subject,
-            s -> createSubject(id, s.getName(), state.get().getOrganization(s.getAffiliation())),
-            createSubject(id, NOT_AVAILABLE_NAME, null)
-    );
+    return ObjectUtils.ifNotNull(subject, s -> createSubject(id, s.getName(), state.get().getOrganization(s.getAffiliation())));
+  }
+
+  @Override
+  public Subject resolveSubject(String name) {
+    PropertiesSubject subject = state.get().getSubject(name);
+    return ObjectUtils.ifNotNull(subject, s -> createSubject(IdMapper.toGlobalID(s.getInternalID()), s.getName(), state.get().getOrganization(s.getAffiliation())));
   }
 
   @Override

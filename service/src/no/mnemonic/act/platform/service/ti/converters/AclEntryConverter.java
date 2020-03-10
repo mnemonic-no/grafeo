@@ -7,17 +7,16 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
-import java.util.UUID;
 import java.util.function.Function;
 
 public class AclEntryConverter implements Function<FactAclEntryRecord, AclEntry> {
 
   private final OriginByIdConverter originConverter;
-  private final Function<UUID, Subject> subjectConverter;
+  private final SubjectByIdConverter subjectConverter;
 
   @Inject
   public AclEntryConverter(OriginByIdConverter originConverter,
-                           Function<UUID, Subject> subjectConverter) {
+                           SubjectByIdConverter subjectConverter) {
     this.originConverter = originConverter;
     this.subjectConverter = subjectConverter;
   }

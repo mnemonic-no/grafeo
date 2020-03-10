@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -26,7 +25,9 @@ public class OriginConverterTest {
     NamespaceByIdConverter namespaceConverter = mock(NamespaceByIdConverter.class);
     when(namespaceConverter.apply(notNull())).thenAnswer(i -> Namespace.builder().setId(i.getArgument(0)).build());
 
-    Function<UUID, Organization> organizationConverter = id -> Organization.builder().setId(id).build();
+    OrganizationByIdConverter organizationConverter = mock(OrganizationByIdConverter.class);
+    when(organizationConverter.apply(notNull())).thenAnswer(i -> Organization.builder().setId(i.getArgument(0)).build());
+
     converter = new OriginConverter(namespaceConverter, organizationConverter);
   }
 

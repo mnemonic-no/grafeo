@@ -7,17 +7,16 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
-import java.util.UUID;
 import java.util.function.Function;
 
 public class OriginConverter implements Function<OriginEntity, Origin> {
 
   private final NamespaceByIdConverter namespaceConverter;
-  private final Function<UUID, Organization> organizationConverter;
+  private final OrganizationByIdConverter organizationConverter;
 
   @Inject
   public OriginConverter(NamespaceByIdConverter namespaceConverter,
-                         Function<UUID, Organization> organizationConverter) {
+                         OrganizationByIdConverter organizationConverter) {
     this.namespaceConverter = namespaceConverter;
     this.organizationConverter = organizationConverter;
   }
