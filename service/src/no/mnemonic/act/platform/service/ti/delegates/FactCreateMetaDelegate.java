@@ -26,6 +26,9 @@ import javax.inject.Inject;
 import java.util.Objects;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withAcl;
+import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withComment;
+
 public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
@@ -80,8 +83,8 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
     FactRecord existingFact = resolveExistingFact(newFact);
     if (existingFact != null) {
       // Refresh an existing Fact (plus adding any additional ACL entries and comments).
-      existingFact = factCreateHandler.withAcl(existingFact, request.getAcl());
-      existingFact = factCreateHandler.withComment(existingFact, request.getComment());
+      existingFact = withAcl(existingFact, securityContext.getCurrentUserID(), request.getAcl());
+      existingFact = withComment(existingFact, request.getComment());
       existingFact = objectFactDao.refreshFact(existingFact);
     } else {
       // Or create a new Fact.
@@ -121,8 +124,8 @@ public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate
             .setAccessMode(factCreateHandler.resolveAccessMode(referencedFact, request.getAccessMode()))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
-    fact = factCreateHandler.withAcl(fact, request.getAcl());
-    fact = factCreateHandler.withComment(fact, request.getComment());
+    fact = withAcl(fact, securityContext.getCurrentUserID(), request.getAcl());
+    fact = withComment(fact, request.getComment());
 
     return fact;
   }

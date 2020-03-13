@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
-import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
@@ -15,8 +14,6 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -234,97 +231,6 @@ public class FactCreateHandlerTest {
     assertThrows(InvalidArgumentException.class, () -> handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit), AccessMode.RoleBased));
     assertThrows(InvalidArgumentException.class, () -> handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit), AccessMode.Public));
     assertThrows(InvalidArgumentException.class, () -> handler.resolveAccessMode(new FactRecord().setAccessMode(FactRecord.AccessMode.RoleBased), AccessMode.Public));
-  }
-
-  @Test
-  public void testWithAclNullFact() {
-    assertNull(handler.withAcl(null, ListUtils.list(UUID.randomUUID())));
-  }
-
-  @Test
-  public void testWithAclSkipsEmptyAcl() {
-    assertTrue(CollectionUtils.isEmpty(handler.withAcl(new FactRecord(), null).getAcl()));
-    assertTrue(CollectionUtils.isEmpty(handler.withAcl(new FactRecord(), ListUtils.list()).getAcl()));
-  }
-
-  @Test
-  public void testWithAclAddsEntryToEmptyAcl() {
-    UUID subjectID = UUID.randomUUID();
-    FactRecord fact = new FactRecord().setOriginID(UUID.randomUUID());
-
-    handler.withAcl(fact, ListUtils.list(subjectID));
-    assertEquals(1, fact.getAcl().size());
-    assertNotNull(fact.getAcl().get(0).getId());
-    assertEquals(fact.getOriginID(), fact.getAcl().get(0).getOriginID());
-    assertEquals(subjectID, fact.getAcl().get(0).getSubjectID());
-    assertTrue(fact.getAcl().get(0).getTimestamp() > 0);
-  }
-
-  @Test
-  public void testWithAclAddsEntryToExistingAcl() {
-    UUID subjectID = UUID.randomUUID();
-    FactRecord fact = new FactRecord().addAclEntry(new FactAclEntryRecord().setSubjectID(UUID.randomUUID()));
-
-    handler.withAcl(fact, ListUtils.list(subjectID));
-    assertEquals(2, fact.getAcl().size());
-  }
-
-  @Test
-  public void testWithAclSkipsExistingEntry() {
-    UUID subjectID = UUID.randomUUID();
-    FactRecord fact = new FactRecord().addAclEntry(new FactAclEntryRecord().setSubjectID(subjectID));
-
-    handler.withAcl(fact, ListUtils.list(subjectID));
-    assertEquals(1, fact.getAcl().size());
-  }
-
-  @Test
-  public void testWithAclAccessModeExplicitAddsCurrentUser() {
-    UUID currentUser = UUID.randomUUID();
-    FactRecord fact = new FactRecord().setAccessMode(FactRecord.AccessMode.Explicit);
-    when(securityContext.getCurrentUserID()).thenReturn(currentUser);
-
-    handler.withAcl(fact, null);
-    assertEquals(1, fact.getAcl().size());
-    assertEquals(currentUser, fact.getAcl().get(0).getSubjectID());
-  }
-
-  @Test
-  public void testWithAclAccessModeExplicitSkipsExistingCurrentUser() {
-    UUID currentUser = UUID.randomUUID();
-    FactRecord fact = new FactRecord()
-            .setAccessMode(FactRecord.AccessMode.Explicit)
-            .addAclEntry(new FactAclEntryRecord().setSubjectID(currentUser));
-    when(securityContext.getCurrentUserID()).thenReturn(currentUser);
-
-    handler.withAcl(fact, null);
-    assertEquals(1, fact.getAcl().size());
-    assertEquals(currentUser, fact.getAcl().get(0).getSubjectID());
-  }
-
-  @Test
-  public void testWithCommentNullFact() {
-    assertNull(handler.withComment(null, "Hello World!"));
-  }
-
-  @Test
-  public void testWithCommentSkipsBlankComment() {
-    assertTrue(CollectionUtils.isEmpty(handler.withComment(new FactRecord(), null).getComments()));
-    assertTrue(CollectionUtils.isEmpty(handler.withComment(new FactRecord(), "").getComments()));
-    assertTrue(CollectionUtils.isEmpty(handler.withComment(new FactRecord(), " ").getComments()));
-  }
-
-  @Test
-  public void testWithCommentAddsAdditionalComment() {
-    FactRecord fact = new FactRecord()
-            .setOriginID(UUID.randomUUID());
-
-    handler.withComment(fact, "Hello World!");
-    assertEquals(1, fact.getComments().size());
-    assertNotNull(fact.getComments().get(0).getId());
-    assertEquals(fact.getOriginID(), fact.getComments().get(0).getOriginID());
-    assertEquals("Hello World!", fact.getComments().get(0).getComment());
-    assertTrue(fact.getComments().get(0).getTimestamp() > 0);
   }
 
   @Test

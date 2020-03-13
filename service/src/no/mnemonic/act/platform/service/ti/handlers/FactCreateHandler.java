@@ -8,8 +8,6 @@ import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
-import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
-import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
@@ -19,16 +17,12 @@ import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
@@ -161,68 +155,6 @@ public class FactCreateHandler {
     }
 
     return mode;
-  }
-
-  /**
-   * Add additional ACL entries to a FactRecord. It will omit any entries already in the Fact's ACL
-   * and makes sure that the current user is in the ACL with AccessMode 'Explicit'.
-   *
-   * @param fact Fact the ACL belongs to
-   * @param acl  List of Subject IDs
-   * @return Fact with updated ACL
-   */
-  public FactRecord withAcl(FactRecord fact, List<UUID> acl) {
-    if (fact == null) return null;
-    // It doesn't make sense to have an ACL when Fact is public.
-    if (fact.getAccessMode() == FactRecord.AccessMode.Public) return fact;
-
-    // Fetch any existing entries ...
-    Set<UUID> existingAcl = SetUtils.set(fact.getAcl())
-            .stream()
-            .map(FactAclEntryRecord::getSubjectID)
-            .collect(Collectors.toSet());
-    // ... and make sure not to add any duplicates.
-    Set<UUID> subjectsToAdd = SetUtils.set(acl)
-            .stream()
-            .filter(subject -> !existingAcl.contains(subject))
-            .collect(Collectors.toSet());
-
-    UUID currentUser = securityContext.getCurrentUserID();
-    if (fact.getAccessMode() == FactRecord.AccessMode.Explicit && !existingAcl.contains(currentUser)) {
-      // Make sure that current user is in the ACL with 'Explicit' AccessMode.
-      // With 'RoleBased' AccessMode current user has access to Fact via the Organization.
-      subjectsToAdd.add(currentUser);
-    }
-
-    // Add all new ACL entries to Fact.
-    for (UUID subject : subjectsToAdd) {
-      fact.addAclEntry(new FactAclEntryRecord()
-              .setId(UUID.randomUUID())
-              .setOriginID(fact.getOriginID())
-              .setSubjectID(subject)
-              .setTimestamp(System.currentTimeMillis())
-      );
-    }
-
-    return fact;
-  }
-
-  /**
-   * Add an additional comment to a FactRecord.
-   *
-   * @param fact    Fact the comment belongs to
-   * @param comment Comment to add
-   * @return Fact with added comment
-   */
-  public FactRecord withComment(FactRecord fact, String comment) {
-    if (fact == null) return null;
-    if (StringUtils.isBlank(comment)) return fact;
-
-    return fact.addComment(new FactCommentRecord()
-            .setId(UUID.randomUUID())
-            .setOriginID(fact.getOriginID())
-            .setComment(comment)
-            .setTimestamp(System.currentTimeMillis()));
   }
 
   /**

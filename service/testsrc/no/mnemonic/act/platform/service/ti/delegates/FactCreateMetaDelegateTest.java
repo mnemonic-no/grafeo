@@ -7,6 +7,8 @@ import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateMetaFactRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
+import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
@@ -18,8 +20,6 @@ import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
-import no.mnemonic.commons.utilities.collections.ListUtils;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -27,6 +27,8 @@ import org.mockito.Mock;
 import java.util.Objects;
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -122,7 +124,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     mockValidator(true);
 
     InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
-    assertEquals(SetUtils.set("invalid.meta.fact.binding"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
+    assertEquals(set("invalid.meta.fact.binding"), set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 
   @Test
@@ -139,7 +141,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     mockValidator(true);
 
     InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
-    assertEquals(SetUtils.set("invalid.meta.fact.binding"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
+    assertEquals(set("invalid.meta.fact.binding"), set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 
   @Test
@@ -218,8 +220,11 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).withComment(matchFactRecord(request), eq(request.getComment()));
-    verify(factCreateHandler).withAcl(matchFactRecord(request), eq(request.getAcl()));
+    verify(objectFactDao).storeFact(argThat(record -> {
+      assertEquals(set(record.getComments(), FactCommentRecord::getComment), set(request.getComment()));
+      assertTrue(list(record.getAcl(), FactAclEntryRecord::getSubjectID).containsAll(request.getAcl()));
+      return true;
+    }));
   }
 
   @Test
@@ -250,7 +255,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
             .setAccessMode(FactRecord.AccessMode.RoleBased)
             .setOrganizationID(request.getOrganization());
     when(objectFactDao.retrieveExistingFacts(matchFactRecord(request)))
-            .thenReturn(ResultContainer.<FactRecord>builder().setValues(ListUtils.list(existingFact).iterator()).build());
+            .thenReturn(ResultContainer.<FactRecord>builder().setValues(list(existingFact).iterator()).build());
     when(getSecurityContext().hasReadPermission(existingFact)).thenReturn(true);
 
     // Mock stuff needed for refreshing Fact.
@@ -258,9 +263,12 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).withComment(same(existingFact), eq(request.getComment()));
-    verify(factCreateHandler).withAcl(same(existingFact), eq(request.getAcl()));
-    verify(objectFactDao).refreshFact(existingFact);
+    verify(objectFactDao).refreshFact(argThat(record -> {
+      assertEquals(existingFact, record);
+      assertEquals(set(record.getComments(), FactCommentRecord::getComment), set(request.getComment()) );
+      assertEquals(set(record.getAcl(), FactAclEntryRecord::getSubjectID), set(request.getAcl()));
+      return true;
+    }));
     verify(objectFactDao, never()).storeFact(any());
     verify(factConverter).apply(same(existingFact));
   }
@@ -293,8 +301,6 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
     when(objectFactDao.retrieveExistingFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
     // Mock stuff needed for saving Fact.
     when(objectFactDao.storeFact(any())).thenAnswer(i -> i.getArgument(0));
-    when(factCreateHandler.withAcl(any(), any())).thenAnswer(i -> i.getArgument(0));
-    when(factCreateHandler.withComment(any(), any())).thenAnswer(i -> i.getArgument(0));
   }
 
   private void mockFetchingOrganization() throws Exception {
@@ -339,6 +345,7 @@ public class FactCreateMetaDelegateTest extends AbstractDelegateTest {
       assertEquals(origin.getTrust(), record.getTrust(), 0.0);
       assertEquals(request.getConfidence(), record.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), record.getAccessMode().name());
+      assertEquals(set(request.getComment()), set(record.getComments(), FactCommentRecord::getComment));
       assertTrue(record.getTimestamp() > 0);
       assertTrue(record.getLastSeenTimestamp() > 0);
 

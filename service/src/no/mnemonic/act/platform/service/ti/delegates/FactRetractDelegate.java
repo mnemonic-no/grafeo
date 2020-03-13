@@ -24,6 +24,9 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import javax.inject.Inject;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withAcl;
+import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withComment;
+
 public class FactRetractDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
@@ -95,8 +98,8 @@ public class FactRetractDelegate extends AbstractDelegate implements Delegate {
             .setAccessMode(factCreateHandler.resolveAccessMode(factToRetract, request.getAccessMode()))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
-    retractionFact = factCreateHandler.withAcl(retractionFact, request.getAcl());
-    retractionFact = factCreateHandler.withComment(retractionFact, request.getComment());
+    retractionFact = withAcl(retractionFact, securityContext.getCurrentUserID(), request.getAcl());
+    retractionFact = withComment(retractionFact, request.getComment());
 
     return objectFactDao.storeFact(retractionFact);
   }
