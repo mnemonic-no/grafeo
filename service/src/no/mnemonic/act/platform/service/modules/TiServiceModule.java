@@ -26,16 +26,22 @@ import java.util.function.Function;
  */
 public class TiServiceModule extends AbstractModule {
 
+  private boolean skipDefaultAccessController;
+
   @Override
   protected void configure() {
-    // Install all dependencies for the service (DAO, access controller, converters, aspects).
+    // Install all dependencies for the service.
     install(new DaoModule());
-    install(new PropertiesBasedAccessControllerModule());
     install(new AuthenticationAspect());
     install(new RequestContextAspect());
     install(new ValidationAspect());
     install(new TriggerContextAspect());
     install(new ServiceRequestScopeAspect());
+
+    if (!skipDefaultAccessController) {
+      // Omit default access controller if the module is configured using withoutDefaultAccessController().
+      install(new PropertiesBasedAccessControllerModule());
+    }
 
     // Configure the ActionTriggers' pipeline worker and administration service.
     bind(TriggerEventConsumer.class).to(InMemoryQueueWorker.class).in(Scopes.SINGLETON);
@@ -51,5 +57,16 @@ public class TiServiceModule extends AbstractModule {
     // Don't include statistics in the default ObjectConverter, e.g. when including Objects as part of Facts.
     // When statistics should be included in responses create a new instance of the ObjectConverter instead.
     return id -> Collections.emptyList();
+  }
+
+  /**
+   * Instruct the module to omit the default access controller implementation. In this case an alternative
+   * implementation must be configured in Guice.
+   *
+   * @return this
+   */
+  public TiServiceModule withoutDefaultAccessController() {
+    this.skipDefaultAccessController = true;
+    return this;
   }
 }
