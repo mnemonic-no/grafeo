@@ -1,30 +1,20 @@
 package no.mnemonic.act.platform.auth.properties.model;
 
 import no.mnemonic.services.common.auth.model.Credentials;
-import no.mnemonic.services.common.auth.model.SecurityLevel;
-import no.mnemonic.services.common.auth.model.SubjectIdentity;
 
 /**
- * Credentials based on identifying a Subject by mapping its numeric internal ID to a SubjectIdentifier.
+ * Credentials based on identifying a Subject by its numeric internal ID.
  */
 public class SubjectCredentials implements Credentials {
 
-  private final SubjectIdentifier identifier;
+  private final long subjectID;
 
   private SubjectCredentials(long subjectID) {
-    identifier = SubjectIdentifier.builder()
-            .setInternalID(subjectID)
-            .build();
+    this.subjectID = subjectID;
   }
 
-  @Override
-  public SubjectIdentity getUserID() {
-    return identifier;
-  }
-
-  @Override
-  public SecurityLevel getSecurityLevel() {
-    throw new UnsupportedOperationException("Security level is not implemented!");
+  public long getSubjectID() {
+    return subjectID;
   }
 
   public static Builder builder() {

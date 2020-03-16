@@ -2,7 +2,6 @@ package no.mnemonic.act.platform.rest.api.auth;
 
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.auth.properties.model.SubjectCredentials;
-import no.mnemonic.act.platform.auth.properties.model.SubjectIdentifier;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -34,9 +33,7 @@ public class SubjectCredentialsResolverTest {
 
     assertNotNull(rh.getCredentials());
     assertTrue(rh.getCredentials() instanceof SubjectCredentials);
-    SubjectCredentials credentials = SubjectCredentials.class.cast(rh.getCredentials());
-    SubjectIdentifier identifier = SubjectIdentifier.class.cast(credentials.getUserID());
-    assertEquals(1, identifier.getInternalID());
+    assertEquals(1, ((SubjectCredentials) rh.getCredentials()).getSubjectID());
   }
 
   @Test

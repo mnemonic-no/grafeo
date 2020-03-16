@@ -42,8 +42,8 @@
 
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.3.4</mnemonic.commons.version>
-    <mnemonic.messaging.version>1.2.22</mnemonic.messaging.version>
-    <mnemonic.services.common.version>0.3.16</mnemonic.services.common.version>
+    <mnemonic.messaging.version>1.2.23</mnemonic.messaging.version>
+    <mnemonic.services.common.version>0.3.18</mnemonic.services.common.version>
     <mnemonic.services.triggers.version>0.0.10</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->

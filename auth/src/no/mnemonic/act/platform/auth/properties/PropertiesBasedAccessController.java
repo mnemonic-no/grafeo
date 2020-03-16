@@ -5,10 +5,7 @@ import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.auth.properties.internal.*;
-import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
-import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
-import no.mnemonic.act.platform.auth.properties.model.SubjectCredentials;
-import no.mnemonic.act.platform.auth.properties.model.SubjectIdentifier;
+import no.mnemonic.act.platform.auth.properties.model.*;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -39,46 +36,50 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   }
 
   @Override
-  public void validate(Credentials credentials) throws InvalidCredentialsException {
+  public SessionDescriptor validate(Credentials credentials) throws InvalidCredentialsException {
     if (!(credentials instanceof SubjectCredentials)) {
       throw new InvalidCredentialsException("Cannot handle the type of provided credentials.");
     }
 
-    PropertiesSubject subject = getSubject(credentials);
+    PropertiesSubject subject = state.get().getSubject(SubjectCredentials.class.cast(credentials).getSubjectID());
     if (subject == null || subject.isGroup()) {
       throw new InvalidCredentialsException("The presented credentials are not valid.");
     }
+
+    return SubjectDescriptor.builder()
+            .setIdentifier(SubjectIdentifier.builder().setInternalID(subject.getInternalID()).build())
+            .build();
   }
 
   @Override
   public boolean hasPermission(Credentials credentials, FunctionIdentity function) throws InvalidCredentialsException {
-    validate(credentials);
-    return hasPermission(getSubject(credentials), getFunctionName(function));
+    SessionDescriptor descriptor = validate(credentials);
+    return hasPermission(getSubject(descriptor), getFunctionName(function));
   }
 
   @Override
   public boolean hasPermission(Credentials credentials, NamedFunction function) throws InvalidCredentialsException {
-    validate(credentials);
-    return hasPermission(getSubject(credentials), getFunctionName(function));
+    SessionDescriptor descriptor = validate(credentials);
+    return hasPermission(getSubject(descriptor), getFunctionName(function));
   }
 
   @Override
   public boolean hasPermission(Credentials credentials, FunctionIdentity function, OrganizationIdentity organization) throws InvalidCredentialsException {
-    validate(credentials);
-    return hasPermission(getSubject(credentials), getFunctionName(function), getOrganizationID(organization));
+    SessionDescriptor descriptor = validate(credentials);
+    return hasPermission(getSubject(descriptor), getFunctionName(function), getOrganizationID(organization));
   }
 
   @Override
   public boolean hasPermission(Credentials credentials, NamedFunction function, OrganizationIdentity organization) throws InvalidCredentialsException {
-    validate(credentials);
-    return hasPermission(getSubject(credentials), getFunctionName(function), getOrganizationID(organization));
+    SessionDescriptor descriptor = validate(credentials);
+    return hasPermission(getSubject(descriptor), getFunctionName(function), getOrganizationID(organization));
   }
 
   @Override
   public Set<SubjectIdentity> getSubjectIdentities(Credentials credentials) throws InvalidCredentialsException {
-    validate(credentials);
+    SessionDescriptor descriptor = validate(credentials);
 
-    PropertiesSubject subject = getSubject(credentials);
+    PropertiesSubject subject = getSubject(descriptor);
     Set<PropertiesSubject> parents = state.get().getParentSubjects(subject.getInternalID());
 
     // Return subject itself and its parents.
@@ -90,8 +91,8 @@ public class PropertiesBasedAccessController implements AccessController, Organi
 
   @Override
   public Set<OrganizationIdentity> getAvailableOrganizations(Credentials credentials) throws InvalidCredentialsException {
-    validate(credentials);
-    return resolveAvailableOrganizations(getSubject(credentials))
+    SessionDescriptor descriptor = validate(credentials);
+    return resolveAvailableOrganizations(getSubject(descriptor))
             .stream()
             .map(id -> OrganizationIdentifier.builder().setInternalID(id).build())
             .collect(Collectors.toSet());
@@ -99,9 +100,9 @@ public class PropertiesBasedAccessController implements AccessController, Organi
 
   @Override
   public Set<OrganizationIdentity> getDescendingOrganizations(Credentials credentials, OrganizationIdentity topLevelOrg) throws InvalidCredentialsException {
-    validate(credentials);
+    SessionDescriptor descriptor = validate(credentials);
 
-    PropertiesSubject subject = getSubject(credentials);
+    PropertiesSubject subject = getSubject(descriptor);
     long organizationID = getOrganizationID(topLevelOrg);
 
     // Subject has no access to organization.
@@ -133,8 +134,8 @@ public class PropertiesBasedAccessController implements AccessController, Organi
 
   @Override
   public Organization resolveCurrentUserAffiliation(Credentials credentials) throws InvalidCredentialsException {
-    validate(credentials);
-    UUID id = IdMapper.toGlobalID(getSubject(credentials).getAffiliation());
+    SessionDescriptor descriptor = validate(credentials);
+    UUID id = IdMapper.toGlobalID(getSubject(descriptor).getAffiliation());
     return ObjectUtils.ifNull(resolveOrganization(id), createOrganization(id, NOT_AVAILABLE_NAME));
   }
 
@@ -152,8 +153,8 @@ public class PropertiesBasedAccessController implements AccessController, Organi
 
   @Override
   public Subject resolveCurrentUser(Credentials credentials) throws InvalidCredentialsException {
-    validate(credentials);
-    return resolveSubject(IdMapper.toGlobalID(getSubject(credentials).getInternalID()));
+    SessionDescriptor descriptor = validate(credentials);
+    return resolveSubject(IdMapper.toGlobalID(getSubject(descriptor).getInternalID()));
   }
 
   @Override
@@ -195,9 +196,12 @@ public class PropertiesBasedAccessController implements AccessController, Organi
     state.set(newState);
   }
 
-  private PropertiesSubject getSubject(Credentials credentials) {
-    SubjectIdentifier identifier = (SubjectIdentifier) SubjectCredentials.class.cast(credentials).getUserID();
-    return state.get().getSubject(identifier.getInternalID());
+  private PropertiesSubject getSubject(SessionDescriptor descriptor) {
+    if (!(descriptor instanceof SubjectDescriptor)) {
+      throw new IllegalArgumentException("Cannot handle the type of provided descriptor.");
+    }
+
+    return state.get().getSubject(SubjectDescriptor.class.cast(descriptor).getIdentifier().getInternalID());
   }
 
   private long getOrganizationID(OrganizationIdentity organization) {

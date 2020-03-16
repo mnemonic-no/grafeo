@@ -2,10 +2,7 @@ package no.mnemonic.act.platform.auth.properties;
 
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
-import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
-import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
-import no.mnemonic.act.platform.auth.properties.model.SubjectCredentials;
-import no.mnemonic.act.platform.auth.properties.model.SubjectIdentifier;
+import no.mnemonic.act.platform.auth.properties.model.*;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 import no.mnemonic.services.common.auth.model.*;
 import org.junit.After;
@@ -35,7 +32,9 @@ public class PropertiesBasedAccessControllerTest {
   @Test
   public void testValidateWithValidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.validate(createCredentials(1));
+    SessionDescriptor descriptor = accessController.validate(createCredentials(1));
+    assertTrue(descriptor instanceof SubjectDescriptor);
+    assertEquals(1, ((SubjectDescriptor) descriptor).getIdentifier().getInternalID());
   }
 
   @Test(expected = InvalidCredentialsException.class)
@@ -47,17 +46,7 @@ public class PropertiesBasedAccessControllerTest {
   @Test(expected = InvalidCredentialsException.class)
   public void testValidateWithCredentialsOfWrongType() throws Exception {
     setup("subject.1.name = subject");
-    accessController.validate(new Credentials() {
-      @Override
-      public SubjectIdentity getUserID() {
-        return null;
-      }
-
-      @Override
-      public SecurityLevel getSecurityLevel() {
-        return null;
-      }
-    });
+    accessController.validate(new Credentials() {});
   }
 
   @Test(expected = InvalidCredentialsException.class)
