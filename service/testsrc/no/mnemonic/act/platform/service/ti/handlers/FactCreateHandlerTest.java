@@ -1,16 +1,24 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
+import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -19,8 +27,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.List;
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -41,13 +52,19 @@ public class FactCreateHandlerTest {
   private OriginManager originManager;
   @Mock
   private ValidatorFactory validatorFactory;
+  @Mock
+  private ObjectFactDao objectFactDao;
+  @Mock
+  private FactConverter factConverter;
+  @Mock
+  private TriggerContext triggerContext;
 
   private FactCreateHandler handler;
 
   @Before
   public void setUp() {
     initMocks(this);
-    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originResolver, originManager, validatorFactory);
+    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originResolver, originManager, validatorFactory, objectFactDao, factConverter, triggerContext);
   }
 
   @Test(expected = InvalidArgumentException.class)
@@ -243,5 +260,102 @@ public class FactCreateHandlerTest {
     InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
       () -> handler.assertValidFactValue(factType, "test"));
     assertEquals(SetUtils.set("fact.not.valid"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
+  }
+
+  @Test
+  public void testSaveNewFact() {
+    FactRecord factToSave = new FactRecord()
+      .setId(UUID.randomUUID())
+      .setAccessMode(FactRecord.AccessMode.RoleBased)
+      .setOrganizationID(UUID.randomUUID());
+    mockSaveFact();
+
+    List<UUID> subjectIds = list(UUID.randomUUID());
+    handler.saveFact(factToSave, "some comment", subjectIds);
+
+    verify(objectFactDao).storeFact(argThat(fact -> {
+      assertEquals(factToSave, fact);
+      assertEquals(set("some comment"), set(fact.getComments(), FactCommentRecord::getComment));
+      assertEquals(set(subjectIds), set(fact.getAcl(), FactAclEntryRecord::getSubjectID));
+      return true;
+    }));
+
+    verify(objectFactDao, never()).refreshFact(any());
+    verify(factConverter).apply(same(factToSave));
+  }
+
+  @Test
+  public void testRefreshExistingFact() {
+    FactRecord factToSave = new FactRecord()
+      .setId(UUID.randomUUID())
+      .setAccessMode(FactRecord.AccessMode.Public)
+      .setOrganizationID(UUID.randomUUID());
+    mockSaveFact();
+
+    // Mock fetching of existing Fact.
+    FactRecord existingFact = new FactRecord()
+      .setId(UUID.randomUUID())
+      .setAccessMode(FactRecord.AccessMode.RoleBased)
+      .setOrganizationID(UUID.randomUUID());
+    when(objectFactDao.retrieveExistingFacts(factToSave))
+      .thenReturn(ResultContainer.<FactRecord>builder().setValues(list(existingFact).iterator()).build());
+    when(securityContext.hasReadPermission(existingFact)).thenReturn(true);
+
+    // Mock stuff needed for refreshing Fact.
+    when(objectFactDao.refreshFact(existingFact)).thenReturn(existingFact);
+
+    List<UUID> subjectIds = list(UUID.randomUUID());
+    handler.saveFact(factToSave, "some comment", subjectIds);
+
+    verify(objectFactDao).refreshFact(argThat(fact -> {
+      assertEquals(existingFact, fact);
+      assertEquals(set("some comment"), set(fact.getComments(), FactCommentRecord::getComment));
+      assertEquals(set(subjectIds), set(fact.getAcl(), FactAclEntryRecord::getSubjectID));
+      return true;
+    }));
+
+    verify(objectFactDao, never()).storeFact(any());
+    verify(factConverter).apply(same(existingFact));
+  }
+
+  @Test
+  public void testSaveFactRegisterTriggerEvent() {
+    FactRecord fact = new FactRecord()
+      .setId(UUID.randomUUID())
+      .setAccessMode(FactRecord.AccessMode.Public)
+      .setOrganizationID(UUID.randomUUID());
+    mockSaveFact();
+
+    Fact addedFact = handler.saveFact(fact, null, null);
+
+    verify(triggerContext).registerTriggerEvent(argThat(event -> {
+      assertNotNull(event);
+      assertEquals(TiServiceEvent.EventName.FactAdded.name(), event.getEvent());
+      assertEquals(fact.getOrganizationID(), event.getOrganization());
+      assertEquals(fact.getAccessMode().name(), event.getAccessMode().name());
+      assertSame(addedFact, event.getContextParameters().get(TiServiceEvent.ContextParameter.AddedFact.name()));
+      return true;
+    }));
+  }
+
+  private void mockSaveFact() {
+    // Mocking
+    mockFactConverter();
+    // Mock fetching of existing Fact.
+    when(objectFactDao.retrieveExistingFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
+    // Mock stuff needed for saving Fact.
+    when(objectFactDao.storeFact(any())).thenAnswer(i -> i.getArgument(0));
+  }
+
+  private void mockFactConverter() {
+    // Mock FactConverter needed for registering TriggerEvent.
+    when(factConverter.apply(any())).then(i -> {
+      FactRecord record = i.getArgument(0);
+      return Fact.builder()
+        .setId(record.getId())
+        .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(record.getAccessMode().name()))
+        .setOrganization(Organization.builder().setId(record.getOrganizationID()).build().toInfo())
+        .build();
+    });
   }
 }

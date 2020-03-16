@@ -4,12 +4,13 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.commons.utilities.StringUtils;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 
 public class FactHelper {
 
@@ -46,12 +47,9 @@ public class FactHelper {
     if (fact.getAccessMode() == FactRecord.AccessMode.Public) return fact;
 
     // Fetch any existing entries ...
-    Set<UUID> existingAcl = SetUtils.set(fact.getAcl())
-      .stream()
-      .map(FactAclEntryRecord::getSubjectID)
-      .collect(Collectors.toSet());
+    Set<UUID> existingAcl = set(fact.getAcl(), FactAclEntryRecord::getSubjectID);
     // ... and make sure not to add any duplicates.
-    Set<UUID> subjectsToAdd = SetUtils.set(acl)
+    Set<UUID> subjectsToAdd = set(acl)
       .stream()
       .filter(subject -> !existingAcl.contains(subject))
       .collect(Collectors.toSet());

@@ -3,13 +3,13 @@ package no.mnemonic.act.platform.service.ti.helpers;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Test;
 
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withAcl;
 import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withComment;
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static org.junit.Assert.*;
 
 public class FactHelperTest {
@@ -42,13 +42,13 @@ public class FactHelperTest {
 
   @Test
   public void testWithAclNullFact() {
-    assertNull(withAcl(null, UUID.randomUUID(), ListUtils.list(UUID.randomUUID())));
+    assertNull(withAcl(null, UUID.randomUUID(), list(UUID.randomUUID())));
   }
 
   @Test
   public void testWithAclSkipsEmptyAcl() {
     assertTrue(CollectionUtils.isEmpty(withAcl(new FactRecord(), UUID.randomUUID(), null).getAcl()));
-    assertTrue(CollectionUtils.isEmpty(withAcl(new FactRecord(), UUID.randomUUID(), ListUtils.list()).getAcl()));
+    assertTrue(CollectionUtils.isEmpty(withAcl(new FactRecord(), UUID.randomUUID(), list()).getAcl()));
   }
 
   @Test
@@ -56,7 +56,7 @@ public class FactHelperTest {
     UUID subjectID = UUID.randomUUID();
     FactRecord fact = new FactRecord().setOriginID(UUID.randomUUID());
 
-    fact = withAcl(fact, UUID.randomUUID(), ListUtils.list(subjectID));
+    fact = withAcl(fact, UUID.randomUUID(), list(subjectID));
     assertEquals(1, fact.getAcl().size());
     assertNotNull(fact.getAcl().get(0).getId());
     assertEquals(fact.getOriginID(), fact.getAcl().get(0).getOriginID());
@@ -69,7 +69,7 @@ public class FactHelperTest {
     UUID subjectID = UUID.randomUUID();
     FactRecord fact = new FactRecord().addAclEntry(new FactAclEntryRecord().setSubjectID(UUID.randomUUID()));
 
-    fact = withAcl(fact, UUID.randomUUID(), ListUtils.list(subjectID));
+    fact = withAcl(fact, UUID.randomUUID(), list(subjectID));
     assertEquals(2, fact.getAcl().size());
   }
 
@@ -78,7 +78,7 @@ public class FactHelperTest {
     UUID subjectID = UUID.randomUUID();
     FactRecord fact = new FactRecord().addAclEntry(new FactAclEntryRecord().setSubjectID(subjectID));
 
-    fact = withAcl(fact, UUID.randomUUID(), ListUtils.list(subjectID));
+    fact = withAcl(fact, UUID.randomUUID(), list(subjectID));
     assertEquals(1, fact.getAcl().size());
   }
 

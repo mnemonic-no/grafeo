@@ -3,16 +3,21 @@ package no.mnemonic.act.platform.service.ti.handlers;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.TiServiceEvent;
+import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -21,10 +26,13 @@ import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
+import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withAcl;
+import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withComment;
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
 public class FactCreateHandler {
@@ -42,6 +50,9 @@ public class FactCreateHandler {
   private final OriginResolver originResolver;
   private final OriginManager originManager;
   private final ValidatorFactory validatorFactory;
+  private final ObjectFactDao objectFactDao;
+  private final FactConverter factConverter;
+  private final TriggerContext triggerContext;
 
   @Inject
   public FactCreateHandler(TiSecurityContext securityContext,
@@ -49,13 +60,19 @@ public class FactCreateHandler {
                            OrganizationResolver organizationResolver,
                            OriginResolver originResolver,
                            OriginManager originManager,
-                           ValidatorFactory validatorFactory) {
+                           ValidatorFactory validatorFactory,
+                           ObjectFactDao objectFactDao,
+                           FactConverter factConverter,
+                           TriggerContext triggerContext) {
     this.securityContext = securityContext;
     this.subjectResolver = subjectResolver;
     this.organizationResolver = organizationResolver;
     this.originResolver = originResolver;
     this.originManager = originManager;
     this.validatorFactory = validatorFactory;
+    this.objectFactDao = objectFactDao;
+    this.factConverter = factConverter;
+    this.triggerContext = triggerContext;
   }
 
   /**
@@ -158,6 +175,34 @@ public class FactCreateHandler {
   }
 
   /**
+   * Saves a fact into permanent storage. If the fact exists already, the fact is refreshed.
+   *
+   * @param fact The fact to save
+   * @param comment A comment to the record
+   * @param subjectIds List of subject ids for the record
+   * @return The fact that was stored
+   */
+  public Fact saveFact(FactRecord fact, String comment, List<UUID> subjectIds ) {
+    FactRecord existingFact = resolveExistingFact(fact);
+
+    FactRecord effectiveFact = existingFact != null ? existingFact : fact;
+    effectiveFact = withAcl(effectiveFact, securityContext.getCurrentUserID(), subjectIds);
+    effectiveFact = withComment(effectiveFact, comment);
+
+    if (existingFact != null) {
+      effectiveFact = objectFactDao.refreshFact(effectiveFact);
+    } else {
+      // Or create a new Fact.
+      effectiveFact = objectFactDao.storeFact(effectiveFact);
+    }
+
+    // Register TriggerEvent before returning added Fact.
+    Fact addedFact = factConverter.apply(effectiveFact);
+    registerTriggerEvent(addedFact);
+    return addedFact;
+  }
+
+  /**
    * Assert that a Fact value is valid according to a FactType's validator.
    *
    * @param type  FactType to validate against
@@ -171,6 +216,24 @@ public class FactCreateHandler {
       throw new InvalidArgumentException()
         .addValidationError("Fact did not pass validation against FactType.", "fact.not.valid", "value", value);
     }
+  }
+
+  private FactRecord resolveExistingFact(FactRecord newFact) {
+    // Fetch any Facts which are logically the same as the Fact to create, apply permission check and return existing Fact if accessible.
+    return objectFactDao.retrieveExistingFacts(newFact)
+      .stream()
+      .filter(securityContext::hasReadPermission)
+      .findFirst()
+      .orElse(null);
+  }
+
+  private void registerTriggerEvent(Fact addedFact) {
+    TiServiceEvent event = TiServiceEvent.forEvent(TiServiceEvent.EventName.FactAdded)
+      .setOrganization(ObjectUtils.ifNotNull(addedFact.getOrganization(), Organization.Info::getId))
+      .setAccessMode(addedFact.getAccessMode())
+      .addContextParameter(TiServiceEvent.ContextParameter.AddedFact.name(), addedFact)
+      .build();
+    triggerContext.registerTriggerEvent(event);
   }
 
   private Organization fetchOrganization(UUID organizationID) throws InvalidArgumentException {

@@ -6,16 +6,12 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
-import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
-import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.TiServiceEvent;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.ObjectResolver;
@@ -26,18 +22,12 @@ import javax.inject.Inject;
 import java.util.Objects;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withAcl;
-import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withComment;
-
 public class FactCreateDelegate extends AbstractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final TriggerContext triggerContext;
-  private final ObjectFactDao objectFactDao;
   private final FactTypeResolver factTypeResolver;
   private final ObjectResolver objectResolver;
   private final FactCreateHandler factCreateHandler;
-  private final FactConverter factConverter;
 
   private FactTypeEntity requestedFactType;
   private OriginEntity requestedOrigin;
@@ -45,19 +35,13 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
 
   @Inject
   public FactCreateDelegate(TiSecurityContext securityContext,
-                            TriggerContext triggerContext,
-                            ObjectFactDao objectFactDao,
                             FactTypeResolver factTypeResolver,
                             ObjectResolver objectResolver,
-                            FactCreateHandler factCreateHandler,
-                            FactConverter factConverter) {
+                            FactCreateHandler factCreateHandler) {
     this.securityContext = securityContext;
-    this.triggerContext = triggerContext;
-    this.objectFactDao = objectFactDao;
     this.factTypeResolver = factTypeResolver;
     this.objectResolver = objectResolver;
     this.factCreateHandler = factCreateHandler;
-    this.factConverter = factConverter;
   }
 
   public Fact handle(CreateFactRequest request)
@@ -75,22 +59,7 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
     assertValidFactObjectBindings(request);
 
     FactRecord newFact = toFactRecord(request);
-    FactRecord existingFact = resolveExistingFact(newFact);
-    if (existingFact != null) {
-      // Refresh an existing Fact (plus adding any additional ACL entries and comments).
-      existingFact = withAcl(existingFact, securityContext.getCurrentUserID(), request.getAcl());
-      existingFact = withComment(existingFact, request.getComment());
-      existingFact = objectFactDao.refreshFact(existingFact);
-    } else {
-      // Or create a new Fact.
-      newFact = objectFactDao.storeFact(newFact);
-    }
-
-    // Register TriggerEvent before returning added Fact.
-    Fact addedFact = factConverter.apply(existingFact != null ? existingFact : newFact);
-    registerTriggerEvent(addedFact);
-
-    return addedFact;
+    return factCreateHandler.saveFact(newFact, request.getComment(), request.getAcl());
   }
 
   private void assertValidFactObjectBindings(CreateFactRequest request) throws InvalidArgumentException {
@@ -129,7 +98,7 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
     ObjectRecord source = objectResolver.resolveObject(request.getSourceObject());
     ObjectRecord destination = objectResolver.resolveObject(request.getDestinationObject());
 
-    FactRecord fact = new FactRecord()
+    return new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(requestedFactType.getId())
             .setValue(request.getValue())
@@ -144,27 +113,5 @@ public class FactCreateDelegate extends AbstractDelegate implements Delegate {
             .setSourceObject(source)
             .setDestinationObject(destination)
             .setBidirectionalBinding(request.isBidirectionalBinding());
-    fact = withAcl(fact, securityContext.getCurrentUserID(), request.getAcl());
-    fact = withComment(fact, request.getComment());
-
-    return fact;
-  }
-
-  private FactRecord resolveExistingFact(FactRecord newFact) {
-    // Fetch any Facts which are logically the same as the Fact to create, apply permission check and return existing Fact if accessible.
-    return objectFactDao.retrieveExistingFacts(newFact)
-            .stream()
-            .filter(securityContext::hasReadPermission)
-            .findFirst()
-            .orElse(null);
-  }
-
-  private void registerTriggerEvent(Fact addedFact) {
-    TiServiceEvent event = TiServiceEvent.forEvent(TiServiceEvent.EventName.FactAdded)
-            .setOrganization(ObjectUtils.ifNotNull(addedFact.getOrganization(), Organization.Info::getId))
-            .setAccessMode(addedFact.getAccessMode())
-            .addContextParameter(TiServiceEvent.ContextParameter.AddedFact.name(), addedFact)
-            .build();
-    triggerContext.registerTriggerEvent(event);
   }
 }
