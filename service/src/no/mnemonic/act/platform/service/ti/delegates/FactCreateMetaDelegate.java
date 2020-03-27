@@ -22,7 +22,7 @@ import javax.inject.Inject;
 import java.util.Objects;
 import java.util.UUID;
 
-public class FactCreateMetaDelegate extends AbstractDelegate implements Delegate {
+public class FactCreateMetaDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactTypeResolver factTypeResolver;

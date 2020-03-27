@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.request.v1.GetFactCommentsRequest;
 import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactCommentConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -20,27 +21,30 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
+public class FactGetCommentsDelegateTest {
 
   @Mock
   private FactResolver factResolver;
   @Mock
   private FactCommentConverter factCommentConverter;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private FactGetCommentsDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
-    delegate = new FactGetCommentsDelegate(getSecurityContext(), factResolver, factCommentConverter);
+    initMocks(this);
+    delegate = new FactGetCommentsDelegate(securityContext, factResolver, factCommentConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testGetFactCommentsNoAccessToFact() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactRecord.class));
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
   }
@@ -49,7 +53,7 @@ public class FactGetCommentsDelegateTest extends AbstractDelegateTest {
   public void testGetFactCommentsNoViewPermission() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.viewFactComments), any());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.viewFactComments), any());
 
     delegate.handle(request);
   }

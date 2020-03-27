@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactCommentConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import org.junit.Before;
@@ -18,8 +19,9 @@ import java.util.UUID;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
+public class FactCreateCommentDelegateTest {
 
   @Mock
   private ObjectFactDao objectFactDao;
@@ -27,20 +29,22 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
   private FactResolver factResolver;
   @Mock
   private FactCommentConverter factCommentConverter;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private FactCreateCommentDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
-    delegate = new FactCreateCommentDelegate(getSecurityContext(), objectFactDao, factResolver, factCommentConverter);
+    initMocks(this);
+    delegate = new FactCreateCommentDelegate(securityContext, objectFactDao, factResolver, factCommentConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCreateFactCommentNoAccessToFact() throws Exception {
     CreateFactCommentRequest request = createFactCommentRequest();
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactRecord.class));
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
   }
@@ -49,7 +53,7 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
   public void testCreateFactCommentNoAddPermission() throws Exception {
     CreateFactCommentRequest request = createFactCommentRequest();
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.addFactComments), any());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.addFactComments), any());
 
     delegate.handle(request);
   }
@@ -69,7 +73,7 @@ public class FactCreateCommentDelegateTest extends AbstractDelegateTest {
     FactRecord fact = createFactRecord(request.getFact(), request.getReplyTo());
     when(factResolver.resolveFact(request.getFact())).thenReturn(fact);
     when(objectFactDao.storeFactComment(notNull(), notNull())).then(i -> i.getArgument(1));
-    when(getSecurityContext().getCurrentUserID()).thenReturn(currentUser);
+    when(securityContext.getCurrentUserID()).thenReturn(currentUser);
 
     delegate.handle(request);
 

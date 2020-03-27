@@ -7,10 +7,11 @@ import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeByIdConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeByIdConverter;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -20,8 +21,9 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class ObjectGetDelegateTest extends AbstractDelegateTest {
+public class ObjectGetDelegateTest {
 
   @Mock
   private ObjectFactDao objectFactDao;
@@ -29,35 +31,39 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
   private FactTypeByIdConverter factTypeConverter;
   @Mock
   private ObjectTypeByIdConverter objectTypeConverter;
+  @Mock
+  private ObjectTypeHandler objectTypeHandler;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private ObjectGetDelegate delegate;
 
   @Before
   public void setup() {
+    initMocks(this);
     // Mocks required for ObjectConverter.
-    when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(getSecurityContext().getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
+    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
 
-    // initMocks() will be called by base class.
     delegate = new ObjectGetDelegate(
-            getSecurityContext(),
+            securityContext,
             objectFactDao,
             factTypeConverter,
-            objectTypeConverter
-    );
+            objectTypeConverter,
+            objectTypeHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByIdWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
     delegate.handle(new GetObjectByIdRequest());
   }
 
   @Test
   public void testFetchNonExistingObjectById() throws Exception {
     GetObjectByIdRequest request = new GetObjectByIdRequest().setId(UUID.randomUUID());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
@@ -74,7 +80,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
     when(objectFactDao.getObject(object.getId())).thenReturn(object);
 
     assertNotNull(delegate.handle(new GetObjectByIdRequest().setId(object.getId())));
-    verify(getSecurityContext()).checkReadPermission(object);
+    verify(securityContext).checkReadPermission(object);
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
       assertNotNull(criteria.getCurrentUserID());
@@ -85,7 +91,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByTypeValueWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
     delegate.handle(new GetObjectByTypeValueRequest());
   }
 
@@ -93,11 +99,12 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
   public void testFetchObjectByTypeValueWithNonExistingObjectType() throws Exception {
     GetObjectByTypeValueRequest request = new GetObjectByTypeValueRequest().setType("type").setValue("value");
 
+    doThrow(InvalidArgumentException.class).when(objectTypeHandler).assertObjectTypeExists(request.getType(), "type");
+
     try {
       delegate.handle(request);
       fail();
     } catch (InvalidArgumentException ignored) {
-      verify(getObjectManager()).getObjectType(request.getType());
       verifyNoInteractions(objectFactDao);
     }
   }
@@ -105,8 +112,7 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
   @Test
   public void testFetchNonExistingObjectByTypeValue() throws Exception {
     GetObjectByTypeValueRequest request = new GetObjectByTypeValueRequest().setType("type").setValue("value");
-    when(getObjectManager().getObjectType(request.getType())).thenReturn(new ObjectTypeEntity());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
@@ -121,11 +127,11 @@ public class ObjectGetDelegateTest extends AbstractDelegateTest {
   public void testFetchObjectByTypeValue() throws Exception {
     GetObjectByTypeValueRequest request = new GetObjectByTypeValueRequest().setType("type").setValue("value");
     ObjectRecord object = new ObjectRecord().setId(UUID.randomUUID());
-    when(getObjectManager().getObjectType(request.getType())).thenReturn(new ObjectTypeEntity());
+
     when(objectFactDao.getObject(request.getType(), request.getValue())).thenReturn(object);
 
     assertNotNull(delegate.handle(request));
-    verify(getSecurityContext()).checkReadPermission(object);
+    verify(securityContext).checkReadPermission(object);
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
       assertNotNull(criteria.getCurrentUserID());

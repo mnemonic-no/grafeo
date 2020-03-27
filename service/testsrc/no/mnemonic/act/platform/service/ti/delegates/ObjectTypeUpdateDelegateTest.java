@@ -4,45 +4,68 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.request.v1.UpdateObjectTypeRequest;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.ObjectTypeResolver;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class ObjectTypeUpdateDelegateTest extends AbstractDelegateTest {
+public class ObjectTypeUpdateDelegateTest {
+
+  @Mock
+  private ObjectTypeResolver objectTypeResolver;
+  @Mock
+  private ObjectTypeHandler objectTypeHandler;
+  @Mock
+  private ObjectManager objectManager;
+  @Mock
+  private ObjectTypeConverter objectTypeConverter;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private ObjectTypeUpdateDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
-    delegate = new ObjectTypeUpdateDelegate(getSecurityContext(), getObjectManager(), getObjectTypeConverter());
+    initMocks(this);
+    delegate = new ObjectTypeUpdateDelegate(
+      securityContext,
+      objectManager,
+      objectTypeConverter,
+      objectTypeResolver,
+      objectTypeHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testUpdateObjectTypeWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.updateTypes);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.updateTypes);
     delegate.handle(createRequest());
   }
 
   @Test(expected = ObjectNotFoundException.class)
   public void testUpdateObjectTypeNotExisting() throws Exception {
     UpdateObjectTypeRequest request = createRequest();
+    when(objectTypeResolver.fetchExistingObjectType(request.getId())).thenThrow(ObjectNotFoundException.class);
     delegate.handle(request);
-    verify(getObjectManager()).getObjectType(request.getId());
   }
 
   @Test(expected = InvalidArgumentException.class)
   public void testUpdateObjectTypeWithExistingName() throws Exception {
     UpdateObjectTypeRequest request = createRequest();
-    when(getObjectManager().getObjectType(request.getId())).thenReturn(new ObjectTypeEntity());
-    when(getObjectManager().getObjectType(request.getName())).thenReturn(new ObjectTypeEntity());
+    when(objectManager.getObjectType(request.getId())).thenReturn(new ObjectTypeEntity());
+    doThrow(InvalidArgumentException.class).when(objectTypeHandler).assertObjectTypeNotExists(request.getName());
     delegate.handle(request);
   }
 
@@ -50,15 +73,15 @@ public class ObjectTypeUpdateDelegateTest extends AbstractDelegateTest {
   public void testUpdateObjectType() throws Exception {
     UpdateObjectTypeRequest request = createRequest();
     ObjectTypeEntity entity = new ObjectTypeEntity();
-    when(getObjectManager().getObjectType(request.getId())).thenReturn(entity);
-    when(getObjectManager().saveObjectType(argThat(e -> {
+    when(objectTypeResolver.fetchExistingObjectType(request.getId())).thenReturn(entity);
+    when(objectManager.saveObjectType(argThat(e -> {
       assertSame(entity, e);
       assertEquals(request.getName(), e.getName());
       return true;
     }))).thenReturn(entity);
 
     delegate.handle(request);
-    verify(getObjectTypeConverter()).apply(entity);
+    verify(objectTypeConverter).apply(entity);
   }
 
   private UpdateObjectTypeRequest createRequest() {

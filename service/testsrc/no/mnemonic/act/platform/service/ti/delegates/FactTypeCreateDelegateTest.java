@@ -5,9 +5,13 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.CreateFactTypeRequest;
 import no.mnemonic.act.platform.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.act.platform.api.request.v1.MetaFactBindingDefinition;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
+import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,25 +21,39 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
+public class FactTypeCreateDelegateTest{
 
   @Mock
+  private TiSecurityContext securityContext;
+  @Mock
   private FactTypeHelper factTypeHelper;
+  @Mock
+  private ValidatorHandler validatorHandler;
+  @Mock
+  private FactManager factManager;
+  @Mock
+  private FactTypeConverter factTypeConverter;
 
   private FactTypeCreateDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
+    initMocks(this);
     when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
     when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
-    delegate = new FactTypeCreateDelegate(getSecurityContext(), getFactManager(), factTypeHelper, getFactTypeConverter());
+    delegate = new FactTypeCreateDelegate(
+      securityContext,
+      factManager,
+      factTypeHelper,
+      factTypeConverter,
+      validatorHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCreateFactTypeWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.addTypes);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.addTypes);
     delegate.handle(createFactTypeRequest());
   }
 
@@ -60,25 +78,25 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
   }
 
   @Test
-  public void testCreateFactTypeValidatorNotFound() {
+  public void testCreateFactTypeValidatorNotFound() throws InvalidArgumentException {
     CreateFactTypeRequest request = createFactTypeRequest();
-    when(getValidatorFactory().get(request.getValidator(), request.getValidatorParameter())).thenThrow(IllegalArgumentException.class);
-    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
-    assertEquals(SetUtils.set("validator.not.exist"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
+    doThrow(InvalidArgumentException.class).when(validatorHandler).assertValidatorExists(request.getValidator(), request.getValidatorParameter());
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
+    verify(validatorHandler).assertValidatorExists(request.getValidator(), request.getValidatorParameter());
   }
 
   @Test
   public void testCreateFactType() throws Exception {
     CreateFactTypeRequest request = createFactTypeRequest();
     FactTypeEntity newEntity = new FactTypeEntity();
-    when(getFactManager().saveFactType(any())).thenReturn(newEntity);
+    when(factManager.saveFactType(any())).thenReturn(newEntity);
 
     delegate.handle(request);
     verify(factTypeHelper).assertFactTypeNotExists(request.getName());
     verify(factTypeHelper).assertObjectTypesToBindExist(request.getRelevantObjectBindings(), "relevantObjectBindings");
     verify(factTypeHelper).convertFactObjectBindingDefinitions(request.getRelevantObjectBindings());
-    verify(getFactTypeConverter()).apply(newEntity);
-    verify(getFactManager()).saveFactType(argThat(entity -> {
+    verify(factTypeConverter).apply(newEntity);
+    verify(factManager).saveFactType(argThat(entity -> {
       assertCommonEntity(request, entity);
       assertEquals(1, entity.getRelevantObjectBindings().size());
       return true;
@@ -89,14 +107,14 @@ public class FactTypeCreateDelegateTest extends AbstractDelegateTest {
   public void testCreateMetaFactType() throws Exception {
     CreateFactTypeRequest request = createMetaFactTypeRequest();
     FactTypeEntity newEntity = new FactTypeEntity();
-    when(getFactManager().saveFactType(any())).thenReturn(newEntity);
+    when(factManager.saveFactType(any())).thenReturn(newEntity);
 
     delegate.handle(request);
     verify(factTypeHelper).assertFactTypeNotExists(request.getName());
     verify(factTypeHelper).assertFactTypesToBindExist(request.getRelevantFactBindings(), "relevantFactBindings");
     verify(factTypeHelper).convertMetaFactBindingDefinitions(request.getRelevantFactBindings());
-    verify(getFactTypeConverter()).apply(newEntity);
-    verify(getFactManager()).saveFactType(argThat(entity -> {
+    verify(factTypeConverter).apply(newEntity);
+    verify(factManager).saveFactType(argThat(entity -> {
       assertCommonEntity(request, entity);
       assertEquals(1, entity.getRelevantFactBindings().size());
       return true;

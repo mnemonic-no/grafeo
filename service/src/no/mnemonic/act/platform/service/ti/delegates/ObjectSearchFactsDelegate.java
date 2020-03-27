@@ -12,27 +12,31 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
 
-public class ObjectSearchFactsDelegate extends AbstractDelegate implements Delegate {
+public class ObjectSearchFactsDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
   private final SearchObjectFactsRequestConverter requestConverter;
   private final FactSearchHandler factSearchHandler;
+  private final ObjectTypeHandler objectTypeHandler;
 
   @Inject
   public ObjectSearchFactsDelegate(TiSecurityContext securityContext,
                                    ObjectFactDao objectFactDao,
                                    SearchObjectFactsRequestConverter requestConverter,
-                                   FactSearchHandler factSearchHandler) {
+                                   FactSearchHandler factSearchHandler,
+                                   ObjectTypeHandler objectTypeHandler) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.requestConverter = requestConverter;
     this.factSearchHandler = factSearchHandler;
+    this.objectTypeHandler = objectTypeHandler;
   }
 
   public ResultSet<Fact> handle(SearchObjectFactsRequest request)
@@ -55,7 +59,7 @@ public class ObjectSearchFactsDelegate extends AbstractDelegate implements Deleg
 
     // Make sure that ObjectType exists. Assume to fetch Object by type/value if 'objectID' isn't set in request.
     if (request.getObjectID() == null) {
-      assertObjectTypeExists(request.getObjectType(), "objectType");
+      objectTypeHandler.assertObjectTypeExists(request.getObjectType(), "objectType");
     }
   }
 

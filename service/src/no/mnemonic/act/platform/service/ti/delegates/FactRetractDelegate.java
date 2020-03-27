@@ -27,7 +27,7 @@ import java.util.UUID;
 import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withAcl;
 import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withComment;
 
-public class FactRetractDelegate extends AbstractDelegate implements Delegate {
+public class FactRetractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final TriggerContext triggerContext;

@@ -117,10 +117,10 @@ public class ObjectResolverTest {
 
   private ObjectTypeEntity mockFetchObjectType() {
     ObjectTypeEntity type = new ObjectTypeEntity()
-            .setId(UUID.randomUUID())
-            .setName("ObjectType")
-            .setValidator("Validator")
-            .setValidatorParameter("Parameter");
+      .setId(UUID.randomUUID())
+      .setName("ObjectType")
+      .setValidator("Validator")
+      .setValidatorParameter("Parameter");
     when(objectManager.getObjectType(type.getName())).thenReturn(type);
     return type;
   }

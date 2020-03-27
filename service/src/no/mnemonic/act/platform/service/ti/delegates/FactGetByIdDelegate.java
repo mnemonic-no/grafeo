@@ -14,7 +14,7 @@ import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 
 import javax.inject.Inject;
 
-public class FactGetByIdDelegate extends AbstractDelegate implements Delegate {
+public class FactGetByIdDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactResolver factResolver;

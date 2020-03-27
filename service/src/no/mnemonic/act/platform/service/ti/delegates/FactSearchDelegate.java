@@ -13,7 +13,7 @@ import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
 
-public class FactSearchDelegate extends AbstractDelegate implements Delegate {
+public class FactSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final SearchFactRequestConverter requestConverter;

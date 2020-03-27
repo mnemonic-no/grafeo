@@ -19,7 +19,7 @@ import javax.inject.Inject;
 import java.util.Objects;
 import java.util.UUID;
 
-public class FactCreateCommentDelegate extends AbstractDelegate implements Delegate {
+public class FactCreateCommentDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;

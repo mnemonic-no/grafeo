@@ -19,7 +19,7 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FactGetCommentsDelegate extends AbstractDelegate implements Delegate {
+public class FactGetCommentsDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactResolver factResolver;

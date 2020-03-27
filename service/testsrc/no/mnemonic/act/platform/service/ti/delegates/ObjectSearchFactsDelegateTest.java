@@ -8,10 +8,11 @@ import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -23,8 +24,9 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
+public class ObjectSearchFactsDelegateTest {
 
   @Mock
   private ObjectFactDao objectFactDao;
@@ -32,18 +34,27 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   private FactSearchHandler factSearchHandler;
   @Mock
   private SearchObjectFactsRequestConverter requestConverter;
+  @Mock
+  private ObjectTypeHandler objectTypeHandler;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private ObjectSearchFactsDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
-    delegate = new ObjectSearchFactsDelegate(getSecurityContext(), objectFactDao, requestConverter, factSearchHandler);
+    initMocks(this);
+    delegate = new ObjectSearchFactsDelegate(
+      securityContext,
+      objectFactDao,
+      requestConverter,
+      factSearchHandler,
+      objectTypeHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testSearchObjectFactsWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
     delegate.handle(new SearchObjectFactsRequest());
   }
 
@@ -52,22 +63,19 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
     delegate.handle(new SearchObjectFactsRequest());
   }
 
-  @Test
+  @Test(expected = InvalidArgumentException.class)
   public void testSearchObjectFactsWithNonExistingObjectType() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
 
-    try {
-      delegate.handle(request);
-      fail();
-    } catch (InvalidArgumentException ignored) {
-      verify(getObjectManager()).getObjectType(request.getObjectType());
-    }
+    doThrow(InvalidArgumentException.class).when(objectTypeHandler).assertObjectTypeExists(request.getObjectType(), "objectType");
+
+    delegate.handle(request);
   }
 
   @Test
   public void testSearchObjectFactsByNonExistingId() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(UUID.randomUUID());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
@@ -80,14 +88,13 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
   @Test
   public void testSearchObjectFactsByNonExistingTypeValue() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
-    when(getObjectManager().getObjectType(request.getObjectType())).thenReturn(new ObjectTypeEntity());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
-      verify(getObjectManager()).getObjectType(request.getObjectType());
+      verify(objectTypeHandler).assertObjectTypeExists(request.getObjectType(), "objectType");
       verify(objectFactDao).getObject(request.getObjectType(), request.getObjectValue());
     }
   }
@@ -145,11 +152,10 @@ public class ObjectSearchFactsDelegateTest extends AbstractDelegateTest {
 
     verify(requestConverter).apply(isNotNull());
     verify(factSearchHandler).search(isNotNull(), eq(request.getIncludeRetracted()));
-    verify(getSecurityContext()).checkReadPermission(isA(ObjectRecord.class));
+    verify(securityContext).checkReadPermission(isA(ObjectRecord.class));
   }
 
   private void mockSearchObjectFacts() throws Exception {
-    when(getObjectManager().getObjectType(isA(String.class))).thenReturn(new ObjectTypeEntity());
     when(objectFactDao.getObject(any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
     when(objectFactDao.getObject(any(), any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
 

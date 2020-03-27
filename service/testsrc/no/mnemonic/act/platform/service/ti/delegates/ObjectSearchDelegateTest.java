@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeByIdConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeByIdConverter;
 import no.mnemonic.act.platform.service.ti.converters.SearchObjectRequestConverter;
@@ -29,8 +30,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class ObjectSearchDelegateTest extends AbstractDelegateTest {
+public class ObjectSearchDelegateTest {
 
   @Mock
   private ObjectFactDao objectFactDao;
@@ -40,14 +42,17 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
   private FactTypeByIdConverter factTypeConverter;
   @Mock
   private ObjectTypeByIdConverter objectTypeConverter;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private ObjectSearchDelegate delegate;
 
   @Before
   public void setup() throws Exception {
+    initMocks(this);
     // Mocks required for ElasticSearch access control.
-    when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(getSecurityContext().getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
+    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
 
     // Mocks required for request converter.
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
@@ -56,9 +61,9 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
             .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
             .build());
 
-    // initMocks() will be called by base class.
+
     delegate = new ObjectSearchDelegate(
-            getSecurityContext(),
+            securityContext,
             objectFactDao,
             requestConverter,
             factTypeConverter,
@@ -68,7 +73,7 @@ public class ObjectSearchDelegateTest extends AbstractDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testSearchObjectsWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
     delegate.handle(new SearchObjectRequest());
   }
 

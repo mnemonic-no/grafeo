@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class ObjectSearchDelegate extends AbstractDelegate implements Delegate {
+public class ObjectSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;

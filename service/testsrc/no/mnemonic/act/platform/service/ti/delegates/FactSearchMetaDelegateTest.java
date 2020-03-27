@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
@@ -21,8 +22,9 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactSearchMetaDelegateTest extends AbstractDelegateTest {
+public class FactSearchMetaDelegateTest {
 
   @Mock
   private FactResolver factResolver;
@@ -30,18 +32,20 @@ public class FactSearchMetaDelegateTest extends AbstractDelegateTest {
   private FactSearchHandler factSearchHandler;
   @Mock
   private SearchMetaFactsRequestConverter requestConverter;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private FactSearchMetaDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
-    delegate = new FactSearchMetaDelegate(getSecurityContext(), requestConverter, factResolver, factSearchHandler);
+    initMocks(this);
+    delegate = new FactSearchMetaDelegate(securityContext, requestConverter, factResolver, factSearchHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testSearchMetaFactsWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
     delegate.handle(new SearchMetaFactsRequest());
   }
 
@@ -49,7 +53,7 @@ public class FactSearchMetaDelegateTest extends AbstractDelegateTest {
   public void testSearchMetaFactsNoAccessToFact() throws Exception {
     SearchMetaFactsRequest request = new SearchMetaFactsRequest().setFact(UUID.randomUUID());
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactRecord.class));
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
   }
@@ -67,7 +71,7 @@ public class FactSearchMetaDelegateTest extends AbstractDelegateTest {
 
     verify(requestConverter).apply(isNotNull());
     verify(factSearchHandler).search(isNotNull(), eq(true));
-    verify(getSecurityContext()).checkReadPermission(isA(FactRecord.class));
+    verify(securityContext).checkReadPermission(isA(FactRecord.class));
   }
 
   private void mockSearchMetaFacts() throws Exception {

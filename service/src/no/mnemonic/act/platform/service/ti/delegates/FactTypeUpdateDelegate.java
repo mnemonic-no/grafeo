@@ -20,7 +20,7 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import javax.inject.Inject;
 import java.util.Objects;
 
-public class FactTypeUpdateDelegate extends AbstractDelegate implements Delegate {
+public class FactTypeUpdateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactManager factManager;
@@ -45,7 +45,7 @@ public class FactTypeUpdateDelegate extends AbstractDelegate implements Delegate
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     securityContext.checkPermission(TiFunctionConstants.updateTypes);
 
-    FactTypeEntity entity = fetchExistingFactType(request.getId());
+    FactTypeEntity entity = factTypeResolver.fetchExistingFactType(request.getId());
     if (Objects.equals(entity.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
       throw new AccessDeniedException("Not allowed to update the system-defined Retraction FactType.");
     }

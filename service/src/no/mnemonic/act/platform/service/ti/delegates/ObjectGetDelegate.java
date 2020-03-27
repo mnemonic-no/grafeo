@@ -14,25 +14,29 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeByIdConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeByIdConverter;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 
 import javax.inject.Inject;
 
-public class ObjectGetDelegate extends AbstractDelegate implements Delegate {
+public class ObjectGetDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
   private final FactTypeByIdConverter factTypeConverter;
   private final ObjectTypeByIdConverter objectTypeConverter;
+  private final ObjectTypeHandler objectTypeHandler;
 
   @Inject
   public ObjectGetDelegate(TiSecurityContext securityContext,
                            ObjectFactDao objectFactDao,
                            FactTypeByIdConverter factTypeConverter,
-                           ObjectTypeByIdConverter objectTypeConverter) {
+                           ObjectTypeByIdConverter objectTypeConverter,
+                           ObjectTypeHandler objectTypeHandler) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.factTypeConverter = factTypeConverter;
     this.objectTypeConverter = objectTypeConverter;
+    this.objectTypeHandler = objectTypeHandler;
   }
 
   public Object handle(GetObjectByIdRequest request)
@@ -46,7 +50,7 @@ public class ObjectGetDelegate extends AbstractDelegate implements Delegate {
   public Object handle(GetObjectByTypeValueRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
-    assertObjectTypeExists(request.getType(), "type");
+    objectTypeHandler.assertObjectTypeExists(request.getType(), "type");
     ObjectRecord object = objectFactDao.getObject(request.getType(), request.getValue());
     securityContext.checkReadPermission(object);
     return createObjectConverter().apply(object);

@@ -11,6 +11,7 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
+import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import javax.inject.Inject;
@@ -18,22 +19,25 @@ import java.util.UUID;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
 
-public class FactTypeCreateDelegate extends AbstractDelegate implements Delegate {
+public class FactTypeCreateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactManager factManager;
   private final FactTypeHelper factTypeHelper;
   private final FactTypeConverter factTypeConverter;
+  private final ValidatorHandler validatorHandler;
 
   @Inject
   public FactTypeCreateDelegate(TiSecurityContext securityContext,
                                 FactManager factManager,
                                 FactTypeHelper factTypeHelper,
-                                FactTypeConverter factTypeConverter) {
+                                FactTypeConverter factTypeConverter,
+                                ValidatorHandler validatorHandler) {
     this.securityContext = securityContext;
     this.factManager = factManager;
     this.factTypeHelper = factTypeHelper;
     this.factTypeConverter = factTypeConverter;
+    this.validatorHandler = validatorHandler;
   }
 
   public FactType handle(CreateFactTypeRequest request)
@@ -59,7 +63,7 @@ public class FactTypeCreateDelegate extends AbstractDelegate implements Delegate
     factTypeHelper.assertFactTypeNotExists(request.getName());
     factTypeHelper.assertObjectTypesToBindExist(request.getRelevantObjectBindings(), "relevantObjectBindings");
     factTypeHelper.assertFactTypesToBindExist(request.getRelevantFactBindings(), "relevantFactBindings");
-    assertValidatorExists(request.getValidator(), request.getValidatorParameter());
+    validatorHandler.assertValidatorExists(request.getValidator(), request.getValidatorParameter());
 
     FactTypeEntity entity = new FactTypeEntity()
             .setId(UUID.randomUUID()) // ID needs to be provided by client.

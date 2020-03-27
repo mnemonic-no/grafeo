@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.AclEntryConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import org.junit.Before;
@@ -19,8 +20,9 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
+public class FactGrantAccessDelegateTest {
 
   @Mock
   private ObjectFactDao objectFactDao;
@@ -28,20 +30,22 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
   private FactResolver factResolver;
   @Mock
   private AclEntryConverter aclEntryConverter;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private FactGrantAccessDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
-    delegate = new FactGrantAccessDelegate(getSecurityContext(), objectFactDao, factResolver, aclEntryConverter);
+    initMocks(this);
+    delegate = new FactGrantAccessDelegate(securityContext, objectFactDao, factResolver, aclEntryConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testGrantFactAccessNoAccessToFact() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactRecord.class));
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
   }
@@ -50,7 +54,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
   public void testGrantFactAccessNoGrantPermission() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.grantFactAccess), any());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.grantFactAccess), any());
 
     delegate.handle(request);
   }
@@ -82,7 +86,7 @@ public class FactGrantAccessDelegateTest extends AbstractDelegateTest {
     FactRecord fact = createFactRecord(request);
     when(factResolver.resolveFact(request.getFact())).thenReturn(fact);
     when(objectFactDao.storeFactAclEntry(notNull(), notNull())).then(i -> i.getArgument(1));
-    when(getSecurityContext().getCurrentUserID()).thenReturn(currentUser);
+    when(securityContext.getCurrentUserID()).thenReturn(currentUser);
 
     delegate.handle(request);
 

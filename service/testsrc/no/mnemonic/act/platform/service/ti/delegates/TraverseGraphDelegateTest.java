@@ -12,10 +12,14 @@ import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.cassandra.FactManager;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -29,17 +33,26 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class TraverseGraphDelegateTest extends AbstractDelegateTest {
+public class TraverseGraphDelegateTest {
 
+  @Mock
+  private FactManager factManager;
+  @Mock
+  private FactConverter factConverter;
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
-  private ObjectSearchDelegate objectSearch;
-  @Mock
   private ObjectConverter objectConverter;
   @Mock
-  private FactConverter factConverter;
+  private ObjectManager objectManager;
+  @Mock
+  private ObjectSearchDelegate objectSearch;
+  @Mock
+  private ObjectTypeHandler objectTypeHandler;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private TraverseGraphDelegate delegate;
 
@@ -49,7 +62,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
             .setQuery(query);
     ResultSet<?> result = delegate.handle(request);
     // Permission check should be performed on starting point of graph traversal.
-    verify(getSecurityContext()).checkReadPermission(object);
+    verify(securityContext).checkReadPermission(object);
     return result;
   };
 
@@ -60,7 +73,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
             .setQuery(query);
     ResultSet<?> result = delegate.handle(request);
     // Permission check should be performed on starting point of graph traversal.
-    verify(getSecurityContext()).checkReadPermission(object);
+    verify(securityContext).checkReadPermission(object);
     return result;
   };
 
@@ -74,28 +87,28 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
+    initMocks(this);
     delegate = new TraverseGraphDelegate(
-            getSecurityContext(),
+            securityContext,
             objectFactDao,
-            getObjectManager(),
-            getFactManager(),
+            objectManager,
+            factManager,
             objectSearch,
             objectConverter,
-            factConverter
-    ).setScriptExecutionTimeout(2000);
+            factConverter,
+            objectTypeHandler).setScriptExecutionTimeout(2000);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testTraverseGraphByObjectIdWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.traverseFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseFactObjects);
     delegate.handle(new TraverseByObjectIdRequest());
   }
 
   @Test
   public void testTraverseGraphByObjectIdWithoutObject() throws Exception {
     TraverseByObjectIdRequest request = new TraverseByObjectIdRequest().setId(UUID.randomUUID());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
@@ -137,33 +150,30 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testTraverseGraphByObjectTypeValueWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.traverseFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseFactObjects);
     delegate.handle(new TraverseByObjectTypeValueRequest());
   }
 
-  @Test
+  @Test(expected = InvalidArgumentException.class)
   public void testTraverseGraphByObjectTypeValueWithoutObjectType() throws Exception {
     TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest().setType("type").setValue("value");
 
-    try {
-      delegate.handle(request);
-      fail();
-    } catch (InvalidArgumentException ignored) {
-      verify(getObjectManager()).getObjectType(request.getType());
-    }
+    doThrow(InvalidArgumentException.class).when(objectTypeHandler).assertObjectTypeExists(request.getType(), "type");
+
+    delegate.handle(request);
   }
 
   @Test
   public void testTraverseGraphByObjectTypeValueWithoutObject() throws Exception {
     TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest().setType("type").setValue("value");
-    when(getObjectManager().getObjectType(request.getType())).thenReturn(new ObjectTypeEntity());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission((ObjectRecord) isNull());
+    when(objectManager.getObjectType(request.getType())).thenReturn(new ObjectTypeEntity());
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
     try {
       delegate.handle(request);
       fail();
     } catch (AccessDeniedException ignored) {
-      verify(getObjectManager()).getObjectType(request.getType());
+      verify(objectTypeHandler).assertObjectTypeExists(request.getType(), "type");
       verify(objectFactDao).getObject(request.getType(), request.getValue());
     }
   }
@@ -200,7 +210,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testTraverseGraphByObjectSearchWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.traverseFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseFactObjects);
     delegate.handle(new TraverseByObjectSearchRequest());
   }
 
@@ -249,8 +259,8 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     assertEquals(1, result.size());
     assertTrue(result.get(0) instanceof Fact);
     // SecurityContext should be called twice, once during graph traversal and once when creating result.
-    verify(getSecurityContext()).hasReadPermission(isA(FactEntity.class));
-    verify(getSecurityContext()).hasReadPermission(isA(FactRecord.class));
+    verify(securityContext).hasReadPermission(isA(FactEntity.class));
+    verify(securityContext).hasReadPermission(isA(FactRecord.class));
   }
 
   private void testTraverseGraphReturnVertices(TestMethod method) throws Exception {
@@ -283,8 +293,8 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   }
 
   private ObjectRecord mockFullTraversal() {
-    when(getSecurityContext().hasReadPermission(isA(FactEntity.class))).thenReturn(true);
-    when(getSecurityContext().hasReadPermission(isA(FactRecord.class))).thenReturn(true);
+    when(securityContext.hasReadPermission(isA(FactEntity.class))).thenReturn(true);
+    when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
 
     ObjectRecord otherObject = mockFetchObject();
     FactEntity fact = mockFetchFact(otherObject);
@@ -296,16 +306,16 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     ObjectTypeEntity objectType = new ObjectTypeEntity()
             .setId(UUID.randomUUID())
             .setName("objectType");
-    when(getObjectManager().getObjectType(objectType.getId())).thenReturn(objectType);
-    when(getObjectManager().getObjectType(objectType.getName())).thenReturn(objectType);
+    when(objectManager.getObjectType(objectType.getId())).thenReturn(objectType);
+    when(objectManager.getObjectType(objectType.getName())).thenReturn(objectType);
 
     ObjectEntity entity = new ObjectEntity()
             .setId(UUID.randomUUID())
             .setTypeID(objectType.getId())
             .setValue("objectValue");
     ObjectRecord record = toRecord(entity);
-    when(getObjectManager().getObject(entity.getId())).thenReturn(entity);
-    when(getObjectManager().getObject(objectType.getName(), entity.getValue())).thenReturn(entity);
+    when(objectManager.getObject(entity.getId())).thenReturn(entity);
+    when(objectManager.getObject(objectType.getName(), entity.getValue())).thenReturn(entity);
     when(objectFactDao.getObject(entity.getId())).thenReturn(record);
     when(objectFactDao.getObject(objectType.getName(), entity.getValue())).thenReturn(record);
     when(objectConverter.apply(record)).thenReturn(Object.builder().setId(entity.getId()).build());
@@ -316,7 +326,7 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
   private ObjectRecord mockFetchObject(FactEntity fact) {
     ObjectRecord object = mockFetchObject();
 
-    when(getObjectManager().fetchObjectFactBindings(object.getId())).thenReturn(ListUtils.list(
+    when(objectManager.fetchObjectFactBindings(object.getId())).thenReturn(ListUtils.list(
             new ObjectFactBindingEntity()
                     .setObjectID(object.getId())
                     .setFactID(fact.getId())
@@ -330,14 +340,14 @@ public class TraverseGraphDelegateTest extends AbstractDelegateTest {
     FactTypeEntity factType = new FactTypeEntity()
             .setId(UUID.randomUUID())
             .setName("factType");
-    when(getFactManager().getFactType(factType.getId())).thenReturn(factType);
+    when(factManager.getFactType(factType.getId())).thenReturn(factType);
 
     FactEntity entity = new FactEntity()
             .setId(UUID.randomUUID())
             .setTypeID(factType.getId())
             .setValue("factValue");
     FactRecord record = toRecord(entity);
-    when(getFactManager().getFact(entity.getId())).thenReturn(entity);
+    when(factManager.getFact(entity.getId())).thenReturn(entity);
     when(objectFactDao.getFact(entity.getId())).thenReturn(record);
     when(factConverter.apply(record)).thenReturn(Fact.builder().setId(entity.getId()).build());
 

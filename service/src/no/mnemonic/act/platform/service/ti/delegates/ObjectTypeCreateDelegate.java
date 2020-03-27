@@ -10,33 +10,41 @@ import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
+import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
 
 import javax.inject.Inject;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
 
-public class ObjectTypeCreateDelegate extends AbstractDelegate implements Delegate {
+public class ObjectTypeCreateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
   private final ObjectTypeConverter objectTypeConverter;
+  private final ObjectTypeHandler objectTypeHandler;
+  private final ValidatorHandler validatorHandler;
 
   @Inject
   public ObjectTypeCreateDelegate(TiSecurityContext securityContext,
                                   ObjectManager objectManager,
-                                  ObjectTypeConverter objectTypeConverter) {
+                                  ObjectTypeConverter objectTypeConverter,
+                                  ObjectTypeHandler objectTypeHandler,
+                                  ValidatorHandler validatorHandler) {
     this.securityContext = securityContext;
     this.objectManager = objectManager;
     this.objectTypeConverter = objectTypeConverter;
+    this.objectTypeHandler = objectTypeHandler;
+    this.validatorHandler = validatorHandler;
   }
 
   public ObjectType handle(CreateObjectTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     securityContext.checkPermission(TiFunctionConstants.addTypes);
 
-    assertObjectTypeNotExists(request.getName());
-    assertValidatorExists(request.getValidator(), request.getValidatorParameter());
+    objectTypeHandler.assertObjectTypeNotExists(request.getName());
+    validatorHandler.assertValidatorExists(request.getValidator(), request.getValidatorParameter());
 
     ObjectTypeEntity entity = new ObjectTypeEntity()
             .setId(UUID.randomUUID()) // ID needs to be provided by client.

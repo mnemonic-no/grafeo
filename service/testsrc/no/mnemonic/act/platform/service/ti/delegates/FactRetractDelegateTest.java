@@ -11,7 +11,9 @@ import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
@@ -30,8 +32,9 @@ import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactRetractDelegateTest extends AbstractDelegateTest {
+public class FactRetractDelegateTest {
 
   @Mock
   private ObjectFactDao objectFactDao;
@@ -43,15 +46,19 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   private FactCreateHandler factCreateHandler;
   @Mock
   private FactConverter factConverter;
+  @Mock
+  private TiSecurityContext securityContext;
+  @Mock
+  private TriggerContext triggerContext;
 
   private FactRetractDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
+    initMocks(this);
     delegate = new FactRetractDelegate(
-            getSecurityContext(),
-            getTriggerContext(),
+            securityContext,
+            triggerContext,
             objectFactDao,
             factTypeResolver,
             factResolver,
@@ -63,7 +70,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testRetractFactNoAccessToFact() throws Exception {
     RetractFactRequest request = mockRetractingFact();
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactRecord.class));
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
   }
@@ -71,7 +78,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testRetractFactWithoutAddPermission() throws Exception {
     RetractFactRequest request = mockRetractingFact();
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.addFactObjects, request.getOrganization());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.addFactObjects, request.getOrganization());
 
     delegate.handle(request);
   }
@@ -165,7 +172,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
 
     Fact retractionFact = delegate.handle(request);
 
-    verify(getTriggerContext()).registerTriggerEvent(argThat(event -> {
+    verify(triggerContext).registerTriggerEvent(argThat(event -> {
       assertNotNull(event);
       assertEquals(TiServiceEvent.EventName.FactRetracted.name(), event.getEvent());
       assertEquals(retractionFact.getOrganization().getId(), event.getOrganization());
@@ -195,7 +202,7 @@ public class FactRetractDelegateTest extends AbstractDelegateTest {
             .setId(request.getFact())
             .setAccessMode(FactRecord.AccessMode.RoleBased);
 
-    when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(factCreateHandler.resolveOrigin(request.getOrigin())).thenReturn(origin);
     when(factCreateHandler.resolveOrganization(request.getOrganization(), origin)).thenReturn(organization);
 

@@ -18,7 +18,7 @@ import no.mnemonic.services.common.api.ResultSet;
 import javax.inject.Inject;
 import java.util.List;
 
-public class FactGetAclDelegate extends AbstractDelegate implements Delegate {
+public class FactGetAclDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactResolver factResolver;

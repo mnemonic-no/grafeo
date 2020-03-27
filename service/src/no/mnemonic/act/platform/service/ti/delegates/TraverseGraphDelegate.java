@@ -21,6 +21,7 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.FactConverter;
 import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.helpers.GremlinSandboxExtension;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
@@ -40,7 +41,7 @@ import java.util.concurrent.TimeoutException;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
-public class TraverseGraphDelegate extends AbstractDelegate implements Delegate {
+public class TraverseGraphDelegate implements Delegate {
 
   private static final String SCRIPT_ENGINE = "gremlin-groovy";
   private static final long SCRIPT_EXECUTION_TIMEOUT = 120_000;
@@ -52,6 +53,7 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
   private final ObjectSearchDelegate objectSearch;
   private final ObjectConverter objectConverter;
   private final FactConverter factConverter;
+  private final ObjectTypeHandler objectTypeHandler;
 
   private final Collection<java.lang.Object> traversalResult = new ArrayList<>();
 
@@ -64,7 +66,8 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
                                FactManager factManager,
                                ObjectSearchDelegate objectSearch,
                                ObjectConverter objectConverter,
-                               FactConverter factConverter) {
+                               FactConverter factConverter,
+                               ObjectTypeHandler objectTypeHandler) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.objectManager = objectManager;
@@ -72,6 +75,7 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
     this.objectSearch = objectSearch;
     this.objectConverter = objectConverter;
     this.factConverter = factConverter;
+    this.objectTypeHandler = objectTypeHandler;
   }
 
   public ResultSet<?> handle(TraverseByObjectIdRequest request)
@@ -84,7 +88,7 @@ public class TraverseGraphDelegate extends AbstractDelegate implements Delegate 
   public ResultSet<?> handle(TraverseByObjectTypeValueRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
-    assertObjectTypeExists(request.getType(), "type");
+    objectTypeHandler.assertObjectTypeExists(request.getType(), "type");
 
     return handle(objectFactDao.getObject(request.getType(), request.getValue()), request.getQuery());
   }

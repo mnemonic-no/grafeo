@@ -11,10 +11,10 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.ObjectResolver;
-import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,8 +26,9 @@ import java.util.UUID;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactCreateDelegateTest extends AbstractDelegateTest {
+public class FactCreateDelegateTest {
 
   @Mock
   private FactTypeResolver factTypeResolver;
@@ -35,6 +36,8 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   private ObjectResolver objectResolver;
   @Mock
   private FactCreateHandler factCreateHandler;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private FactCreateDelegate delegate;
 
@@ -79,9 +82,9 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
+    initMocks(this);
     delegate = new FactCreateDelegate(
-      getSecurityContext(),
+      securityContext,
       factTypeResolver,
       objectResolver,
       factCreateHandler
@@ -92,7 +95,7 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   public void testCreateFactWithoutAddPermission() throws Exception {
     mockFetchingOrganization();
     mockFetchingFactType();
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.addFactObjects, organization.getId());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.addFactObjects, organization.getId());
     delegate.handle(createRequest());
   }
 
@@ -273,13 +276,12 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
   }
 
   private void mockCreateNewFact() throws Exception {
-    mockValidator(true);
     mockFetchingOrganization();
     mockFetchingFactType();
     mockFetchingObjects();
 
     // Mock fetching of current user.
-    when(getSecurityContext().getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
   }
 
   private void mockFetchingOrganization() throws Exception {
@@ -295,15 +297,6 @@ public class FactCreateDelegateTest extends AbstractDelegateTest {
     when(objectResolver.resolveObject(ip.getId().toString())).thenReturn(ip);
     when(objectResolver.resolveObject(domain.getId().toString())).thenReturn(domain);
     when(objectResolver.resolveObject(threatActor.getId().toString())).thenReturn(threatActor);
-  }
-
-  private Validator mockValidator(boolean valid) {
-    Validator validator = mock(Validator.class);
-
-    when(validator.validate(anyString())).thenReturn(valid);
-    when(getValidatorFactory().get(anyString(), anyString())).thenReturn(validator);
-
-    return validator;
   }
 
   private CreateFactRequest createRequest() {

@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.SearchFactRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -20,18 +21,23 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactSearchDelegateTest extends AbstractDelegateTest {
+public class FactSearchDelegateTest {
 
   @Mock
   private FactSearchHandler factSearchHandler;
   @Mock
   private SearchFactRequestConverter requestConverter;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private FactSearchDelegate delegate;
 
   @Before
   public void setup() throws Exception {
+    initMocks(this);
+
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setCurrentUserID(UUID.randomUUID())
             .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
@@ -43,13 +49,12 @@ public class FactSearchDelegateTest extends AbstractDelegateTest {
             .build()
     );
 
-    // initMocks() will be called by base class.
-    delegate = new FactSearchDelegate(getSecurityContext(), requestConverter, factSearchHandler);
+    delegate = new FactSearchDelegate(securityContext, requestConverter, factSearchHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testSearchFactsWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
     delegate.handle(new SearchFactRequest());
   }
 

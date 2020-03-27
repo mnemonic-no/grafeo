@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.service.ti.resolvers;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import org.junit.Before;
@@ -28,6 +29,21 @@ public class FactTypeResolverTest {
   public void initialize() {
     initMocks(this);
     resolver = new FactTypeResolver(factManager);
+  }
+
+  @Test
+  public void testFetchFactType() throws Exception {
+    UUID id = UUID.randomUUID();
+    FactTypeEntity entity = new FactTypeEntity();
+    when(factManager.getFactType(id)).thenReturn(entity);
+    assertSame(entity, resolver.fetchExistingFactType(id));
+  }
+
+  @Test
+  public void testFetchFactTypeNotFound() {
+    UUID id = UUID.randomUUID();
+    assertThrows(ObjectNotFoundException.class, () -> resolver.fetchExistingFactType(id));
+    verify(factManager).getFactType(id);
   }
 
   @Test
@@ -114,5 +130,4 @@ public class FactTypeResolverTest {
     assertEquals(1.0f, retraction.getDefaultConfidence(), 0.0);
     assertEquals("TrueValidator", retraction.getValidator());
   }
-
 }

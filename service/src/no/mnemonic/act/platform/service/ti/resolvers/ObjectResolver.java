@@ -83,7 +83,7 @@ public class ObjectResolver {
     ObjectTypeEntity typeEntity = objectManager.getObjectType(type);
     if (typeEntity == null) {
       throw new InvalidArgumentException()
-              .addValidationError("ObjectType does not exist.", "object.type.not.exist", "objectType", type);
+        .addValidationError("ObjectType does not exist.", "object.type.not.exist", "objectType", type);
     }
     return typeEntity;
   }
@@ -92,13 +92,13 @@ public class ObjectResolver {
     Validator validator = validatorFactory.get(type.getValidator(), type.getValidatorParameter());
     if (!validator.validate(value)) {
       throw new InvalidArgumentException()
-              .addValidationError("Object did not pass validation against ObjectType.", "object.not.valid", "objectValue", value);
+        .addValidationError("Object did not pass validation against ObjectType.", "object.not.valid", "objectValue", value);
     }
 
     ObjectRecord objectRecord = new ObjectRecord()
-            .setId(UUID.randomUUID())
-            .setTypeID(type.getId())
-            .setValue(value);
+      .setId(UUID.randomUUID())
+      .setTypeID(type.getId())
+      .setValue(value);
 
     return objectFactDao.storeObject(objectRecord);
   }

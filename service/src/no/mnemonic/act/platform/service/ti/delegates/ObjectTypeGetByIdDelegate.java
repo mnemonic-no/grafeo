@@ -9,24 +9,28 @@ import no.mnemonic.act.platform.api.request.v1.GetObjectTypeByIdRequest;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.ObjectTypeResolver;
 
 import javax.inject.Inject;
 
-public class ObjectTypeGetByIdDelegate extends AbstractDelegate implements Delegate {
+public class ObjectTypeGetByIdDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectTypeConverter objectTypeConverter;
+  private final ObjectTypeResolver objectTypeResolver;
 
   @Inject
   public ObjectTypeGetByIdDelegate(TiSecurityContext securityContext,
-                                   ObjectTypeConverter objectTypeConverter) {
+                                   ObjectTypeConverter objectTypeConverter,
+                                   ObjectTypeResolver objectTypeResolver) {
     this.securityContext = securityContext;
     this.objectTypeConverter = objectTypeConverter;
+    this.objectTypeResolver = objectTypeResolver;
   }
 
   public ObjectType handle(GetObjectTypeByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     securityContext.checkPermission(TiFunctionConstants.viewTypes);
-    return objectTypeConverter.apply(fetchExistingObjectType(request.getId()));
+    return objectTypeConverter.apply(objectTypeResolver.fetchExistingObjectType(request.getId()));
   }
 }

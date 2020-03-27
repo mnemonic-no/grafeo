@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.request.v1.GetFactAclRequest;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.AclEntryConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -20,27 +21,30 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactGetAclDelegateTest extends AbstractDelegateTest {
+public class FactGetAclDelegateTest {
 
   @Mock
   private FactResolver factResolver;
   @Mock
   private AclEntryConverter aclEntryConverter;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private FactGetAclDelegate delegate;
 
   @Before
   public void setup() {
-    // initMocks() will be called by base class.
-    delegate = new FactGetAclDelegate(getSecurityContext(), factResolver, aclEntryConverter);
+    initMocks(this);
+    delegate = new FactGetAclDelegate(securityContext, factResolver, aclEntryConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testGetFactAclNoAccessToFact() throws Exception {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkReadPermission(isA(FactRecord.class));
+    doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
   }
@@ -49,7 +53,7 @@ public class FactGetAclDelegateTest extends AbstractDelegateTest {
   public void testGetFactAclNoViewPermission() throws Exception {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
     when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(getSecurityContext()).checkPermission(eq(TiFunctionConstants.viewFactAccess), any());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.viewFactAccess), any());
 
     delegate.handle(request);
   }

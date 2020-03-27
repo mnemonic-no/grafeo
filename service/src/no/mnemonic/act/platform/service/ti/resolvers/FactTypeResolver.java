@@ -2,8 +2,10 @@ package no.mnemonic.act.platform.service.ti.resolvers;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
 import java.util.Objects;
@@ -21,6 +23,22 @@ public class FactTypeResolver {
   @Inject
   public FactTypeResolver(FactManager factManager) {
     this.factManager = factManager;
+  }
+
+  /**
+   * Fetch an existing FactType by ID.
+   *
+   * @param id UUID of FactType
+   * @return Existing FactType
+   * @throws ObjectNotFoundException Thrown if FactType cannot be found
+   */
+  public FactTypeEntity fetchExistingFactType(UUID id) throws ObjectNotFoundException {
+    FactTypeEntity entity = factManager.getFactType(id);
+    if (entity == null) {
+      throw new ObjectNotFoundException(String.format("FactType with id = %s does not exist.", id),
+        "fact.type.not.exist", "id", ObjectUtils.ifNotNull(id, Object::toString, "NULL"));
+    }
+    return entity;
   }
 
   /**
@@ -85,5 +103,4 @@ public class FactTypeResolver {
     FactTypeEntity collision = factManager.getFactType(RETRACTION_FACT_TYPE_NAME);
     return collision == null ? RETRACTION_FACT_TYPE_NAME : RETRACTION_FACT_TYPE_NAME + "-" + UUID.randomUUID().toString().substring(0, 8);
   }
-
 }

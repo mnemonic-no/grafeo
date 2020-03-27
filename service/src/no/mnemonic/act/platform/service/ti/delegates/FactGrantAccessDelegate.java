@@ -19,7 +19,7 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 import javax.inject.Inject;
 import java.util.UUID;
 
-public class FactGrantAccessDelegate extends AbstractDelegate implements Delegate {
+public class FactGrantAccessDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
