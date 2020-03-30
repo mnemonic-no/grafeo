@@ -33,7 +33,6 @@ public class TiServiceModule extends AbstractModule {
     // Install all dependencies for the service.
     install(new DaoModule());
     install(new AuthenticationAspect());
-    install(new RequestContextAspect());
     install(new ValidationAspect());
     install(new TriggerContextAspect());
     install(new ServiceRequestScopeAspect());

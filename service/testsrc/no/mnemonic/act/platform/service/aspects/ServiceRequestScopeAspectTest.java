@@ -4,11 +4,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.service.Service;
-import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.After;
@@ -25,8 +23,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class ServiceRequestScopeAspectTest {
 
   @Mock
-  private TiRequestContext requestContext;
-  @Mock
   private TiSecurityContext securityContext;
   @Mock
   private TriggerContext triggerContext;
@@ -37,14 +33,12 @@ public class ServiceRequestScopeAspectTest {
   public void setUp() {
     initMocks(this);
 
-    TiRequestContext.set(requestContext);
     TiSecurityContext.set(securityContext);
     TriggerContext.set(triggerContext);
   }
 
   @After
   public void cleanUp() {
-    TiRequestContext.clear();
     TiSecurityContext.clear();
     TriggerContext.clear();
 
@@ -73,11 +67,10 @@ public class ServiceRequestScopeAspectTest {
   @ServiceRequestScope
   static class RequestScoped {
     @Inject
-    RequestScoped(TiRequestContext context1, TiSecurityContext context2, TriggerContext context3) {
+    RequestScoped(TiSecurityContext context1, TriggerContext context2) {
       // Verify that the injected contexts are the same as the ones provided by Context.get().
-      assertSame(context1, TiRequestContext.get());
-      assertSame(context2, TiSecurityContext.get());
-      assertSame(context3, TriggerContext.get());
+      assertSame(context1, TiSecurityContext.get());
+      assertSame(context2, TriggerContext.get());
 
       initializationCounter.incrementAndGet();
     }
@@ -131,11 +124,6 @@ public class ServiceRequestScopeAspectTest {
 
     @Override
     public SecurityContext createSecurityContext(Credentials credentials) {
-      return null;
-    }
-
-    @Override
-    public RequestContext createRequestContext() {
       return null;
     }
   }

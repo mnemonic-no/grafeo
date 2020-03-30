@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.service.Service;
 import no.mnemonic.act.platform.service.TestSecurityContext;
-import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
@@ -94,11 +93,5 @@ public class AuthenticationAspectTest {
       assertNotNull(credentials);
       return new TestSecurityContext();
     }
-
-    @Override
-    public RequestContext createRequestContext() {
-      return new RequestContext();
-    }
   }
-
 }

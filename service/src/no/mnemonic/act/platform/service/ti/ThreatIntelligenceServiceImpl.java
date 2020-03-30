@@ -11,12 +11,9 @@ import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.service.Service;
-import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.delegates.*;
-import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.common.api.ResultSet;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
@@ -33,9 +30,7 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   private final OrganizationResolver organizationResolver;
   private final SubjectResolver subjectResolver;
   private final FactManager factManager;
-  private final ObjectManager objectManager;
   private final ObjectFactDao objectFactDao;
-  private final ValidatorFactory validatorFactory;
   private final DelegateProvider delegateProvider;
 
   @Inject
@@ -44,18 +39,14 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
                                        OrganizationResolver organizationResolver,
                                        SubjectResolver subjectResolver,
                                        FactManager factManager,
-                                       ObjectManager objectManager,
                                        ObjectFactDao objectFactDao,
-                                       ValidatorFactory validatorFactory,
                                        DelegateProvider delegateProvider) {
     this.accessController = accessController;
     this.identityResolver = identityResolver;
     this.organizationResolver = organizationResolver;
     this.subjectResolver = subjectResolver;
     this.factManager = factManager;
-    this.objectManager = objectManager;
     this.objectFactDao = objectFactDao;
-    this.validatorFactory = validatorFactory;
     this.delegateProvider = delegateProvider;
   }
 
@@ -69,15 +60,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
             .setAclResolver(factManager::fetchFactAcl)
-            .build();
-  }
-
-  @Override
-  public RequestContext createRequestContext() {
-    return TiRequestContext.builder()
-            .setFactManager(factManager)
-            .setObjectManager(objectManager)
-            .setValidatorFactory(validatorFactory)
             .build();
   }
 

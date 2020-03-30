@@ -3,12 +3,10 @@ package no.mnemonic.act.platform.service.aspects;
 import com.google.inject.Key;
 import com.google.inject.matcher.Matchers;
 import no.mnemonic.act.platform.service.Service;
-import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScopeImpl;
-import no.mnemonic.act.platform.service.ti.TiRequestContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import org.aopalliance.intercept.MethodInvocation;
 
@@ -36,9 +34,7 @@ public class ServiceRequestScopeAspect extends AbstractAspect {
 
   public ServiceRequestScopeAspect() {
     // Add all contexts which will be seeded in the service request scope.
-    contexts.put(RequestContext.class, RequestContext::get);
     contexts.put(SecurityContext.class, SecurityContext::get);
-    contexts.put(TiRequestContext.class, TiRequestContext::get);
     contexts.put(TiSecurityContext.class, TiSecurityContext::get);
     contexts.put(TriggerContext.class, TriggerContext::get);
   }

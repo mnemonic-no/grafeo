@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service;
 
-import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.services.common.auth.model.Credentials;
 
@@ -16,12 +15,5 @@ public interface Service {
    * @return New SecurityContext
    */
   SecurityContext createSecurityContext(Credentials credentials);
-
-  /**
-   * Create a service-specific RequestContext.
-   *
-   * @return New RequestContext
-   */
-  RequestContext createRequestContext();
 
 }

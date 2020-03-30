@@ -5,7 +5,6 @@ import com.google.inject.Guice;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.service.Service;
 import no.mnemonic.act.platform.service.TestSecurityContext;
-import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.services.common.auth.model.Credentials;
@@ -80,11 +79,5 @@ public class TriggerContextAspectTest {
     public SecurityContext createSecurityContext(Credentials credentials) {
       return new TestSecurityContext();
     }
-
-    @Override
-    public RequestContext createRequestContext() {
-      return new RequestContext();
-    }
   }
-
 }

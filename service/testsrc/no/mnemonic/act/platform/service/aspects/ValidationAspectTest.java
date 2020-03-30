@@ -7,7 +7,6 @@ import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.act.platform.service.Service;
 import no.mnemonic.act.platform.service.TestSecurityContext;
-import no.mnemonic.act.platform.service.contexts.RequestContext;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Test;
@@ -169,11 +168,6 @@ public class ValidationAspectTest {
     @Override
     public SecurityContext createSecurityContext(Credentials credentials) {
       return new TestSecurityContext();
-    }
-
-    @Override
-    public RequestContext createRequestContext() {
-      return new RequestContext();
     }
   }
 

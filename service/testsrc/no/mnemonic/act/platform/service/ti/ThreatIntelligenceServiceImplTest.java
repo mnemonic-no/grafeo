@@ -7,9 +7,7 @@ import no.mnemonic.act.platform.auth.OrganizationResolver;
 import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.service.ti.delegates.*;
-import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Before;
@@ -17,7 +15,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -36,11 +33,7 @@ public class ThreatIntelligenceServiceImplTest {
   @Mock
   private FactManager factManager;
   @Mock
-  private ObjectManager objectManager;
-  @Mock
   private ObjectFactDao objectFactDao;
-  @Mock
-  private ValidatorFactory validatorFactory;
   @Mock
   private DelegateProvider delegateProvider;
 
@@ -55,9 +48,7 @@ public class ThreatIntelligenceServiceImplTest {
             organizationResolver,
             subjectResolver,
             factManager,
-            objectManager,
             objectFactDao,
-            validatorFactory,
             delegateProvider
     );
   }
@@ -65,15 +56,6 @@ public class ThreatIntelligenceServiceImplTest {
   @Test
   public void testCreateSecurityContext() {
     assertNotNull(service.createSecurityContext(credentials));
-  }
-
-  @Test
-  public void testCreateRequestContext() {
-    TiRequestContext context = (TiRequestContext) service.createRequestContext();
-    assertNotNull(context);
-    assertSame(factManager, context.getFactManager());
-    assertSame(objectManager, context.getObjectManager());
-    assertSame(validatorFactory, context.getValidatorFactory());
   }
 
   @Test
