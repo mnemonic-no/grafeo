@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
@@ -20,15 +20,15 @@ public class ObjectTypeSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
-  private final ObjectTypeConverter objectTypeConverter;
+  private final ObjectTypeResponseConverter objectTypeResponseConverter;
 
   @Inject
   public ObjectTypeSearchDelegate(TiSecurityContext securityContext,
                                   ObjectManager objectManager,
-                                  ObjectTypeConverter objectTypeConverter) {
+                                  ObjectTypeResponseConverter objectTypeResponseConverter) {
     this.securityContext = securityContext;
     this.objectManager = objectManager;
-    this.objectTypeConverter = objectTypeConverter;
+    this.objectTypeResponseConverter = objectTypeResponseConverter;
   }
 
   public ResultSet<ObjectType> handle(SearchObjectTypeRequest request)
@@ -39,7 +39,7 @@ public class ObjectTypeSearchDelegate implements Delegate {
     List<ObjectType> types = objectManager
             .fetchObjectTypes()
             .stream()
-            .map(objectTypeConverter)
+            .map(objectTypeResponseConverter)
             .collect(Collectors.toList());
 
     return StreamingResultSet.<ObjectType>builder()

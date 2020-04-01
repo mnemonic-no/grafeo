@@ -7,8 +7,8 @@ import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactCommentConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.FactCommentResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -26,9 +26,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactGetCommentsDelegateTest {
 
   @Mock
-  private FactResolver factResolver;
+  private FactRequestResolver factRequestResolver;
   @Mock
-  private FactCommentConverter factCommentConverter;
+  private FactCommentResponseConverter factCommentResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -37,13 +37,13 @@ public class FactGetCommentsDelegateTest {
   @Before
   public void setup() {
     initMocks(this);
-    delegate = new FactGetCommentsDelegate(securityContext, factResolver, factCommentConverter);
+    delegate = new FactGetCommentsDelegate(securityContext, factRequestResolver, factCommentResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testGetFactCommentsNoAccessToFact() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
@@ -52,7 +52,7 @@ public class FactGetCommentsDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testGetFactCommentsNoViewPermission() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.viewFactComments), any());
 
     delegate.handle(request);
@@ -62,36 +62,36 @@ public class FactGetCommentsDelegateTest {
   public void testGetFactComments() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
     List<FactCommentRecord> comments = createComments();
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setComments(comments));
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setComments(comments));
 
     ResultSet<FactComment> result = delegate.handle(request);
 
     assertEquals(comments.size(), result.getCount());
     assertEquals(0, result.getLimit());
     assertEquals(comments.size(), ListUtils.list(result.iterator()).size());
-    verify(factCommentConverter, times(comments.size())).apply(argThat(comments::contains));
+    verify(factCommentResponseConverter, times(comments.size())).apply(argThat(comments::contains));
   }
 
   @Test
   public void testGetFactCommentsFilterByBefore() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID()).setBefore(150L);
     List<FactCommentRecord> comments = createComments();
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setComments(comments));
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setComments(comments));
 
     assertEquals(1, delegate.handle(request).getCount());
-    verify(factCommentConverter).apply(comments.get(0));
-    verifyNoMoreInteractions(factCommentConverter);
+    verify(factCommentResponseConverter).apply(comments.get(0));
+    verifyNoMoreInteractions(factCommentResponseConverter);
   }
 
   @Test
   public void testGetFactCommentsFilterByAfter() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID()).setAfter(250L);
     List<FactCommentRecord> comments = createComments();
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setComments(comments));
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setComments(comments));
 
     assertEquals(1, delegate.handle(request).getCount());
-    verify(factCommentConverter).apply(comments.get(2));
-    verifyNoMoreInteractions(factCommentConverter);
+    verify(factCommentResponseConverter).apply(comments.get(2));
+    verifyNoMoreInteractions(factCommentResponseConverter);
   }
 
   private FactCommentRecord createComment(long timestamp) {

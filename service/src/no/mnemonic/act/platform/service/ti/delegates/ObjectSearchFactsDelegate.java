@@ -10,7 +10,7 @@ import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.SearchObjectFactsRequestConverter;
+import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.commons.utilities.StringUtils;

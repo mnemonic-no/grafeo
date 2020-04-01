@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -27,14 +27,14 @@ public class OriginCreateDelegateTest {
   @Mock
   private OriginManager originManager;
   @Mock
-  private OriginConverter originConverter;
+  private OriginResponseConverter originResponseConverter;
 
   private OriginCreateDelegate delegate;
 
   @Before
   public void setUp() {
     initMocks(this);
-    delegate = new OriginCreateDelegate(securityContext, originManager, originConverter);
+    delegate = new OriginCreateDelegate(securityContext, originManager, originResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -76,7 +76,7 @@ public class OriginCreateDelegateTest {
 
     delegate.handle(request);
     verify(securityContext).checkPermission(TiFunctionConstants.addOrigins, request.getOrganization());
-    verify(originConverter).apply(notNull());
+    verify(originResponseConverter).apply(notNull());
     verify(originManager).saveOrigin(argThat(entity -> {
       assertNotNull(entity.getId());
       assertNotNull(entity.getNamespaceID());
@@ -97,7 +97,7 @@ public class OriginCreateDelegateTest {
 
     delegate.handle(request);
     verify(securityContext).checkPermission(TiFunctionConstants.addOrigins);
-    verify(originConverter).apply(notNull());
+    verify(originResponseConverter).apply(notNull());
     verify(originManager).saveOrigin(argThat(entity -> {
       assertNotNull(entity.getId());
       assertNotNull(entity.getNamespaceID());

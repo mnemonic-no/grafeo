@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
@@ -20,15 +20,15 @@ public class FactTypeSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final FactManager factManager;
-  private final FactTypeConverter factTypeConverter;
+  private final FactTypeResponseConverter factTypeResponseConverter;
 
   @Inject
   public FactTypeSearchDelegate(TiSecurityContext securityContext,
                                 FactManager factManager,
-                                FactTypeConverter factTypeConverter) {
+                                FactTypeResponseConverter factTypeResponseConverter) {
     this.securityContext = securityContext;
     this.factManager = factManager;
-    this.factTypeConverter = factTypeConverter;
+    this.factTypeResponseConverter = factTypeResponseConverter;
   }
 
   public ResultSet<FactType> handle(SearchFactTypeRequest request)
@@ -39,7 +39,7 @@ public class FactTypeSearchDelegate implements Delegate {
     List<FactType> types = factManager
             .fetchFactTypes()
             .stream()
-            .map(factTypeConverter)
+            .map(factTypeResponseConverter)
             .collect(Collectors.toList());
 
     return StreamingResultSet.<FactType>builder()

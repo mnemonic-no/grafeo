@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
 
@@ -22,19 +22,19 @@ public class ObjectTypeCreateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
-  private final ObjectTypeConverter objectTypeConverter;
+  private final ObjectTypeResponseConverter objectTypeResponseConverter;
   private final ObjectTypeHandler objectTypeHandler;
   private final ValidatorHandler validatorHandler;
 
   @Inject
   public ObjectTypeCreateDelegate(TiSecurityContext securityContext,
                                   ObjectManager objectManager,
-                                  ObjectTypeConverter objectTypeConverter,
+                                  ObjectTypeResponseConverter objectTypeResponseConverter,
                                   ObjectTypeHandler objectTypeHandler,
                                   ValidatorHandler validatorHandler) {
     this.securityContext = securityContext;
     this.objectManager = objectManager;
-    this.objectTypeConverter = objectTypeConverter;
+    this.objectTypeResponseConverter = objectTypeResponseConverter;
     this.objectTypeHandler = objectTypeHandler;
     this.validatorHandler = validatorHandler;
   }
@@ -54,6 +54,6 @@ public class ObjectTypeCreateDelegate implements Delegate {
             .setValidatorParameter(request.getValidatorParameter());
 
     entity = objectManager.saveObjectType(entity);
-    return objectTypeConverter.apply(entity);
+    return objectTypeResponseConverter.apply(entity);
   }
 }

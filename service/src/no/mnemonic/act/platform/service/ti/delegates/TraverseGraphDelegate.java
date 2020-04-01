@@ -19,8 +19,8 @@ import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
 import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.helpers.GremlinSandboxExtension;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -51,8 +51,8 @@ public class TraverseGraphDelegate implements Delegate {
   private final ObjectManager objectManager;
   private final FactManager factManager;
   private final ObjectSearchDelegate objectSearch;
-  private final ObjectConverter objectConverter;
-  private final FactConverter factConverter;
+  private final ObjectResponseConverter objectResponseConverter;
+  private final FactResponseConverter factResponseConverter;
   private final ObjectTypeHandler objectTypeHandler;
 
   private final Collection<java.lang.Object> traversalResult = new ArrayList<>();
@@ -65,16 +65,16 @@ public class TraverseGraphDelegate implements Delegate {
                                ObjectManager objectManager,
                                FactManager factManager,
                                ObjectSearchDelegate objectSearch,
-                               ObjectConverter objectConverter,
-                               FactConverter factConverter,
+                               ObjectResponseConverter objectResponseConverter,
+                               FactResponseConverter factResponseConverter,
                                ObjectTypeHandler objectTypeHandler) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.objectManager = objectManager;
     this.factManager = factManager;
     this.objectSearch = objectSearch;
-    this.objectConverter = objectConverter;
-    this.factConverter = factConverter;
+    this.objectResponseConverter = objectResponseConverter;
+    this.factResponseConverter = factResponseConverter;
     this.objectTypeHandler = objectTypeHandler;
   }
 
@@ -173,13 +173,13 @@ public class TraverseGraphDelegate implements Delegate {
         // because it requires fetching Facts for each Object. In addition, accidentally returning non-accessible
         // Objects will only leak the information that the Object exists and will not give further access to any Facts.
         ObjectRecord object = objectFactDao.getObject(ObjectVertex.class.cast(value).getObject().getId());
-        traversalResult.add(objectConverter.apply(object));
+        traversalResult.add(objectResponseConverter.apply(object));
       } else if (value instanceof FactEdge) {
         // Fetch FactRecord and convert to Fact model before adding to result.
         FactRecord fact = objectFactDao.getFact(FactEdge.class.cast(value).getFact().getId());
         // But only add it if user has access to the Fact. Skip Fact otherwise.
         if (securityContext.hasReadPermission(fact)) {
-          traversalResult.add(factConverter.apply(fact));
+          traversalResult.add(factResponseConverter.apply(fact));
         }
       } else {
         // Don't know what this is, just add its string representation to result.

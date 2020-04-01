@@ -5,7 +5,7 @@ import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
@@ -23,15 +23,15 @@ public class FactRetractionHandler {
 
   private final Map<UUID, Boolean> retractionCache = new ConcurrentHashMap<>();
 
-  private final FactTypeResolver factTypeResolver;
+  private final FactTypeRequestResolver factTypeRequestResolver;
   private final FactSearchManager factSearchManager;
   private final TiSecurityContext securityContext;
 
   @Inject
-  public FactRetractionHandler(FactTypeResolver factTypeResolver,
+  public FactRetractionHandler(FactTypeRequestResolver factTypeRequestResolver,
                                FactSearchManager factSearchManager,
                                TiSecurityContext securityContext) {
-    this.factTypeResolver = factTypeResolver;
+    this.factTypeRequestResolver = factTypeRequestResolver;
     this.factSearchManager = factSearchManager;
     this.securityContext = securityContext;
   }
@@ -96,7 +96,7 @@ public class FactRetractionHandler {
     // to. No access to retractions means that from the user's perspective the referenced Fact isn't retracted.
     FactSearchCriteria retractionsCriteria = FactSearchCriteria.builder()
             .addInReferenceTo(factID)
-            .addFactTypeID(factTypeResolver.resolveRetractionFactType().getId())
+            .addFactTypeID(factTypeRequestResolver.resolveRetractionFactType().getId())
             .setCurrentUserID(securityContext.getCurrentUserID())
             .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
             .build();

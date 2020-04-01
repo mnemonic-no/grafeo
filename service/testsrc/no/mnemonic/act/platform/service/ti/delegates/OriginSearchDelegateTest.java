@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -29,7 +29,7 @@ public class OriginSearchDelegateTest {
   @Mock
   private OriginManager originManager;
   @Mock
-  private OriginConverter originConverter;
+  private OriginResponseConverter originResponseConverter;
 
   private OriginSearchDelegate delegate;
 
@@ -40,7 +40,7 @@ public class OriginSearchDelegateTest {
     when(originManager.fetchOrigins()).thenReturn(createEntities());
     when(securityContext.hasReadPermission(isA(OriginEntity.class))).thenReturn(true);
 
-    delegate = new OriginSearchDelegate(securityContext, originManager, originConverter);
+    delegate = new OriginSearchDelegate(securityContext, originManager, originResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -57,7 +57,7 @@ public class OriginSearchDelegateTest {
     assertEquals(25, result.getLimit());
     assertEquals(2, ListUtils.list(result.iterator()).size());
     verify(securityContext, times(2)).hasReadPermission(isA(OriginEntity.class));
-    verify(originConverter, times(2)).apply(notNull());
+    verify(originResponseConverter, times(2)).apply(notNull());
   }
 
   @Test
@@ -67,7 +67,7 @@ public class OriginSearchDelegateTest {
     assertEquals(3, result.getCount());
     assertEquals(3, ListUtils.list(result.iterator()).size());
     verify(securityContext, times(3)).hasReadPermission(isA(OriginEntity.class));
-    verify(originConverter, times(3)).apply(notNull());
+    verify(originResponseConverter, times(3)).apply(notNull());
   }
 
   @Test
@@ -78,7 +78,7 @@ public class OriginSearchDelegateTest {
     assertEquals(1, result.getLimit());
     assertEquals(1, ListUtils.list(result.iterator()).size());
     verify(securityContext, times(1)).hasReadPermission(isA(OriginEntity.class));
-    verify(originConverter, times(1)).apply(notNull());
+    verify(originResponseConverter, times(1)).apply(notNull());
   }
 
   @Test
@@ -89,7 +89,7 @@ public class OriginSearchDelegateTest {
     assertEquals(0, result.getLimit());
     assertEquals(2, ListUtils.list(result.iterator()).size());
     verify(securityContext, times(2)).hasReadPermission(isA(OriginEntity.class));
-    verify(originConverter, times(2)).apply(notNull());
+    verify(originResponseConverter, times(2)).apply(notNull());
   }
 
   @Test
@@ -100,7 +100,7 @@ public class OriginSearchDelegateTest {
     assertEquals(0, result.getCount());
     assertEquals(0, ListUtils.list(result.iterator()).size());
     verify(securityContext, times(2)).hasReadPermission(isA(OriginEntity.class));
-    verify(originConverter, never()).apply(any());
+    verify(originResponseConverter, never()).apply(any());
   }
 
   private List<OriginEntity> createEntities() {

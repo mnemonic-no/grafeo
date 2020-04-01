@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.SearchFactRequestConverter;
+import no.mnemonic.act.platform.service.ti.converters.request.SearchFactRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;

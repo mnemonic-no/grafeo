@@ -10,9 +10,9 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -25,28 +25,28 @@ public class FactTypeUpdateDelegate implements Delegate {
   private final TiSecurityContext securityContext;
   private final FactManager factManager;
   private final FactTypeHelper factTypeHelper;
-  private final FactTypeResolver factTypeResolver;
-  private final FactTypeConverter factTypeConverter;
+  private final FactTypeRequestResolver factTypeRequestResolver;
+  private final FactTypeResponseConverter factTypeResponseConverter;
 
   @Inject
   public FactTypeUpdateDelegate(TiSecurityContext securityContext,
                                 FactManager factManager,
                                 FactTypeHelper factTypeHelper,
-                                FactTypeResolver factTypeResolver,
-                                FactTypeConverter factTypeConverter) {
+                                FactTypeRequestResolver factTypeRequestResolver,
+                                FactTypeResponseConverter factTypeResponseConverter) {
     this.securityContext = securityContext;
     this.factManager = factManager;
     this.factTypeHelper = factTypeHelper;
-    this.factTypeResolver = factTypeResolver;
-    this.factTypeConverter = factTypeConverter;
+    this.factTypeRequestResolver = factTypeRequestResolver;
+    this.factTypeResponseConverter = factTypeResponseConverter;
   }
 
   public FactType handle(UpdateFactTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     securityContext.checkPermission(TiFunctionConstants.updateTypes);
 
-    FactTypeEntity entity = factTypeResolver.fetchExistingFactType(request.getId());
-    if (Objects.equals(entity.getId(), factTypeResolver.resolveRetractionFactType().getId())) {
+    FactTypeEntity entity = factTypeRequestResolver.fetchExistingFactType(request.getId());
+    if (Objects.equals(entity.getId(), factTypeRequestResolver.resolveRetractionFactType().getId())) {
       throw new AccessDeniedException("Not allowed to update the system-defined Retraction FactType.");
     }
 
@@ -82,6 +82,6 @@ public class FactTypeUpdateDelegate implements Delegate {
     }
 
     entity = factManager.saveFactType(entity);
-    return factTypeConverter.apply(entity);
+    return factTypeResponseConverter.apply(entity);
   }
 }

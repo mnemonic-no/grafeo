@@ -8,7 +8,7 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,14 +28,14 @@ public class OriginDeleteDelegateTest {
   @Mock
   private OriginResolver originResolver;
   @Mock
-  private OriginConverter originConverter;
+  private OriginResponseConverter originResponseConverter;
 
   private OriginDeleteDelegate delegate;
 
   @Before
   public void setUp() {
     initMocks(this);
-    delegate = new OriginDeleteDelegate(securityContext, originManager, originResolver, originConverter);
+    delegate = new OriginDeleteDelegate(securityContext, originManager, originResolver, originResponseConverter);
   }
 
   @Test(expected = ObjectNotFoundException.class)
@@ -87,6 +87,6 @@ public class OriginDeleteDelegateTest {
 
     delegate.handle(new DeleteOriginRequest().setId(entity.getId()));
     verify(originManager).saveOrigin(argThat(origin -> origin.getFlags().contains(OriginEntity.Flag.Deleted)));
-    verify(originConverter).apply(entity);
+    verify(originResponseConverter).apply(entity);
   }
 }

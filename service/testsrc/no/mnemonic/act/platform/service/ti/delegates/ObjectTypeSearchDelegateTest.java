@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -25,7 +25,7 @@ public class ObjectTypeSearchDelegateTest {
   @Mock
   private ObjectManager objectManager;
   @Mock
-  private ObjectTypeConverter objectTypeConverter;
+  private ObjectTypeResponseConverter objectTypeResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -35,7 +35,7 @@ public class ObjectTypeSearchDelegateTest {
   @Before
   public void setup() {
     initMocks(this);
-    delegate = new ObjectTypeSearchDelegate(securityContext, objectManager, objectTypeConverter);
+    delegate = new ObjectTypeSearchDelegate(securityContext, objectManager, objectTypeResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -54,6 +54,6 @@ public class ObjectTypeSearchDelegateTest {
     assertEquals(entities.size(), result.getCount());
     assertEquals(0, result.getLimit());
     assertEquals(entities.size(), ListUtils.list(result.iterator()).size());
-    verify(objectTypeConverter, times(entities.size())).apply(argThat(entities::contains));
+    verify(objectTypeResponseConverter, times(entities.size())).apply(argThat(entities::contains));
   }
 }

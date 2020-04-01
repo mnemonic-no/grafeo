@@ -10,7 +10,7 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -22,17 +22,17 @@ public class OriginUpdateDelegate implements Delegate {
   private final TiSecurityContext securityContext;
   private final OriginManager originManager;
   private final OriginResolver originResolver;
-  private final OriginConverter originConverter;
+  private final OriginResponseConverter originResponseConverter;
 
   @Inject
   public OriginUpdateDelegate(TiSecurityContext securityContext,
                               OriginManager originManager,
                               OriginResolver originResolver,
-                              OriginConverter originConverter) {
+                              OriginResponseConverter originResponseConverter) {
     this.securityContext = securityContext;
     this.originManager = originManager;
     this.originResolver = originResolver;
-    this.originConverter = originConverter;
+    this.originResponseConverter = originResponseConverter;
   }
 
   public Origin handle(UpdateOriginRequest request)
@@ -69,7 +69,7 @@ public class OriginUpdateDelegate implements Delegate {
     }
 
     entity = originManager.saveOrigin(entity);
-    return originConverter.apply(entity);
+    return originResponseConverter.apply(entity);
   }
 
   private OriginEntity fetchExistingOrigin(UpdateOriginRequest request) throws ObjectNotFoundException {

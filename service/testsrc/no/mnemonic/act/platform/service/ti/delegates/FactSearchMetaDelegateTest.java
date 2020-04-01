@@ -8,9 +8,9 @@ import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.SearchMetaFactsRequestConverter;
+import no.mnemonic.act.platform.service.ti.converters.request.SearchMetaFactsRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactSearchHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -27,7 +27,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactSearchMetaDelegateTest {
 
   @Mock
-  private FactResolver factResolver;
+  private FactRequestResolver factRequestResolver;
   @Mock
   private FactSearchHandler factSearchHandler;
   @Mock
@@ -40,7 +40,7 @@ public class FactSearchMetaDelegateTest {
   @Before
   public void setup() {
     initMocks(this);
-    delegate = new FactSearchMetaDelegate(securityContext, requestConverter, factResolver, factSearchHandler);
+    delegate = new FactSearchMetaDelegate(securityContext, requestConverter, factRequestResolver, factSearchHandler);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -52,7 +52,7 @@ public class FactSearchMetaDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testSearchMetaFactsNoAccessToFact() throws Exception {
     SearchMetaFactsRequest request = new SearchMetaFactsRequest().setFact(UUID.randomUUID());
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
@@ -75,7 +75,7 @@ public class FactSearchMetaDelegateTest {
   }
 
   private void mockSearchMetaFacts() throws Exception {
-    when(factResolver.resolveFact(any())).thenReturn(new FactRecord());
+    when(factRequestResolver.resolveFact(any())).thenReturn(new FactRecord());
 
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setCurrentUserID(UUID.randomUUID())

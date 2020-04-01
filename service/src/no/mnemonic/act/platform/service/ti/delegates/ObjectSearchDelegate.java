@@ -14,10 +14,10 @@ import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeByIdConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeByIdConverter;
-import no.mnemonic.act.platform.service.ti.converters.SearchObjectRequestConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectRequestConverter;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
@@ -32,15 +32,15 @@ public class ObjectSearchDelegate implements Delegate {
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
   private final SearchObjectRequestConverter requestConverter;
-  private final FactTypeByIdConverter factTypeConverter;
-  private final ObjectTypeByIdConverter objectTypeConverter;
+  private final FactTypeByIdResponseResolver factTypeConverter;
+  private final ObjectTypeByIdResponseResolver objectTypeConverter;
 
   @Inject
   public ObjectSearchDelegate(TiSecurityContext securityContext,
                               ObjectFactDao objectFactDao,
                               SearchObjectRequestConverter requestConverter,
-                              FactTypeByIdConverter factTypeConverter,
-                              ObjectTypeByIdConverter objectTypeConverter) {
+                              FactTypeByIdResponseResolver factTypeConverter,
+                              ObjectTypeByIdResponseResolver objectTypeConverter) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.requestConverter = requestConverter;
@@ -125,7 +125,7 @@ public class ObjectSearchDelegate implements Delegate {
       // the information that the Object exists (plus potentially the Fact statistics) and will not give further access
       // to any Facts.
       return currentBatch.stream()
-              .map(new ObjectConverter(objectTypeConverter, factTypeConverter, statistics::getStatistics))
+              .map(new ObjectResponseConverter(objectTypeConverter, factTypeConverter, statistics::getStatistics))
               .iterator();
     }
   }

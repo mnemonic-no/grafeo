@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 
 import javax.inject.Inject;
 import java.util.UUID;
@@ -20,15 +20,15 @@ public class OriginCreateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final OriginManager originManager;
-  private final OriginConverter originConverter;
+  private final OriginResponseConverter originResponseConverter;
 
   @Inject
   public OriginCreateDelegate(TiSecurityContext securityContext,
                               OriginManager originManager,
-                              OriginConverter originConverter) {
+                              OriginResponseConverter originResponseConverter) {
     this.securityContext = securityContext;
     this.originManager = originManager;
-    this.originConverter = originConverter;
+    this.originResponseConverter = originResponseConverter;
   }
 
   public Origin handle(CreateOriginRequest request)
@@ -56,7 +56,7 @@ public class OriginCreateDelegate implements Delegate {
             .setType(OriginEntity.Type.Group);
 
     entity = originManager.saveOrigin(entity);
-    return originConverter.apply(entity);
+    return originResponseConverter.apply(entity);
   }
 
   private void assertOriginNotExists(CreateOriginRequest request) throws InvalidArgumentException {

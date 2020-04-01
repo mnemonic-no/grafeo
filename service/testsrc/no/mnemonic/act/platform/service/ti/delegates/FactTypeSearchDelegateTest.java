@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -25,7 +25,7 @@ public class FactTypeSearchDelegateTest {
   @Mock
   private FactManager factManager;
   @Mock
-  private FactTypeConverter factTypeConverter;
+  private FactTypeResponseConverter factTypeResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -34,7 +34,7 @@ public class FactTypeSearchDelegateTest {
   @Before
   public void setup() {
     initMocks(this);
-    delegate = new FactTypeSearchDelegate(securityContext, factManager, factTypeConverter);
+    delegate = new FactTypeSearchDelegate(securityContext, factManager, factTypeResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -53,6 +53,6 @@ public class FactTypeSearchDelegateTest {
     assertEquals(entities.size(), result.getCount());
     assertEquals(0, result.getLimit());
     assertEquals(entities.size(), ListUtils.list(result.iterator()).size());
-    verify(factTypeConverter, times(entities.size())).apply(argThat(entities::contains));
+    verify(factTypeResponseConverter, times(entities.size())).apply(argThat(entities::contains));
   }
 }

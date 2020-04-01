@@ -18,7 +18,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -55,7 +55,7 @@ public class FactCreateHandlerTest {
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
-  private FactConverter factConverter;
+  private FactResponseConverter factResponseConverter;
   @Mock
   private TriggerContext triggerContext;
 
@@ -64,7 +64,7 @@ public class FactCreateHandlerTest {
   @Before
   public void setUp() {
     initMocks(this);
-    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originResolver, originManager, validatorFactory, objectFactDao, factConverter, triggerContext);
+    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originResolver, originManager, validatorFactory, objectFactDao, factResponseConverter, triggerContext);
   }
 
   @Test(expected = InvalidArgumentException.class)
@@ -281,7 +281,7 @@ public class FactCreateHandlerTest {
     }));
 
     verify(objectFactDao, never()).refreshFact(any());
-    verify(factConverter).apply(same(factToSave));
+    verify(factResponseConverter).apply(same(factToSave));
   }
 
   @Test
@@ -315,7 +315,7 @@ public class FactCreateHandlerTest {
     }));
 
     verify(objectFactDao, never()).storeFact(any());
-    verify(factConverter).apply(same(existingFact));
+    verify(factResponseConverter).apply(same(existingFact));
   }
 
   @Test
@@ -349,7 +349,7 @@ public class FactCreateHandlerTest {
 
   private void mockFactConverter() {
     // Mock FactConverter needed for registering TriggerEvent.
-    when(factConverter.apply(any())).then(i -> {
+    when(factResponseConverter.apply(any())).then(i -> {
       FactRecord record = i.getArgument(0);
       return Fact.builder()
         .setId(record.getId())

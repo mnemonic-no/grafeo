@@ -11,8 +11,8 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.AclEntryConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.AclEntryResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
@@ -23,24 +23,24 @@ public class FactGrantAccessDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
-  private final FactResolver factResolver;
-  private final AclEntryConverter aclEntryConverter;
+  private final FactRequestResolver factRequestResolver;
+  private final AclEntryResponseConverter aclEntryResponseConverter;
 
   @Inject
   public FactGrantAccessDelegate(TiSecurityContext securityContext,
                                  ObjectFactDao objectFactDao,
-                                 FactResolver factResolver,
-                                 AclEntryConverter aclEntryConverter) {
+                                 FactRequestResolver factRequestResolver,
+                                 AclEntryResponseConverter aclEntryResponseConverter) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
-    this.factResolver = factResolver;
-    this.aclEntryConverter = aclEntryConverter;
+    this.factRequestResolver = factRequestResolver;
+    this.aclEntryResponseConverter = aclEntryResponseConverter;
   }
 
   public AclEntry handle(GrantFactAccessRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Fetch Fact and verify that it exists.
-    FactRecord fact = factResolver.resolveFact(request.getFact());
+    FactRecord fact = factRequestResolver.resolveFact(request.getFact());
     // Verify that user is allowed to access the Fact.
     securityContext.checkReadPermission(fact);
     // Verify that user is allowed to grant further access to the Fact.
@@ -54,7 +54,7 @@ public class FactGrantAccessDelegate implements Delegate {
     // Return an existing ACL entry or create a new entry for requested Subject.
     FactAclEntryRecord aclEntry = ObjectUtils.ifNull(findExistingAclEntry(fact, request.getSubject()), () -> saveNewAclEntry(fact, request.getSubject()));
 
-    return aclEntryConverter.apply(aclEntry);
+    return aclEntryResponseConverter.apply(aclEntry);
   }
 
   private FactAclEntryRecord findExistingAclEntry(FactRecord fact, UUID subject) {

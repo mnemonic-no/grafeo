@@ -5,8 +5,8 @@ import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -19,9 +19,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactGetByIdDelegateTest {
 
   @Mock
-  private FactResolver factResolver;
+  private FactRequestResolver factRequestResolver;
   @Mock
-  private FactConverter factConverter;
+  private FactResponseConverter factResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -30,7 +30,7 @@ public class FactGetByIdDelegateTest {
   @Before
   public void setup() {
     initMocks(this);
-    delegate = new FactGetByIdDelegate(securityContext, factResolver, factConverter);
+    delegate = new FactGetByIdDelegate(securityContext, factRequestResolver, factResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -44,7 +44,7 @@ public class FactGetByIdDelegateTest {
     UUID id = UUID.randomUUID();
     FactRecord record = new FactRecord();
 
-    when(factResolver.resolveFact(id)).thenReturn(record);
+    when(factRequestResolver.resolveFact(id)).thenReturn(record);
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(record);
 
     delegate.handle(new GetFactByIdRequest().setId(id));
@@ -55,10 +55,10 @@ public class FactGetByIdDelegateTest {
     UUID id = UUID.randomUUID();
     FactRecord record = new FactRecord();
 
-    when(factResolver.resolveFact(id)).thenReturn(record);
+    when(factRequestResolver.resolveFact(id)).thenReturn(record);
 
     delegate.handle(new GetFactByIdRequest().setId(id));
     verify(securityContext).checkReadPermission(record);
-    verify(factConverter).apply(record);
+    verify(factResponseConverter).apply(record);
   }
 }

@@ -13,8 +13,8 @@ import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
-import no.mnemonic.act.platform.service.ti.resolvers.ObjectResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectRequestResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +31,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactCreateDelegateTest {
 
   @Mock
-  private FactTypeResolver factTypeResolver;
+  private FactTypeRequestResolver factTypeRequestResolver;
   @Mock
-  private ObjectResolver objectResolver;
+  private ObjectRequestResolver objectRequestResolver;
   @Mock
   private FactCreateHandler factCreateHandler;
   @Mock
@@ -85,8 +85,8 @@ public class FactCreateDelegateTest {
     initMocks(this);
     delegate = new FactCreateDelegate(
       securityContext,
-      factTypeResolver,
-      objectResolver,
+      factTypeRequestResolver,
+      objectRequestResolver,
       factCreateHandler
     );
   }
@@ -119,7 +119,7 @@ public class FactCreateDelegateTest {
     InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
     assertEquals(set("invalid.source.object", "invalid.destination.object"), set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
 
-    verify(objectResolver, times(2)).resolveObject("unknown");
+    verify(objectRequestResolver, times(2)).resolveObject("unknown");
   }
 
   @Test
@@ -290,13 +290,13 @@ public class FactCreateDelegateTest {
   }
 
   private void mockFetchingFactType() throws Exception {
-    when(factTypeResolver.resolveFactType(resolveFactType.getName())).thenReturn(resolveFactType);
+    when(factTypeRequestResolver.resolveFactType(resolveFactType.getName())).thenReturn(resolveFactType);
   }
 
   private void mockFetchingObjects() throws Exception {
-    when(objectResolver.resolveObject(ip.getId().toString())).thenReturn(ip);
-    when(objectResolver.resolveObject(domain.getId().toString())).thenReturn(domain);
-    when(objectResolver.resolveObject(threatActor.getId().toString())).thenReturn(threatActor);
+    when(objectRequestResolver.resolveObject(ip.getId().toString())).thenReturn(ip);
+    when(objectRequestResolver.resolveObject(domain.getId().toString())).thenReturn(domain);
+    when(objectRequestResolver.resolveObject(threatActor.getId().toString())).thenReturn(threatActor);
   }
 
   private CreateFactRequest createRequest() {

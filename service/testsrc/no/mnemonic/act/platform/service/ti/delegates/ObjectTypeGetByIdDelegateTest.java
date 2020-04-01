@@ -6,8 +6,8 @@ import no.mnemonic.act.platform.api.request.v1.GetObjectTypeByIdRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.ObjectTypeResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectTypeRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -20,9 +20,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class ObjectTypeGetByIdDelegateTest {
 
   @Mock
-  private ObjectTypeResolver objectTypeResolver;
+  private ObjectTypeRequestResolver objectTypeRequestResolver;
   @Mock
-  private ObjectTypeConverter objectTypeConverter;
+  private ObjectTypeResponseConverter objectTypeResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -33,8 +33,8 @@ public class ObjectTypeGetByIdDelegateTest {
     initMocks(this);
     delegate = new ObjectTypeGetByIdDelegate(
       securityContext,
-      objectTypeConverter,
-      objectTypeResolver);
+      objectTypeResponseConverter,
+      objectTypeRequestResolver);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -46,7 +46,7 @@ public class ObjectTypeGetByIdDelegateTest {
   @Test(expected = ObjectNotFoundException.class)
   public void testFetchObjectTypeNotFound() throws Exception {
     UUID id = UUID.randomUUID();
-    when(objectTypeResolver.fetchExistingObjectType(id)).thenThrow(ObjectNotFoundException.class);
+    when(objectTypeRequestResolver.fetchExistingObjectType(id)).thenThrow(ObjectNotFoundException.class);
     delegate.handle(new GetObjectTypeByIdRequest().setId(id));
   }
 
@@ -55,8 +55,8 @@ public class ObjectTypeGetByIdDelegateTest {
     UUID id = UUID.randomUUID();
     ObjectTypeEntity entity = new ObjectTypeEntity();
 
-    when(objectTypeResolver.fetchExistingObjectType(id)).thenReturn(entity);
+    when(objectTypeRequestResolver.fetchExistingObjectType(id)).thenReturn(entity);
     delegate.handle(new GetObjectTypeByIdRequest().setId(id));
-    verify(objectTypeConverter).apply(entity);
+    verify(objectTypeResponseConverter).apply(entity);
   }
 }

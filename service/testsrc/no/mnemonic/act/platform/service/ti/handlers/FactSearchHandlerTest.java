@@ -8,7 +8,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -34,7 +34,7 @@ public class FactSearchHandlerTest {
   @Mock
   private TiSecurityContext securityContext;
   @Mock
-  private FactConverter factConverter;
+  private FactResponseConverter factResponseConverter;
 
   private FactSearchHandler handler;
 
@@ -43,7 +43,7 @@ public class FactSearchHandlerTest {
     initMocks(this);
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
 
-    handler = new FactSearchHandler(retractionHandler, objectFactDao, securityContext, factConverter);
+    handler = new FactSearchHandler(retractionHandler, objectFactDao, securityContext, factResponseConverter);
   }
 
   @Test
@@ -125,7 +125,7 @@ public class FactSearchHandlerTest {
     assertEquals(2, ListUtils.list(result.iterator()).size());
 
     verify(securityContext, times(3)).hasReadPermission(isA(FactRecord.class));
-    verify(factConverter, times(2)).apply(isA(FactRecord.class));
+    verify(factResponseConverter, times(2)).apply(isA(FactRecord.class));
   }
 
   @Test
@@ -140,7 +140,7 @@ public class FactSearchHandlerTest {
     assertEquals(25, ListUtils.list(result.iterator()).size());
 
     verify(securityContext, times(25)).hasReadPermission(isA(FactRecord.class));
-    verify(factConverter, times(25)).apply(isA(FactRecord.class));
+    verify(factResponseConverter, times(25)).apply(isA(FactRecord.class));
   }
 
   @Test

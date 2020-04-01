@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
@@ -24,19 +24,19 @@ public class FactTypeCreateDelegate implements Delegate {
   private final TiSecurityContext securityContext;
   private final FactManager factManager;
   private final FactTypeHelper factTypeHelper;
-  private final FactTypeConverter factTypeConverter;
+  private final FactTypeResponseConverter factTypeResponseConverter;
   private final ValidatorHandler validatorHandler;
 
   @Inject
   public FactTypeCreateDelegate(TiSecurityContext securityContext,
                                 FactManager factManager,
                                 FactTypeHelper factTypeHelper,
-                                FactTypeConverter factTypeConverter,
+                                FactTypeResponseConverter factTypeResponseConverter,
                                 ValidatorHandler validatorHandler) {
     this.securityContext = securityContext;
     this.factManager = factManager;
     this.factTypeHelper = factTypeHelper;
-    this.factTypeConverter = factTypeConverter;
+    this.factTypeResponseConverter = factTypeResponseConverter;
     this.validatorHandler = validatorHandler;
   }
 
@@ -76,6 +76,6 @@ public class FactTypeCreateDelegate implements Delegate {
             .setRelevantFactBindings(factTypeHelper.convertMetaFactBindingDefinitions(request.getRelevantFactBindings()));
 
     entity = factManager.saveFactType(entity);
-    return factTypeConverter.apply(entity);
+    return factTypeResponseConverter.apply(entity);
   }
 }

@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.api.request.v1.GetOriginByIdRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 
 import javax.inject.Inject;
@@ -18,15 +18,15 @@ public class OriginGetByIdDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final OriginResolver originResolver;
-  private final OriginConverter originConverter;
+  private final OriginResponseConverter originResponseConverter;
 
   @Inject
   public OriginGetByIdDelegate(TiSecurityContext securityContext,
                                OriginResolver originResolver,
-                               OriginConverter originConverter) {
+                               OriginResponseConverter originResponseConverter) {
     this.securityContext = securityContext;
     this.originResolver = originResolver;
-    this.originConverter = originConverter;
+    this.originResponseConverter = originResponseConverter;
   }
 
   public Origin handle(GetOriginByIdRequest request)
@@ -44,6 +44,6 @@ public class OriginGetByIdDelegate implements Delegate {
     // Verify that the user is allowed to view the fetched Origin.
     securityContext.checkReadPermission(entity);
 
-    return originConverter.apply(entity);
+    return originResponseConverter.apply(entity);
   }
 }

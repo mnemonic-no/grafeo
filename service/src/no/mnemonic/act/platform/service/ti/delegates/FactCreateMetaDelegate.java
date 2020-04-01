@@ -13,8 +13,8 @@ import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
@@ -25,8 +25,8 @@ import java.util.UUID;
 public class FactCreateMetaDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final FactTypeResolver factTypeResolver;
-  private final FactResolver factResolver;
+  private final FactTypeRequestResolver factTypeRequestResolver;
+  private final FactRequestResolver factRequestResolver;
   private final FactCreateHandler factCreateHandler;
 
   private FactTypeEntity requestedFactType;
@@ -35,26 +35,26 @@ public class FactCreateMetaDelegate implements Delegate {
 
   @Inject
   public FactCreateMetaDelegate(TiSecurityContext securityContext,
-                                FactTypeResolver factTypeResolver,
-                                FactResolver factResolver,
+                                FactTypeRequestResolver factTypeRequestResolver,
+                                FactRequestResolver factRequestResolver,
                                 FactCreateHandler factCreateHandler) {
     this.securityContext = securityContext;
-    this.factTypeResolver = factTypeResolver;
-    this.factResolver = factResolver;
+    this.factTypeRequestResolver = factTypeRequestResolver;
+    this.factRequestResolver = factRequestResolver;
     this.factCreateHandler = factCreateHandler;
   }
 
   public Fact handle(CreateMetaFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Fetch referenced Fact and verify that it exists.
-    FactRecord referencedFact = factResolver.resolveFact(request.getFact());
+    FactRecord referencedFact = factRequestResolver.resolveFact(request.getFact());
     // Verify that user is allowed to access the referenced Fact.
     securityContext.checkReadPermission(referencedFact);
 
     // Resolve some objects which are required later on. This will also validate those request parameters.
     requestedOrigin = factCreateHandler.resolveOrigin(request.getOrigin());
     requestedOrganization = factCreateHandler.resolveOrganization(request.getOrganization(), requestedOrigin);
-    requestedFactType = factTypeResolver.resolveFactType(request.getType());
+    requestedFactType = factTypeRequestResolver.resolveFactType(request.getType());
 
     // Verify that user is allowed to add Facts for the requested organization.
     securityContext.checkPermission(TiFunctionConstants.addFactObjects, requestedOrganization.getId());

@@ -8,29 +8,29 @@ import no.mnemonic.act.platform.api.model.v1.ObjectType;
 import no.mnemonic.act.platform.api.request.v1.GetObjectTypeByIdRequest;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.ObjectTypeResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectTypeRequestResolver;
 
 import javax.inject.Inject;
 
 public class ObjectTypeGetByIdDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final ObjectTypeConverter objectTypeConverter;
-  private final ObjectTypeResolver objectTypeResolver;
+  private final ObjectTypeResponseConverter objectTypeResponseConverter;
+  private final ObjectTypeRequestResolver objectTypeRequestResolver;
 
   @Inject
   public ObjectTypeGetByIdDelegate(TiSecurityContext securityContext,
-                                   ObjectTypeConverter objectTypeConverter,
-                                   ObjectTypeResolver objectTypeResolver) {
+                                   ObjectTypeResponseConverter objectTypeResponseConverter,
+                                   ObjectTypeRequestResolver objectTypeRequestResolver) {
     this.securityContext = securityContext;
-    this.objectTypeConverter = objectTypeConverter;
-    this.objectTypeResolver = objectTypeResolver;
+    this.objectTypeResponseConverter = objectTypeResponseConverter;
+    this.objectTypeRequestResolver = objectTypeRequestResolver;
   }
 
   public ObjectType handle(GetObjectTypeByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     securityContext.checkPermission(TiFunctionConstants.viewTypes);
-    return objectTypeConverter.apply(objectTypeResolver.fetchExistingObjectType(request.getId()));
+    return objectTypeResponseConverter.apply(objectTypeRequestResolver.fetchExistingObjectType(request.getId()));
   }
 }

@@ -9,8 +9,8 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeByIdConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeByIdConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,9 +28,9 @@ public class ObjectGetDelegateTest {
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
-  private FactTypeByIdConverter factTypeConverter;
+  private FactTypeByIdResponseResolver factTypeConverter;
   @Mock
-  private ObjectTypeByIdConverter objectTypeConverter;
+  private ObjectTypeByIdResponseResolver objectTypeConverter;
   @Mock
   private ObjectTypeHandler objectTypeHandler;
   @Mock

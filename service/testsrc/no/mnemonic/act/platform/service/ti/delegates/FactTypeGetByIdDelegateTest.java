@@ -5,8 +5,8 @@ import no.mnemonic.act.platform.api.request.v1.GetFactTypeByIdRequest;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -19,9 +19,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactTypeGetByIdDelegateTest {
 
   @Mock
-  private FactTypeResolver factTypeResolver;
+  private FactTypeRequestResolver factTypeRequestResolver;
   @Mock
-  private FactTypeConverter factTypeConverter;
+  private FactTypeResponseConverter factTypeResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -32,8 +32,8 @@ public class FactTypeGetByIdDelegateTest {
     initMocks(this);
     delegate = new FactTypeGetByIdDelegate(
       securityContext,
-      factTypeConverter,
-      factTypeResolver);
+      factTypeResponseConverter,
+      factTypeRequestResolver);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -47,8 +47,8 @@ public class FactTypeGetByIdDelegateTest {
     UUID id = UUID.randomUUID();
     FactTypeEntity entity = new FactTypeEntity();
 
-    when(factTypeResolver.fetchExistingFactType(id)).thenReturn(entity);
+    when(factTypeRequestResolver.fetchExistingFactType(id)).thenReturn(entity);
     delegate.handle(new GetFactTypeByIdRequest().setId(id));
-    verify(factTypeConverter).apply(entity);
+    verify(factTypeResponseConverter).apply(entity);
   }
 }

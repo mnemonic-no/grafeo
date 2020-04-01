@@ -7,8 +7,8 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.AclEntryConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.AclEntryResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -26,9 +26,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactGetAclDelegateTest {
 
   @Mock
-  private FactResolver factResolver;
+  private FactRequestResolver factRequestResolver;
   @Mock
-  private AclEntryConverter aclEntryConverter;
+  private AclEntryResponseConverter aclEntryResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -37,13 +37,13 @@ public class FactGetAclDelegateTest {
   @Before
   public void setup() {
     initMocks(this);
-    delegate = new FactGetAclDelegate(securityContext, factResolver, aclEntryConverter);
+    delegate = new FactGetAclDelegate(securityContext, factRequestResolver, aclEntryResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testGetFactAclNoAccessToFact() throws Exception {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
@@ -52,7 +52,7 @@ public class FactGetAclDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testGetFactAclNoViewPermission() throws Exception {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.viewFactAccess), any());
 
     delegate.handle(request);
@@ -62,13 +62,13 @@ public class FactGetAclDelegateTest {
   public void testGetFactAcl() throws Exception {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
     List<FactAclEntryRecord> acl = ListUtils.list(new FactAclEntryRecord(), new FactAclEntryRecord(), new FactAclEntryRecord());
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setAcl(acl));
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setAcl(acl));
 
     ResultSet<AclEntry> result = delegate.handle(request);
 
     assertEquals(acl.size(), result.getCount());
     assertEquals(0, result.getLimit());
     assertEquals(acl.size(), ListUtils.list(result.iterator()).size());
-    verify(aclEntryConverter, times(acl.size())).apply(argThat(acl::contains));
+    verify(aclEntryResponseConverter, times(acl.size())).apply(argThat(acl::contains));
   }
 }

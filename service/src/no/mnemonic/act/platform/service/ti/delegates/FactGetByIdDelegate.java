@@ -9,31 +9,31 @@ import no.mnemonic.act.platform.api.request.v1.GetFactByIdRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 
 import javax.inject.Inject;
 
 public class FactGetByIdDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final FactResolver factResolver;
-  private final FactConverter factConverter;
+  private final FactRequestResolver factRequestResolver;
+  private final FactResponseConverter factResponseConverter;
 
   @Inject
   public FactGetByIdDelegate(TiSecurityContext securityContext,
-                             FactResolver factResolver,
-                             FactConverter factConverter) {
+                             FactRequestResolver factRequestResolver,
+                             FactResponseConverter factResponseConverter) {
     this.securityContext = securityContext;
-    this.factResolver = factResolver;
-    this.factConverter = factConverter;
+    this.factRequestResolver = factRequestResolver;
+    this.factResponseConverter = factResponseConverter;
   }
 
   public Fact handle(GetFactByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
-    FactRecord record = factResolver.resolveFact(request.getId());
+    FactRecord record = factRequestResolver.resolveFact(request.getId());
     securityContext.checkReadPermission(record);
-    return factConverter.apply(record);
+    return factResponseConverter.apply(record);
   }
 }

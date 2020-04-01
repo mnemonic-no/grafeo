@@ -10,9 +10,9 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,11 +30,11 @@ public class FactTypeUpdateDelegateTest {
   @Mock
   private FactManager factManager;
   @Mock
-  private FactTypeConverter factTypeConverter;
+  private FactTypeResponseConverter factTypeResponseConverter;
   @Mock
   private FactTypeHelper factTypeHelper;
   @Mock
-  private FactTypeResolver factTypeResolver;
+  private FactTypeRequestResolver factTypeRequestResolver;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -50,13 +50,13 @@ public class FactTypeUpdateDelegateTest {
     when(factManager.saveFactType(any())).then(i -> i.getArgument(0));
     when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
     when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
-    when(factTypeResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
+    when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
     delegate = new FactTypeUpdateDelegate(
       securityContext,
       factManager,
       factTypeHelper,
-      factTypeResolver,
-      factTypeConverter);
+      factTypeRequestResolver,
+      factTypeResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -68,13 +68,13 @@ public class FactTypeUpdateDelegateTest {
   @Test(expected = ObjectNotFoundException.class)
   public void testUpdateFactTypeNotExisting() throws Exception {
     UUID id = UUID.randomUUID();
-    when(factTypeResolver.fetchExistingFactType(id)).thenThrow(ObjectNotFoundException.class);
+    when(factTypeRequestResolver.fetchExistingFactType(id)).thenThrow(ObjectNotFoundException.class);
     delegate.handle(new UpdateFactTypeRequest().setId(id));
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testUpdateRetractionFactTypeNotAllowed() throws Exception {
-    when(factTypeResolver.fetchExistingFactType(retractionFactType.getId())).thenReturn(retractionFactType);
+    when(factTypeRequestResolver.fetchExistingFactType(retractionFactType.getId())).thenReturn(retractionFactType);
     delegate.handle(new UpdateFactTypeRequest().setId(retractionFactType.getId()));
   }
 
@@ -85,11 +85,11 @@ public class FactTypeUpdateDelegateTest {
             .setName("newName");
     FactTypeEntity existingEntity = new FactTypeEntity();
 
-    when(factTypeResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
+    when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
     delegate.handle(request);
     verify(factTypeHelper).assertFactTypeNotExists(request.getName());
-    verify(factTypeConverter).apply(existingEntity);
+    verify(factTypeResponseConverter).apply(existingEntity);
     verify(factManager).saveFactType(argThat(entity -> {
       assertSame(existingEntity, entity);
       assertEquals(request.getName(), entity.getName());
@@ -103,10 +103,10 @@ public class FactTypeUpdateDelegateTest {
             .setId(UUID.randomUUID())
             .setDefaultConfidence(0.1f);
     FactTypeEntity existingEntity = new FactTypeEntity();
-    when(factTypeResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
+    when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
     delegate.handle(request);
-    verify(factTypeConverter).apply(existingEntity);
+    verify(factTypeResponseConverter).apply(existingEntity);
     verify(factManager).saveFactType(argThat(entity -> {
       assertSame(existingEntity, entity);
       assertEquals(request.getDefaultConfidence(), entity.getDefaultConfidence(), 0.0);
@@ -121,7 +121,7 @@ public class FactTypeUpdateDelegateTest {
             .addAddObjectBinding(new FactObjectBindingDefinition());
     FactTypeEntity existingEntity = new FactTypeEntity()
             .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition());
-    when(factTypeResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
+    when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
     delegate.handle(request);
   }
@@ -132,12 +132,12 @@ public class FactTypeUpdateDelegateTest {
             .setId(UUID.randomUUID())
             .addAddObjectBinding(new FactObjectBindingDefinition());
     FactTypeEntity existingEntity = new FactTypeEntity();
-    when(factTypeResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
+    when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
     delegate.handle(request);
     verify(factTypeHelper).assertObjectTypesToBindExist(request.getAddObjectBindings(), "addObjectBindings");
     verify(factTypeHelper).convertFactObjectBindingDefinitions(request.getAddObjectBindings());
-    verify(factTypeConverter).apply(existingEntity);
+    verify(factTypeResponseConverter).apply(existingEntity);
     verify(factManager).saveFactType(argThat(entity -> {
       assertSame(existingEntity, entity);
       assertEquals(1, entity.getRelevantObjectBindings().size());
@@ -152,7 +152,7 @@ public class FactTypeUpdateDelegateTest {
             .addAddFactBinding(new MetaFactBindingDefinition());
     FactTypeEntity existingEntity = new FactTypeEntity()
             .addRelevantObjectBinding(new FactTypeEntity.FactObjectBindingDefinition());
-    when(factTypeResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
+    when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
     delegate.handle(request);
   }
@@ -163,12 +163,12 @@ public class FactTypeUpdateDelegateTest {
             .setId(UUID.randomUUID())
             .addAddFactBinding(new MetaFactBindingDefinition());
     FactTypeEntity existingEntity = new FactTypeEntity();
-    when(factTypeResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
+    when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
     delegate.handle(request);
     verify(factTypeHelper).assertFactTypesToBindExist(request.getAddFactBindings(), "addFactBindings");
     verify(factTypeHelper).convertMetaFactBindingDefinitions(request.getAddFactBindings());
-    verify(factTypeConverter).apply(existingEntity);
+    verify(factTypeResponseConverter).apply(existingEntity);
     verify(factManager).saveFactType(argThat(entity -> {
       assertSame(existingEntity, entity);
       assertEquals(1, entity.getRelevantFactBindings().size());
@@ -183,7 +183,7 @@ public class FactTypeUpdateDelegateTest {
             .addAddObjectBinding(new FactObjectBindingDefinition())
             .addAddFactBinding(new MetaFactBindingDefinition());
     FactTypeEntity existingEntity = new FactTypeEntity();
-    when(factTypeResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
+    when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
     delegate.handle(request);
   }

@@ -8,8 +8,8 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.AclEntryConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.AclEntryResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -27,9 +27,9 @@ public class FactGrantAccessDelegateTest {
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
-  private FactResolver factResolver;
+  private FactRequestResolver factRequestResolver;
   @Mock
-  private AclEntryConverter aclEntryConverter;
+  private AclEntryResponseConverter aclEntryResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -38,13 +38,13 @@ public class FactGrantAccessDelegateTest {
   @Before
   public void setup() {
     initMocks(this);
-    delegate = new FactGrantAccessDelegate(securityContext, objectFactDao, factResolver, aclEntryConverter);
+    delegate = new FactGrantAccessDelegate(securityContext, objectFactDao, factRequestResolver, aclEntryResponseConverter);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testGrantFactAccessNoAccessToFact() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
     delegate.handle(request);
@@ -53,7 +53,7 @@ public class FactGrantAccessDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testGrantFactAccessNoGrantPermission() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.grantFactAccess), any());
 
     delegate.handle(request);
@@ -62,7 +62,7 @@ public class FactGrantAccessDelegateTest {
   @Test(expected = InvalidArgumentException.class)
   public void testGrantFactAccessToPublicFact() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
-    when(factResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setAccessMode(FactRecord.AccessMode.Public));
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setAccessMode(FactRecord.AccessMode.Public));
 
     delegate.handle(request);
   }
@@ -71,12 +71,12 @@ public class FactGrantAccessDelegateTest {
   public void testGrantFactAccessSubjectAlreadyInAcl() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
     FactAclEntryRecord existingEntry = createFactAclEntryRecord(request);
-    when(factResolver.resolveFact(request.getFact())).thenReturn(createFactRecord(request).addAclEntry(existingEntry));
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(createFactRecord(request).addAclEntry(existingEntry));
 
     delegate.handle(request);
 
     verify(objectFactDao, never()).storeFactAclEntry(any(), any());
-    verify(aclEntryConverter).apply(matchFactAclEntryRecord(request, existingEntry.getOriginID()));
+    verify(aclEntryResponseConverter).apply(matchFactAclEntryRecord(request, existingEntry.getOriginID()));
   }
 
   @Test
@@ -84,14 +84,14 @@ public class FactGrantAccessDelegateTest {
     UUID currentUser = UUID.randomUUID();
     GrantFactAccessRequest request = createGrantAccessRequest();
     FactRecord fact = createFactRecord(request);
-    when(factResolver.resolveFact(request.getFact())).thenReturn(fact);
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(fact);
     when(objectFactDao.storeFactAclEntry(notNull(), notNull())).then(i -> i.getArgument(1));
     when(securityContext.getCurrentUserID()).thenReturn(currentUser);
 
     delegate.handle(request);
 
     verify(objectFactDao).storeFactAclEntry(same(fact), matchFactAclEntryRecord(request, currentUser));
-    verify(aclEntryConverter).apply(matchFactAclEntryRecord(request, currentUser));
+    verify(aclEntryResponseConverter).apply(matchFactAclEntryRecord(request, currentUser));
   }
 
   private GrantFactAccessRequest createGrantAccessRequest() {

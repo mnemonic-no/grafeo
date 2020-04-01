@@ -6,7 +6,7 @@ import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -23,7 +23,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactRetractionHandlerTest {
 
   @Mock
-  private FactTypeResolver factTypeResolver;
+  private FactTypeRequestResolver factTypeRequestResolver;
   @Mock
   private FactSearchManager factSearchManager;
   @Mock
@@ -36,11 +36,11 @@ public class FactRetractionHandlerTest {
     initMocks(this);
 
     // Common mocks used by most tests.
-    when(factTypeResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()));
+    when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()));
     when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
     when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
 
-    handler = new FactRetractionHandler(factTypeResolver, factSearchManager, securityContext);
+    handler = new FactRetractionHandler(factTypeRequestResolver, factSearchManager, securityContext);
   }
 
   @Test

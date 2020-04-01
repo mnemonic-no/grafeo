@@ -10,7 +10,7 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.OriginConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
@@ -27,15 +27,15 @@ public class OriginSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final OriginManager originManager;
-  private final OriginConverter originConverter;
+  private final OriginResponseConverter originResponseConverter;
 
   @Inject
   public OriginSearchDelegate(TiSecurityContext securityContext,
                               OriginManager originManager,
-                              OriginConverter originConverter) {
+                              OriginResponseConverter originResponseConverter) {
     this.securityContext = securityContext;
     this.originManager = originManager;
-    this.originConverter = originConverter;
+    this.originResponseConverter = originResponseConverter;
   }
 
   public ResultSet<Origin> handle(SearchOriginRequest request)
@@ -51,7 +51,7 @@ public class OriginSearchDelegate implements Delegate {
             // Only return accessible Origins.
             .filter(securityContext::hasReadPermission)
             // Convert from entity to model.
-            .map(originConverter)
+            .map(originResponseConverter)
             // Apply limit where 0 means all results.
             .limit(limit == 0 ? Integer.MAX_VALUE : limit)
             .collect(Collectors.toList());

@@ -8,29 +8,29 @@ import no.mnemonic.act.platform.api.model.v1.FactType;
 import no.mnemonic.act.platform.api.request.v1.GetFactTypeByIdRequest;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 
 import javax.inject.Inject;
 
 public class FactTypeGetByIdDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final FactTypeConverter factTypeConverter;
-  private final FactTypeResolver factTypeResolver;
+  private final FactTypeResponseConverter factTypeResponseConverter;
+  private final FactTypeRequestResolver factTypeRequestResolver;
 
   @Inject
   public FactTypeGetByIdDelegate(TiSecurityContext securityContext,
-                                 FactTypeConverter factTypeConverter,
-                                 FactTypeResolver factTypeResolver) {
+                                 FactTypeResponseConverter factTypeResponseConverter,
+                                 FactTypeRequestResolver factTypeRequestResolver) {
     this.securityContext = securityContext;
-    this.factTypeConverter = factTypeConverter;
-    this.factTypeResolver = factTypeResolver;
+    this.factTypeResponseConverter = factTypeResponseConverter;
+    this.factTypeRequestResolver = factTypeRequestResolver;
   }
 
   public FactType handle(GetFactTypeByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     securityContext.checkPermission(TiFunctionConstants.viewTypes);
-    return factTypeConverter.apply(factTypeResolver.fetchExistingFactType(request.getId()));
+    return factTypeResponseConverter.apply(factTypeRequestResolver.fetchExistingFactType(request.getId()));
   }
 }

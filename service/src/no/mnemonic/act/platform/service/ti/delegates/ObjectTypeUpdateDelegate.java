@@ -10,9 +10,9 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.ObjectTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectTypeRequestResolver;
 import no.mnemonic.commons.utilities.StringUtils;
 
 import javax.inject.Inject;
@@ -21,20 +21,20 @@ public class ObjectTypeUpdateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectManager objectManager;
-  private final ObjectTypeConverter objectTypeConverter;
-  private final ObjectTypeResolver objectTypeResolver;
+  private final ObjectTypeResponseConverter objectTypeResponseConverter;
+  private final ObjectTypeRequestResolver objectTypeRequestResolver;
   private final ObjectTypeHandler objectTypeHandler;
 
   @Inject
   public ObjectTypeUpdateDelegate(TiSecurityContext securityContext,
                                   ObjectManager objectManager,
-                                  ObjectTypeConverter objectTypeConverter,
-                                  ObjectTypeResolver objectTypeResolver,
+                                  ObjectTypeResponseConverter objectTypeResponseConverter,
+                                  ObjectTypeRequestResolver objectTypeRequestResolver,
                                   ObjectTypeHandler objectTypeHandler) {
     this.securityContext = securityContext;
     this.objectManager = objectManager;
-    this.objectTypeConverter = objectTypeConverter;
-    this.objectTypeResolver = objectTypeResolver;
+    this.objectTypeResponseConverter = objectTypeResponseConverter;
+    this.objectTypeRequestResolver = objectTypeRequestResolver;
     this.objectTypeHandler = objectTypeHandler;
   }
 
@@ -42,7 +42,7 @@ public class ObjectTypeUpdateDelegate implements Delegate {
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     securityContext.checkPermission(TiFunctionConstants.updateTypes);
 
-    ObjectTypeEntity entity = objectTypeResolver.fetchExistingObjectType(request.getId());
+    ObjectTypeEntity entity = objectTypeRequestResolver.fetchExistingObjectType(request.getId());
 
     if (!StringUtils.isBlank(request.getName())) {
       objectTypeHandler.assertObjectTypeNotExists(request.getName());
@@ -50,6 +50,6 @@ public class ObjectTypeUpdateDelegate implements Delegate {
     }
 
     entity = objectManager.saveObjectType(entity);
-    return objectTypeConverter.apply(entity);
+    return objectTypeResponseConverter.apply(entity);
   }
 }

@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -34,7 +34,7 @@ public class FactTypeCreateDelegateTest{
   @Mock
   private FactManager factManager;
   @Mock
-  private FactTypeConverter factTypeConverter;
+  private FactTypeResponseConverter factTypeResponseConverter;
 
   private FactTypeCreateDelegate delegate;
 
@@ -47,7 +47,7 @@ public class FactTypeCreateDelegateTest{
       securityContext,
       factManager,
       factTypeHelper,
-      factTypeConverter,
+      factTypeResponseConverter,
       validatorHandler);
   }
 
@@ -95,7 +95,7 @@ public class FactTypeCreateDelegateTest{
     verify(factTypeHelper).assertFactTypeNotExists(request.getName());
     verify(factTypeHelper).assertObjectTypesToBindExist(request.getRelevantObjectBindings(), "relevantObjectBindings");
     verify(factTypeHelper).convertFactObjectBindingDefinitions(request.getRelevantObjectBindings());
-    verify(factTypeConverter).apply(newEntity);
+    verify(factTypeResponseConverter).apply(newEntity);
     verify(factManager).saveFactType(argThat(entity -> {
       assertCommonEntity(request, entity);
       assertEquals(1, entity.getRelevantObjectBindings().size());
@@ -113,7 +113,7 @@ public class FactTypeCreateDelegateTest{
     verify(factTypeHelper).assertFactTypeNotExists(request.getName());
     verify(factTypeHelper).assertFactTypesToBindExist(request.getRelevantFactBindings(), "relevantFactBindings");
     verify(factTypeHelper).convertMetaFactBindingDefinitions(request.getRelevantFactBindings());
-    verify(factTypeConverter).apply(newEntity);
+    verify(factTypeResponseConverter).apply(newEntity);
     verify(factManager).saveFactType(argThat(entity -> {
       assertCommonEntity(request, entity);
       assertEquals(1, entity.getRelevantFactBindings().size());

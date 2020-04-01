@@ -11,9 +11,9 @@ import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactTypeByIdConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeByIdConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 
 import javax.inject.Inject;
@@ -22,15 +22,15 @@ public class ObjectGetDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
-  private final FactTypeByIdConverter factTypeConverter;
-  private final ObjectTypeByIdConverter objectTypeConverter;
+  private final FactTypeByIdResponseResolver factTypeConverter;
+  private final ObjectTypeByIdResponseResolver objectTypeConverter;
   private final ObjectTypeHandler objectTypeHandler;
 
   @Inject
   public ObjectGetDelegate(TiSecurityContext securityContext,
                            ObjectFactDao objectFactDao,
-                           FactTypeByIdConverter factTypeConverter,
-                           ObjectTypeByIdConverter objectTypeConverter,
+                           FactTypeByIdResponseResolver factTypeConverter,
+                           ObjectTypeByIdResponseResolver objectTypeConverter,
                            ObjectTypeHandler objectTypeHandler) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
@@ -56,8 +56,8 @@ public class ObjectGetDelegate implements Delegate {
     return createObjectConverter().apply(object);
   }
 
-  private ObjectConverter createObjectConverter() {
-    return new ObjectConverter(objectTypeConverter, factTypeConverter, id -> {
+  private ObjectResponseConverter createObjectConverter() {
+    return new ObjectResponseConverter(objectTypeConverter, factTypeConverter, id -> {
       ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
               .addObjectID(id)
               .setCurrentUserID(securityContext.getCurrentUserID())

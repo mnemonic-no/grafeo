@@ -11,8 +11,8 @@ import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -28,9 +28,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactCreateMetaDelegateTest {
 
   @Mock
-  private FactTypeResolver factTypeResolver;
+  private FactTypeRequestResolver factTypeRequestResolver;
   @Mock
-  private FactResolver factResolver;
+  private FactRequestResolver factRequestResolver;
   @Mock
   private FactCreateHandler factCreateHandler;
   @Mock
@@ -67,15 +67,15 @@ public class FactCreateMetaDelegateTest {
     initMocks(this);
     delegate = new FactCreateMetaDelegate(
       securityContext,
-      factTypeResolver,
-      factResolver,
+      factTypeRequestResolver,
+      factRequestResolver,
       factCreateHandler
     );
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCreateMetaFactNoAccessToReferencedFact() throws Exception {
-    when(factResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
+    when(factRequestResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(seenIn);
 
     delegate.handle(createRequest());
@@ -83,7 +83,7 @@ public class FactCreateMetaDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testCreateMetaFactWithoutAddPermission() throws Exception {
-    when(factResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
+    when(factRequestResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
     mockFetchingOrganization();
     mockFetchingFactType();
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.addFactObjects, organization.getId());
@@ -105,7 +105,7 @@ public class FactCreateMetaDelegateTest {
     CreateMetaFactRequest request = createRequest();
     observationFactType.setRelevantFactBindings(null);
 
-    when(factResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
+    when(factRequestResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
     mockFetchingOrganization();
     mockFetchingFactType();
 
@@ -121,7 +121,7 @@ public class FactCreateMetaDelegateTest {
     CreateMetaFactRequest request = createRequest()
             .setFact(anotherFact.getId());
 
-    when(factResolver.resolveFact(anotherFact.getId())).thenReturn(anotherFact);
+    when(factRequestResolver.resolveFact(anotherFact.getId())).thenReturn(anotherFact);
     mockFetchingOrganization();
     mockFetchingFactType();
 
@@ -230,7 +230,7 @@ public class FactCreateMetaDelegateTest {
     // Mock fetching of current user.
     when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
     // Mock fetching of referenced Fact.
-    when(factResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
+    when(factRequestResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
     when(factCreateHandler.resolveAccessMode(eq(seenIn), any())).thenReturn(FactRecord.AccessMode.Explicit);
   }
 
@@ -240,7 +240,7 @@ public class FactCreateMetaDelegateTest {
   }
 
   private void mockFetchingFactType() throws Exception {
-    when(factTypeResolver.resolveFactType(observationFactType.getName())).thenReturn(observationFactType);
+    when(factTypeRequestResolver.resolveFactType(observationFactType.getName())).thenReturn(observationFactType);
   }
 
   private FactRecord matchFactRecord(CreateMetaFactRequest request) {

@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
 import org.junit.Before;
@@ -29,7 +29,7 @@ public class ObjectTypeCreateDelegateTest {
   @Mock
   private ObjectManager objectManager;
   @Mock
-  private ObjectTypeConverter objectTypeConverter;
+  private ObjectTypeResponseConverter objectTypeResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -39,7 +39,7 @@ public class ObjectTypeCreateDelegateTest {
     delegate = new ObjectTypeCreateDelegate(
       securityContext,
       objectManager,
-      objectTypeConverter,
+      objectTypeResponseConverter,
       objectTypeHandler,
       validatorHandler);
   }
@@ -71,7 +71,7 @@ public class ObjectTypeCreateDelegateTest {
     when(objectManager.saveObjectType(any())).thenReturn(newEntity);
 
     delegate.handle(request);
-    verify(objectTypeConverter).apply(newEntity);
+    verify(objectTypeResponseConverter).apply(newEntity);
     verify(objectManager).saveObjectType(argThat(entity -> {
       assertNotNull(entity.getId());
       assertNotNull(entity.getNamespaceID());

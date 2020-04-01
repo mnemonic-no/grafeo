@@ -10,7 +10,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -28,17 +28,17 @@ public class FactSearchHandler {
   private final FactRetractionHandler retractionHandler;
   private final ObjectFactDao objectFactDao;
   private final TiSecurityContext securityContext;
-  private final FactConverter factConverter;
+  private final FactResponseConverter factResponseConverter;
 
   @Inject
   public FactSearchHandler(FactRetractionHandler retractionHandler,
                            ObjectFactDao objectFactDao,
                            TiSecurityContext securityContext,
-                           FactConverter factConverter) {
+                           FactResponseConverter factResponseConverter) {
     this.retractionHandler = retractionHandler;
     this.objectFactDao = objectFactDao;
     this.securityContext = securityContext;
-    this.factConverter = factConverter;
+    this.factResponseConverter = factResponseConverter;
   }
 
   /**
@@ -61,7 +61,7 @@ public class FactSearchHandler {
     Iterator<Fact> facts = searchResult.stream()
             .filter(fact -> includeRetracted(fact, includeRetracted))
             .filter(securityContext::hasReadPermission)
-            .map(factConverter)
+            .map(factResponseConverter)
             .limit(limit > 0 ? limit : Long.MAX_VALUE)
             .iterator();
 

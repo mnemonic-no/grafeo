@@ -17,7 +17,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -51,7 +51,7 @@ public class FactCreateHandler {
   private final OriginManager originManager;
   private final ValidatorFactory validatorFactory;
   private final ObjectFactDao objectFactDao;
-  private final FactConverter factConverter;
+  private final FactResponseConverter factResponseConverter;
   private final TriggerContext triggerContext;
 
   @Inject
@@ -62,7 +62,7 @@ public class FactCreateHandler {
                            OriginManager originManager,
                            ValidatorFactory validatorFactory,
                            ObjectFactDao objectFactDao,
-                           FactConverter factConverter,
+                           FactResponseConverter factResponseConverter,
                            TriggerContext triggerContext) {
     this.securityContext = securityContext;
     this.subjectResolver = subjectResolver;
@@ -71,7 +71,7 @@ public class FactCreateHandler {
     this.originManager = originManager;
     this.validatorFactory = validatorFactory;
     this.objectFactDao = objectFactDao;
-    this.factConverter = factConverter;
+    this.factResponseConverter = factResponseConverter;
     this.triggerContext = triggerContext;
   }
 
@@ -197,7 +197,7 @@ public class FactCreateHandler {
     }
 
     // Register TriggerEvent before returning added Fact.
-    Fact addedFact = factConverter.apply(effectiveFact);
+    Fact addedFact = factResponseConverter.apply(effectiveFact);
     registerTriggerEvent(addedFact);
     return addedFact;
   }

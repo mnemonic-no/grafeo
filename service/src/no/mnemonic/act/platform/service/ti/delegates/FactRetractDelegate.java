@@ -15,10 +15,10 @@ import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.FactResolver;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 import javax.inject.Inject;
@@ -32,10 +32,10 @@ public class FactRetractDelegate implements Delegate {
   private final TiSecurityContext securityContext;
   private final TriggerContext triggerContext;
   private final ObjectFactDao objectFactDao;
-  private final FactTypeResolver factTypeResolver;
-  private final FactResolver factResolver;
+  private final FactTypeRequestResolver factTypeRequestResolver;
+  private final FactRequestResolver factRequestResolver;
   private final FactCreateHandler factCreateHandler;
-  private final FactConverter factConverter;
+  private final FactResponseConverter factResponseConverter;
 
   private FactTypeEntity retractionFactType;
   private OriginEntity requestedOrigin;
@@ -45,28 +45,28 @@ public class FactRetractDelegate implements Delegate {
   public FactRetractDelegate(TiSecurityContext securityContext,
                              TriggerContext triggerContext,
                              ObjectFactDao objectFactDao,
-                             FactTypeResolver factTypeResolver,
-                             FactResolver factResolver,
+                             FactTypeRequestResolver factTypeRequestResolver,
+                             FactRequestResolver factRequestResolver,
                              FactCreateHandler factCreateHandler,
-                             FactConverter factConverter) {
+                             FactResponseConverter factResponseConverter) {
     this.securityContext = securityContext;
     this.triggerContext = triggerContext;
     this.objectFactDao = objectFactDao;
-    this.factTypeResolver = factTypeResolver;
-    this.factResolver = factResolver;
+    this.factTypeRequestResolver = factTypeRequestResolver;
+    this.factRequestResolver = factRequestResolver;
     this.factCreateHandler = factCreateHandler;
-    this.factConverter = factConverter;
+    this.factResponseConverter = factResponseConverter;
   }
 
   public Fact handle(RetractFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Fetch Fact to retract and verify that it exists.
-    FactRecord factToRetract = factResolver.resolveFact(request.getFact());
+    FactRecord factToRetract = factRequestResolver.resolveFact(request.getFact());
     // Verify that user is allowed to access the Fact to retract.
     securityContext.checkReadPermission(factToRetract);
 
     // Resolve some objects which are required later on. This will also validate those request parameters.
-    retractionFactType = factTypeResolver.resolveRetractionFactType();
+    retractionFactType = factTypeRequestResolver.resolveRetractionFactType();
     requestedOrigin = factCreateHandler.resolveOrigin(request.getOrigin());
     requestedOrganization = factCreateHandler.resolveOrganization(request.getOrganization(), requestedOrigin);
 
@@ -78,8 +78,8 @@ public class FactRetractDelegate implements Delegate {
     factToRetract = objectFactDao.retractFact(factToRetract);
 
     // Register TriggerEvent before returning Retraction Fact.
-    Fact retractionFactParameter = factConverter.apply(retractionFact);
-    Fact retractedFactParameter = factConverter.apply(factToRetract);
+    Fact retractionFactParameter = factResponseConverter.apply(retractionFact);
+    Fact retractedFactParameter = factResponseConverter.apply(factToRetract);
     registerTriggerEvent(retractionFactParameter, retractedFactParameter);
 
     return retractionFactParameter;

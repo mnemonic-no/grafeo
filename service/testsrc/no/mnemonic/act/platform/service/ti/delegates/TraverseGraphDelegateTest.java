@@ -17,8 +17,8 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.FactConverter;
-import no.mnemonic.act.platform.service.ti.converters.ObjectConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -40,11 +40,11 @@ public class TraverseGraphDelegateTest {
   @Mock
   private FactManager factManager;
   @Mock
-  private FactConverter factConverter;
+  private FactResponseConverter factResponseConverter;
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
-  private ObjectConverter objectConverter;
+  private ObjectResponseConverter objectResponseConverter;
   @Mock
   private ObjectManager objectManager;
   @Mock
@@ -94,8 +94,8 @@ public class TraverseGraphDelegateTest {
             objectManager,
             factManager,
             objectSearch,
-            objectConverter,
-            factConverter,
+      objectResponseConverter,
+      factResponseConverter,
             objectTypeHandler).setScriptExecutionTimeout(2000);
   }
 
@@ -318,7 +318,7 @@ public class TraverseGraphDelegateTest {
     when(objectManager.getObject(objectType.getName(), entity.getValue())).thenReturn(entity);
     when(objectFactDao.getObject(entity.getId())).thenReturn(record);
     when(objectFactDao.getObject(objectType.getName(), entity.getValue())).thenReturn(record);
-    when(objectConverter.apply(record)).thenReturn(Object.builder().setId(entity.getId()).build());
+    when(objectResponseConverter.apply(record)).thenReturn(Object.builder().setId(entity.getId()).build());
 
     return record;
   }
@@ -349,7 +349,7 @@ public class TraverseGraphDelegateTest {
     FactRecord record = toRecord(entity);
     when(factManager.getFact(entity.getId())).thenReturn(entity);
     when(objectFactDao.getFact(entity.getId())).thenReturn(record);
-    when(factConverter.apply(record)).thenReturn(Fact.builder().setId(entity.getId()).build());
+    when(factResponseConverter.apply(record)).thenReturn(Fact.builder().setId(entity.getId()).build());
 
     return entity;
   }

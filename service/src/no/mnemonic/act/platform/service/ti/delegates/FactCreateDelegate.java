@@ -13,8 +13,8 @@ import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.FactTypeResolver;
-import no.mnemonic.act.platform.service.ti.resolvers.ObjectResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
@@ -25,8 +25,8 @@ import java.util.UUID;
 public class FactCreateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
-  private final FactTypeResolver factTypeResolver;
-  private final ObjectResolver objectResolver;
+  private final FactTypeRequestResolver factTypeRequestResolver;
+  private final ObjectRequestResolver objectRequestResolver;
   private final FactCreateHandler factCreateHandler;
 
   private FactTypeEntity requestedFactType;
@@ -35,12 +35,12 @@ public class FactCreateDelegate implements Delegate {
 
   @Inject
   public FactCreateDelegate(TiSecurityContext securityContext,
-                            FactTypeResolver factTypeResolver,
-                            ObjectResolver objectResolver,
+                            FactTypeRequestResolver factTypeRequestResolver,
+                            ObjectRequestResolver objectRequestResolver,
                             FactCreateHandler factCreateHandler) {
     this.securityContext = securityContext;
-    this.factTypeResolver = factTypeResolver;
-    this.objectResolver = objectResolver;
+    this.factTypeRequestResolver = factTypeRequestResolver;
+    this.objectRequestResolver = objectRequestResolver;
     this.factCreateHandler = factCreateHandler;
   }
 
@@ -49,7 +49,7 @@ public class FactCreateDelegate implements Delegate {
     // First resolve some objects which are required later on. This will also validate those request parameters.
     requestedOrigin = factCreateHandler.resolveOrigin(request.getOrigin());
     requestedOrganization = factCreateHandler.resolveOrganization(request.getOrganization(), requestedOrigin);
-    requestedFactType = factTypeResolver.resolveFactType(request.getType());
+    requestedFactType = factTypeRequestResolver.resolveFactType(request.getType());
 
     // Verify that user is allowed to add Facts for the requested organization.
     securityContext.checkPermission(TiFunctionConstants.addFactObjects, requestedOrganization.getId());
@@ -64,8 +64,8 @@ public class FactCreateDelegate implements Delegate {
 
   private void assertValidFactObjectBindings(CreateFactRequest request) throws InvalidArgumentException {
     // Validate that either source or destination or both are set. One field can be NULL to support bindings of cardinality 1.
-    ObjectRecord source = objectResolver.resolveObject(request.getSourceObject());
-    ObjectRecord destination = objectResolver.resolveObject(request.getDestinationObject());
+    ObjectRecord source = objectRequestResolver.resolveObject(request.getSourceObject());
+    ObjectRecord destination = objectRequestResolver.resolveObject(request.getDestinationObject());
     if (source == null && destination == null) {
       throw new InvalidArgumentException()
               .addValidationError("Requested source Object could not be resolved.", "invalid.source.object", "sourceObject", request.getSourceObject())
@@ -95,8 +95,8 @@ public class FactCreateDelegate implements Delegate {
   }
 
   private FactRecord toFactRecord(CreateFactRequest request) throws InvalidArgumentException {
-    ObjectRecord source = objectResolver.resolveObject(request.getSourceObject());
-    ObjectRecord destination = objectResolver.resolveObject(request.getDestinationObject());
+    ObjectRecord source = objectRequestResolver.resolveObject(request.getSourceObject());
+    ObjectRecord destination = objectRequestResolver.resolveObject(request.getDestinationObject());
 
     return new FactRecord()
             .setId(UUID.randomUUID())

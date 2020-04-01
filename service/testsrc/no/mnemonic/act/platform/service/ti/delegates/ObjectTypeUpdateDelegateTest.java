@@ -8,9 +8,9 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.converters.ObjectTypeConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.ObjectTypeResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectTypeRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -25,13 +25,13 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class ObjectTypeUpdateDelegateTest {
 
   @Mock
-  private ObjectTypeResolver objectTypeResolver;
+  private ObjectTypeRequestResolver objectTypeRequestResolver;
   @Mock
   private ObjectTypeHandler objectTypeHandler;
   @Mock
   private ObjectManager objectManager;
   @Mock
-  private ObjectTypeConverter objectTypeConverter;
+  private ObjectTypeResponseConverter objectTypeResponseConverter;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -43,8 +43,8 @@ public class ObjectTypeUpdateDelegateTest {
     delegate = new ObjectTypeUpdateDelegate(
       securityContext,
       objectManager,
-      objectTypeConverter,
-      objectTypeResolver,
+      objectTypeResponseConverter,
+      objectTypeRequestResolver,
       objectTypeHandler);
   }
 
@@ -57,7 +57,7 @@ public class ObjectTypeUpdateDelegateTest {
   @Test(expected = ObjectNotFoundException.class)
   public void testUpdateObjectTypeNotExisting() throws Exception {
     UpdateObjectTypeRequest request = createRequest();
-    when(objectTypeResolver.fetchExistingObjectType(request.getId())).thenThrow(ObjectNotFoundException.class);
+    when(objectTypeRequestResolver.fetchExistingObjectType(request.getId())).thenThrow(ObjectNotFoundException.class);
     delegate.handle(request);
   }
 
@@ -73,7 +73,7 @@ public class ObjectTypeUpdateDelegateTest {
   public void testUpdateObjectType() throws Exception {
     UpdateObjectTypeRequest request = createRequest();
     ObjectTypeEntity entity = new ObjectTypeEntity();
-    when(objectTypeResolver.fetchExistingObjectType(request.getId())).thenReturn(entity);
+    when(objectTypeRequestResolver.fetchExistingObjectType(request.getId())).thenReturn(entity);
     when(objectManager.saveObjectType(argThat(e -> {
       assertSame(entity, e);
       assertEquals(request.getName(), e.getName());
@@ -81,7 +81,7 @@ public class ObjectTypeUpdateDelegateTest {
     }))).thenReturn(entity);
 
     delegate.handle(request);
-    verify(objectTypeConverter).apply(entity);
+    verify(objectTypeResponseConverter).apply(entity);
   }
 
   private UpdateObjectTypeRequest createRequest() {
