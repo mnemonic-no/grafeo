@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.dao.tinkerpop;
+package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
@@ -10,17 +10,14 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
 import java.util.*;
 
-import static no.mnemonic.act.platform.dao.tinkerpop.FactProperty.*;
+import static no.mnemonic.act.platform.service.ti.tinkerpop.FactProperty.*;
 import static org.apache.tinkerpop.gremlin.structure.Edge.Exceptions.edgeRemovalNotSupported;
 
 /**
  * An edge represents a binding between two Objects by one Fact in the Object-Fact-Model. A Fact can be represented by
  * multiple edges if the Fact is bound to more than two Objects. Because of that, {@link Edge#id()} will return an
  * edge-specific UUID and NOT the Fact's UUID. This UUID is randomly generated when the edge is created.
- *
- * @deprecated Will be replaced by the TinkerPop implementation in the service module.
  */
-@Deprecated
 public class FactEdge implements Edge {
 
   private final ActGraph graph;

@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.dao.tinkerpop;
+package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -17,9 +17,7 @@ import static org.apache.tinkerpop.gremlin.structure.Property.Exceptions.propert
  * Base class for all exposed properties from a Fact. Every subclass holds one property related to a Fact.
  *
  * @param <V> Type of property value
- * @deprecated Will be replaced by the TinkerPop implementation in the service module.
  */
-@Deprecated
 abstract class FactProperty<V> implements Property<V> {
 
   private final FactEntity fact;

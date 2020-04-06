@@ -1,11 +1,8 @@
-package no.mnemonic.act.platform.dao.tinkerpop.exceptions;
+package no.mnemonic.act.platform.service.ti.tinkerpop.exceptions;
 
 /**
  * A GraphOperationException is thrown when an operation on the graph could not be executed.
- *
- * @deprecated Will be replaced by the TinkerPop implementation in the service module.
  */
-@Deprecated
 public class GraphOperationException extends RuntimeException {
 
   private static final long serialVersionUID = -799287264768678971L;

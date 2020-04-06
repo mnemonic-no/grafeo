@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.dao.tinkerpop;
+package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
@@ -12,7 +12,7 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import java.util.*;
 
 import static no.mnemonic.act.platform.dao.cassandra.entity.Direction.*;
-import static no.mnemonic.act.platform.dao.tinkerpop.ObjectProperty.Value;
+import static no.mnemonic.act.platform.service.ti.tinkerpop.ObjectProperty.Value;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.edgeAdditionsNotSupported;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRemovalNotSupported;
 
@@ -23,10 +23,7 @@ import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRem
  * Adjacent edges represent Facts where the edge direction (IN, OUT) is mapped onto the binding's direction between
  * Object and Fact. If a Fact is only bound to one Object the edge will be a loop, and if the Fact is bound to more
  * than two Objects an edge to each Object is created.
- *
- * @deprecated Will be replaced by the TinkerPop implementation in the service module.
  */
-@Deprecated
 public class ObjectVertex implements Vertex {
 
   private final ActGraph graph;

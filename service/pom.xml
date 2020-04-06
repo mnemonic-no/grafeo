@@ -108,6 +108,12 @@
       <artifactId>gremlin-groovy</artifactId>
       <version>${tinkerpop.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.tinkerpop</groupId>
+      <artifactId>gremlin-core</artifactId>
+      <version>${tinkerpop.version}</version>
+    </dependency>
+
     <!-- Need a javax.validation and javax.el implementation for request validation. -->
     <dependency>
       <groupId>org.hibernate.validator</groupId>

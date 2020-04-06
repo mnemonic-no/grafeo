@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.dao.tinkerpop;
+package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -17,9 +17,7 @@ import static org.apache.tinkerpop.gremlin.structure.VertexProperty.Exceptions.m
  * Base class for all exposed properties from an Object. Every subclass holds one property related to an Object.
  *
  * @param <V> Type of property value
- * @deprecated Will be replaced by the TinkerPop implementation in the service module.
  */
-@Deprecated
 abstract class ObjectProperty<V> implements VertexProperty<V> {
 
   private final ObjectEntity object;

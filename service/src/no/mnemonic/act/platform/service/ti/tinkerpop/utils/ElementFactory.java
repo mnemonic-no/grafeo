@@ -1,12 +1,12 @@
-package no.mnemonic.act.platform.dao.tinkerpop.utils;
+package no.mnemonic.act.platform.service.ti.tinkerpop.utils;
 
 import com.google.common.cache.*;
 import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
-import no.mnemonic.act.platform.dao.tinkerpop.ActGraph;
-import no.mnemonic.act.platform.dao.tinkerpop.FactEdge;
-import no.mnemonic.act.platform.dao.tinkerpop.ObjectVertex;
+import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
+import no.mnemonic.act.platform.service.ti.tinkerpop.FactEdge;
+import no.mnemonic.act.platform.service.ti.tinkerpop.ObjectVertex;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -19,10 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Helper class for creation and retrieval of edges and vertices which implements simple caching.
- *
- * @deprecated Will be replaced by the TinkerPop implementation in the service module.
  */
-@Deprecated
 public class ElementFactory {
 
   private static final int CACHE_MAXIMUM_SIZE = 10000;
