@@ -8,6 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -21,16 +23,29 @@ public class ObjectTypeByIdResponseResolverTest {
   @Mock
   private ObjectTypeResponseConverter objectTypeResponseConverter;
 
+  private Map<UUID, ObjectType> responseCache;
   private ObjectTypeByIdResponseResolver converter;
 
   @Before
   public void setup() {
     initMocks(this);
-    converter = new ObjectTypeByIdResponseResolver(objectManager, objectTypeResponseConverter);
+    responseCache = new HashMap<>();
+    converter = new ObjectTypeByIdResponseResolver(objectManager, objectTypeResponseConverter, responseCache);
   }
 
   @Test
-  public void testConvertObjectType() {
+  public void testConvertCachedObjectType() {
+    UUID id = UUID.randomUUID();
+    ObjectType model = ObjectType.builder().build();
+    responseCache.put(id, model);
+
+    assertSame(model, converter.apply(id));
+    verifyNoInteractions(objectManager);
+    verifyNoInteractions(objectTypeResponseConverter);
+  }
+
+  @Test
+  public void testConvertUncachedObjectType() {
     UUID id = UUID.randomUUID();
     ObjectTypeEntity entity = new ObjectTypeEntity();
     ObjectType model = ObjectType.builder().build();
@@ -44,7 +59,7 @@ public class ObjectTypeByIdResponseResolverTest {
   }
 
   @Test
-  public void testConvertObjectTypeNotAvailable() {
+  public void testConvertUncachedObjectTypeNotAvailable() {
     UUID id = UUID.randomUUID();
     ObjectType model = converter.apply(id);
 
@@ -53,7 +68,7 @@ public class ObjectTypeByIdResponseResolverTest {
     assertEquals("N/A", model.getName());
 
     verify(objectManager).getObjectType(id);
-    verifyZeroInteractions(objectTypeResponseConverter);
+    verifyNoInteractions(objectTypeResponseConverter);
   }
 
   @Test

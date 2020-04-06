@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.dao.DaoModule;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.service.aspects.*;
 import no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl;
+import no.mnemonic.act.platform.service.ti.caches.ResponseCachesModule;
 import no.mnemonic.act.platform.service.validators.DefaultValidatorFactory;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
@@ -36,6 +37,7 @@ public class TiServiceModule extends AbstractModule {
     install(new ValidationAspect());
     install(new TriggerContextAspect());
     install(new ServiceRequestScopeAspect());
+    install(new ResponseCachesModule());
 
     if (!skipDefaultAccessController) {
       // Omit default access controller if the module is configured using withoutDefaultAccessController().

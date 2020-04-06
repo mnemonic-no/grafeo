@@ -6,11 +6,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class OrganizationByIdResponseResolverTest {
@@ -18,16 +19,28 @@ public class OrganizationByIdResponseResolverTest {
   @Mock
   private OrganizationResolver organizationResolver;
 
+  private Map<UUID, Organization> responseCache;
   private OrganizationByIdResponseResolver converter;
 
   @Before
   public void setup() {
     initMocks(this);
-    converter = new OrganizationByIdResponseResolver(organizationResolver);
+    responseCache = new HashMap<>();
+    converter = new OrganizationByIdResponseResolver(organizationResolver, responseCache);
   }
 
   @Test
-  public void testConvertOrganization() {
+  public void testConvertCachedOrganization() {
+    UUID id = UUID.randomUUID();
+    Organization model = Organization.builder().build();
+    responseCache.put(id, model);
+
+    assertSame(model, converter.apply(id));
+    verifyNoInteractions(organizationResolver);
+  }
+
+  @Test
+  public void testConvertUncachedOrganization() {
     UUID id = UUID.randomUUID();
     Organization model = Organization.builder().build();
 
@@ -38,7 +51,7 @@ public class OrganizationByIdResponseResolverTest {
   }
 
   @Test
-  public void testConvertOrganizationNotAvailable() {
+  public void testConvertUncachedOrganizationNotAvailable() {
     UUID id = UUID.randomUUID();
     Organization model = converter.apply(id);
 

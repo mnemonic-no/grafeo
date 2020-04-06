@@ -6,11 +6,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class SubjectByIdResponseResolverTest {
@@ -18,16 +19,28 @@ public class SubjectByIdResponseResolverTest {
   @Mock
   private SubjectResolver subjectResolver;
 
+  private Map<UUID, Subject> responseCache;
   private SubjectByIdResponseResolver converter;
 
   @Before
   public void setup() {
     initMocks(this);
-    converter = new SubjectByIdResponseResolver(subjectResolver);
+    responseCache = new HashMap<>();
+    converter = new SubjectByIdResponseResolver(subjectResolver, responseCache);
   }
 
   @Test
-  public void testConvertSubject() {
+  public void testConvertCachedSubject() {
+    UUID id = UUID.randomUUID();
+    Subject model = Subject.builder().build();
+    responseCache.put(id, model);
+
+    assertSame(model, converter.apply(id));
+    verifyNoInteractions(subjectResolver);
+  }
+
+  @Test
+  public void testConvertUncachedSubject() {
     UUID id = UUID.randomUUID();
     Subject model = Subject.builder().build();
 
@@ -38,7 +51,7 @@ public class SubjectByIdResponseResolverTest {
   }
 
   @Test
-  public void testConvertSubjectNotAvailable() {
+  public void testConvertUncachedSubjectNotAvailable() {
     UUID id = UUID.randomUUID();
     Subject model = converter.apply(id);
 

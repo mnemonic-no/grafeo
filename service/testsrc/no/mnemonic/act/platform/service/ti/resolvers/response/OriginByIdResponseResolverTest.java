@@ -8,6 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -21,16 +23,29 @@ public class OriginByIdResponseResolverTest {
   @Mock
   private OriginResponseConverter originResponseConverter;
 
+  private Map<UUID, Origin> responseCache;
   private OriginByIdResponseResolver converter;
 
   @Before
   public void setup() {
     initMocks(this);
-    converter = new OriginByIdResponseResolver(originResolver, originResponseConverter);
+    responseCache = new HashMap<>();
+    converter = new OriginByIdResponseResolver(originResolver, originResponseConverter, responseCache);
   }
 
   @Test
-  public void testConvertOrigin() {
+  public void testConvertCachedOrigin() {
+    UUID id = UUID.randomUUID();
+    Origin model = Origin.builder().build();
+    responseCache.put(id, model);
+
+    assertSame(model, converter.apply(id));
+    verifyNoInteractions(originResolver);
+    verifyNoInteractions(originResponseConverter);
+  }
+
+  @Test
+  public void testConvertUncachedOrigin() {
     UUID id = UUID.randomUUID();
     OriginEntity entity = new OriginEntity();
     Origin model = Origin.builder().build();
@@ -44,7 +59,7 @@ public class OriginByIdResponseResolverTest {
   }
 
   @Test
-  public void testConvertOriginNotAvailable() {
+  public void testConvertUncachedOriginNotAvailable() {
     UUID id = UUID.randomUUID();
     Origin model = converter.apply(id);
 
@@ -53,7 +68,7 @@ public class OriginByIdResponseResolverTest {
     assertEquals("N/A", model.getName());
 
     verify(originResolver).apply(id);
-    verifyZeroInteractions(originResponseConverter);
+    verifyNoInteractions(originResponseConverter);
   }
 
   @Test

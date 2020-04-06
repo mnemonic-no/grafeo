@@ -8,6 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -21,16 +23,29 @@ public class FactTypeByIdResponseResolverTest {
   @Mock
   private FactTypeResponseConverter factTypeResponseConverter;
 
+  private Map<UUID, FactType> responseCache;
   private FactTypeByIdResponseResolver converter;
 
   @Before
   public void setup() {
     initMocks(this);
-    converter = new FactTypeByIdResponseResolver(factManager, factTypeResponseConverter);
+    responseCache = new HashMap<>();
+    converter = new FactTypeByIdResponseResolver(factManager, factTypeResponseConverter, responseCache);
   }
 
   @Test
-  public void testConvertFactType() {
+  public void testConvertCachedFactType() {
+    UUID id = UUID.randomUUID();
+    FactType model = FactType.builder().build();
+    responseCache.put(id, model);
+
+    assertSame(model, converter.apply(id));
+    verifyNoInteractions(factManager);
+    verifyNoInteractions(factTypeResponseConverter);
+  }
+
+  @Test
+  public void testConvertUncachedFactType() {
     UUID id = UUID.randomUUID();
     FactTypeEntity entity = new FactTypeEntity();
     FactType model = FactType.builder().build();
@@ -44,7 +59,7 @@ public class FactTypeByIdResponseResolverTest {
   }
 
   @Test
-  public void testConvertFactTypeNotAvailable() {
+  public void testConvertUncachedFactTypeNotAvailable() {
     UUID id = UUID.randomUUID();
     FactType model = converter.apply(id);
 
@@ -53,7 +68,7 @@ public class FactTypeByIdResponseResolverTest {
     assertEquals("N/A", model.getName());
 
     verify(factManager).getFactType(id);
-    verifyZeroInteractions(factTypeResponseConverter);
+    verifyNoInteractions(factTypeResponseConverter);
   }
 
   @Test
