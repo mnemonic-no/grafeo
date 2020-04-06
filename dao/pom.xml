@@ -126,12 +126,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Force a newer version of netty (used by Cassandra driver) in order to fix vulnerability warnings. -->
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-handler</artifactId>
-      <version>${netty.version}</version>
-    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>

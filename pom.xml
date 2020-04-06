@@ -41,32 +41,31 @@
     <jdk.version>1.8</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.3.4</mnemonic.commons.version>
-    <mnemonic.messaging.version>1.2.23</mnemonic.messaging.version>
+    <mnemonic.commons.version>0.3.5</mnemonic.commons.version>
+    <mnemonic.messaging.version>1.2.24</mnemonic.messaging.version>
     <mnemonic.services.common.version>0.3.18</mnemonic.services.common.version>
     <mnemonic.services.triggers.version>0.0.10</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
-    <activemq.version>5.15.11</activemq.version>
-    <cassandra.version>4.4.0</cassandra.version>
+    <activemq.version>5.15.12</activemq.version>
+    <cassandra.version>4.5.1</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
-    <elastic.search.version>6.8.6</elastic.search.version>
+    <elastic.search.version>6.8.8</elastic.search.version>
     <guava.version>28.2-jre</guava.version>
-    <guice.version>4.2.2</guice.version>
+    <guice.version>4.2.3</guice.version>
     <hibernate.validator.version>6.1.2.Final</hibernate.validator.version>
-    <jackson.version>2.10.2</jackson.version>
+    <jackson.version>2.10.3</jackson.version>
     <javax.el.version>3.0.1-b11</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
-    <jetty.version>9.4.26.v20200117</jetty.version>
+    <jetty.version>9.4.27.v20200227</jetty.version>
     <junit.version>4.13</junit.version>
-    <log4j.version>2.13.0</log4j.version>
-    <mockito.version>3.2.4</mockito.version>
-    <netty.version>4.1.45.Final</netty.version>
-    <resteasy.version>4.4.2.Final</resteasy.version>
-    <swagger.version>1.6.0</swagger.version>
-    <tinkerpop.version>3.4.5</tinkerpop.version>
+    <log4j.version>2.13.1</log4j.version>
+    <mockito.version>3.3.3</mockito.version>
+    <resteasy.version>4.5.3.Final</resteasy.version>
+    <swagger.version>1.6.1</swagger.version>
+    <tinkerpop.version>3.4.6</tinkerpop.version>
 
     <!-- build dependencies -->
     <maven.assembly.version>3.1.1</maven.assembly.version>
