@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
+import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
@@ -19,7 +20,6 @@ import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConve
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -51,6 +51,19 @@ public class FactRetractDelegateTest {
   @Mock
   private TriggerContext triggerContext;
 
+  private final OriginEntity origin = new OriginEntity()
+          .setId(UUID.randomUUID())
+          .setName("origin")
+          .setTrust(0.1f);
+  private final Organization organization = Organization.builder()
+          .setId(UUID.randomUUID())
+          .setName("organization")
+          .build();
+  private final Subject subject = Subject.builder()
+          .setId(UUID.randomUUID())
+          .setName("subject")
+          .build();
+
   private FactRetractDelegate delegate;
 
   @Before
@@ -60,10 +73,10 @@ public class FactRetractDelegateTest {
             securityContext,
             triggerContext,
             objectFactDao,
-      factTypeRequestResolver,
-      factRequestResolver,
-      factCreateHandler,
-      factResponseConverter
+            factTypeRequestResolver,
+            factRequestResolver,
+            factCreateHandler,
+            factResponseConverter
     );
   }
 
@@ -78,7 +91,7 @@ public class FactRetractDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testRetractFactWithoutAddPermission() throws Exception {
     RetractFactRequest request = mockRetractingFact();
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.addFactObjects, request.getOrganization());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.addFactObjects, organization.getId());
 
     delegate.handle(request);
   }
@@ -96,35 +109,31 @@ public class FactRetractDelegateTest {
 
   @Test
   public void testRetractFactSetMissingOrganization() throws Exception {
-    UUID organizationID = UUID.randomUUID();
     RetractFactRequest request = mockRetractingFact().setOrganization(null);
 
-    when(factCreateHandler.resolveOrganization(isNull(), notNull()))
-            .thenReturn(Organization.builder().setId(organizationID).build());
+    when(factCreateHandler.resolveOrganization(isNull(), notNull())).thenReturn(organization);
 
     Fact fact = delegate.handle(request);
 
     verify(objectFactDao).storeFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && organizationID.equals(e.getOrganizationID())));
+            && Objects.equals(organization.getId(), e.getOrganizationID())));
     verify(factResponseConverter).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && organizationID.equals(e.getOrganizationID())));
+            && Objects.equals(organization.getId(), e.getOrganizationID())));
   }
 
   @Test
   public void testRetractFactSetMissingOrigin() throws Exception {
-    UUID originID = UUID.randomUUID();
     RetractFactRequest request = mockRetractingFact().setOrigin(null);
 
-    when(factCreateHandler.resolveOrigin(isNull())).thenReturn(new OriginEntity().setId(originID));
-    when(factCreateHandler.resolveOrganization(notNull(), notNull()))
-            .thenReturn(Organization.builder().setId(request.getOrganization()).build());
+    when(factCreateHandler.resolveOrigin(isNull())).thenReturn(origin);
+    when(factCreateHandler.resolveOrganization(notNull(), notNull())).thenReturn(organization);
 
     Fact fact = delegate.handle(request);
 
     verify(objectFactDao).storeFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && originID.equals(e.getOriginID())));
+            && Objects.equals(origin.getId(), e.getOriginID())));
     verify(factResponseConverter).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && originID.equals(e.getOriginID())));
+            && Objects.equals(origin.getId(), e.getOriginID())));
   }
 
   @Test
@@ -161,7 +170,7 @@ public class FactRetractDelegateTest {
 
     verify(objectFactDao).storeFact(argThat(record -> {
       assertEquals(set(record.getComments(), FactCommentRecord::getComment), set(request.getComment()));
-      assertTrue(list(record.getAcl(), FactAclEntryRecord::getSubjectID).containsAll(request.getAcl()));
+      assertTrue(list(record.getAcl(), FactAclEntryRecord::getSubjectID).contains(subject.getId()));
       return true;
     }));
   }
@@ -186,14 +195,6 @@ public class FactRetractDelegateTest {
   private RetractFactRequest mockRetractingFact() throws Exception {
     RetractFactRequest request = createRetractRequest();
 
-    OriginEntity origin = new OriginEntity()
-            .setId(request.getOrigin())
-            .setName("origin")
-            .setTrust(0.1f);
-    Organization organization = Organization.builder()
-            .setId(request.getOrganization())
-            .setName("organization")
-            .build();
     FactTypeEntity retractionFactType = new FactTypeEntity()
             .setId(UUID.randomUUID())
             .setName("retractionFact")
@@ -203,8 +204,9 @@ public class FactRetractDelegateTest {
             .setAccessMode(FactRecord.AccessMode.RoleBased);
 
     when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(factCreateHandler.resolveOrigin(request.getOrigin())).thenReturn(origin);
-    when(factCreateHandler.resolveOrganization(request.getOrganization(), origin)).thenReturn(organization);
+    when(factCreateHandler.resolveOrigin(origin.getName())).thenReturn(origin);
+    when(factCreateHandler.resolveOrganization(organization.getName(), origin)).thenReturn(organization);
+    when(factCreateHandler.resolveSubjects(notNull())).thenReturn(list(subject));
 
     when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
     // Mock fetching of Fact to retract.
@@ -230,12 +232,12 @@ public class FactRetractDelegateTest {
   private RetractFactRequest createRetractRequest() {
     return new RetractFactRequest()
             .setFact(UUID.randomUUID())
-            .setOrganization(UUID.randomUUID())
-            .setOrigin(UUID.randomUUID())
+            .setOrganization(organization.getName())
+            .setOrigin(origin.getName())
             .setConfidence(0.3f)
             .setComment("Hello World!")
             .setAccessMode(AccessMode.Explicit)
-            .setAcl(ListUtils.list(UUID.randomUUID()));
+            .addAcl(subject.getName());
   }
 
   private FactRecord matchFactRecord(RetractFactRequest request) {
@@ -248,9 +250,9 @@ public class FactRetractDelegateTest {
       assertNotNull(record.getId());
       assertNotNull(record.getTypeID());
       assertEquals(request.getFact(), record.getInReferenceToID());
-      assertEquals(request.getOrganization(), record.getOrganizationID());
+      assertEquals(organization.getId(), record.getOrganizationID());
       assertNotNull(record.getAddedByID());
-      assertEquals(request.getOrigin(), record.getOriginID());
+      assertEquals(origin.getId(), record.getOriginID());
       assertTrue(record.getTrust() > 0.0);
       assertEquals(request.getConfidence(), record.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), record.getAccessMode().name());

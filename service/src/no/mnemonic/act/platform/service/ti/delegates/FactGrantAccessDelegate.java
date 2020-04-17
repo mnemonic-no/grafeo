@@ -5,7 +5,9 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.AclEntry;
+import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.GrantFactAccessRequest;
+import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -14,6 +16,7 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.AclEntryResponseConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
@@ -24,16 +27,19 @@ public class FactGrantAccessDelegate implements Delegate {
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
   private final FactRequestResolver factRequestResolver;
+  private final SubjectResolver subjectResolver;
   private final AclEntryResponseConverter aclEntryResponseConverter;
 
   @Inject
   public FactGrantAccessDelegate(TiSecurityContext securityContext,
                                  ObjectFactDao objectFactDao,
                                  FactRequestResolver factRequestResolver,
+                                 SubjectResolver subjectResolver,
                                  AclEntryResponseConverter aclEntryResponseConverter) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.factRequestResolver = factRequestResolver;
+    this.subjectResolver = subjectResolver;
     this.aclEntryResponseConverter = aclEntryResponseConverter;
   }
 
@@ -51,10 +57,25 @@ public class FactGrantAccessDelegate implements Delegate {
               .addValidationError("Cannot grant explicit access to a public Fact.", "fact.is.public", "fact", request.getFact().toString());
     }
 
+    UUID subjectID = resolveSubjectID(request.getSubject());
     // Return an existing ACL entry or create a new entry for requested Subject.
-    FactAclEntryRecord aclEntry = ObjectUtils.ifNull(findExistingAclEntry(fact, request.getSubject()), () -> saveNewAclEntry(fact, request.getSubject()));
+    FactAclEntryRecord aclEntry = ObjectUtils.ifNull(findExistingAclEntry(fact, subjectID), () -> saveNewAclEntry(fact, subjectID));
 
     return aclEntryResponseConverter.apply(aclEntry);
+  }
+
+  private UUID resolveSubjectID(String idOrName) throws InvalidArgumentException {
+    Subject subject;
+    if (StringUtils.isUUID(idOrName)) {
+      subject = subjectResolver.resolveSubject(UUID.fromString(idOrName));
+    } else {
+      subject = subjectResolver.resolveSubject(idOrName);
+    }
+
+    if (subject != null) return subject.getId();
+
+    throw new InvalidArgumentException()
+            .addValidationError("Subject does not exist.", "subject.not.exist", "subject", idOrName);
   }
 
   private FactAclEntryRecord findExistingAclEntry(FactRecord fact, UUID subject) {

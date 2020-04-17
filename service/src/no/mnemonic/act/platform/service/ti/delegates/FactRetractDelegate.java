@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
+import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -20,6 +21,7 @@ import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
 import java.util.UUID;
@@ -98,7 +100,7 @@ public class FactRetractDelegate implements Delegate {
             .setAccessMode(factCreateHandler.resolveAccessMode(factToRetract, request.getAccessMode()))
             .setTimestamp(System.currentTimeMillis())
             .setLastSeenTimestamp(System.currentTimeMillis());
-    retractionFact = withAcl(retractionFact, securityContext.getCurrentUserID(), request.getAcl());
+    retractionFact = withAcl(retractionFact, securityContext.getCurrentUserID(), ListUtils.list(factCreateHandler.resolveSubjects(request.getAcl()), Subject::getId));
     retractionFact = withComment(retractionFact, request.getComment());
 
     return objectFactDao.storeFact(retractionFact);

@@ -114,9 +114,7 @@ public class FactIT extends AbstractIT {
 
     // Create a Fact with ACL and a comment via the REST API ...
     CreateFactRequest request = createCreateFactRequest(objectType, factType)
-            .addAcl(UUID.randomUUID())
-            .addAcl(UUID.randomUUID())
-            .addAcl(UUID.randomUUID())
+            .addAcl("Max Mustermann")
             .setComment("Hello World!");
     Response response = request("/v1/fact").post(Entity.json(request));
     assertEquals(201, response.getStatus());
@@ -206,9 +204,7 @@ public class FactIT extends AbstractIT {
 
     // Create a meta Fact with ACL and a comment via the REST API ...
     CreateMetaFactRequest request = createCreateMetaFactRequest(metaFactType)
-            .addAcl(UUID.randomUUID())
-            .addAcl(UUID.randomUUID())
-            .addAcl(UUID.randomUUID())
+            .addAcl("00000000-0000-0000-0000-000000000002")
             .setComment("Hello World!");
     Response response = request("/v1/fact/uuid/" + referencedFact.getId() + "/meta").post(Entity.json(request));
     assertEquals(201, response.getStatus());
@@ -355,7 +351,7 @@ public class FactIT extends AbstractIT {
     // Create a Fact via the REST API ...
     CreateFactRequest request = createCreateFactRequest()
             .setAccessMode(AccessMode.Explicit)
-            .addAcl(UUID.fromString("00000000-0000-0000-0000-000000000002"));
+            .addAcl("00000000-0000-0000-0000-000000000002");
     Response response = request("/v1/fact", 1).post(Entity.json(request));
     assertEquals(201, response.getStatus());
     UUID factID = getIdFromModel(getPayload(response));

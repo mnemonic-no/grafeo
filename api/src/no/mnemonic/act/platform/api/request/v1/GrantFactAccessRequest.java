@@ -10,7 +10,7 @@ public class GrantFactAccessRequest implements ValidatingRequest {
   @ServiceNotNull
   private UUID fact;
   @ServiceNotNull
-  private UUID subject;
+  private String subject;
 
   public UUID getFact() {
     return fact;
@@ -21,11 +21,11 @@ public class GrantFactAccessRequest implements ValidatingRequest {
     return this;
   }
 
-  public UUID getSubject() {
+  public String getSubject() {
     return subject;
   }
 
-  public GrantFactAccessRequest setSubject(UUID subject) {
+  public GrantFactAccessRequest setSubject(String subject) {
     this.subject = subject;
     return this;
   }

@@ -153,9 +153,9 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFieldParsingErrorReturns412() throws Exception {
-    Response response = target("/v1/fact").request().post(Entity.json("{\"origin\" : \"something\"}"));
+    Response response = target("/v1/fact/uuid/123e4567-e89b-12d3-a456-426655440000/comments").request().post(Entity.json("{\"replyTo\" : \"something\"}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "origin", "something");
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "replyTo", "something");
   }
 
   @Test
@@ -181,9 +181,9 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFieldParsingErrorWithWrongArrayValueReturns412() throws Exception {
-    Response response = target("/v1/fact").request().post(Entity.json("{\"acl\" : [\"something\"]}"));
+    Response response = target("/v1/fact/search").request().post(Entity.json("{\"objectID\" : [\"something\"]}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "acl[0]", "something");
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "objectID[0]", "something");
   }
 
   @Test

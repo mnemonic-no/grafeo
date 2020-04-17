@@ -148,7 +148,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     when(getTiService().grantFactAccess(any(), isA(GrantFactAccessRequest.class))).then(i -> {
       GrantFactAccessRequest request = i.getArgument(1);
       assertEquals(fact, request.getFact());
-      assertEquals(subject, request.getSubject());
+      assertEquals(subject.toString(), request.getSubject());
       return AclEntry.builder().setId(entry).build();
     });
 

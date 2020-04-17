@@ -14,33 +14,30 @@ public class CreateFactRequestTest extends AbstractRequestTest {
 
   @Test
   public void testDecodeRequest() throws Exception {
-    UUID organization = UUID.randomUUID();
-    UUID origin = UUID.randomUUID();
-    UUID acl = UUID.randomUUID();
     UUID objectID = UUID.randomUUID();
     String json = String.format("{" +
             "type : 'factType'," +
             "value : 'factValue'," +
-            "organization : '%s'," +
-            "origin : '%s'," +
+            "organization : 'organization'," +
+            "origin : 'origin'," +
             "confidence : 0.1," +
             "accessMode : 'Explicit'," +
             "comment : 'comment'," +
-            "acl : ['%s']," +
+            "acl : ['subject']," +
             "sourceObject : 'type/value'," +
             "destinationObject : '%s'," +
             "bidirectionalBinding : true" +
-            "}", organization, origin, acl, objectID);
+            "}", objectID);
 
     CreateFactRequest request = getMapper().readValue(json, CreateFactRequest.class);
     assertEquals("factType", request.getType());
     assertEquals("factValue", request.getValue());
-    assertEquals(organization, request.getOrganization());
-    assertEquals(origin, request.getOrigin());
+    assertEquals("organization", request.getOrganization());
+    assertEquals("origin", request.getOrigin());
     assertEquals(0.1f, request.getConfidence(), 0.0);
     assertEquals(AccessMode.Explicit, request.getAccessMode());
     assertEquals("comment", request.getComment());
-    assertEquals(ListUtils.list(acl), request.getAcl());
+    assertEquals(ListUtils.list("subject"), request.getAcl());
     assertEquals("type/value", request.getSourceObject());
     assertEquals(objectID, UUID.fromString(request.getDestinationObject()));
     assertTrue(request.isBidirectionalBinding());

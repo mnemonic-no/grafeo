@@ -27,12 +27,12 @@ public class CreateMetaFactRequest implements ValidatingRequest {
   private String type;
   @ApiModelProperty(value = "Value of new meta Fact (can be empty if allowed by FactType)", example = "2016-09-28T21:26:22Z")
   private String value;
-  @ApiModelProperty(value = "Set owner of new meta Fact. If not set the Origin's organization will be used (takes Organization UUID)",
+  @ApiModelProperty(value = "Set owner of new meta Fact. If not set the Origin's organization will be used (takes Organization UUID or name)",
           example = "123e4567-e89b-12d3-a456-426655440000")
-  private UUID organization;
-  @ApiModelProperty(value = "Set Origin of new meta Fact. If not set the current user will be used as Origin (takes Origin UUID)",
+  private String organization;
+  @ApiModelProperty(value = "Set Origin of new meta Fact. If not set the current user will be used as Origin (takes Origin UUID or name)",
           example = "123e4567-e89b-12d3-a456-426655440000")
-  private UUID origin;
+  private String origin;
   @ApiModelProperty(value = "Set confidence of new meta Fact. If not set the FactType's default confidence will be used " +
           "(value between 0.0 and 1.0)", example = "0.9")
   @JsonDeserialize(using = RoundingFloatDeserializer.class)
@@ -43,8 +43,8 @@ public class CreateMetaFactRequest implements ValidatingRequest {
   private AccessMode accessMode;
   @ApiModelProperty(value = "If set adds a comment to new meta Fact", example = "Hello World!")
   private String comment;
-  @ApiModelProperty(value = "If set defines explicitly who has access to new meta Fact (takes Subject UUIDs)")
-  private List<UUID> acl;
+  @ApiModelProperty(value = "If set defines explicitly who has access to new meta Fact (takes Subject UUIDs or names)")
+  private List<String> acl;
 
   public UUID getFact() {
     return fact;
@@ -73,20 +73,20 @@ public class CreateMetaFactRequest implements ValidatingRequest {
     return this;
   }
 
-  public UUID getOrganization() {
+  public String getOrganization() {
     return organization;
   }
 
-  public CreateMetaFactRequest setOrganization(UUID organization) {
+  public CreateMetaFactRequest setOrganization(String organization) {
     this.organization = organization;
     return this;
   }
 
-  public UUID getOrigin() {
+  public String getOrigin() {
     return origin;
   }
 
-  public CreateMetaFactRequest setOrigin(UUID origin) {
+  public CreateMetaFactRequest setOrigin(String origin) {
     this.origin = origin;
     return this;
   }
@@ -118,16 +118,16 @@ public class CreateMetaFactRequest implements ValidatingRequest {
     return this;
   }
 
-  public List<UUID> getAcl() {
+  public List<String> getAcl() {
     return acl;
   }
 
-  public CreateMetaFactRequest setAcl(List<UUID> acl) {
+  public CreateMetaFactRequest setAcl(List<String> acl) {
     this.acl = ObjectUtils.ifNotNull(acl, ListUtils::list);
     return this;
   }
 
-  public CreateMetaFactRequest addAcl(UUID acl) {
+  public CreateMetaFactRequest addAcl(String acl) {
     this.acl = ListUtils.addToList(this.acl, acl);
     return this;
   }

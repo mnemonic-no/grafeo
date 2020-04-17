@@ -12,7 +12,6 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
-import java.util.UUID;
 
 @ApiModel(description = "Create a new Fact.")
 public class CreateFactRequest implements ValidatingRequest {
@@ -23,12 +22,12 @@ public class CreateFactRequest implements ValidatingRequest {
   private String type;
   @ApiModelProperty(value = "Value of new Fact (can be empty if allowed by FactType)", example = "APT28")
   private String value;
-  @ApiModelProperty(value = "Set owner of new Fact. If not set the Origins's organization will be used (takes Organization UUID)",
+  @ApiModelProperty(value = "Set owner of new Fact. If not set the Origins's organization will be used (takes Organization UUID or name)",
           example = "123e4567-e89b-12d3-a456-426655440000")
-  private UUID organization;
-  @ApiModelProperty(value = "Set Origin of new Fact. If not set the current user will be used as Origin (takes Origin UUID)",
+  private String organization;
+  @ApiModelProperty(value = "Set Origin of new Fact. If not set the current user will be used as Origin (takes Origin UUID or name)",
           example = "123e4567-e89b-12d3-a456-426655440000")
-  private UUID origin;
+  private String origin;
   @ApiModelProperty(value = "Set confidence of new Fact. If not set the FactType's default confidence will be used " +
           "(value between 0.0 and 1.0)", example = "0.9")
   @JsonDeserialize(using = RoundingFloatDeserializer.class)
@@ -39,8 +38,8 @@ public class CreateFactRequest implements ValidatingRequest {
   private AccessMode accessMode = AccessMode.RoleBased;
   @ApiModelProperty(value = "If set adds a comment to new Fact", example = "Hello World!")
   private String comment;
-  @ApiModelProperty(value = "If set defines explicitly who has access to new Fact (takes Subject UUIDs)")
-  private List<UUID> acl;
+  @ApiModelProperty(value = "If set defines explicitly who has access to new Fact (takes Subject UUIDs or names)")
+  private List<String> acl;
   @ApiModelProperty(value = "Set Object which is linked to new Fact as source (takes Object UUID or Object identified by 'type/value')",
           example = "ThreatActor/Sofacy")
   private String sourceObject;
@@ -68,20 +67,20 @@ public class CreateFactRequest implements ValidatingRequest {
     return this;
   }
 
-  public UUID getOrganization() {
+  public String getOrganization() {
     return organization;
   }
 
-  public CreateFactRequest setOrganization(UUID organization) {
+  public CreateFactRequest setOrganization(String organization) {
     this.organization = organization;
     return this;
   }
 
-  public UUID getOrigin() {
+  public String getOrigin() {
     return origin;
   }
 
-  public CreateFactRequest setOrigin(UUID origin) {
+  public CreateFactRequest setOrigin(String origin) {
     this.origin = origin;
     return this;
   }
@@ -113,16 +112,16 @@ public class CreateFactRequest implements ValidatingRequest {
     return this;
   }
 
-  public List<UUID> getAcl() {
+  public List<String> getAcl() {
     return acl;
   }
 
-  public CreateFactRequest setAcl(List<UUID> acl) {
+  public CreateFactRequest setAcl(List<String> acl) {
     this.acl = ObjectUtils.ifNotNull(acl, ListUtils::list);
     return this;
   }
 
-  public CreateFactRequest addAcl(UUID acl) {
+  public CreateFactRequest addAcl(String acl) {
     this.acl = ListUtils.addToList(this.acl, acl);
     return this;
   }

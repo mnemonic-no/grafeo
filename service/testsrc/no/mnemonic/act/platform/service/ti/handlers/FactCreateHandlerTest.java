@@ -19,7 +19,6 @@ import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -27,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,8 +47,6 @@ public class FactCreateHandlerTest {
   @Mock
   private OrganizationResolver organizationResolver;
   @Mock
-  private OriginResolver originResolver;
-  @Mock
   private OriginManager originManager;
   @Mock
   private ValidatorFactory validatorFactory;
@@ -64,22 +62,32 @@ public class FactCreateHandlerTest {
   @Before
   public void setUp() {
     initMocks(this);
-    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originResolver, originManager, validatorFactory, objectFactDao, factResponseConverter, triggerContext);
+    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originManager, validatorFactory, objectFactDao, factResponseConverter, triggerContext);
   }
 
   @Test(expected = InvalidArgumentException.class)
   public void testResolveOrganizationProvidedOrganizationNotExists() throws Exception {
-    handler.resolveOrganization(UUID.randomUUID(), null);
+    handler.resolveOrganization("organization", null);
   }
 
   @Test
-  public void testResolveOrganizationProvidedFetchesExistingOrganization() throws Exception {
+  public void testResolveOrganizationProvidedFetchesExistingOrganizationById() throws Exception {
     UUID organizationID = UUID.randomUUID();
     Organization organization = Organization.builder().build();
     when(organizationResolver.resolveOrganization(organizationID)).thenReturn(organization);
 
-    assertSame(organization, handler.resolveOrganization(organizationID, null));
+    assertSame(organization, handler.resolveOrganization(organizationID.toString(), null));
     verify(organizationResolver).resolveOrganization(organizationID);
+    verify(securityContext).checkReadPermission(organization);
+  }
+
+  @Test
+  public void testResolveOrganizationProvidedFetchesExistingOrganizationByName() throws Exception {
+    Organization organization = Organization.builder().build();
+    when(organizationResolver.resolveOrganization("organization")).thenReturn(organization);
+
+    assertSame(organization, handler.resolveOrganization("organization", null));
+    verify(organizationResolver).resolveOrganization("organization");
     verify(securityContext).checkReadPermission(organization);
   }
 
@@ -118,19 +126,30 @@ public class FactCreateHandlerTest {
 
   @Test(expected = InvalidArgumentException.class)
   public void testResolveOriginProvidedOriginNotExists() throws Exception {
-    handler.resolveOrigin(UUID.randomUUID());
+    handler.resolveOrigin("origin");
   }
 
   @Test
-  public void testResolveOriginProvidedFetchesExistingOrigin() throws Exception {
+  public void testResolveOriginProvidedFetchesExistingOriginById() throws Exception {
     UUID originID = UUID.randomUUID();
     OriginEntity origin = new OriginEntity().setId(originID);
-    when(originResolver.apply(originID)).thenReturn(origin);
+    when(originManager.getOrigin(originID)).thenReturn(origin);
 
-    assertSame(origin, handler.resolveOrigin(originID));
-    verify(originResolver).apply(originID);
+    assertSame(origin, handler.resolveOrigin(originID.toString()));
+    verify(originManager).getOrigin(originID);
     verify(securityContext).checkReadPermission(origin);
-    verifyNoInteractions(originManager);
+    verifyNoMoreInteractions(originManager);
+  }
+
+  @Test
+  public void testResolveOriginProvidedFetchesExistingOriginByName() throws Exception {
+    OriginEntity origin = new OriginEntity();
+    when(originManager.getOrigin("origin")).thenReturn(origin);
+
+    assertSame(origin, handler.resolveOrigin("origin"));
+    verify(originManager).getOrigin("origin");
+    verify(securityContext).checkReadPermission(origin);
+    verifyNoMoreInteractions(originManager);
   }
 
   @Test(expected = InvalidArgumentException.class)
@@ -139,9 +158,9 @@ public class FactCreateHandlerTest {
     OriginEntity origin = new OriginEntity()
             .setId(originID)
             .addFlag(OriginEntity.Flag.Deleted);
-    when(originResolver.apply(originID)).thenReturn(origin);
+    when(originManager.getOrigin(originID)).thenReturn(origin);
 
-    handler.resolveOrigin(originID);
+    handler.resolveOrigin(originID.toString());
   }
 
   @Test
@@ -149,11 +168,11 @@ public class FactCreateHandlerTest {
     UUID currentUserID = UUID.randomUUID();
     OriginEntity origin = new OriginEntity().setId(currentUserID);
     when(securityContext.getCurrentUserID()).thenReturn(currentUserID);
-    when(originResolver.apply(currentUserID)).thenReturn(origin);
+    when(originManager.getOrigin(currentUserID)).thenReturn(origin);
 
     assertSame(origin, handler.resolveOrigin(null));
-    verify(originResolver).apply(currentUserID);
-    verifyNoInteractions(originManager);
+    verify(originManager).getOrigin(currentUserID);
+    verifyNoMoreInteractions(originManager);
   }
 
   @Test(expected = InvalidArgumentException.class)
@@ -163,7 +182,7 @@ public class FactCreateHandlerTest {
             .setId(currentUserID)
             .addFlag(OriginEntity.Flag.Deleted);
     when(securityContext.getCurrentUserID()).thenReturn(currentUserID);
-    when(originResolver.apply(currentUserID)).thenReturn(origin);
+    when(originManager.getOrigin(currentUserID)).thenReturn(origin);
 
     handler.resolveOrigin(null);
   }
@@ -182,7 +201,7 @@ public class FactCreateHandlerTest {
     when(originManager.saveOrigin(notNull())).thenReturn(newOrigin);
 
     assertSame(newOrigin, handler.resolveOrigin(null));
-    verify(originResolver).apply(currentUserID);
+    verify(originManager).getOrigin(currentUserID);
     verify(subjectResolver).resolveSubject(currentUserID);
     verify(originManager).saveOrigin(argThat(entity -> {
       assertEquals(currentUserID, entity.getId());
@@ -217,6 +236,34 @@ public class FactCreateHandlerTest {
       assertTrue(entity.getName().startsWith(currentUser.getName()));
       return true;
     }));
+  }
+
+  @Test
+  public void testResolveSubjectsWithoutAcl() throws Exception {
+    assertNotNull(handler.resolveSubjects(null));
+    assertNotNull(handler.resolveSubjects(new ArrayList<>()));
+  }
+
+  @Test
+  public void testResolveSubjectsByIdOrName() throws Exception {
+    when(subjectResolver.resolveSubject(isA(UUID.class))).thenReturn(Subject.builder().build());
+    when(subjectResolver.resolveSubject(isA(String.class))).thenReturn(Subject.builder().build());
+
+    List<String> acl = list(UUID.randomUUID().toString(), "name", UUID.randomUUID().toString());
+    assertEquals(acl.size(), handler.resolveSubjects(acl).size());
+    verify(subjectResolver, times(2)).resolveSubject(isA(UUID.class));
+    verify(subjectResolver).resolveSubject("name");
+  }
+
+  @Test
+  public void testResolveSubjectsFailsOnUnresolved() {
+    when(subjectResolver.resolveSubject(isA(String.class))).thenReturn(Subject.builder().build());
+
+    List<String> acl = list(UUID.randomUUID().toString(), "name", UUID.randomUUID().toString());
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> handler.resolveSubjects(acl));
+    assertEquals(set("acl[0]", "acl[2]"), set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getProperty));
+    verify(subjectResolver, times(2)).resolveSubject(isA(UUID.class));
+    verify(subjectResolver).resolveSubject("name");
   }
 
   @Test
@@ -258,16 +305,16 @@ public class FactCreateHandlerTest {
     when(validatorFactory.get(factType.getValidator(), factType.getValidatorParameter())).thenReturn(validator);
 
     InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
-      () -> handler.assertValidFactValue(factType, "test"));
+            () -> handler.assertValidFactValue(factType, "test"));
     assertEquals(SetUtils.set("fact.not.valid"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 
   @Test
   public void testSaveNewFact() {
     FactRecord factToSave = new FactRecord()
-      .setId(UUID.randomUUID())
-      .setAccessMode(FactRecord.AccessMode.RoleBased)
-      .setOrganizationID(UUID.randomUUID());
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.RoleBased)
+            .setOrganizationID(UUID.randomUUID());
     mockSaveFact();
 
     List<UUID> subjectIds = list(UUID.randomUUID());
@@ -287,18 +334,18 @@ public class FactCreateHandlerTest {
   @Test
   public void testRefreshExistingFact() {
     FactRecord factToSave = new FactRecord()
-      .setId(UUID.randomUUID())
-      .setAccessMode(FactRecord.AccessMode.Public)
-      .setOrganizationID(UUID.randomUUID());
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.Public)
+            .setOrganizationID(UUID.randomUUID());
     mockSaveFact();
 
     // Mock fetching of existing Fact.
     FactRecord existingFact = new FactRecord()
-      .setId(UUID.randomUUID())
-      .setAccessMode(FactRecord.AccessMode.RoleBased)
-      .setOrganizationID(UUID.randomUUID());
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.RoleBased)
+            .setOrganizationID(UUID.randomUUID());
     when(objectFactDao.retrieveExistingFacts(factToSave))
-      .thenReturn(ResultContainer.<FactRecord>builder().setValues(list(existingFact).iterator()).build());
+            .thenReturn(ResultContainer.<FactRecord>builder().setValues(list(existingFact).iterator()).build());
     when(securityContext.hasReadPermission(existingFact)).thenReturn(true);
 
     // Mock stuff needed for refreshing Fact.
@@ -321,9 +368,9 @@ public class FactCreateHandlerTest {
   @Test
   public void testSaveFactRegisterTriggerEvent() {
     FactRecord fact = new FactRecord()
-      .setId(UUID.randomUUID())
-      .setAccessMode(FactRecord.AccessMode.Public)
-      .setOrganizationID(UUID.randomUUID());
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.Public)
+            .setOrganizationID(UUID.randomUUID());
     mockSaveFact();
 
     Fact addedFact = handler.saveFact(fact, null, null);
@@ -352,10 +399,10 @@ public class FactCreateHandlerTest {
     when(factResponseConverter.apply(any())).then(i -> {
       FactRecord record = i.getArgument(0);
       return Fact.builder()
-        .setId(record.getId())
-        .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(record.getAccessMode().name()))
-        .setOrganization(Organization.builder().setId(record.getOrganizationID()).build().toInfo())
-        .build();
+              .setId(record.getId())
+              .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(record.getAccessMode().name()))
+              .setOrganization(Organization.builder().setId(record.getOrganizationID()).build().toInfo())
+              .build();
     });
   }
 }

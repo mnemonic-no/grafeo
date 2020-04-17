@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
+import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateMetaFactRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import java.util.Objects;
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -46,6 +48,10 @@ public class FactCreateMetaDelegateTest {
           .setId(UUID.randomUUID())
           .setName("organization")
           .build();
+  private final Subject subject = Subject.builder()
+          .setId(UUID.randomUUID())
+          .setName("subject")
+          .build();
   private FactTypeEntity seenInFactType = new FactTypeEntity()
           .setId(UUID.randomUUID())
           .setName("seenIn");
@@ -66,10 +72,10 @@ public class FactCreateMetaDelegateTest {
   public void setup() {
     initMocks(this);
     delegate = new FactCreateMetaDelegate(
-      securityContext,
-      factTypeRequestResolver,
-      factRequestResolver,
-      factCreateHandler
+            securityContext,
+            factTypeRequestResolver,
+            factRequestResolver,
+            factCreateHandler
     );
   }
 
@@ -136,7 +142,7 @@ public class FactCreateMetaDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(request.getAcl()));
+    verify(factCreateHandler).saveFact(matchFactRecord(request), notNull(), notNull());
   }
 
   @Test
@@ -151,11 +157,7 @@ public class FactCreateMetaDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(
-      argThat(e -> organizationID.equals(e.getOrganizationID())),
-      eq(request.getComment()),
-      eq(request.getAcl())
-    );
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(organizationID, e.getOrganizationID())), notNull(), notNull());
   }
 
   @Test
@@ -170,11 +172,7 @@ public class FactCreateMetaDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(
-      argThat(e -> originID.equals(e.getOriginID())),
-      eq(request.getComment()),
-      eq(request.getAcl())
-    );
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(originID, e.getOriginID())), notNull(), notNull());
   }
 
   @Test
@@ -185,11 +183,7 @@ public class FactCreateMetaDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(
-      argThat(e -> Objects.equals(observationFactType.getDefaultConfidence(), e.getConfidence())),
-      eq(request.getComment()),
-      eq(request.getAcl())
-    );
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(observationFactType.getDefaultConfidence(), e.getConfidence())), notNull(), notNull());
   }
 
   @Test
@@ -202,30 +196,36 @@ public class FactCreateMetaDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(
-      argThat(e -> seenIn.getAccessMode().equals(e.getAccessMode())),
-      eq(request.getComment()),
-      eq(request.getAcl())
-    );
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(seenIn.getAccessMode(), e.getAccessMode())), notNull(), notNull());
   }
 
+  @Test
+  public void testCreateMetaFactSavesCommentAndAcl() throws Exception {
+    CreateMetaFactRequest request = createRequest();
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(list(subject.getId())));
+  }
 
   private CreateMetaFactRequest createRequest() {
     return new CreateMetaFactRequest()
             .setFact(seenIn.getId())
             .setType(observationFactType.getName())
             .setValue("today")
-            .setOrganization(organization.getId())
-            .setOrigin(origin.getId())
+            .setOrganization(organization.getName())
+            .setOrigin(origin.getName())
             .setConfidence(0.3f)
             .setAccessMode(AccessMode.Explicit)
             .setComment("Hello World!")
-            .addAcl(UUID.randomUUID());
+            .addAcl(subject.getName());
   }
 
   private void mockCreateNewFact() throws Exception {
     mockFetchingFactType();
     mockFetchingOrganization();
+    mockFetchingSubject();
 
     // Mock fetching of current user.
     when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
@@ -235,8 +235,12 @@ public class FactCreateMetaDelegateTest {
   }
 
   private void mockFetchingOrganization() throws Exception {
-    when(factCreateHandler.resolveOrigin(origin.getId())).thenReturn(origin);
-    when(factCreateHandler.resolveOrganization(organization.getId(), origin)).thenReturn(organization);
+    when(factCreateHandler.resolveOrigin(origin.getName())).thenReturn(origin);
+    when(factCreateHandler.resolveOrganization(organization.getName(), origin)).thenReturn(organization);
+  }
+
+  private void mockFetchingSubject() throws Exception {
+    when(factCreateHandler.resolveSubjects(notNull())).thenReturn(list(subject));
   }
 
   private void mockFetchingFactType() throws Exception {
@@ -249,9 +253,9 @@ public class FactCreateMetaDelegateTest {
       assertEquals(observationFactType.getId(), record.getTypeID());
       assertEquals(request.getValue(), record.getValue());
       assertEquals(request.getFact(), record.getInReferenceToID());
-      assertEquals(request.getOrganization(), record.getOrganizationID());
+      assertEquals(organization.getId(), record.getOrganizationID());
       assertNotNull(record.getAddedByID());
-      assertEquals(request.getOrigin(), record.getOriginID());
+      assertEquals(origin.getId(), record.getOriginID());
       assertEquals(origin.getTrust(), record.getTrust(), 0.0);
       assertEquals(request.getConfidence(), record.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), record.getAccessMode().name());

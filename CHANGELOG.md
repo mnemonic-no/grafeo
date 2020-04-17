@@ -19,6 +19,10 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Changed
+- (2020-04-17) In Create APIs (create Fact, create meta Fact, retract Fact) related entities (`organization`, `origin`, `acl`)
+can be specified by either UUID or name. If an entity cannot be resolved a 412 response will be returned.
+- (2020-04-17) When granting a Subject access to an existing Fact the Subject can be specified by either UUID or name.
+If the Subject cannot be resolved a 412 response will be returned.
 - (2019-11-06) If a user has the `unlimitedSearch` permission an unlimited number of results can be fetched when
 searching for Facts. Otherwise the maximum number of returned results is capped at 10.000.
 - (2019-11-04) Creating a new Fact where `source` and `destination` are the same Object will fail with a 412 response.

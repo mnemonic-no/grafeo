@@ -18,6 +18,7 @@ import no.mnemonic.commons.utilities.StringUtils;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -284,7 +285,7 @@ public class FactEndpoint {
   })
   public Response grantFactAccess(
           @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact,
-          @PathParam("subject") @ApiParam(value = "UUID of Subject.") @NotNull @Valid UUID subject,
+          @PathParam("subject") @ApiParam(value = "UUID or name of Subject.") @NotBlank String subject,
           @ApiParam(hidden = true) @Valid GrantFactAccessRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Swagger won't send a request object because it's hidden from the API, thus, make sure that it's initialized.

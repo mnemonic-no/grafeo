@@ -14,12 +14,11 @@ public class GrantFactAccessRequestTest extends AbstractRequestTest {
   @Test
   public void testDecodeRequest() throws Exception {
     UUID fact = UUID.randomUUID();
-    UUID subject = UUID.randomUUID();
-    String json = String.format("{ fact : '%s', subject : '%s' }", fact, subject);
+    String json = String.format("{ fact : '%s', subject : 'subject' }", fact);
 
     GrantFactAccessRequest request = getMapper().readValue(json, GrantFactAccessRequest.class);
     assertEquals(fact, request.getFact());
-    assertEquals(subject, request.getSubject());
+    assertEquals("subject", request.getSubject());
   }
 
   @Test
@@ -34,7 +33,7 @@ public class GrantFactAccessRequestTest extends AbstractRequestTest {
   public void testRequestValidationSucceeds() {
     assertTrue(getValidator().validate(new GrantFactAccessRequest()
             .setFact(UUID.randomUUID())
-            .setSubject(UUID.randomUUID())
+            .setSubject("subject")
     ).isEmpty());
   }
 

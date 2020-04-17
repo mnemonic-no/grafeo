@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.service.ti.delegates;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
+import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -15,7 +16,6 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectRequestResolver;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import java.util.Objects;
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -48,6 +49,10 @@ public class FactCreateDelegateTest {
   private final Organization organization = Organization.builder()
           .setId(UUID.randomUUID())
           .setName("organization")
+          .build();
+  private final Subject subject = Subject.builder()
+          .setId(UUID.randomUUID())
+          .setName("subject")
           .build();
   private final ObjectTypeEntity ipObjectType = new ObjectTypeEntity()
           .setId(UUID.randomUUID())
@@ -84,10 +89,10 @@ public class FactCreateDelegateTest {
   public void setup() {
     initMocks(this);
     delegate = new FactCreateDelegate(
-      securityContext,
-      factTypeRequestResolver,
-      objectRequestResolver,
-      factCreateHandler
+            securityContext,
+            factTypeRequestResolver,
+            objectRequestResolver,
+            factCreateHandler
     );
   }
 
@@ -182,7 +187,7 @@ public class FactCreateDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(request.getAcl()));
+    verify(factCreateHandler).saveFact(matchFactRecord(request), notNull(), notNull());
   }
 
   @Test
@@ -193,7 +198,7 @@ public class FactCreateDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(request.getAcl()));
+    verify(factCreateHandler).saveFact(matchFactRecord(request), notNull(), notNull());
   }
 
   @Test
@@ -203,7 +208,7 @@ public class FactCreateDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(request.getAcl()));
+    verify(factCreateHandler).saveFact(matchFactRecord(request), notNull(), notNull());
   }
 
   @Test
@@ -220,7 +225,7 @@ public class FactCreateDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(request.getAcl()));
+    verify(factCreateHandler).saveFact(matchFactRecord(request), notNull(), notNull());
   }
 
   @Test
@@ -235,10 +240,7 @@ public class FactCreateDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(
-      argThat(e -> organizationID.equals(e.getOrganizationID())),
-      eq(request.getComment()),
-      eq(request.getAcl()));
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(organizationID, e.getOrganizationID())), notNull(), notNull());
   }
 
   @Test
@@ -253,11 +255,7 @@ public class FactCreateDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(
-      argThat(e -> originID.equals(e.getOriginID())),
-      eq(request.getComment()),
-      eq(request.getAcl())
-    );
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(originID, e.getOriginID())), notNull(), notNull());
   }
 
   @Test
@@ -268,15 +266,22 @@ public class FactCreateDelegateTest {
 
     delegate.handle(request);
 
-    verify(factCreateHandler).saveFact(
-      argThat(e -> Objects.equals(resolveFactType.getDefaultConfidence(), e.getConfidence())),
-      eq(request.getComment()),
-      eq(request.getAcl())
-    );
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(resolveFactType.getDefaultConfidence(), e.getConfidence())), notNull(), notNull());
+  }
+
+  @Test
+  public void testCreateFactSavesCommentAndAcl() throws Exception {
+    CreateFactRequest request = createRequest();
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(list(subject.getId())));
   }
 
   private void mockCreateNewFact() throws Exception {
     mockFetchingOrganization();
+    mockFetchingSubject();
     mockFetchingFactType();
     mockFetchingObjects();
 
@@ -285,8 +290,12 @@ public class FactCreateDelegateTest {
   }
 
   private void mockFetchingOrganization() throws Exception {
-    when(factCreateHandler.resolveOrigin(origin.getId())).thenReturn(origin);
-    when(factCreateHandler.resolveOrganization(organization.getId(), origin)).thenReturn(organization);
+    when(factCreateHandler.resolveOrigin(origin.getName())).thenReturn(origin);
+    when(factCreateHandler.resolveOrganization(organization.getName(), origin)).thenReturn(organization);
+  }
+
+  private void mockFetchingSubject() throws Exception {
+    when(factCreateHandler.resolveSubjects(notNull())).thenReturn(list(subject));
   }
 
   private void mockFetchingFactType() throws Exception {
@@ -303,12 +312,12 @@ public class FactCreateDelegateTest {
     return new CreateFactRequest()
             .setType(resolveFactType.getName())
             .setValue("factValue")
-            .setOrganization(organization.getId())
-            .setOrigin(origin.getId())
+            .setOrganization(organization.getName())
+            .setOrigin(origin.getName())
             .setConfidence(0.3f)
             .setComment("Hello World!")
             .setAccessMode(AccessMode.RoleBased)
-            .setAcl(ListUtils.list(UUID.randomUUID()))
+            .addAcl(subject.getName())
             .setSourceObject(ip.getId().toString())
             .setDestinationObject(domain.getId().toString());
   }
@@ -318,9 +327,9 @@ public class FactCreateDelegateTest {
       assertNotNull(record.getId());
       assertEquals(resolveFactType.getId(), record.getTypeID());
       assertEquals(request.getValue(), record.getValue());
-      assertEquals(request.getOrganization(), record.getOrganizationID());
+      assertEquals(organization.getId(), record.getOrganizationID());
       assertNotNull(record.getAddedByID());
-      assertEquals(request.getOrigin(), record.getOriginID());
+      assertEquals(origin.getId(), record.getOriginID());
       assertEquals(origin.getTrust(), record.getTrust(), 0.0);
       assertEquals(request.getConfidence(), record.getConfidence(), 0.0);
       assertEquals(request.getAccessMode().name(), record.getAccessMode().name());

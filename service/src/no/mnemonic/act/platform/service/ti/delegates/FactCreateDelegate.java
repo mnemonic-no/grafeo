@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
+import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
@@ -17,6 +18,7 @@ import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestReso
 import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
 import java.util.Objects;
@@ -59,7 +61,7 @@ public class FactCreateDelegate implements Delegate {
     assertValidFactObjectBindings(request);
 
     FactRecord newFact = toFactRecord(request);
-    return factCreateHandler.saveFact(newFact, request.getComment(), request.getAcl());
+    return factCreateHandler.saveFact(newFact, request.getComment(), ListUtils.list(factCreateHandler.resolveSubjects(request.getAcl()), Subject::getId));
   }
 
   private void assertValidFactObjectBindings(CreateFactRequest request) throws InvalidArgumentException {

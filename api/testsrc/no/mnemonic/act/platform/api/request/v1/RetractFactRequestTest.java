@@ -15,27 +15,24 @@ public class RetractFactRequestTest extends AbstractRequestTest {
   @Test
   public void testDecodeRequest() throws Exception {
     UUID fact = UUID.randomUUID();
-    UUID organization = UUID.randomUUID();
-    UUID origin = UUID.randomUUID();
-    UUID acl = UUID.randomUUID();
     String json = String.format("{" +
             "fact : '%s'," +
-            "organization : '%s'," +
-            "origin : '%s'," +
+            "organization : 'organization'," +
+            "origin : 'origin'," +
             "confidence : 0.1," +
             "accessMode : 'Explicit'," +
             "comment : 'comment'," +
-            "acl : ['%s']" +
-            "}", fact, organization, origin, acl);
+            "acl : ['subject']" +
+            "}", fact);
 
     RetractFactRequest request = getMapper().readValue(json, RetractFactRequest.class);
     assertEquals(fact, request.getFact());
-    assertEquals(organization, request.getOrganization());
-    assertEquals(origin, request.getOrigin());
+    assertEquals("organization", request.getOrganization());
+    assertEquals("origin", request.getOrigin());
     assertEquals(0.1f, request.getConfidence(), 0.0);
     assertEquals(AccessMode.Explicit, request.getAccessMode());
     assertEquals("comment", request.getComment());
-    assertEquals(ListUtils.list(acl), request.getAcl());
+    assertEquals(ListUtils.list("subject"), request.getAcl());
   }
 
   @Test

@@ -15,31 +15,28 @@ public class CreateMetaFactRequestTest extends AbstractRequestTest {
   @Test
   public void testDecodeRequest() throws Exception {
     UUID fact = UUID.randomUUID();
-    UUID organization = UUID.randomUUID();
-    UUID origin = UUID.randomUUID();
-    UUID acl = UUID.randomUUID();
     String json = String.format("{" +
             "fact : '%s'," +
             "type : 'factType'," +
             "value : 'factValue'," +
-            "organization : '%s'," +
-            "origin : '%s'," +
+            "organization : 'organization'," +
+            "origin : 'origin'," +
             "confidence : 0.1," +
             "accessMode : 'Explicit'," +
             "comment : 'comment'," +
-            "acl : ['%s']" +
-            "}", fact, organization, origin, acl);
+            "acl : ['subject']" +
+            "}", fact);
 
     CreateMetaFactRequest request = getMapper().readValue(json, CreateMetaFactRequest.class);
     assertEquals(fact, request.getFact());
     assertEquals("factType", request.getType());
     assertEquals("factValue", request.getValue());
-    assertEquals(organization, request.getOrganization());
-    assertEquals(origin, request.getOrigin());
+    assertEquals("organization", request.getOrganization());
+    assertEquals("origin", request.getOrigin());
     assertEquals(0.1f, request.getConfidence(), 0.0);
     assertEquals(AccessMode.Explicit, request.getAccessMode());
     assertEquals("comment", request.getComment());
-    assertEquals(ListUtils.list(acl), request.getAcl());
+    assertEquals(ListUtils.list("subject"), request.getAcl());
   }
 
   @Test
