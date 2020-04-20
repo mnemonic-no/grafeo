@@ -1,10 +1,10 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.tinkerpop.exceptions.GraphOperationException;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ElementFactory;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.commons.configuration.Configuration;
@@ -15,7 +15,6 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 import static org.apache.tinkerpop.gremlin.structure.Graph.Exceptions.*;
 
@@ -28,15 +27,17 @@ public class ActGraph implements Graph {
 
   private static final Features SUPPORTED_FEATURES = new ActGraphFeatures();
 
-  private final ObjectManager objectManager;
-  private final FactManager factManager;
-  private final Predicate<FactEntity> hasFactAccess;
   private final ElementFactory elementFactory;
+  private final ObjectFactDao objectFactDao;
+  private final ObjectFactTypeResolver objectFactTypeResolver;
+  private final TiSecurityContext securityContext;
 
-  private ActGraph(ObjectManager objectManager, FactManager factManager, Predicate<FactEntity> hasFactAccess) {
-    this.objectManager = ObjectUtils.notNull(objectManager, "'objectManager' is null!");
-    this.factManager = ObjectUtils.notNull(factManager, "'factManager' is null!");
-    this.hasFactAccess = ObjectUtils.notNull(hasFactAccess, "'hasFactAccess' is null!");
+  private ActGraph(ObjectFactDao objectFactDao,
+                   ObjectFactTypeResolver objectFactTypeResolver,
+                   TiSecurityContext securityContext) {
+    this.objectFactDao = ObjectUtils.notNull(objectFactDao, "'objectFactDao' is null!");
+    this.objectFactTypeResolver = ObjectUtils.notNull(objectFactTypeResolver, "'objectFactTypeResolver' is null!'");
+    this.securityContext = ObjectUtils.notNull(securityContext, "'securityContext' is null!");
     this.elementFactory = ElementFactory.builder().setOwner(this).build();
   }
 
@@ -97,16 +98,16 @@ public class ActGraph implements Graph {
     return StringFactory.graphString(this, "");
   }
 
-  public boolean hasFactAccess(FactEntity fact) {
-    return hasFactAccess.test(fact);
+  public ObjectFactTypeResolver getObjectFactTypeResolver() {
+    return objectFactTypeResolver;
   }
 
-  public ObjectManager getObjectManager() {
-    return objectManager;
+  public ObjectFactDao getObjectFactDao() {
+    return objectFactDao;
   }
 
-  public FactManager getFactManager() {
-    return factManager;
+  public TiSecurityContext getSecurityContext() {
+    return securityContext;
   }
 
   ElementFactory getElementFactory() {
@@ -152,29 +153,29 @@ public class ActGraph implements Graph {
   }
 
   public static class Builder {
-    private ObjectManager objectManager;
-    private FactManager factManager;
-    private Predicate<FactEntity> hasFactAccess;
+    private ObjectFactDao objectFactDao;
+    private ObjectFactTypeResolver objectFactTypeResolver;
+    private TiSecurityContext securityContext;
 
     private Builder() {
     }
 
     public ActGraph build() {
-      return new ActGraph(objectManager, factManager, hasFactAccess);
+      return new ActGraph(objectFactDao, objectFactTypeResolver, securityContext);
     }
 
-    public Builder setObjectManager(ObjectManager objectManager) {
-      this.objectManager = objectManager;
+    public Builder setObjectFactDao(ObjectFactDao objectFactDao) {
+      this.objectFactDao = objectFactDao;
       return this;
     }
 
-    public Builder setFactManager(FactManager factManager) {
-      this.factManager = factManager;
+    public Builder setObjectTypeFactResolver(ObjectFactTypeResolver objectTypeFactResolver) {
+      this.objectFactTypeResolver = objectTypeFactResolver;
       return this;
     }
 
-    public Builder setHasFactAccess(Predicate<FactEntity> hasFactAccess) {
-      this.hasFactAccess = hasFactAccess;
+    public Builder setSecurityContext(TiSecurityContext securityContext) {
+      this.securityContext = securityContext;
       return this;
     }
   }

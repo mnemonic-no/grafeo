@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -20,11 +20,11 @@ import static org.apache.tinkerpop.gremlin.structure.VertexProperty.Exceptions.m
  */
 abstract class ObjectProperty<V> implements VertexProperty<V> {
 
-  private final ObjectEntity object;
+  private final ObjectRecord object;
   private final ObjectVertex owner;
   private final UUID id;
 
-  private ObjectProperty(ObjectEntity object, ObjectVertex owner) {
+  private ObjectProperty(ObjectRecord object, ObjectVertex owner) {
     this.object = ObjectUtils.notNull(object, "'object' is null!");
     this.owner = ObjectUtils.notNull(owner, "'owner' is null!");
     this.id = UUID.randomUUID(); // Generate a random ID for each new instance.
@@ -65,13 +65,13 @@ abstract class ObjectProperty<V> implements VertexProperty<V> {
     return StringFactory.propertyString(this);
   }
 
-  protected ObjectEntity getObject() {
+  protected ObjectRecord getObject() {
     // Need to expose 'object' to inner static classes.
     return object;
   }
 
   static class Value extends ObjectProperty<String> {
-    Value(ObjectEntity object, ObjectVertex owner) {
+    Value(ObjectRecord object, ObjectVertex owner) {
       super(object, owner);
     }
 

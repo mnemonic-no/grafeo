@@ -1,14 +1,17 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
 
 import static no.mnemonic.act.platform.service.ti.tinkerpop.FactProperty.*;
 import static org.apache.tinkerpop.gremlin.structure.Edge.Exceptions.edgeRemovalNotSupported;
@@ -19,18 +22,18 @@ import static org.apache.tinkerpop.gremlin.structure.Edge.Exceptions.edgeRemoval
 public class FactEdge implements Edge {
 
   private final ActGraph graph;
-  private final FactEntity fact;
-  private final FactTypeEntity type;
+  private final FactRecord fact;
+  private final FactTypeStruct type;
   private final Vertex inVertex;
   private final Vertex outVertex;
   private final Set<Property> allProperties;
 
-  public FactEdge(ActGraph graph, UUID factID, UUID inVertexObjectID, UUID outVertexObjectID) {
+  public FactEdge(ActGraph graph, FactRecord fact, FactTypeStruct type, Vertex inVertex, Vertex outVertex) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
-    this.fact = ObjectUtils.notNull(graph.getFactManager().getFact(factID), String.format("Fact with id = %s does not exist.", factID));
-    this.type = ObjectUtils.notNull(graph.getFactManager().getFactType(fact.getTypeID()), String.format("FactType with id = %s does not exist.", fact.getTypeID()));
-    this.inVertex = graph.getElementFactory().getVertex(inVertexObjectID);
-    this.outVertex = graph.getElementFactory().getVertex(outVertexObjectID);
+    this.fact = ObjectUtils.notNull(fact, "'fact' is null!");
+    this.type = ObjectUtils.notNull(type, "'type' is null!");
+    this.inVertex = ObjectUtils.notNull(inVertex, "'inVertex' is null!");
+    this.outVertex = ObjectUtils.notNull(outVertex, "'outVertex' is null!");
     this.allProperties = Collections.unmodifiableSet(getAllProperties()); // Generate properties set only once.
   }
 
@@ -100,10 +103,6 @@ public class FactEdge implements Edge {
     return Objects.hash(id());
   }
 
-  public FactEntity getFact() {
-    return fact;
-  }
-
   private Set<Property> getAllProperties() {
     // Currently, those properties only expose information directly from a Fact. Some additional interesting properties
     // would be e.g. organizationName or originName, but those are not directly available. Maybe it would be good to
@@ -122,5 +121,4 @@ public class FactEdge implements Edge {
             new LastSeenTimestamp(fact, this)
     );
   }
-
 }

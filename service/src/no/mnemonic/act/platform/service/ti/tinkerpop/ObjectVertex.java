@@ -1,18 +1,22 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.api.result.ResultContainer;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
 import java.util.*;
 
-import static no.mnemonic.act.platform.dao.cassandra.entity.Direction.*;
 import static no.mnemonic.act.platform.service.ti.tinkerpop.ObjectProperty.Value;
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
+import static no.mnemonic.commons.utilities.collections.SetUtils.union;
+import static org.apache.tinkerpop.gremlin.structure.Direction.*;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.edgeAdditionsNotSupported;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRemovalNotSupported;
 
@@ -21,22 +25,19 @@ import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRem
  * is represented by one vertex. Because of that, {@link Vertex#id()} will return the Object's UUID.
  * <p>
  * Adjacent edges represent Facts where the edge direction (IN, OUT) is mapped onto the binding's direction between
- * Object and Fact. If a Fact is only bound to one Object the edge will be a loop, and if the Fact is bound to more
- * than two Objects an edge to each Object is created.
+ * Object and Fact.
  */
 public class ObjectVertex implements Vertex {
 
   private final ActGraph graph;
-  private final ObjectEntity object;
-  private final ObjectTypeEntity type;
-  private final List<ObjectFactBindingEntity> bindings;
+  private final ObjectRecord object;
+  private final ObjectFactTypeResolver.ObjectTypeStruct type;
   private final Set<VertexProperty> allProperties;
 
-  public ObjectVertex(ActGraph graph, UUID objectID) {
+  public ObjectVertex(ActGraph graph, ObjectRecord object, ObjectFactTypeResolver.ObjectTypeStruct type) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
-    this.object = ObjectUtils.notNull(graph.getObjectManager().getObject(objectID), String.format("Object with id = %s does not exist.", objectID));
-    this.type = ObjectUtils.notNull(graph.getObjectManager().getObjectType(object.getTypeID()), String.format("ObjectType with id = %s does not exist.", object.getTypeID()));
-    this.bindings = Collections.unmodifiableList(ListUtils.list(graph.getObjectManager().fetchObjectFactBindings(objectID)));
+    this.object = ObjectUtils.notNull(object, "'object' is null!");
+    this.type = ObjectUtils.notNull(type, "'type' is null!");
     this.allProperties = Collections.unmodifiableSet(getAllProperties()); // Generate properties set only once.
   }
 
@@ -47,33 +48,30 @@ public class ObjectVertex implements Vertex {
 
   @Override
   public Iterator<Edge> edges(Direction direction, String... edgeLabels) {
-    Set<Edge> facts = new HashSet<>();
+    Set<UUID> factTypeIds = this.graph.getObjectFactTypeResolver().factTypeNamesToIds(set(edgeLabels));
 
-    for (ObjectFactBindingEntity binding : bindings) {
-      if (binding.getDirection() == BiDirectional) {
-        facts.addAll(graph.getElementFactory().createEdges(binding));
-      }
+    ResultContainer<FactRecord> factRecords = graph.getObjectFactDao().searchFacts(
+            FactSearchCriteria.builder()
+                    .addObjectID(object.getId())
+                    .setFactTypeID(factTypeIds)
+                    .setCurrentUserID(graph.getSecurityContext().getCurrentUserID())
+                    .setAvailableOrganizationID(graph.getSecurityContext().getAvailableOrganizationID())
+                    .build());
 
-      if (binding.getDirection() == FactIsDestination && (direction == Direction.BOTH || direction == Direction.OUT)) {
-        facts.addAll(graph.getElementFactory().createEdges(binding));
-      }
-
-      if (binding.getDirection() == FactIsSource && (direction == Direction.BOTH || direction == Direction.IN)) {
-        facts.addAll(graph.getElementFactory().createEdges(binding));
-      }
-    }
-
-    return facts
+    return factRecords
             .stream()
-            .filter(edge -> SetUtils.set(edgeLabels).isEmpty() || SetUtils.in(edge.label(), edgeLabels))
+            .filter(record -> matchesDirection(record, object, direction))
+            .filter(graph.getSecurityContext()::hasReadPermission)
+            .map(graph.getElementFactory()::createEdge)
+            .filter(Objects::nonNull)
             .iterator();
   }
 
   @Override
   public Iterator<Vertex> vertices(Direction direction, String... edgeLabels) {
-    return SetUtils.set(edges(direction, edgeLabels), e -> SetUtils.set(e.vertices(direction)))
-            .stream()
-            .reduce(new HashSet<>(), (result, next) -> SetUtils.union(result, next))
+    return IteratorUtils.stream(edges(direction, edgeLabels))
+            .map(e -> set(e.vertices(direction)))
+            .reduce(new HashSet<>(), (result, next) -> union(result, next))
             .iterator();
   }
 
@@ -81,7 +79,7 @@ public class ObjectVertex implements Vertex {
   public <V> Iterator<VertexProperty<V>> properties(String... propertyKeys) {
     //noinspection unchecked
     return allProperties.stream()
-            .filter(property -> SetUtils.set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
+            .filter(property -> set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
             .map(property -> (VertexProperty<V>) property)
             .iterator();
   }
@@ -129,16 +127,30 @@ public class ObjectVertex implements Vertex {
     return Objects.hash(id());
   }
 
-  public ObjectEntity getObject() {
-    return object;
-  }
-
   private Set<VertexProperty> getAllProperties() {
     // Currently, only one property is exposed. Object statistics would be interesting as well, but this requires an
     // external index in order to allow efficient graph traversals.
-    return SetUtils.set(
-            new Value(object, this)
-    );
+    return set(new Value(object, this));
   }
 
+  static boolean matchesDirection(FactRecord fact, ObjectRecord object, Direction direction) {
+    ObjectRecord sourceObject = fact.getSourceObject();
+    ObjectRecord destinationObject = fact.getDestinationObject();
+
+    // One legged facts are not supported when traversing
+    if (sourceObject == null || destinationObject == null) return false;
+
+    boolean isLoop = Objects.equals(sourceObject.getId(), destinationObject.getId());
+
+    // Loops are not supported when traversing, nor are they possible to create in the API
+    if (isLoop) return false;
+
+    boolean matchesBidirectional = (fact.isBidirectionalBinding() || direction == BOTH);
+
+    return matchesBidirectional ||
+            // object --- fact --> anyObject
+            (Objects.equals(object.getId(), sourceObject.getId()) && direction == OUT) ||
+            // object <-- fact -- anyObject
+            (Objects.equals(object.getId(), destinationObject.getId()) && direction == IN);
+  }
 }

@@ -1,10 +1,12 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop.utils;
 
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
-import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Before;
@@ -20,9 +22,11 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class ElementFactoryTest {
 
   @Mock
-  private ObjectManager objectManager;
+  private ObjectFactDao objectFactDao;
   @Mock
-  private FactManager factManager;
+  private ObjectFactTypeResolver objectFactTypeResolver;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private ElementFactory elementFactory;
 
@@ -31,9 +35,9 @@ public class ElementFactoryTest {
     initMocks(this);
 
     ActGraph actGraph = ActGraph.builder()
-            .setObjectManager(objectManager)
-            .setFactManager(factManager)
-            .setHasFactAccess(f -> true)
+            .setObjectFactDao(objectFactDao)
+            .setObjectTypeFactResolver(objectFactTypeResolver)
+            .setSecurityContext(securityContext)
             .build();
     elementFactory = ElementFactory.builder().setOwner(actGraph).build();
   }
@@ -43,88 +47,49 @@ public class ElementFactoryTest {
     ElementFactory.builder().build();
   }
 
-  @Test(expected = RuntimeException.class)
-  public void testCreateEdgesWithoutBinding() {
-    elementFactory.createEdges(null);
+  @Test
+  public void testToEdgeWithoutFact() {
+    assertNull(elementFactory.createEdge(null));
+    assertNull(elementFactory.getEdge(null));
   }
 
   @Test
-  public void testCreateEdgesWithoutFact() {
-    ObjectFactBindingEntity binding = createInBinding(Direction.BiDirectional);
-    assertTrue(elementFactory.createEdges(binding).isEmpty());
-  }
+  public void testCreateEdges() {
+    FactTypeStruct factTypeMock = mockFactType();
+    ObjectTypeStruct objectTypeMock = mockObjectType();
+    ObjectRecord objectA = mockObject(objectTypeMock);
+    ObjectRecord objectB = mockObject(objectTypeMock);
 
-  @Test
-  public void testCreateEdgesWithoutFactAccess() {
-    ActGraph graph = ActGraph.builder()
-            .setObjectManager(objectManager)
-            .setFactManager(factManager)
-            .setHasFactAccess(f -> false)
-            .build();
-    ElementFactory factory = ElementFactory.builder().setOwner(graph).build();
+    Edge edge = elementFactory.createEdge(new FactRecord()
+            .setId(UUID.randomUUID())
+            .setTypeID(factTypeMock.getId())
+            .setBidirectionalBinding(true)
+            .setDestinationObject(objectA)
+            .setSourceObject(objectB));
 
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.BiDirectional);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.BiDirectional);
-    mockObject(inBinding);
-    mockObject(outBinding.getObjectID());
-    mockFact(inBinding.getFactID(), outBinding);
-
-    assertTrue(factory.createEdges(inBinding).isEmpty());
-  }
-
-  @Test
-  public void testCreateEdgesReturnsLoop() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.FactIsDestination);
-    FactEntity.FactObjectBinding outBinding = new FactEntity.FactObjectBinding()
-            .setObjectID(inBinding.getObjectID())
-            .setDirection(inBinding.getDirection());
-    mockObject(inBinding);
-    mockFact(inBinding.getFactID(), outBinding);
-
-    Edge edge = elementFactory.createEdges(inBinding).iterator().next();
-    assertSame(edge.inVertex(), edge.outVertex());
-  }
-
-  @Test
-  public void testCreateEdgesWithDirectionBiDirectional() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.BiDirectional);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.BiDirectional);
-
-    Edge edge = mockAndRunCreateEdges(inBinding, outBinding);
-
-    assertEquals(inBinding.getObjectID(), edge.inVertex().id());
-    assertEquals(outBinding.getObjectID(), edge.outVertex().id());
-  }
-
-  @Test
-  public void testCreateEdgesWithDirectionFactIsDestination() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.FactIsDestination);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.FactIsSource);
-
-    Edge edge = mockAndRunCreateEdges(inBinding, outBinding);
-
-    assertEquals(inBinding.getObjectID(), edge.inVertex().id());
-    assertEquals(outBinding.getObjectID(), edge.outVertex().id());
-  }
-
-  @Test
-  public void testCreateEdgesWithDirectionFactIsSource() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.FactIsSource);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.FactIsDestination);
-
-    Edge edge = mockAndRunCreateEdges(inBinding, outBinding);
-
-    assertEquals(outBinding.getObjectID(), edge.inVertex().id());
-    assertEquals(inBinding.getObjectID(), edge.outVertex().id());
+    assertEquals(objectA.getId(), edge.outVertex().id());
+    assertEquals(objectB.getId(), edge.inVertex().id());
   }
 
   @Test
   public void testCreateEdgesExecutedTwice() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.BiDirectional);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.BiDirectional);
+    UUID edgeID = UUID.randomUUID();
+    FactTypeStruct factTypeMock = mockFactType();
+    ObjectTypeStruct objectTypeMock = mockObjectType();
+    ObjectRecord objectSource = mockObject(objectTypeMock);
+    ObjectRecord objectDestination = mockObject(objectTypeMock);
 
-    Edge first = mockAndRunCreateEdges(inBinding, outBinding);
-    Edge second = mockAndRunCreateEdges(inBinding, outBinding);
+    Edge first = elementFactory.createEdge(new FactRecord()
+            .setId(edgeID)
+            .setTypeID(factTypeMock.getId())
+            .setSourceObject(objectSource)
+            .setDestinationObject(objectDestination));
+
+    Edge second = elementFactory.createEdge(new FactRecord()
+            .setId(edgeID)
+            .setTypeID(factTypeMock.getId())
+            .setSourceObject(objectSource)
+            .setDestinationObject(objectDestination));
 
     assertSame(first, second);
   }
@@ -141,11 +106,18 @@ public class ElementFactoryTest {
 
   @Test
   public void testGetEdgeCached() {
-    ObjectFactBindingEntity inBinding = createInBinding(Direction.BiDirectional);
-    FactEntity.FactObjectBinding outBinding = createOutBinding(Direction.BiDirectional);
+    FactTypeStruct factTypeMock = mockFactType();
+    ObjectTypeStruct objectTypeMock = mockObjectType();
+    ObjectRecord objectSource = mockObject(objectTypeMock);
+    ObjectRecord objectDestination = mockObject(objectTypeMock);
 
-    Edge first = mockAndRunCreateEdges(inBinding, outBinding);
-    Edge second = elementFactory.getEdge((UUID) first.id());
+    Edge first = elementFactory.createEdge(new FactRecord()
+            .setId(UUID.randomUUID())
+            .setTypeID(factTypeMock.getId())
+            .setSourceObject(objectSource)
+            .setDestinationObject(objectDestination));
+
+    Edge second = elementFactory.getEdge((UUID)first.id());
 
     assertSame(first, second);
   }
@@ -162,77 +134,50 @@ public class ElementFactoryTest {
 
   @Test
   public void testGetVertexNotCached() {
-    UUID objectID = mockObject(UUID.randomUUID());
+    ObjectTypeStruct objectTypeMock = mockObjectType();
+    ObjectRecord objectSource = mockObject(objectTypeMock);
+
+    UUID objectID = objectSource.getId();
+
     assertEquals(objectID, elementFactory.getVertex(objectID).id());
   }
 
   @Test
   public void testGetVertexCached() {
-    UUID objectID = mockObject(UUID.randomUUID());
+    ObjectTypeStruct objectTypeMock = mockObjectType();
+    ObjectRecord objectSource = mockObject(objectTypeMock);
 
+    UUID objectID = objectSource.getId();
     Vertex first = elementFactory.getVertex(objectID);
     Vertex second = elementFactory.getVertex(objectID);
 
     assertSame(first, second);
   }
 
-  private Edge mockAndRunCreateEdges(ObjectFactBindingEntity inBinding, FactEntity.FactObjectBinding outBinding) {
-    mockObject(inBinding);
-    mockObject(outBinding.getObjectID());
-    mockFact(inBinding.getFactID(), outBinding);
-
-    return elementFactory.createEdges(inBinding).iterator().next();
+  private ObjectTypeStruct mockObjectType() {
+    UUID objectTypeId = UUID.randomUUID();
+    ObjectTypeStruct objectType = ObjectTypeStruct.builder()
+            .setId(objectTypeId)
+            .setName("someObjectType")
+            .build();
+    when(objectFactTypeResolver.toObjectTypeStruct(objectTypeId)).thenReturn(objectType);
+    return objectType;
   }
 
-  private UUID mockObject(UUID objectID) {
-    UUID typeID = UUID.randomUUID();
-
-    when(objectManager.getObject(objectID)).thenReturn(new ObjectEntity()
-            .setId(objectID)
-            .setTypeID(typeID)
-            .setValue("value")
-    );
-
-    when(objectManager.getObjectType(typeID)).thenReturn(new ObjectTypeEntity()
-            .setId(typeID)
-            .setName("type")
-    );
-
-    return objectID;
+  private FactTypeStruct mockFactType() {
+    UUID factTypeId = UUID.randomUUID();
+    FactTypeStruct factType = FactTypeStruct.builder()
+            .setId(factTypeId)
+            .setName("someFactType")
+            .build();
+    when(objectFactTypeResolver.toFactTypeStruct(factTypeId))
+            .thenReturn(factType);
+    return factType;
   }
 
-  private void mockObject(ObjectFactBindingEntity inBinding) {
-    mockObject(inBinding.getObjectID());
-    when(objectManager.fetchObjectFactBindings(inBinding.getObjectID())).thenReturn(ListUtils.list(inBinding).iterator());
+  private ObjectRecord mockObject(ObjectTypeStruct objectTypeStruct) {
+    ObjectRecord object = new ObjectRecord().setTypeID(objectTypeStruct.getId()).setId(UUID.randomUUID());
+    when(objectFactDao.getObject(object.getId())).thenReturn(object);
+    return object;
   }
-
-  private void mockFact(UUID factID, FactEntity.FactObjectBinding outBinding) {
-    UUID typeID = UUID.randomUUID();
-
-    when(factManager.getFact(factID)).thenReturn(new FactEntity()
-            .setId(factID)
-            .setTypeID(typeID)
-            .setValue("value")
-            .setBindings(ListUtils.list(outBinding))
-    );
-
-    when(factManager.getFactType(typeID)).thenReturn(new FactTypeEntity()
-            .setId(typeID)
-            .setName("type")
-    );
-  }
-
-  private ObjectFactBindingEntity createInBinding(Direction inDirection) {
-    return new ObjectFactBindingEntity()
-            .setObjectID(UUID.randomUUID())
-            .setFactID(UUID.randomUUID())
-            .setDirection(inDirection);
-  }
-
-  private FactEntity.FactObjectBinding createOutBinding(Direction outDirection) {
-    return new FactEntity.FactObjectBinding()
-            .setObjectID(UUID.randomUUID())
-            .setDirection(outDirection);
-  }
-
 }

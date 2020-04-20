@@ -1,20 +1,23 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop.utils;
 
-import com.google.common.cache.*;
-import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.FactEdge;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ObjectVertex;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
-import java.util.*;
+import java.util.UUID;
 
 /**
  * Helper class for creation and retrieval of edges and vertices which implements simple caching.
@@ -22,6 +25,7 @@ import java.util.*;
 public class ElementFactory {
 
   private static final int CACHE_MAXIMUM_SIZE = 10000;
+  private static final Logger LOGGER = Logging.getLogger(ElementFactory.class);
 
   private final ActGraph owner;
   // Cache for created edges. This cache is manually populated by createEdges().
@@ -36,56 +40,7 @@ public class ElementFactory {
   }
 
   /**
-   * Create edges based on a binding between an Object and a Fact.
-   * <p>
-   * It will fetch the Fact and create edges between the Object and other Objects bound to the Fact. If only the given
-   * Object is bound to the Fact a loop edge is created. If the Fact is bound to multiple Objects an edge for each
-   * binding is created where applicable (taking the binding directions into account).
-   * <p>
-   * Created edges are cached for later retrieval by {@link ElementFactory#getEdge(UUID)}.
-   *
-   * @param inBinding Binding between an Object and a Fact (incoming vertex).
-   * @return Created edges.
-   */
-  public Set<Edge> createEdges(ObjectFactBindingEntity inBinding) {
-    ObjectUtils.notNull(inBinding, "'inBinding' is null!");
-
-    FactEntity fact = owner.getFactManager().getFact(inBinding.getFactID());
-    // Only create edges if user has access to Fact.
-    if (fact == null || !owner.hasFactAccess(fact)) {
-      return new HashSet<>();
-    }
-
-    // If the Fact is only bound to the 'inBinding' Object then this needs to be represented as a loop in the graph.
-    if (CollectionUtils.size(fact.getBindings()) == 1 && Objects.equals(fact.getBindings().get(0).getObjectID(), inBinding.getObjectID())) {
-      return SetUtils.set(createAndCache(inBinding.getFactID(), inBinding.getObjectID(), inBinding.getObjectID()));
-    }
-
-    Set<Edge> edges = new HashSet<>();
-    for (FactEntity.FactObjectBinding outBinding : ListUtils.list(fact.getBindings())) {
-      // Skip bindings to 'inBinding' Object.
-      if (Objects.equals(outBinding.getObjectID(), inBinding.getObjectID())) continue;
-
-      // For all other bindings create an edge where the objectID of the binding is the outgoing vertex.
-      // But only if the directions fit together!
-      if ((inBinding.getDirection() == Direction.BiDirectional && outBinding.getDirection() == Direction.BiDirectional) ||
-              (inBinding.getDirection() == Direction.FactIsDestination && outBinding.getDirection() == Direction.FactIsSource)) {
-        edges.add(createAndCache(inBinding.getFactID(), inBinding.getObjectID(), outBinding.getObjectID()));
-      }
-
-      // In this case need to swap 'inBinding' and 'outBinding' in order to have the correct edge direction.
-      if (inBinding.getDirection() == Direction.FactIsSource && outBinding.getDirection() == Direction.FactIsDestination) {
-        edges.add(createAndCache(inBinding.getFactID(), outBinding.getObjectID(), inBinding.getObjectID()));
-      }
-    }
-
-    return edges;
-  }
-
-  /**
    * Retrieve an edge from the cache by its ID.
-   * <p>
-   * This will return NULL if the edge was not created and cached by {@link ElementFactory#createEdges(ObjectFactBindingEntity)} before.
    *
    * @param id ID of edge, i.e. {@link Edge#id()}.
    * @return Cached edge or NULL.
@@ -93,6 +48,29 @@ public class ElementFactory {
   public Edge getEdge(UUID id) {
     if (id == null) return null;
     return edgeCache.getIfPresent(id);
+  }
+
+  /**
+   * Convert FactRecord to Edge
+   * <p>
+   * Edges are cached. New edges will be created and cached if it is not
+   * found in the cache.
+   *
+   * Returns null if the conversion failed.
+   *
+   * @param factRecord FactRecord to convert
+   * @return Edge      The edge, or null if the record is invalid.
+   */
+  public Edge createEdge(FactRecord factRecord) {
+    if (factRecord == null) return null;
+
+    try {
+      return edgeCache.get(factRecord.getId(), () -> fetchEdge(factRecord));
+    } catch (Exception e) {
+      // Ignore the exception and just return null
+      LOGGER.warning(e, "Failed to create edge for FactRecord with id = %s.", factRecord.getId());
+      return null;
+    }
   }
 
   /**
@@ -113,21 +91,18 @@ public class ElementFactory {
     }
   }
 
-  public static Builder builder() {
-    return new Builder();
+  private Edge fetchEdge(FactRecord factRecord) {
+    FactTypeStruct factTypeStruct = this.owner
+            .getObjectFactTypeResolver()
+            .toFactTypeStruct(factRecord.getTypeID());
+    Vertex inVertex = getVertex(factRecord.getSourceObject().getId());
+    Vertex outVertex = getVertex(factRecord.getDestinationObject().getId());
+
+    return new FactEdge(owner, factRecord, factTypeStruct, inVertex, outVertex);
   }
 
-  private Edge createAndCache(UUID factID, UUID inVertex, UUID outVertex) {
-    // Try to fetch edge from cache first
-    Edge edge = edgeCache.getIfPresent(factID);
-
-    if (edge == null) {
-      // Edge is not present in cache, create new instance and cache it for later access.
-      edge = new FactEdge(owner, factID, inVertex, outVertex);
-      edgeCache.put((UUID) edge.id(), edge);
-    }
-
-    return edge;
+  public static Builder builder() {
+    return new Builder();
   }
 
   private Cache<UUID, Edge> createEdgeCache() {
@@ -142,7 +117,13 @@ public class ElementFactory {
             .build(new CacheLoader<UUID, Vertex>() {
               @Override
               public Vertex load(UUID key) {
-                return new ObjectVertex(owner, key);
+                ObjectRecord objectRecord = ObjectUtils.notNull(
+                        owner.getObjectFactDao().getObject(key),
+                        String.format("Object with id = %s does not exist.", key));
+                ObjectTypeStruct objectTypeStruct = ObjectUtils.notNull(
+                        owner.getObjectFactTypeResolver().toObjectTypeStruct(objectRecord.getTypeID()),
+                        String.format("ObjectType with id = %s does not exist.", objectRecord.getTypeID()));
+                return new ObjectVertex(owner, objectRecord, objectTypeStruct);
               }
             });
   }

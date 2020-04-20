@@ -1,8 +1,9 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.entity.Direction;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.ObjectFactBindingEntity;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.api.result.ResultContainer;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.exceptions.GraphOperationException;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -23,30 +24,32 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 public class ActGraphTest extends AbstractGraphTest {
 
   @Test(expected = RuntimeException.class)
-  public void testCreateGraphWithoutObjectManager() {
+  public void testCreateGraphWithoutObjectFactDao() {
     ActGraph.builder()
-            .setFactManager(getFactManager())
-            .setHasFactAccess(b -> true)
+            .setSecurityContext(getSecurityContext())
+            .setObjectTypeFactResolver(getObjectFactTypeResolver())
             .build();
   }
 
   @Test(expected = RuntimeException.class)
-  public void testCreateGraphWithoutFactManager() {
+  public void testCreateGraphWithoutObjectFactTypeResolver() {
     ActGraph.builder()
-            .setObjectManager(getObjectManager())
-            .setHasFactAccess(b -> true)
+            .setObjectFactDao(getObjectFactDao())
+            .setSecurityContext(getSecurityContext())
             .build();
   }
 
   @Test(expected = RuntimeException.class)
-  public void testCreateGraphWithoutHasFactAccess() {
+  public void testCreateGraphWithoutSecurityContext() {
     ActGraph.builder()
-            .setObjectManager(getObjectManager())
-            .setFactManager(getFactManager())
+            .setObjectTypeFactResolver(getObjectFactTypeResolver())
+            .setObjectFactDao(getObjectFactDao())
             .build();
   }
 
@@ -57,7 +60,7 @@ public class ActGraphTest extends AbstractGraphTest {
 
   @Test
   public void testFetchingVerticesWithId() {
-    UUID objectID = mockObject();
+    UUID objectID = mockObjectRecord(mockObjectType(), "someValue").getId();
     Iterator<Vertex> result = getActGraph().vertices(objectID);
     assertEquals(objectID, result.next().id());
   }
@@ -76,16 +79,18 @@ public class ActGraphTest extends AbstractGraphTest {
 
   @Test
   public void testFetchingEdgesWithId() {
-    ObjectFactBindingEntity inBinding = mockFactWithObject();
-    Set<Edge> expected = getActGraph().getElementFactory().createEdges(inBinding);
+    Edge edge = createEdge();
+
+    Set<Edge> expected = SetUtils.set(getActGraph().getElementFactory().getEdge((UUID)edge.id()));
     Set<Edge> actual = SetUtils.set(getActGraph().edges(expected.iterator().next().id()));
     assertEquals(expected, actual);
   }
 
   @Test
   public void testFetchingEdgesWithEdge() {
-    ObjectFactBindingEntity binding = mockFactWithObject();
-    Set<Edge> expected = getActGraph().getElementFactory().createEdges(binding);
+    Edge edge = createEdge();
+
+    Set<Edge> expected = SetUtils.set(getActGraph().getElementFactory().getEdge((UUID)edge.id()));
     Set<Edge> actual = SetUtils.set(getActGraph().edges(expected.iterator().next()));
     assertEquals(expected, actual);
   }
@@ -127,8 +132,10 @@ public class ActGraphTest extends AbstractGraphTest {
 
   @Test
   public void testIterateVerticesWithUuidIdSupportUsingStarVertex() {
+    when(getObjectFactDao().searchFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
     Vertex vertex1 = createVertex();
     Vertex vertex2 = getActGraph().vertices(StarGraph.of(vertex1).getStarVertex()).next();
+
     assertEquals(vertex1.id(), vertex2.id());
     assertFalse(vertex2 instanceof StarGraph.StarVertex);
   }
@@ -177,6 +184,7 @@ public class ActGraphTest extends AbstractGraphTest {
   public void testIterateEdgesWithUuidIdSupportUsingEdge() {
     Edge edge1 = createEdge();
     Edge edge2 = getActGraph().edges(edge1).next();
+
     assertEquals(edge1.id(), edge2.id());
   }
 
@@ -232,24 +240,29 @@ public class ActGraphTest extends AbstractGraphTest {
   }
 
   private Vertex createVertex() {
-    return new ObjectVertex(getActGraph(), mockObject());
+    ObjectTypeStruct objectType = ObjectTypeStruct.builder()
+            .setId(UUID.randomUUID())
+            .setName("someObjectType")
+            .build();
+
+    ObjectRecord objectRecord = new ObjectRecord()
+            .setId(UUID.randomUUID())
+            .setTypeID(objectType.getId())
+            .setValue("someObjectValue");
+
+    when(getObjectFactTypeResolver().toObjectTypeStruct(objectType.getId())).thenReturn(objectType);
+    when(getObjectFactDao().getObject(objectRecord.getId())).thenReturn(objectRecord);
+
+    return new ObjectVertex(
+            getActGraph(),
+            objectRecord,
+            objectType);
   }
 
   private Edge createEdge() {
-    return getActGraph().getElementFactory().createEdges(mockFactWithObject()).iterator().next();
+    FactRecord fact = mockFact(
+            mockObjectRecord(mockObjectType(), "someValue"),
+            mockObjectRecord(mockObjectType(), "someOtherValue"));
+    return getActGraph().getElementFactory().createEdge(fact);
   }
-
-  private ObjectFactBindingEntity mockFactWithObject() {
-    UUID objectID = mockObject();
-    UUID factID = mockFact(new FactEntity.FactObjectBinding()
-            .setDirection(Direction.BiDirectional)
-            .setObjectID(objectID)
-    );
-
-    return new ObjectFactBindingEntity()
-            .setFactID(factID)
-            .setObjectID(objectID)
-            .setDirection(Direction.BiDirectional);
-  }
-
 }

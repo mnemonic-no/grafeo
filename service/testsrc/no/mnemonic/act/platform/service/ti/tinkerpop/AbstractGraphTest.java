@@ -1,24 +1,30 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.*;
-import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.mockito.Mock;
 
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 abstract class AbstractGraphTest {
 
   @Mock
-  private ObjectManager objectManager;
+  private ObjectFactDao objectFactDao;
   @Mock
-  private FactManager factManager;
+  private ObjectFactTypeResolver objectFactTypeResolver;
+  @Mock
+  private TiSecurityContext securityContext;
 
   private ActGraph actGraph;
 
@@ -26,68 +32,76 @@ abstract class AbstractGraphTest {
   public void setup() {
     initMocks(this);
 
+    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
+    when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
+
     actGraph = ActGraph.builder()
-            .setObjectManager(objectManager)
-            .setFactManager(factManager)
-            .setHasFactAccess(f -> true)
+            .setObjectFactDao(objectFactDao)
+            .setObjectTypeFactResolver(objectFactTypeResolver)
+            .setSecurityContext(securityContext)
             .build();
   }
 
-  ObjectManager getObjectManager() {
-    return objectManager;
+  ObjectFactDao getObjectFactDao() {
+    return objectFactDao;
   }
 
-  FactManager getFactManager() {
-    return factManager;
-  }
+  ObjectFactTypeResolver getObjectFactTypeResolver() { return objectFactTypeResolver; }
+
+  TiSecurityContext getSecurityContext() { return securityContext; }
 
   ActGraph getActGraph() {
     return actGraph;
   }
 
-  UUID mockObject() {
-    UUID objectID = UUID.randomUUID();
-    UUID typeID = UUID.randomUUID();
-
-    when(objectManager.getObject(objectID)).thenReturn(new ObjectEntity()
-            .setId(objectID)
-            .setTypeID(typeID)
-            .setValue("value")
-    );
-
-    when(objectManager.getObjectType(typeID)).thenReturn(new ObjectTypeEntity()
-            .setId(typeID)
-            .setName("type")
-    );
-
-    return objectID;
+  ObjectTypeStruct mockObjectType() {
+    UUID objectTypeID = UUID.randomUUID();
+    ObjectTypeStruct objectTypeStruct = ObjectTypeStruct.builder()
+            .setId(objectTypeID)
+            .setName("ip")
+            .build();
+    when(objectFactTypeResolver.toObjectTypeStruct(objectTypeID)).thenReturn(objectTypeStruct);
+    return objectTypeStruct;
   }
 
-  UUID mockFact(FactEntity.FactObjectBinding binding) {
-    UUID factID = UUID.randomUUID();
-    UUID typeID = UUID.randomUUID();
+  ObjectRecord mockObjectRecord(ObjectTypeStruct objectType, String value) {
+    UUID objectID = UUID.randomUUID();
+    ObjectRecord objectRecord = new ObjectRecord()
+            .setId(objectID)
+            .setTypeID(objectType.getId())
+            .setValue(value);
+    when(objectFactDao.getObject(objectID)).thenReturn(objectRecord);
+    return objectRecord;
+  }
 
-    when(factManager.getFact(factID)).thenReturn(new FactEntity()
+  FactRecord mockFact(ObjectRecord source, ObjectRecord destination) {
+    UUID factID = UUID.randomUUID();
+    FactTypeStruct factTypeStruct = mockFactType("someFactType");
+
+    FactRecord factRecord = new FactRecord()
             .setId(factID)
-            .setTypeID(typeID)
+            .setTypeID(factTypeStruct.getId())
             .setValue("value")
             .setInReferenceToID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000002"))
             .setOriginID(UUID.fromString("00000000-0000-0000-0000-000000000003"))
             .setTrust(0.3f)
             .setConfidence(0.5f)
-            .setAccessMode(AccessMode.Public)
+            .setAccessMode(FactRecord.AccessMode.Public)
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321)
-            .setBindings(ObjectUtils.ifNotNull(binding, ListUtils::list, ListUtils.list()))
-    );
+            .setSourceObject(source)
+            .setDestinationObject(destination);
+    when(objectFactDao.getFact(factID)).thenReturn(factRecord);
 
-    when(factManager.getFactType(typeID)).thenReturn(new FactTypeEntity()
-            .setId(typeID)
-            .setName("type")
-    );
-
-    return factID;
+    return factRecord;
   }
 
+  FactTypeStruct mockFactType(String name) {
+    UUID factTypeId = UUID.randomUUID();
+    FactTypeStruct factTypeStruct = FactTypeStruct.builder().setId(factTypeId).setName(name).build();
+    when(objectFactTypeResolver.toFactTypeStruct(factTypeId)).thenReturn(factTypeStruct);
+    return factTypeStruct;
+  }
 }

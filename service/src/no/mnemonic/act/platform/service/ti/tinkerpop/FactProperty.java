@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
@@ -20,10 +20,10 @@ import static org.apache.tinkerpop.gremlin.structure.Property.Exceptions.propert
  */
 abstract class FactProperty<V> implements Property<V> {
 
-  private final FactEntity fact;
+  private final FactRecord fact;
   private final FactEdge owner;
 
-  private FactProperty(FactEntity fact, FactEdge owner) {
+  private FactProperty(FactRecord fact, FactEdge owner) {
     this.fact = ObjectUtils.notNull(fact, "'fact' is null!");
     this.owner = ObjectUtils.notNull(owner, "'owner' is null!");
   }
@@ -48,13 +48,13 @@ abstract class FactProperty<V> implements Property<V> {
     return StringFactory.propertyString(this);
   }
 
-  protected FactEntity getFact() {
+  protected FactRecord getFact() {
     // Need to expose 'fact' to inner static classes.
     return fact;
   }
 
   static class FactID extends FactProperty<String> {
-    FactID(FactEntity fact, FactEdge owner) {
+    FactID(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -70,7 +70,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class Value extends FactProperty<String> {
-    Value(FactEntity fact, FactEdge owner) {
+    Value(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -86,7 +86,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class InReferenceToID extends FactProperty<String> {
-    InReferenceToID(FactEntity fact, FactEdge owner) {
+    InReferenceToID(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -102,7 +102,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class OrganizationID extends FactProperty<String> {
-    OrganizationID(FactEntity fact, FactEdge owner) {
+    OrganizationID(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -118,7 +118,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class OriginID extends FactProperty<String> {
-    OriginID(FactEntity fact, FactEdge owner) {
+    OriginID(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -134,7 +134,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class Trust extends FactProperty<Float> {
-    Trust(FactEntity fact, FactEdge owner) {
+    Trust(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -150,7 +150,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class Confidence extends FactProperty<Float> {
-    Confidence(FactEntity fact, FactEdge owner) {
+    Confidence(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -166,7 +166,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class Certainty extends FactProperty<Float> {
-    Certainty(FactEntity fact, FactEdge owner) {
+    Certainty(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -186,7 +186,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class AccessMode extends FactProperty<String> {
-    AccessMode(FactEntity fact, FactEdge owner) {
+    AccessMode(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -202,7 +202,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class Timestamp extends FactProperty<Long> {
-    Timestamp(FactEntity fact, FactEdge owner) {
+    Timestamp(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
@@ -218,7 +218,7 @@ abstract class FactProperty<V> implements Property<V> {
   }
 
   static class LastSeenTimestamp extends FactProperty<Long> {
-    LastSeenTimestamp(FactEntity fact, FactEdge owner) {
+    LastSeenTimestamp(FactRecord fact, FactEdge owner) {
       super(fact, owner);
     }
 
