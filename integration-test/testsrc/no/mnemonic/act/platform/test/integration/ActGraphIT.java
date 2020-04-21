@@ -10,18 +10,16 @@ import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class ActGraphIT {
 
@@ -77,7 +75,6 @@ public class ActGraphIT {
     FactEntity used = createFact(usedType.getId(), "by")
             .setBindings(ListUtils.list(
                     createFactObjectBinding(ip.getId(), Direction.FactIsSource),
-                    createFactObjectBinding(domain.getId(), Direction.FactIsSource),
                     createFactObjectBinding(attack.getId(), Direction.FactIsDestination)
             ));
 
@@ -125,14 +122,6 @@ public class ActGraphIT {
   }
 
   @Test
-  public void testFollowMultiEdge() {
-    List<Vertex> vertices = createGraph().V(attack.getId()).out("used").toList();
-    assertEquals(2, vertices.size());
-    assertTrue(vertices.stream().anyMatch(v -> Objects.equals(v.id(), ip.getId())));
-    assertTrue(vertices.stream().anyMatch(v -> Objects.equals(v.id(), domain.getId())));
-  }
-
-  @Test
   public void testFollowEdgeWithoutFactAccess() {
     GraphTraversalSource g = ActGraph.builder()
             .setObjectManager(objectManager)
@@ -147,7 +136,7 @@ public class ActGraphIT {
   public void testCountOutgoingEdges() {
     assertEquals(1, IteratorUtils.count(createGraph().V(ip.getId()).out()));
     assertEquals(1, IteratorUtils.count(createGraph().V(domain.getId()).out()));
-    assertEquals(2, IteratorUtils.count(createGraph().V(attack.getId()).out()));
+    assertEquals(1, IteratorUtils.count(createGraph().V(attack.getId()).out()));
   }
 
   @Test

@@ -96,7 +96,7 @@ public class TraverseGraphDelegateTest {
             objectSearch,
       objectResponseConverter,
       factResponseConverter,
-            objectTypeHandler).setScriptExecutionTimeout(2000);
+            objectTypeHandler).setScriptExecutionTimeout(3000);
   }
 
   @Test(expected = AccessDeniedException.class)

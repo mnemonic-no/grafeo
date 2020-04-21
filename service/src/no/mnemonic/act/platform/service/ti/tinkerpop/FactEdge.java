@@ -14,9 +14,7 @@ import static no.mnemonic.act.platform.service.ti.tinkerpop.FactProperty.*;
 import static org.apache.tinkerpop.gremlin.structure.Edge.Exceptions.edgeRemovalNotSupported;
 
 /**
- * An edge represents a binding between two Objects by one Fact in the Object-Fact-Model. A Fact can be represented by
- * multiple edges if the Fact is bound to more than two Objects. Because of that, {@link Edge#id()} will return an
- * edge-specific UUID and NOT the Fact's UUID. This UUID is randomly generated when the edge is created.
+ * An edge represents a binding between two Objects by one Fact in the Object-Fact-Model.
  */
 public class FactEdge implements Edge {
 
@@ -25,7 +23,6 @@ public class FactEdge implements Edge {
   private final FactTypeEntity type;
   private final Vertex inVertex;
   private final Vertex outVertex;
-  private final UUID edgeID;
   private final Set<Property> allProperties;
 
   public FactEdge(ActGraph graph, UUID factID, UUID inVertexObjectID, UUID outVertexObjectID) {
@@ -34,7 +31,6 @@ public class FactEdge implements Edge {
     this.type = ObjectUtils.notNull(graph.getFactManager().getFactType(fact.getTypeID()), String.format("FactType with id = %s does not exist.", fact.getTypeID()));
     this.inVertex = graph.getElementFactory().getVertex(inVertexObjectID);
     this.outVertex = graph.getElementFactory().getVertex(outVertexObjectID);
-    this.edgeID = UUID.randomUUID(); // Generate a random ID for each new edge.
     this.allProperties = Collections.unmodifiableSet(getAllProperties()); // Generate properties set only once.
   }
 
@@ -54,7 +50,7 @@ public class FactEdge implements Edge {
 
   @Override
   public Object id() {
-    return edgeID;
+    return fact.getId();
   }
 
   @Override

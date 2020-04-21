@@ -15,7 +15,6 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Helper class for creation and retrieval of edges and vertices which implements simple caching.
@@ -25,9 +24,6 @@ public class ElementFactory {
   private static final int CACHE_MAXIMUM_SIZE = 10000;
 
   private final ActGraph owner;
-  // Maps the triplet (factID, inVertex, outVertex) to UUID returned by Edge.id().
-  // Needed in order to identify entry in 'edgeCache'.
-  private final Map<EdgeID, UUID> edgeIdMap;
   // Cache for created edges. This cache is manually populated by createEdges().
   private final Cache<UUID, Edge> edgeCache;
   // Cache for created vertices. This cache is automatically populated.
@@ -35,7 +31,6 @@ public class ElementFactory {
 
   private ElementFactory(ActGraph owner) {
     this.owner = ObjectUtils.notNull(owner, "'owner is null!'");
-    this.edgeIdMap = new ConcurrentHashMap<>();
     this.edgeCache = createEdgeCache();
     this.vertexCache = createVertexCache();
   }
@@ -123,14 +118,12 @@ public class ElementFactory {
   }
 
   private Edge createAndCache(UUID factID, UUID inVertex, UUID outVertex) {
-    // Try to fetch edge from cache first (but only if 'edgeID' is mapped, otherwise edge is not cached).
-    EdgeID edgeID = new EdgeID(factID, inVertex, outVertex);
-    Edge edge = ObjectUtils.ifNotNull(edgeIdMap.get(edgeID), edgeCache::getIfPresent);
+    // Try to fetch edge from cache first
+    Edge edge = edgeCache.getIfPresent(factID);
 
     if (edge == null) {
       // Edge is not present in cache, create new instance and cache it for later access.
       edge = new FactEdge(owner, factID, inVertex, outVertex);
-      edgeIdMap.put(edgeID, (UUID) edge.id());
       edgeCache.put((UUID) edge.id(), edge);
     }
 
@@ -140,7 +133,6 @@ public class ElementFactory {
   private Cache<UUID, Edge> createEdgeCache() {
     return CacheBuilder.newBuilder()
             .maximumSize(CACHE_MAXIMUM_SIZE)
-            .removalListener(this::cleanUpEdgeCache)
             .build();
   }
 
@@ -153,16 +145,6 @@ public class ElementFactory {
                 return new ObjectVertex(owner, key);
               }
             });
-  }
-
-  private void cleanUpEdgeCache(RemovalNotification notification) {
-    // Need to clean up 'edgeIdMap' when an entry gets evicted.
-    if (notification.wasEvicted()) {
-      SetUtils.set(edgeIdMap.entrySet())
-              .stream()
-              .filter(entry -> Objects.equals(entry.getValue(), notification.getKey()))
-              .forEach(entry -> edgeIdMap.remove(entry.getKey()));
-    }
   }
 
   public static class Builder {
@@ -180,32 +162,4 @@ public class ElementFactory {
       return this;
     }
   }
-
-  private static class EdgeID {
-    private final UUID factID;
-    private final UUID inVertex;
-    private final UUID outVertex;
-
-    private EdgeID(UUID factID, UUID inVertex, UUID outVertex) {
-      this.factID = factID;
-      this.inVertex = inVertex;
-      this.outVertex = outVertex;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      EdgeID that = (EdgeID) o;
-      return Objects.equals(factID, that.factID) &&
-              Objects.equals(inVertex, that.inVertex) &&
-              Objects.equals(outVertex, that.outVertex);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(factID, inVertex, outVertex);
-    }
-  }
-
 }
