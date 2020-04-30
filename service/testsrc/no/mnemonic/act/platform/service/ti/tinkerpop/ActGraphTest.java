@@ -34,6 +34,7 @@ public class ActGraphTest extends AbstractGraphTest {
     ActGraph.builder()
             .setSecurityContext(getSecurityContext())
             .setObjectTypeFactResolver(getObjectFactTypeResolver())
+            .setTraverseParams(TraverseParams.builder().build())
             .build();
   }
 
@@ -42,6 +43,7 @@ public class ActGraphTest extends AbstractGraphTest {
     ActGraph.builder()
             .setObjectFactDao(getObjectFactDao())
             .setSecurityContext(getSecurityContext())
+            .setTraverseParams(TraverseParams.builder().build())
             .build();
   }
 
@@ -50,6 +52,7 @@ public class ActGraphTest extends AbstractGraphTest {
     ActGraph.builder()
             .setObjectTypeFactResolver(getObjectFactTypeResolver())
             .setObjectFactDao(getObjectFactDao())
+            .setTraverseParams(TraverseParams.builder().build())
             .build();
   }
 

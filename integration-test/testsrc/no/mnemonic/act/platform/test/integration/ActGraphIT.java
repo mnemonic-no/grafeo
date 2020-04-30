@@ -17,6 +17,7 @@ import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
+import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.junit.docker.DockerTestUtils;
@@ -210,6 +211,7 @@ public class ActGraphIT {
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContextNoAccess)
+            .setTraverseParams(TraverseParams.builder().build())
             .build()
             .traversal();
 
@@ -249,6 +251,7 @@ public class ActGraphIT {
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(mockSecurityContext)
+            .setTraverseParams(TraverseParams.builder().build())
             .build()
             .traversal();
   }

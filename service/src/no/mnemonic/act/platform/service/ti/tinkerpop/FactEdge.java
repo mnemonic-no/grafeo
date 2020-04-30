@@ -85,6 +85,10 @@ public class FactEdge implements Edge {
     throw edgeRemovalNotSupported();
   }
 
+  public FactRecord getFactRecord() {
+    return this.fact;
+  }
+
   @Override
   public String toString() {
     return StringFactory.edgeString(this);

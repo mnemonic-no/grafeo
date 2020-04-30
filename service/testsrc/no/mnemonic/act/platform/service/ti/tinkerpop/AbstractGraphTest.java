@@ -40,6 +40,7 @@ abstract class AbstractGraphTest {
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContext)
+            .setTraverseParams(TraverseParams.builder().build())
             .build();
   }
 

@@ -109,6 +109,10 @@ public class ObjectVertex implements Vertex {
     throw vertexRemovalNotSupported();
   }
 
+  public ObjectRecord getObjectRecord() {
+    return this.object;
+  }
+
   @Override
   public String toString() {
     return StringFactory.vertexString(this);

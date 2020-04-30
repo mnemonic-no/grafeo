@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
+import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -38,6 +39,7 @@ public class ElementFactoryTest {
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContext)
+            .setTraverseParams(TraverseParams.builder().build())
             .build();
     elementFactory = ElementFactory.builder().setOwner(actGraph).build();
   }

@@ -31,13 +31,16 @@ public class ActGraph implements Graph {
   private final ObjectFactDao objectFactDao;
   private final ObjectFactTypeResolver objectFactTypeResolver;
   private final TiSecurityContext securityContext;
+  private final TraverseParams traverseParams;
 
   private ActGraph(ObjectFactDao objectFactDao,
                    ObjectFactTypeResolver objectFactTypeResolver,
-                   TiSecurityContext securityContext) {
+                   TiSecurityContext securityContext,
+                   TraverseParams traverseParams) {
     this.objectFactDao = ObjectUtils.notNull(objectFactDao, "'objectFactDao' is null!");
     this.objectFactTypeResolver = ObjectUtils.notNull(objectFactTypeResolver, "'objectFactTypeResolver' is null!'");
     this.securityContext = ObjectUtils.notNull(securityContext, "'securityContext' is null!");
+    this.traverseParams = ObjectUtils.notNull(traverseParams, "'traverseParams' is null!");
     this.elementFactory = ElementFactory.builder().setOwner(this).build();
   }
 
@@ -110,6 +113,10 @@ public class ActGraph implements Graph {
     return securityContext;
   }
 
+  public TraverseParams getTraverseParams() {
+    return traverseParams;
+  }
+
   ElementFactory getElementFactory() {
     return elementFactory;
   }
@@ -156,12 +163,13 @@ public class ActGraph implements Graph {
     private ObjectFactDao objectFactDao;
     private ObjectFactTypeResolver objectFactTypeResolver;
     private TiSecurityContext securityContext;
+    private TraverseParams traverseParams;
 
     private Builder() {
     }
 
     public ActGraph build() {
-      return new ActGraph(objectFactDao, objectFactTypeResolver, securityContext);
+      return new ActGraph(objectFactDao, objectFactTypeResolver, securityContext, traverseParams);
     }
 
     public Builder setObjectFactDao(ObjectFactDao objectFactDao) {
@@ -176,6 +184,11 @@ public class ActGraph implements Graph {
 
     public Builder setSecurityContext(TiSecurityContext securityContext) {
       this.securityContext = securityContext;
+      return this;
+    }
+
+    public Builder setTraverseParams(TraverseParams traverseParams) {
+      this.traverseParams = traverseParams;
       return this;
     }
   }

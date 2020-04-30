@@ -439,6 +439,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             .setObjectFactDao(getObjectFactDao())
             .setObjectTypeFactResolver(getObjectFactTypeResolver())
             .setSecurityContext(getSecurityContext())
+            .setTraverseParams(TraverseParams.builder().build())
             .build();
 
     ObjectTypeStruct objectType = mockObjectType();
