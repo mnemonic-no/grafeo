@@ -41,6 +41,7 @@ public class TraverseGraphHandler {
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
   private final ObjectFactTypeResolver objectFactTypeResolver;
+  private final FactRetractionHandler factRetractionHandler;
   private final ObjectResponseConverter objectResponseConverter;
   private final FactResponseConverter factResponseConverter;
 
@@ -51,12 +52,14 @@ public class TraverseGraphHandler {
                               ObjectFactDao objectFactDao,
                               ObjectFactTypeResolver objectFactTypeResolver,
                               ObjectResponseConverter objectResponseConverter,
-                              FactResponseConverter factResponseConverter) {
+                              FactResponseConverter factResponseConverter,
+                              FactRetractionHandler factRetractionHandler) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.objectFactTypeResolver = objectFactTypeResolver;
     this.objectResponseConverter = objectResponseConverter;
     this.factResponseConverter = factResponseConverter;
+    this.factRetractionHandler = factRetractionHandler;
   }
 
   /**
@@ -185,6 +188,7 @@ public class TraverseGraphHandler {
     return ActGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
+            .setFactRetractionHandler(factRetractionHandler)
             .setSecurityContext(securityContext)
             .setTraverseParams(traverseParams)
             .build();

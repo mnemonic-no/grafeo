@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
 import no.mnemonic.act.platform.service.ti.tinkerpop.exceptions.GraphOperationException;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ElementFactory;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
@@ -30,15 +31,18 @@ public class ActGraph implements Graph {
   private final ElementFactory elementFactory;
   private final ObjectFactDao objectFactDao;
   private final ObjectFactTypeResolver objectFactTypeResolver;
+  private final FactRetractionHandler factRetractionHandler;
   private final TiSecurityContext securityContext;
   private final TraverseParams traverseParams;
 
   private ActGraph(ObjectFactDao objectFactDao,
                    ObjectFactTypeResolver objectFactTypeResolver,
+                   FactRetractionHandler factRetractionHandler,
                    TiSecurityContext securityContext,
                    TraverseParams traverseParams) {
     this.objectFactDao = ObjectUtils.notNull(objectFactDao, "'objectFactDao' is null!");
     this.objectFactTypeResolver = ObjectUtils.notNull(objectFactTypeResolver, "'objectFactTypeResolver' is null!'");
+    this.factRetractionHandler = ObjectUtils.notNull(factRetractionHandler, "'factRetractionHandler' is null!");
     this.securityContext = ObjectUtils.notNull(securityContext, "'securityContext' is null!");
     this.traverseParams = ObjectUtils.notNull(traverseParams, "'traverseParams' is null!");
     this.elementFactory = ElementFactory.builder().setOwner(this).build();
@@ -109,6 +113,10 @@ public class ActGraph implements Graph {
     return objectFactDao;
   }
 
+  public FactRetractionHandler getFactRetractionHandler() {
+    return factRetractionHandler;
+  }
+
   public TiSecurityContext getSecurityContext() {
     return securityContext;
   }
@@ -163,13 +171,14 @@ public class ActGraph implements Graph {
     private ObjectFactDao objectFactDao;
     private ObjectFactTypeResolver objectFactTypeResolver;
     private TiSecurityContext securityContext;
+    private FactRetractionHandler factRetractionHandler;
     private TraverseParams traverseParams;
 
     private Builder() {
     }
 
     public ActGraph build() {
-      return new ActGraph(objectFactDao, objectFactTypeResolver, securityContext, traverseParams);
+      return new ActGraph(objectFactDao, objectFactTypeResolver, factRetractionHandler, securityContext, traverseParams);
     }
 
     public Builder setObjectFactDao(ObjectFactDao objectFactDao) {
@@ -179,6 +188,11 @@ public class ActGraph implements Graph {
 
     public Builder setObjectTypeFactResolver(ObjectFactTypeResolver objectTypeFactResolver) {
       this.objectFactTypeResolver = objectTypeFactResolver;
+      return this;
+    }
+
+    public Builder setFactRetractionHandler(FactRetractionHandler factRetractionHandler) {
+      this.factRetractionHandler = factRetractionHandler;
       return this;
     }
 

@@ -65,6 +65,8 @@ public class ObjectVertex implements Vertex {
             .stream()
             .filter(record -> matchesDirection(record, object, direction))
             .filter(graph.getSecurityContext()::hasReadPermission)
+            .filter(record -> graph.getTraverseParams().isIncludeRetracted() ||
+                    !graph.getFactRetractionHandler().isRetracted(record))
             .map(graph.getElementFactory()::createEdge)
             .filter(Objects::nonNull)
             .iterator();

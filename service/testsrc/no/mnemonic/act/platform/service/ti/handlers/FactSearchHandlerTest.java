@@ -148,13 +148,13 @@ public class FactSearchHandlerTest {
     FactRecord fact = new FactRecord().addFlag(FactRecord.Flag.RetractedHint);
 
     mockSearch(fact);
-    when(retractionHandler.isRetracted(fact.getId(), true)).thenReturn(true);
+    when(retractionHandler.isRetracted(fact)).thenReturn(true);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
     ResultSet<Fact> result = handler.search(criteria, true);
 
     assertEquals(1, ListUtils.list(result.iterator()).size());
-    verify(retractionHandler).isRetracted(fact.getId(), true);
+    verify(retractionHandler).isRetracted(fact);
   }
 
   @Test
@@ -162,13 +162,13 @@ public class FactSearchHandlerTest {
     FactRecord fact = new FactRecord();
 
     mockSearch(fact);
-    when(retractionHandler.isRetracted(fact.getId(), false)).thenReturn(false);
+    when(retractionHandler.isRetracted(fact)).thenReturn(false);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
     ResultSet<Fact> result = handler.search(criteria, false);
 
     assertEquals(1, ListUtils.list(result.iterator()).size());
-    verify(retractionHandler).isRetracted(fact.getId(), false);
+    verify(retractionHandler).isRetracted(fact);
   }
 
   @Test
@@ -176,13 +176,13 @@ public class FactSearchHandlerTest {
     FactRecord fact = new FactRecord().addFlag(FactRecord.Flag.RetractedHint);
 
     mockSearch(fact);
-    when(retractionHandler.isRetracted(fact.getId(), true)).thenReturn(true);
+    when(retractionHandler.isRetracted(fact)).thenReturn(true);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
     ResultSet<Fact> result = handler.search(criteria, false);
 
     assertEquals(0, ListUtils.list(result.iterator()).size());
-    verify(retractionHandler).isRetracted(fact.getId(), true);
+    verify(retractionHandler).isRetracted(fact);
   }
 
   private void mockSearch(int count) {

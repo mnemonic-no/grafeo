@@ -45,6 +45,8 @@ public class TraverseGraphHandlerTest {
   private ObjectFactTypeResolver objectFactTypeResolver;
   @Mock
   private TiSecurityContext securityContext;
+  @Mock
+  private FactRetractionHandler factRetractionHandler;
 
   private TraverseGraphHandler handler;
 
@@ -61,7 +63,8 @@ public class TraverseGraphHandlerTest {
             objectFactDao,
             objectFactTypeResolver,
             objectResponseConverter,
-            factResponseConverter).setScriptExecutionTimeout(5000);
+            factResponseConverter,
+            factRetractionHandler).setScriptExecutionTimeout(5000);
   }
 
   @Test

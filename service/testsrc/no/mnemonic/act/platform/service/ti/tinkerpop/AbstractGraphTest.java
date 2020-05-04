@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
@@ -24,6 +25,8 @@ abstract class AbstractGraphTest {
   @Mock
   private ObjectFactTypeResolver objectFactTypeResolver;
   @Mock
+  private FactRetractionHandler factRetractionHandler;
+  @Mock
   private TiSecurityContext securityContext;
 
   private ActGraph actGraph;
@@ -36,12 +39,7 @@ abstract class AbstractGraphTest {
     when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
     when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
 
-    actGraph = ActGraph.builder()
-            .setObjectFactDao(objectFactDao)
-            .setObjectTypeFactResolver(objectFactTypeResolver)
-            .setSecurityContext(securityContext)
-            .setTraverseParams(TraverseParams.builder().build())
-            .build();
+    actGraph = createActGraph(TraverseParams.builder().build());
   }
 
   ObjectFactDao getObjectFactDao() {
@@ -50,10 +48,22 @@ abstract class AbstractGraphTest {
 
   ObjectFactTypeResolver getObjectFactTypeResolver() { return objectFactTypeResolver; }
 
+  FactRetractionHandler getFactRetractionHandler() { return factRetractionHandler; }
+
   TiSecurityContext getSecurityContext() { return securityContext; }
 
   ActGraph getActGraph() {
     return actGraph;
+  }
+
+  ActGraph createActGraph(TraverseParams traverseParams) {
+    return ActGraph.builder()
+            .setObjectFactDao(getObjectFactDao())
+            .setObjectTypeFactResolver(getObjectFactTypeResolver())
+            .setSecurityContext(getSecurityContext())
+            .setFactRetractionHandler(getFactRetractionHandler())
+            .setTraverseParams(traverseParams)
+            .build();
   }
 
   ObjectTypeStruct mockObjectType() {

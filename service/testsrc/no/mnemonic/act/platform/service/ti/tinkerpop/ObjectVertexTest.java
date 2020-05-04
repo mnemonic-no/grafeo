@@ -436,12 +436,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testEdgesWithoutAccess() {
-    ActGraph actGraph = ActGraph.builder()
-            .setObjectFactDao(getObjectFactDao())
-            .setObjectTypeFactResolver(getObjectFactTypeResolver())
-            .setSecurityContext(getSecurityContext())
-            .setTraverseParams(TraverseParams.builder().build())
-            .build();
+    ActGraph actGraph = getActGraph();
 
     ObjectTypeStruct objectType = mockObjectType();
     ObjectRecord source = mockObjectRecord(objectType, "someValue");
@@ -472,15 +467,10 @@ public class ObjectVertexTest extends AbstractGraphTest {
     Long beforeTimestamp = 970000000L;
     Long afterTimestamp = 980000000L;
 
-    ActGraph timeFilterGraph = ActGraph.builder()
-            .setObjectFactDao(getObjectFactDao())
-            .setObjectTypeFactResolver(getObjectFactTypeResolver())
-            .setSecurityContext(getSecurityContext())
-            .setTraverseParams(TraverseParams.builder()
-                    .setAfterTimestamp(afterTimestamp)
-                    .setBeforeTimestamp(beforeTimestamp)
-                    .build())
-            .build();
+    ActGraph timeFilterGraph = createActGraph(TraverseParams.builder()
+            .setAfterTimestamp(afterTimestamp)
+            .setBeforeTimestamp(beforeTimestamp)
+            .build());
 
     Vertex vertex = new ObjectVertex(
             timeFilterGraph,
@@ -499,6 +489,35 @@ public class ObjectVertexTest extends AbstractGraphTest {
       assertEquals(beforeTimestamp, criteria.getEndTimestamp());
       return true;
     }));
+  }
+
+  @Test
+  public void testEdgesAndRetractions() {
+    ActGraph actGraphNoRetractions = createActGraph(TraverseParams.builder().setIncludeRetracted(false).build());
+
+    ObjectTypeStruct objectType = mockObjectType();
+    ObjectRecord source = mockObjectRecord(objectType, "someValue");
+    ObjectRecord destination = mockObjectRecord(objectType, "someOthervalue");
+
+    FactRecord retractedFact = new FactRecord()
+            .setBidirectionalBinding(true)
+            .setId(UUID.randomUUID())
+            .setTypeID(mockFactType("someType").getId())
+            .setValue("someValue")
+            .setSourceObject(source)
+            .setDestinationObject(destination);
+
+    when(getObjectFactDao().searchFacts(notNull())).thenAnswer(
+            x -> ResultContainer.<FactRecord>builder().setValues(list(retractedFact).iterator()).build()
+    );
+    when(getFactRetractionHandler().isRetracted(retractedFact)).thenReturn(true);
+
+    // Should have no edges since the fact is retracted
+    Vertex vertex = new ObjectVertex(actGraphNoRetractions, source, objectType);
+
+    assertFalse(vertex.edges(BOTH).hasNext());
+    assertFalse(vertex.edges(OUT).hasNext());
+    assertFalse(vertex.edges(IN).hasNext());
   }
 
   private Vertex createVertex() {

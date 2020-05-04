@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
+import no.mnemonic.commons.utilities.ObjectUtils;
+
 /**
  * Immutable record that holds parameters that control the
  * traversal of graphs.
@@ -10,13 +12,13 @@ public class TraverseParams {
   private final Long beforeTimestamp;
   private final Long afterTimestamp;
 
-  private TraverseParams(boolean includeRetracted, Long beforeTimestamp, Long afterTimestamp) {
-    this.includeRetracted = includeRetracted;
+  private TraverseParams(Boolean includeRetracted, Long beforeTimestamp, Long afterTimestamp) {
+    this.includeRetracted = ObjectUtils.ifNull(includeRetracted, false);
     this.beforeTimestamp = beforeTimestamp;
     this.afterTimestamp = afterTimestamp;
   }
 
-  public boolean isIncludeRetracted() {
+  public Boolean isIncludeRetracted() {
     return includeRetracted;
   }
 
@@ -32,7 +34,7 @@ public class TraverseParams {
 
   public static class Builder {
 
-    private boolean includeRetracted = false;
+    private Boolean includeRetracted;
     private Long beforeTimestamp;
     private Long afterTimestamp;
 
@@ -42,7 +44,7 @@ public class TraverseParams {
       return new TraverseParams(includeRetracted, beforeTimestamp, afterTimestamp);
     }
 
-    public Builder setIncludeRetracted(boolean includeRetracted) {
+    public Builder setIncludeRetracted(Boolean includeRetracted) {
       this.includeRetracted = includeRetracted;
       return this;
     }

@@ -12,7 +12,6 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
@@ -88,8 +87,7 @@ public class FactSearchHandler {
   private boolean includeRetracted(FactRecord fact, Boolean includeRetracted) {
     // Call FactRetractionHandler for every Fact in order to populate the cache which is re-used by the converter.
     // Because of that, it's only calculated once whether a Fact is retracted from the user's point of view.
-    boolean retractedHint = SetUtils.set(fact.getFlags()).contains(FactRecord.Flag.RetractedHint);
-    boolean isRetracted = retractionHandler.isRetracted(fact.getId(), retractedHint);
+    boolean isRetracted = retractionHandler.isRetracted(fact);
     return ObjectUtils.ifNull(includeRetracted, false) || !isRetracted;
   }
 }

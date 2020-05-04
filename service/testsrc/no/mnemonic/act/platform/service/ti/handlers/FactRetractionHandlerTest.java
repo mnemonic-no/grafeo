@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
@@ -46,56 +47,22 @@ public class FactRetractionHandlerTest {
   @Test
   public void testIsRetractedWithNullInput() {
     assertFalse(handler.isRetracted(null));
-    assertFalse(handler.isRetracted(null, null));
   }
 
   @Test
   public void testIsRetractedWithoutRetractedHintNotRetracted() {
-    FactDocument fact = new FactDocument().setId(UUID.randomUUID());
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID());
 
-    assertFalse(handler.isRetracted(fact.getId()));
+    assertFalse(handler.isRetracted(fact));
 
-    verify(factSearchManager).searchFacts(inReferenceTo(fact.getId()));
-    verifyNoMoreInteractions(factSearchManager);
-  }
-
-  @Test
-  public void testIsRetractedWithoutRetractedHintRetracted() {
-    FactDocument fact = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction = new FactDocument().setId(UUID.randomUUID());
-    when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction));
-
-    assertTrue(handler.isRetracted(fact.getId()));
-
-    verify(factSearchManager).searchFacts(inReferenceTo(fact.getId()));
-    verify(factSearchManager).searchFacts(inReferenceTo(retraction.getId()));
-    verifyNoMoreInteractions(factSearchManager);
-  }
-
-  @Test
-  public void testIsRetractedWithRetractedHintFalse() {
-    assertFalse(handler.isRetracted(UUID.randomUUID(), false));
-    verifyNoMoreInteractions(factSearchManager);
-  }
-
-  @Test
-  public void testIsRetractedWithRetractedHintTrue() {
-    FactDocument fact = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction = new FactDocument().setId(UUID.randomUUID());
-    when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction));
-
-    assertTrue(handler.isRetracted(fact.getId(), true));
-
-    verify(factSearchManager).searchFacts(inReferenceTo(fact.getId()));
-    verify(factSearchManager).searchFacts(inReferenceTo(retraction.getId()));
     verifyNoMoreInteractions(factSearchManager);
   }
 
   @Test
   public void testIsRetractedPopulatesSearchCriteria() {
-    FactDocument fact = new FactDocument().setId(UUID.randomUUID());
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
 
-    assertFalse(handler.isRetracted(fact.getId()));
+    assertFalse(handler.isRetracted(fact));
 
     verify(factSearchManager).searchFacts(argThat(criteria -> {
       assertEquals(set(fact.getId()), criteria.getInReferenceTo());
@@ -107,8 +74,21 @@ public class FactRetractionHandlerTest {
   }
 
   @Test
+  public void testIsRetractedWithRetractedHintTrue() {
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
+    FactDocument retraction = new FactDocument().setId(UUID.randomUUID());
+    when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction));
+
+    assertTrue(handler.isRetracted(fact));
+
+    verify(factSearchManager).searchFacts(inReferenceTo(fact.getId()));
+    verify(factSearchManager).searchFacts(inReferenceTo(retraction.getId()));
+    verifyNoMoreInteractions(factSearchManager);
+  }
+
+  @Test
   public void testIsRetractedWithRetractedRetraction() {
-    FactDocument fact = new FactDocument().setId(UUID.randomUUID());
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
     FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
     FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
 
@@ -117,12 +97,12 @@ public class FactRetractionHandlerTest {
     when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction1));
     when(factSearchManager.searchFacts(inReferenceTo(retraction1.getId()))).thenReturn(createSearchResult(retraction2));
 
-    assertFalse(handler.isRetracted(fact.getId()));
+    assertFalse(handler.isRetracted(fact));
   }
 
   @Test
   public void testIsRetractedWithRetractedRetractionTwoLevels() {
-    FactDocument fact = new FactDocument().setId(UUID.randomUUID());
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
     FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
     FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
     FactDocument retraction3 = new FactDocument().setId(UUID.randomUUID());
@@ -133,12 +113,12 @@ public class FactRetractionHandlerTest {
     when(factSearchManager.searchFacts(inReferenceTo(retraction1.getId()))).thenReturn(createSearchResult(retraction2));
     when(factSearchManager.searchFacts(inReferenceTo(retraction2.getId()))).thenReturn(createSearchResult(retraction3));
 
-    assertTrue(handler.isRetracted(fact.getId()));
+    assertTrue(handler.isRetracted(fact));
   }
 
   @Test
   public void testIsRetractedWithRetractedRetractionComplexTree() {
-    FactDocument fact = new FactDocument().setId(UUID.randomUUID());
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
     FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
     FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
     FactDocument retraction3 = new FactDocument().setId(UUID.randomUUID());
@@ -151,22 +131,22 @@ public class FactRetractionHandlerTest {
     when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction1, retraction3, retraction4));
     when(factSearchManager.searchFacts(inReferenceTo(retraction1.getId()))).thenReturn(createSearchResult(retraction2));
 
-    assertTrue(handler.isRetracted(fact.getId()));
+    assertTrue(handler.isRetracted(fact));
   }
 
   @Test
   public void testIsRetractedCachesResult() {
-    FactDocument fact = new FactDocument().setId(UUID.randomUUID());
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
     FactDocument retraction = new FactDocument().setId(UUID.randomUUID());
     when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction));
 
-    assertTrue(handler.isRetracted(fact.getId()));
+    assertTrue(handler.isRetracted(fact));
 
     verify(factSearchManager).searchFacts(inReferenceTo(fact.getId()));
     verify(factSearchManager).searchFacts(inReferenceTo(retraction.getId()));
     verifyNoMoreInteractions(factSearchManager);
 
-    assertTrue(handler.isRetracted(fact.getId()));
+    assertTrue(handler.isRetracted(fact));
     verifyNoMoreInteractions(factSearchManager);
   }
 

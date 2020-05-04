@@ -175,23 +175,23 @@ public class FactResponseConverterTest {
   @Test
   public void testConvertFactNotRetracted() {
     FactRecord record = createRecord();
-    when(factRetractionHandler.isRetracted(record.getId(), false)).thenReturn(false);
+    when(factRetractionHandler.isRetracted(record)).thenReturn(false);
 
     Fact model = converter.apply(record);
 
     assertEquals(SetUtils.set(), model.getFlags());
-    verify(factRetractionHandler).isRetracted(record.getId(), false);
+    verify(factRetractionHandler).isRetracted(record);
   }
 
   @Test
   public void testConvertFactIsRetracted() {
     FactRecord record = createRecord().addFlag(FactRecord.Flag.RetractedHint);
-    when(factRetractionHandler.isRetracted(record.getId(), true)).thenReturn(true);
+    when(factRetractionHandler.isRetracted(record)).thenReturn(true);
 
     Fact model = converter.apply(record);
 
     assertEquals(SetUtils.set(Fact.Flag.Retracted), model.getFlags());
-    verify(factRetractionHandler).isRetracted(record.getId(), true);
+    verify(factRetractionHandler).isRetracted(record);
   }
 
   private FactRecord createRecord() {

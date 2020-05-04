@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
@@ -8,6 +9,7 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -16,7 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Handler class computing whether a Fact has been retracted. See {@link #isRetracted(UUID, Boolean)} for the details.
+ * Handler class computing whether a Fact has been retracted. See {@link #isRetracted(FactRecord)} for the details.
  */
 @ServiceRequestScope
 public class FactRetractionHandler {
@@ -38,17 +40,6 @@ public class FactRetractionHandler {
 
   /**
    * Check whether a Fact as been retracted (from the current user's point of view).
-   *
-   * @param factID ID of Fact
-   * @return True if Fact has been retracted
-   * @see #isRetracted(UUID, Boolean)
-   */
-  public boolean isRetracted(UUID factID) {
-    return isRetracted(factID, null);
-  }
-
-  /**
-   * Check whether a Fact as been retracted (from the current user's point of view).
    * <p>
    * A Fact has been retracted from the current user's point of view if the user has access to at least one Retraction
    * Fact and that Retraction Fact is not in turn retracted. The implementation will recursively follow the retractions
@@ -57,27 +48,24 @@ public class FactRetractionHandler {
    * The result of the above computation is cached per class instance in order to speed up multiple checks for the same
    * Fact. Note that one class instance should not been used across multiple requests from different users because the
    * computation result depends on whether the user has access to retractions.
-   * <p>
-   * Provide the 'retractedHint' parameter to optimize the computation. If it is known upfront that the Fact has never
-   * been retracted it is not necessary to perform the computation by recursively following retractions. It is still
-   * useful to call this method in order to populate the cache.
    *
-   * @param factID        ID of Fact
-   * @param retractedHint Set to false if the Fact has never been retracted
+   * @param fact        FactRecord to check
    * @return True if Fact has been retracted
    */
-  public boolean isRetracted(UUID factID, Boolean retractedHint) {
-    if (factID == null) return false;
+  public boolean isRetracted(FactRecord fact) {
+    if (fact == null) return false;
+
+    boolean retractedHint = SetUtils.set(fact.getFlags()).contains(FactRecord.Flag.RetractedHint);
 
     // If it's known that the Fact has never been retracted store this information immediately.
     // This will save a lot of calls to ElasticSearch!
-    if (retractedHint != null && !retractedHint) {
-      retractionCache.put(factID, false);
+    if (!retractedHint) {
+      retractionCache.put(fact.getId(), false);
     }
 
     // If no hint is provided or the Fact has been retracted by some user
     // compute if the Fact is retracted from the current user's point of view.
-    return retractionCache.computeIfAbsent(factID, this::computeRetraction);
+    return retractionCache.computeIfAbsent(fact.getId(), this::computeRetraction);
   }
 
   private boolean computeRetraction(UUID factID) {

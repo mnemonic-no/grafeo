@@ -90,7 +90,6 @@ public class FactResponseConverter implements Function<FactRecord, Fact> {
   }
 
   private Set<Fact.Flag> convertFlags(FactRecord record) {
-    boolean retractedHint = SetUtils.set(record.getFlags()).contains(FactRecord.Flag.RetractedHint);
-    return factRetractionHandler.isRetracted(record.getId(), retractedHint) ? SetUtils.set(Fact.Flag.Retracted) : SetUtils.set();
+    return factRetractionHandler.isRetracted(record) ? SetUtils.set(Fact.Flag.Retracted) : SetUtils.set();
   }
 }

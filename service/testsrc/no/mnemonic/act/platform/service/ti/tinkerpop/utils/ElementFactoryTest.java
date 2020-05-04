@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
@@ -27,6 +28,8 @@ public class ElementFactoryTest {
   @Mock
   private ObjectFactTypeResolver objectFactTypeResolver;
   @Mock
+  private FactRetractionHandler factRetractionHandler;
+  @Mock
   private TiSecurityContext securityContext;
 
   private ElementFactory elementFactory;
@@ -39,14 +42,15 @@ public class ElementFactoryTest {
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContext)
+            .setFactRetractionHandler(factRetractionHandler)
             .setTraverseParams(TraverseParams.builder().build())
             .build();
     elementFactory = ElementFactory.builder().setOwner(actGraph).build();
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateElementFactoryWithoutOwner() {
-    ElementFactory.builder().build();
+    assertThrows(RuntimeException.class, () -> ElementFactory.builder().build());
   }
 
   @Test

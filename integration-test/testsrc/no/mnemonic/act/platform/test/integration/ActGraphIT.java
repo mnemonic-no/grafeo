@@ -16,6 +16,8 @@ import no.mnemonic.act.platform.dao.facade.converters.FactCommentRecordConverter
 import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
@@ -211,10 +213,12 @@ public class ActGraphIT {
     when(securityContextNoAccess.getAvailableOrganizationID()).thenReturn(SetUtils.set(new UUID(0, 1)));
     when(securityContextNoAccess.hasReadPermission(any(FactRecord.class))).thenReturn(false);
 
+    FactRetractionHandler factRetractionHandler = new FactRetractionHandler(new FactTypeRequestResolver(factManager), factSearchManager, mockSecurityContext);
     GraphTraversalSource g = ActGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContextNoAccess)
+            .setFactRetractionHandler(factRetractionHandler)
             .setTraverseParams(TraverseParams.builder().build())
             .build()
             .traversal();
@@ -295,15 +299,52 @@ public class ActGraphIT {
             .build()).V(someIp.getId()).outE("resolve")));
   }
 
+  @Test
+  public void testFilterByRetractionStatus() {
+    ObjectRecord someIp = createObject(ipType.getId(), "3.3.3.3");
+    ObjectRecord someDomain = createObject(domainType.getId(), "testing.org");
+
+    objectFactDao.storeObject(someIp);
+    objectFactDao.storeObject(someDomain);
+
+    // Create and retract a fact
+    FactRecord retractedFact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setTypeID(resolveType.getId())
+            .setAccessMode(FactRecord.AccessMode.Public)
+            .setValue("to")
+            .setSourceObject(someIp)
+            .setDestinationObject(someDomain);
+    objectFactDao.storeFact(retractedFact);
+    retractFact(retractedFact);
+
+    // Include retracted
+    assertEquals(1, IteratorUtils.count(createGraph(TraverseParams.builder()
+            .setIncludeRetracted(true)
+            .build()).V(someIp.getId()).outE("resolve")));
+
+    // Don't include retracted
+    assertEquals(0, IteratorUtils.count(createGraph(TraverseParams.builder()
+            .setIncludeRetracted(false)
+            .build()).V(someIp.getId()).outE("resolve")));
+  }
+
   private GraphTraversalSource createGraph() {
     return createGraph(TraverseParams.builder().build());
   }
 
   private GraphTraversalSource createGraph(TraverseParams traverseParams) {
+    // Need a new instance every time due to caching
+    FactRetractionHandler factRetractionHandler = new FactRetractionHandler(
+            new FactTypeRequestResolver(factManager),
+            factSearchManager,
+            mockSecurityContext);
+
     return ActGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(mockSecurityContext)
+            .setFactRetractionHandler(factRetractionHandler)
             .setTraverseParams(traverseParams)
             .build()
             .traversal();
@@ -328,5 +369,20 @@ public class ActGraphIT {
             .setId(UUID.randomUUID())
             .setTypeID(typeID)
             .setValue(value);
+  }
+
+  private void retractFact(FactRecord factToRetract) {
+    FactTypeRequestResolver factTypeRequestResolver = new FactTypeRequestResolver(factManager);
+    FactTypeEntity retractFactType = factTypeRequestResolver.resolveRetractionFactType();
+    FactRecord retractionFact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setTypeID(retractFactType.getId())
+            .setInReferenceToID(factToRetract.getId())
+            .setAccessMode(FactRecord.AccessMode.Public)
+            .setTimestamp(System.currentTimeMillis())
+            .setLastSeenTimestamp(System.currentTimeMillis());
+
+    objectFactDao.storeFact(retractionFact);
+    objectFactDao.retractFact(factToRetract);
   }
 }
