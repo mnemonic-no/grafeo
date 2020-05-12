@@ -48,12 +48,15 @@ public class ObjectVertex implements Vertex {
 
   @Override
   public Iterator<Edge> edges(Direction direction, String... edgeLabels) {
-    Set<UUID> factTypeIds = this.graph.getObjectFactTypeResolver().factTypeNamesToIds(set(edgeLabels));
+    Set<UUID> factTypeIds = graph.getObjectFactTypeResolver().factTypeNamesToIds(set(edgeLabels));
 
     ResultContainer<FactRecord> factRecords = graph.getObjectFactDao().searchFacts(
             FactSearchCriteria.builder()
                     .addObjectID(object.getId())
                     .setFactTypeID(factTypeIds)
+                    .setStartTimestamp(graph.getTraverseParams().getAfterTimestamp())
+                    .setEndTimestamp(graph.getTraverseParams().getBeforeTimestamp())
+                    .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.timestamp)
                     .setCurrentUserID(graph.getSecurityContext().getCurrentUserID())
                     .setAvailableOrganizationID(graph.getSecurityContext().getAvailableOrganizationID())
                     .build());

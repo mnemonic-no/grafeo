@@ -30,7 +30,7 @@ import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class TraverseGraphHandlerTest {
@@ -61,7 +61,7 @@ public class TraverseGraphHandlerTest {
             objectFactDao,
             objectFactTypeResolver,
             objectResponseConverter,
-            factResponseConverter).setScriptExecutionTimeout(3000);
+            factResponseConverter).setScriptExecutionTimeout(5000);
   }
 
   @Test
@@ -189,7 +189,6 @@ public class TraverseGraphHandlerTest {
             .setSourceObject(source)
             .setDestinationObject(destination);
     when(objectFactDao.getFact(factID)).thenReturn(factRecord);
-    when(objectFactTypeResolver.toFactTypeStruct(factTypeStruct.getId())).thenReturn(factTypeStruct);
     when(factResponseConverter.apply(factRecord)).thenReturn(Fact.builder().setId(factRecord.getId()).build());
 
     // Always just return this fact

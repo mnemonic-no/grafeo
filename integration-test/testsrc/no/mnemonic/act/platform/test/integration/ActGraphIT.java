@@ -52,6 +52,10 @@ public class ActGraphIT {
   private static FactSearchManager factSearchManager;
   private static ObjectFactTypeResolver objectFactTypeResolver;
   private static TiSecurityContext mockSecurityContext;
+  private static ObjectTypeEntity ipType;
+  private static ObjectTypeEntity domainType;
+  private static ObjectTypeEntity attackType;
+  private static FactTypeEntity resolveType;
   private static ObjectRecord ip;
   private static ObjectRecord domain;
   private static ObjectRecord attack;
@@ -129,14 +133,14 @@ public class ActGraphIT {
     // ip(1.1.1.1)         - resolve("to")   -> domain(example.org)
     // attack(apt)         - used("by")      -> ip(1.1.1.1)
     // domain(example.org) <- seen("today")
-    ObjectTypeEntity ipType = createObjectType("ip");
-    ObjectTypeEntity domainType = createObjectType("domain");
-    ObjectTypeEntity attackType = createObjectType("attack");
+    ipType = createObjectType("ip");
+    domainType = createObjectType("domain");
+    attackType = createObjectType("attack");
     ip = createObject(ipType.getId(), "1.1.1.1");
     domain = createObject(domainType.getId(), "example.org");
     attack = createObject(attackType.getId(), "apt");
 
-    FactTypeEntity resolveType = createFactType("resolve");
+    resolveType = createFactType("resolve");
     FactTypeEntity seenType = createFactType("seen");
     FactTypeEntity usedType = createFactType("used");
 
@@ -246,12 +250,61 @@ public class ActGraphIT {
     assertEquals(0, IteratorUtils.count(createGraph().V(domain.getId()).out("seen", "resolve")));
   }
 
+  @Test
+  public void testFilterByTime() {
+    ObjectRecord someIp = createObject(ipType.getId(), "2.2.2.2");
+    ObjectRecord someDomain = createObject(domainType.getId(), "test.org");
+
+    objectFactDao.storeObject(someIp);
+    objectFactDao.storeObject(someDomain);
+
+    Long t0 = 98000000L;
+    Long beforeT0 = t0 - 10;
+    Long afterT0 = t0 + 10;
+
+    FactRecord someFact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setTypeID(resolveType.getId())
+            .setAccessMode(FactRecord.AccessMode.Public)
+            .setValue("to")
+            .setTimestamp(t0)
+            .setLastSeenTimestamp(t0)
+            .setSourceObject(someIp)
+            .setDestinationObject(someDomain);
+
+    objectFactDao.storeFact(someFact);
+
+    // No time filter
+    assertEquals(1, IteratorUtils.count(createGraph(TraverseParams.builder()
+            .build()).V(someIp.getId()).outE("resolve")));
+
+    // Just before
+    assertEquals(0, IteratorUtils.count(createGraph(TraverseParams.builder()
+            .setBeforeTimestamp(beforeT0)
+            .build()).V(someIp.getId()).outE("resolve")));
+
+    // Just after
+    assertEquals(0, IteratorUtils.count(createGraph(TraverseParams.builder()
+            .setAfterTimestamp(afterT0)
+            .build()).V(someIp.getId()).outE("resolve")));
+
+    // In between
+    assertEquals(1, IteratorUtils.count(createGraph(TraverseParams.builder()
+            .setAfterTimestamp(beforeT0)
+            .setBeforeTimestamp(afterT0)
+            .build()).V(someIp.getId()).outE("resolve")));
+  }
+
   private GraphTraversalSource createGraph() {
+    return createGraph(TraverseParams.builder().build());
+  }
+
+  private GraphTraversalSource createGraph(TraverseParams traverseParams) {
     return ActGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(mockSecurityContext)
-            .setTraverseParams(TraverseParams.builder().build())
+            .setTraverseParams(traverseParams)
             .build()
             .traversal();
   }

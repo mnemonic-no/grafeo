@@ -23,23 +23,23 @@ import static org.apache.tinkerpop.gremlin.structure.Direction.*;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class ObjectVertexTest extends AbstractGraphTest {
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateVertexWithoutGraph() {
-    new ObjectVertex(null, new ObjectRecord(), ObjectTypeStruct.builder().build());
+    assertThrows(RuntimeException.class, () -> new ObjectVertex(null, new ObjectRecord(), ObjectTypeStruct.builder().build()));
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateVertexWithoutObject() {
-    new ObjectVertex(getActGraph(), null, ObjectTypeStruct.builder().build());
+    assertThrows(RuntimeException.class, () -> new ObjectVertex(getActGraph(), null, ObjectTypeStruct.builder().build()));
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateVertexWithoutObjectType() {
-    new ObjectVertex(getActGraph(), new ObjectRecord(), null);
+    assertThrows(RuntimeException.class, () -> new ObjectVertex(getActGraph(), new ObjectRecord(), null));
   }
 
   @Test
@@ -353,15 +353,16 @@ public class ObjectVertexTest extends AbstractGraphTest {
     assertEquals(VertexProperty.empty(), property);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testGetValueThatIsNotPresentOnVertex() {
-    Vertex vertex = createVertex();
-    vertex.value("something");
+    assertThrows(IllegalStateException.class, () -> {
+      Vertex vertex = createVertex();
+      vertex.value("something");
+    });
   }
 
   @Test
   public void testMatchesDirectionBidirectional() {
-
     ObjectRecord objectA = new ObjectRecord().setId(UUID.randomUUID());
     ObjectRecord objectB = new ObjectRecord().setId(UUID.randomUUID());
 
@@ -464,6 +465,40 @@ public class ObjectVertexTest extends AbstractGraphTest {
     assertFalse(vertex.edges(BOTH).hasNext());
     assertFalse(vertex.edges(OUT).hasNext());
     assertFalse(vertex.edges(IN).hasNext());
+  }
+
+  @Test
+  public void testAppliesTimeFilterToSearch() {
+    Long beforeTimestamp = 970000000L;
+    Long afterTimestamp = 980000000L;
+
+    ActGraph timeFilterGraph = ActGraph.builder()
+            .setObjectFactDao(getObjectFactDao())
+            .setObjectTypeFactResolver(getObjectFactTypeResolver())
+            .setSecurityContext(getSecurityContext())
+            .setTraverseParams(TraverseParams.builder()
+                    .setAfterTimestamp(afterTimestamp)
+                    .setBeforeTimestamp(beforeTimestamp)
+                    .build())
+            .build();
+
+    Vertex vertex = new ObjectVertex(
+            timeFilterGraph,
+            new ObjectRecord().setTypeID(UUID.randomUUID()),
+            ObjectTypeStruct.builder().setName("someObjectType").setId(UUID.randomUUID()).build());
+
+    // Don't care about the answer
+    when(getActGraph().getObjectFactDao().searchFacts(any()))
+            .thenAnswer(invocation -> ResultContainer.<FactRecord>builder().build());
+
+    // Fetching edges will trigger a search for facts
+    vertex.edges(BOTH);
+
+    verify(getObjectFactDao(), times(1)).searchFacts(argThat(criteria -> {
+      assertEquals(afterTimestamp, criteria.getStartTimestamp());
+      assertEquals(beforeTimestamp, criteria.getEndTimestamp());
+      return true;
+    }));
   }
 
   private Vertex createVertex() {
