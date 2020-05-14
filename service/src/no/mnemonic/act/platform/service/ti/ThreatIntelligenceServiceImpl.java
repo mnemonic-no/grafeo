@@ -219,6 +219,12 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   }
 
   @Override
+  public ResultSet<?> traverse(RequestHeader rh, TraverseGraphByObjectTypeValueRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
+    return delegateProvider.get(TraverseByObjectTypeValueDelegate.class).handle(request);
+  }
+
+  @Override
   public Origin getOrigin(RequestHeader rh, GetOriginByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return delegateProvider.get(OriginGetByIdDelegate.class).handle(request);
