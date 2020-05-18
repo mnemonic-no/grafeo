@@ -19,13 +19,13 @@ public class TraverseGraphByObjectIdRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()", required = true)
   @NotBlank
   private String query;
-  @ApiModelProperty(value = "Include retracted Facts (default false)", example = "false")
+  @ApiModelProperty(value = "Traverse retracted Facts (default false)", example = "false")
   private Boolean includeRetracted;
-  @ApiModelProperty(value = "Only return Facts added before a specific timestamp",
+  @ApiModelProperty(value = "Only traverse Facts added before a specific timestamp",
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long before;
-  @ApiModelProperty(value = "Only return Facts added after a specific timestamp",
+  @ApiModelProperty(value = "Only traverse Facts added after a specific timestamp",
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;

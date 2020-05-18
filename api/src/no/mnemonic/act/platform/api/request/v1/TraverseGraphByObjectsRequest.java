@@ -5,19 +5,24 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampDeserializer;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
-import no.mnemonic.act.platform.api.validation.constraints.ServiceNotNull;
+import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import java.util.Set;
 
-@ApiModel(description = "Traverse the Object/Fact graph starting at an Object identified by its type and value.")
-public class TraverseGraphByObjectTypeValueRequest implements ValidatingRequest {
+@ApiModel(description = "Traverse the Object/Fact graph starting at a set of objects identified by either their id " +
+        "or their type and value.")
+public class TraverseGraphByObjectsRequest implements ValidatingRequest {
 
-  @ApiModelProperty(hidden = true)
-  @ServiceNotNull
-  private String type;
-  @ApiModelProperty(hidden = true)
-  @ServiceNotNull
-  private String value;
+  @ApiModelProperty(
+          value = "Set of object identifiers. Takes Object UUID or Object identified by 'type/value')",
+          example = "['123e4567-e89b-12d3-a456-426655440000', 'ThreatActor/Sofacy'}]",
+          required = true)
+  @NotEmpty
+  private Set<String> objects;
+
   @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()", required = true)
   @NotBlank
   private String query;
@@ -32,29 +37,26 @@ public class TraverseGraphByObjectTypeValueRequest implements ValidatingRequest 
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
 
-  public String getType() {
-    return type;
-  }
-
-  public TraverseGraphByObjectTypeValueRequest setType(String type) {
-    this.type = type;
+  public TraverseGraphByObjectsRequest setObjects(Set<String> objects) {
+    this.objects = ObjectUtils.ifNotNull(objects, SetUtils::set);
     return this;
   }
 
-  public String getValue() {
-    return value;
-  }
-
-  public TraverseGraphByObjectTypeValueRequest setValue(String value) {
-    this.value = value;
+  public TraverseGraphByObjectsRequest addObject(String object) {
+    this.objects = SetUtils.addToSet(this.objects, object);
     return this;
   }
+
+  public Set<String> getObjects() {
+    return objects;
+  }
+
 
   public String getQuery() {
     return query;
   }
 
-  public TraverseGraphByObjectTypeValueRequest setQuery(String query) {
+  public TraverseGraphByObjectsRequest setQuery(String query) {
     this.query = query;
     return this;
   }
@@ -63,7 +65,7 @@ public class TraverseGraphByObjectTypeValueRequest implements ValidatingRequest 
     return includeRetracted;
   }
 
-  public TraverseGraphByObjectTypeValueRequest setIncludeRetracted(Boolean includeRetracted) {
+  public TraverseGraphByObjectsRequest setIncludeRetracted(Boolean includeRetracted) {
     this.includeRetracted = includeRetracted;
     return this;
   }
@@ -72,7 +74,7 @@ public class TraverseGraphByObjectTypeValueRequest implements ValidatingRequest 
     return before;
   }
 
-  public TraverseGraphByObjectTypeValueRequest setBefore(Long before) {
+  public TraverseGraphByObjectsRequest setBefore(Long before) {
     this.before = before;
     return this;
   }
@@ -81,7 +83,7 @@ public class TraverseGraphByObjectTypeValueRequest implements ValidatingRequest 
     return after;
   }
 
-  public TraverseGraphByObjectTypeValueRequest setAfter(Long after) {
+  public TraverseGraphByObjectsRequest setAfter(Long after) {
     this.after = after;
     return this;
   }

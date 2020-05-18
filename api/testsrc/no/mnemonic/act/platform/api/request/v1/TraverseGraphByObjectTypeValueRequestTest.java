@@ -28,7 +28,7 @@ public class TraverseGraphByObjectTypeValueRequestTest extends AbstractRequestTe
     assertEquals("g.out()", request.getQuery());
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
-    assertEquals(true, request.getIncludeRetracted());
+    assertTrue(request.getIncludeRetracted());
   }
 
   @Test

@@ -28,7 +28,6 @@ import no.mnemonic.commons.junit.docker.DockerResource;
 import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -40,8 +39,10 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.Set;
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractIT {
@@ -191,6 +192,14 @@ public abstract class AbstractIT {
     assertEquals(id, getIdFromModel(data.get(0)));
   }
 
+  void fetchAndAssertSet(String url, ValidatingRequest request, Set<UUID> expectedIds) throws Exception {
+    Response response = request(url).post(Entity.json(request));
+    assertEquals(200, response.getStatus());
+    ArrayNode data = (ArrayNode) getPayload(response);
+    assertEquals(expectedIds.size(), data.size());
+    assertEquals(expectedIds, set(data.iterator(), this::getIdFromModel));
+  }
+
   void fetchAndAssertNone(String url, ValidatingRequest request) throws Exception {
     Response response = request(url).post(Entity.json(request));
     assertEquals(200, response.getStatus());
@@ -201,9 +210,13 @@ public abstract class AbstractIT {
   /* Helpers for Cassandra */
 
   ObjectTypeEntity createObjectType() {
+    return createObjectType("ObjectType");
+  }
+
+  ObjectTypeEntity createObjectType(String name) {
     ObjectTypeEntity entity = new ObjectTypeEntity()
             .setId(UUID.randomUUID())
-            .setName("ObjectType")
+            .setName(name)
             .setValidator("TrueValidator");
 
     return getObjectManager().saveObjectType(entity);
@@ -222,7 +235,7 @@ public abstract class AbstractIT {
             .setId(UUID.randomUUID())
             .setName("FactType")
             .setValidator("TrueValidator")
-            .setRelevantObjectBindings(SetUtils.set(binding));
+            .setRelevantObjectBindings(set(binding));
 
     return getFactManager().saveFactType(entity);
   }
@@ -253,6 +266,8 @@ public abstract class AbstractIT {
   FactRecord createFact(ObjectRecord source, FactTypeEntity factType, ObjectPreparation<FactRecord> preparation) {
     return createFact(source, createObject(source.getTypeID()), factType, preparation);
   }
+
+
 
   FactRecord createFact(ObjectRecord source, ObjectRecord destination, FactTypeEntity factType, ObjectPreparation<FactRecord> preparation) {
     FactRecord fact = new FactRecord()

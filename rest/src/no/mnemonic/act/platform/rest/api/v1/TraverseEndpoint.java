@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.OperationTimeoutException;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectIdRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectTypeValueRequest;
+import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectsRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.ResultStash;
 import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
@@ -102,5 +103,28 @@ public class TraverseEndpoint {
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectTypeValueRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return buildResponse(service.traverse(credentialsResolver.getRequestHeader(), request.setType(type).setValue(value)));
+  }
+
+  @POST
+  @Path("/objects")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(
+          value = "Traverse the Object/Fact graph starting at a list of Objects.",
+          notes = "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal." +
+                  "The set of starting objects may be identified by either object id or object type and value." +
+                  "For more information about traversal, see '/v1/traverse/object/{type}/{value}'.",
+          response = ResultStash.class
+  )
+  @ApiResponses({
+          @ApiResponse(code = 401, message = "User could not be authenticated."),
+          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
+          @ApiResponse(code = 408, message = "Execution of this operation timed out."),
+          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+  })
+  public Response traverseByObjects(
+          @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectsRequest request
+          ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
+    return buildResponse(service.traverse(credentialsResolver.getRequestHeader(), request));
   }
 }

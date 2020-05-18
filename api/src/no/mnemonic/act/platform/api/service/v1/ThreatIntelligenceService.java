@@ -435,6 +435,22 @@ public interface ThreatIntelligenceService extends Service {
   }
 
   /**
+   * Traverse the graph of Objects and Facts starting at a set of Objects
+   *
+   * @param rh      Contains meta data about the request.
+   * @param request Request containing graph traversal query.
+   * @return Result of the graph traversal.
+   * @throws AccessDeniedException         If the user is not allowed to perform this operation.
+   * @throws AuthenticationFailedException If the user could not be authenticated.
+   * @throws InvalidArgumentException      If the request contains invalid parameters.
+   * @throws OperationTimeoutException     If the graph traversal timed out.
+   */
+  default ResultSet<?> traverse(RequestHeader rh, TraverseGraphByObjectsRequest request)
+          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Fetch an Origin by its id.
    *
    * @param rh      Contains meta data about the request.
