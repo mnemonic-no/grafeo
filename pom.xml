@@ -41,29 +41,33 @@
     <jdk.version>1.8</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.3.5</mnemonic.commons.version>
-    <mnemonic.messaging.version>1.2.24</mnemonic.messaging.version>
+    <mnemonic.commons.version>0.4.0</mnemonic.commons.version>
+    <mnemonic.messaging.version>1.2.26</mnemonic.messaging.version>
     <mnemonic.services.common.version>0.3.18</mnemonic.services.common.version>
     <mnemonic.services.triggers.version>0.0.10</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
     <activemq.version>5.15.12</activemq.version>
-    <cassandra.version>4.5.1</cassandra.version>
+    <cassandra.version>4.6.1</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
-    <elastic.search.version>6.8.8</elastic.search.version>
-    <guava.version>28.2-jre</guava.version>
+    <elastic.search.version>6.8.9</elastic.search.version>
+    <guava.version>29.0-jre</guava.version>
     <guice.version>4.2.3</guice.version>
-    <hibernate.validator.version>6.1.2.Final</hibernate.validator.version>
-    <jackson.version>2.10.3</jackson.version>
+    <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
+    <jackson.version>2.10.4</jackson.version>
     <javax.el.version>3.0.1-b11</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
-    <jetty.version>9.4.27.v20200227</jetty.version>
+    <jetty.version>9.4.28.v20200408</jetty.version>
     <junit.version>4.13</junit.version>
-    <log4j.version>2.13.1</log4j.version>
+    <log4j.version>2.13.3</log4j.version>
     <mockito.version>3.3.3</mockito.version>
+    <!-- Verify if explicit dependency on Netty can be removed upon Cassandra driver upgrade. -->
+    <netty.version>4.1.50.Final</netty.version>
     <resteasy.version>4.5.3.Final</resteasy.version>
+    <!-- Verify if explicit dependency on SmallRye can be removed upon RESTEasy upgrade. -->
+    <smallrye.version>1.8.0</smallrye.version>
     <swagger.version>1.6.1</swagger.version>
     <tinkerpop.version>3.4.6</tinkerpop.version>
 

@@ -117,6 +117,12 @@
       <artifactId>resteasy-validator-provider</artifactId>
       <version>${resteasy.version}</version>
     </dependency>
+    <!-- Force a newer version of SmallRye (used by RESTEasy) in order to fix CVE-2020-1729. -->
+    <dependency>
+      <groupId>io.smallrye.config</groupId>
+      <artifactId>smallrye-config</artifactId>
+      <version>${smallrye.version}</version>
+    </dependency>
     <!-- Need a javax.validation and javax.el implementation for request validation. -->
     <dependency>
       <groupId>org.hibernate.validator</groupId>
