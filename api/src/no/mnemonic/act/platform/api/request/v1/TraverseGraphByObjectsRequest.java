@@ -13,7 +13,7 @@ import javax.validation.constraints.NotEmpty;
 import java.util.Set;
 
 @ApiModel(description = "Traverse the Object/Fact graph starting at a set of objects identified by either their id " +
-        "or their type and value.")
+        "or type/value tuple.")
 public class TraverseGraphByObjectsRequest implements ValidatingRequest {
 
   @ApiModelProperty(
@@ -88,7 +88,7 @@ public class TraverseGraphByObjectsRequest implements ValidatingRequest {
     return this;
   }
 
-  public static TraverseGraphByObjectsRequest from(TraverseGraphByObjectRequest request, String object) {
+  public static TraverseGraphByObjectsRequest from(TraverseGraphRequest request, String object) {
     return new TraverseGraphByObjectsRequest()
             .setQuery(request.getQuery())
             .setAfter(request.getAfter())

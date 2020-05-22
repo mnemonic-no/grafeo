@@ -1,7 +1,9 @@
 package no.mnemonic.act.platform.rest.api.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectRequest;
+import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
+import no.mnemonic.act.platform.api.request.v1.TraverseGraphRequest;
+import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectsRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
@@ -35,7 +37,7 @@ public class TraverseEndpointTest extends AbstractEndpointTest {
       return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
     });
 
-    TraverseGraphByObjectRequest request = new TraverseGraphByObjectRequest()
+    TraverseGraphRequest request = new TraverseGraphRequest()
             .setAfter(after)
             .setBefore(before)
             .setIncludeRetracted(true)
@@ -66,7 +68,7 @@ public class TraverseEndpointTest extends AbstractEndpointTest {
       return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
     });
 
-    TraverseGraphByObjectRequest request = new TraverseGraphByObjectRequest()
+    TraverseGraphRequest request = new TraverseGraphRequest()
             .setQuery("g.values('value')")
             .setAfter(after)
             .setBefore(before)
@@ -103,5 +105,24 @@ public class TraverseEndpointTest extends AbstractEndpointTest {
     assertEquals("something", payload.get(0).asText());
 
     verify(getTiService(), times(1)).traverse(notNull(), isA(TraverseGraphByObjectsRequest.class));
+  }
+
+  @Test
+  public void testTraverseObjectSearch() throws Exception {
+    when(getTiService().traverse(any(), isA(TraverseGraphByObjectSearchRequest.class)))
+            .then(i -> StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build());
+
+    TraverseGraphByObjectSearchRequest request = new TraverseGraphByObjectSearchRequest()
+            .setSearch(new SearchObjectRequest())
+            .setTraverse(new TraverseGraphRequest().setQuery("g.values('value')"));
+
+    Response response = target("/v1/traverse/objects/search").request().post(Entity.json(request));
+    JsonNode payload = getPayload(response);
+    assertEquals(200, response.getStatus());
+    assertTrue(payload.isArray());
+    assertEquals(1, payload.size());
+    assertEquals("something", payload.get(0).asText());
+
+    verify(getTiService(), times(1)).traverse(notNull(), isA(TraverseGraphByObjectSearchRequest.class));
   }
 }

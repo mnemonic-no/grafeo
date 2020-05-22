@@ -8,7 +8,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TraverseGraphByObjectRequestTest extends AbstractRequestTest {
+public class TraverseGraphRequestTest extends AbstractRequestTest {
 
   @Test
   public void testDecodeRequest() throws Exception {
@@ -18,7 +18,7 @@ public class TraverseGraphByObjectRequestTest extends AbstractRequestTest {
             "includeRetracted : true," +
             "query : 'g.out()'" +
             "}";
-    TraverseGraphByObjectRequest request = getMapper().readValue(json, TraverseGraphByObjectRequest.class);
+    TraverseGraphRequest request = getMapper().readValue(json, TraverseGraphRequest.class);
 
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
@@ -28,14 +28,14 @@ public class TraverseGraphByObjectRequestTest extends AbstractRequestTest {
 
   @Test
   public void testRequestValidationFailsOnNull() {
-    Set<ConstraintViolation<TraverseGraphByObjectRequest>> violations = getValidator().validate(new TraverseGraphByObjectRequest());
+    Set<ConstraintViolation<TraverseGraphRequest>> violations = getValidator().validate(new TraverseGraphRequest());
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "query");
   }
 
   @Test
   public void testRequestValidationFailsOnEmpty() {
-    Set<ConstraintViolation<TraverseGraphByObjectRequest>> violations = getValidator().validate(new TraverseGraphByObjectRequest()
+    Set<ConstraintViolation<TraverseGraphRequest>> violations = getValidator().validate(new TraverseGraphRequest()
             .setQuery("")
     );
     assertEquals(1, violations.size());
@@ -44,7 +44,7 @@ public class TraverseGraphByObjectRequestTest extends AbstractRequestTest {
 
   @Test
   public void testRequestValidationFailsOnBlank() {
-    Set<ConstraintViolation<TraverseGraphByObjectRequest>> violations = getValidator().validate(new TraverseGraphByObjectRequest()
+    Set<ConstraintViolation<TraverseGraphRequest>> violations = getValidator().validate(new TraverseGraphRequest()
             .setQuery(" ")
     );
     assertEquals(1, violations.size());
@@ -53,6 +53,6 @@ public class TraverseGraphByObjectRequestTest extends AbstractRequestTest {
 
   @Test
   public void testRequestValidationSucceeds() {
-    assertTrue(getValidator().validate(new TraverseGraphByObjectRequest().setQuery("g.out()")).isEmpty());
+    assertTrue(getValidator().validate(new TraverseGraphRequest().setQuery("g.out()")).isEmpty());
   }
 }

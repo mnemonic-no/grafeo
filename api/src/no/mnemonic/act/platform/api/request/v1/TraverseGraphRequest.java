@@ -8,8 +8,8 @@ import no.mnemonic.act.platform.api.request.ValidatingRequest;
 
 import javax.validation.constraints.NotBlank;
 
-@ApiModel(description = "Traverse the Object/Fact graph starting at an Object")
-public class TraverseGraphByObjectRequest implements ValidatingRequest {
+@ApiModel(description = "Request for traversing an Object/Fact graph")
+public class TraverseGraphRequest implements ValidatingRequest {
 
   @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()", required = true)
   @NotBlank
@@ -29,7 +29,7 @@ public class TraverseGraphByObjectRequest implements ValidatingRequest {
     return query;
   }
 
-  public TraverseGraphByObjectRequest setQuery(String query) {
+  public TraverseGraphRequest setQuery(String query) {
     this.query = query;
     return this;
   }
@@ -38,7 +38,7 @@ public class TraverseGraphByObjectRequest implements ValidatingRequest {
     return includeRetracted;
   }
 
-  public TraverseGraphByObjectRequest setIncludeRetracted(Boolean includeRetracted) {
+  public TraverseGraphRequest setIncludeRetracted(Boolean includeRetracted) {
     this.includeRetracted = includeRetracted;
     return this;
   }
@@ -47,7 +47,7 @@ public class TraverseGraphByObjectRequest implements ValidatingRequest {
     return before;
   }
 
-  public TraverseGraphByObjectRequest setBefore(Long before) {
+  public TraverseGraphRequest setBefore(Long before) {
     this.before = before;
     return this;
   }
@@ -56,7 +56,7 @@ public class TraverseGraphByObjectRequest implements ValidatingRequest {
     return after;
   }
 
-  public TraverseGraphByObjectRequest setAfter(Long after) {
+  public TraverseGraphRequest setAfter(Long after) {
     this.after = after;
     return this;
   }
