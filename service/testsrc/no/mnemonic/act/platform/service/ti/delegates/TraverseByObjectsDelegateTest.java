@@ -119,6 +119,7 @@ public class TraverseByObjectsDelegateTest {
             .setBefore(before)
             .setAfter(after)
             .setIncludeRetracted(true)
+            .setLimit(10)
             .setObjects(set(objectId1.toString(), objectId2.toString()));
 
     delegate.handle(request);
@@ -130,6 +131,7 @@ public class TraverseByObjectsDelegateTest {
               assertTrue(traverseParams.isIncludeRetracted());
               assertEquals(after, traverseParams.getAfterTimestamp());
               assertEquals(before, traverseParams.getBeforeTimestamp());
+              assertEquals(10, traverseParams.getLimit());
               return true;
             }));
   }

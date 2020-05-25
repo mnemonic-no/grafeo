@@ -61,6 +61,7 @@ public class TraverseByObjectsDelegate implements Delegate {
                     .setIncludeRetracted(request.getIncludeRetracted())
                     .setAfterTimestamp(request.getAfter())
                     .setBeforeTimestamp(request.getBefore())
+                    .setLimit(request.getLimit())
                     .build());
   }
 

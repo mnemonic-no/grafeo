@@ -1,9 +1,9 @@
 package no.mnemonic.act.platform.test.integration;
 
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
-import no.mnemonic.act.platform.api.request.v1.TraverseGraphRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectsRequest;
+import no.mnemonic.act.platform.api.request.v1.TraverseGraphRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;

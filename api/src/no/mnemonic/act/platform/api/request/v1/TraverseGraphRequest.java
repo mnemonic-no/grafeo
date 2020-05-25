@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.act.platform.api.json.TimestampDeserializer;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 
 @ApiModel(description = "Request for traversing an Object/Fact graph")
@@ -24,6 +25,9 @@ public class TraverseGraphRequest implements ValidatingRequest {
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
+  @ApiModelProperty(value = "Limit the result size (default 25, 0 means all)", example = "25")
+  @Min(0)
+  private Integer limit;
 
   public String getQuery() {
     return query;
@@ -58,6 +62,15 @@ public class TraverseGraphRequest implements ValidatingRequest {
 
   public TraverseGraphRequest setAfter(Long after) {
     this.after = after;
+    return this;
+  }
+
+  public Integer getLimit() {
+    return limit;
+  }
+
+  public TraverseGraphRequest setLimit(Integer limit) {
+    this.limit = limit;
     return this;
   }
 }

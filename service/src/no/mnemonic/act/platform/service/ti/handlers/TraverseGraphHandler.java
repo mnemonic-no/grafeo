@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
@@ -98,8 +99,9 @@ public class TraverseGraphHandler {
     return this;
   }
 
-  private Collection<Object> executeTraversal(Collection<UUID> startingObjects, String query,
-                                                        TraverseParams traverseParams)
+  private Collection<Object> executeTraversal(Collection<UUID> startingObjects,
+                                              String query,
+                                              TraverseParams traverseParams)
           throws InvalidArgumentException, OperationTimeoutException {
 
     // The result will be written into this collection.
@@ -113,7 +115,7 @@ public class TraverseGraphHandler {
       // Start script execution and wait until result arrived or execution is aborted.
       // Use 'withResult' callback here because the graph will then be iterated inside the 'eval' thread, thus, every
       // exception caused by the traversal will be handled inside that thread as well which will result in an ExecutionException.
-      executor.eval(query, SCRIPT_ENGINE, bindings, createResultConsumer(traversalResult)).get();
+      executor.eval(query, SCRIPT_ENGINE, bindings, createResultConsumer(traversalResult, traverseParams)).get();
     } catch (ExecutionException ex) {
       // Exceptions causing the script execution to fail are wrapped inside an ExecutionException. Need to unwrap them.
       Throwable cause = ObjectUtils.ifNull(ex.getCause(), ex);
@@ -141,17 +143,19 @@ public class TraverseGraphHandler {
    * @param traversalResult Write the result set into the traversalResult collection
    * @return A function that will process the result from the graph traversal.
    */
-  private Consumer<Object> createResultConsumer(Collection<Object> traversalResult) {
+  private Consumer<Object> createResultConsumer(Collection<Object> traversalResult, TraverseParams traverseParams) {
     return (Object result) -> {
-      // The result of the graph traversal will be an iterator, thus, convert result to an iterator here.
-      Iterator<?> resultIterator = IteratorUtils.asIterator(result);
       // Iterate result and convert values if necessary. This will perform the actual graph traversal.
-      resultIterator.forEachRemaining(value -> {
-        Object apiValue = tinkerpopToApi(value);
-        if (apiValue != null) {
-          traversalResult.add(apiValue);
-        }
-      });
+      Iterator<?> iterator = IteratorUtils.asIterator(result);
+
+      Stream<Object> objectStream = IteratorUtils.stream(iterator)
+              .map(this::tinkerpopToApi)
+              .filter(Objects::nonNull);
+      
+      if (traverseParams.getLimit() > 0) {
+        objectStream = objectStream.limit(traverseParams.getLimit());
+      }
+      objectStream.forEach(traversalResult::add);
     };
   }
 

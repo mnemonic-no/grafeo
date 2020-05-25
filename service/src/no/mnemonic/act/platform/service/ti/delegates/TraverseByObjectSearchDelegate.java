@@ -64,6 +64,7 @@ public class TraverseByObjectSearchDelegate implements Delegate {
                     .setIncludeRetracted(request.getTraverse().getIncludeRetracted())
                     .setAfterTimestamp(request.getTraverse().getAfter())
                     .setBeforeTimestamp(request.getTraverse().getBefore())
+                    .setLimit(request.getTraverse().getLimit())
                     .build());
   }
 }

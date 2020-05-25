@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import java.util.Set;
@@ -36,6 +37,9 @@ public class TraverseGraphByObjectsRequest implements ValidatingRequest {
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
+  @ApiModelProperty(value = "Limit the result size (default 25, 0 means all)", example = "25")
+  @Min(0)
+  private Integer limit;
 
   public TraverseGraphByObjectsRequest setObjects(Set<String> objects) {
     this.objects = ObjectUtils.ifNotNull(objects, SetUtils::set);
@@ -50,7 +54,6 @@ public class TraverseGraphByObjectsRequest implements ValidatingRequest {
   public Set<String> getObjects() {
     return objects;
   }
-
 
   public String getQuery() {
     return query;
@@ -88,12 +91,22 @@ public class TraverseGraphByObjectsRequest implements ValidatingRequest {
     return this;
   }
 
+  public Integer getLimit() {
+    return limit;
+  }
+
+  public TraverseGraphByObjectsRequest setLimit(Integer limit) {
+    this.limit = limit;
+    return this;
+  }
+
   public static TraverseGraphByObjectsRequest from(TraverseGraphRequest request, String object) {
     return new TraverseGraphByObjectsRequest()
             .setQuery(request.getQuery())
             .setAfter(request.getAfter())
             .setBefore(request.getBefore())
             .setIncludeRetracted(request.getIncludeRetracted())
+            .setLimit(request.getLimit())
             .addObject(object);
   }
 }

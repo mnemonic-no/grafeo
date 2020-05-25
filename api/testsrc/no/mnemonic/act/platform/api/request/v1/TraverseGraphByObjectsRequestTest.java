@@ -30,6 +30,7 @@ public class TraverseGraphByObjectsRequestTest extends AbstractRequestTest {
             "before : '2016-11-30T15:47:00Z'," +
             "after : '2016-11-30T15:47:01Z'," +
             "includeRetracted : true," +
+            "limit: 10," +
             "query : 'g.out()'" +
             "}";
     TraverseGraphByObjectsRequest request = getMapper().readValue(json, TraverseGraphByObjectsRequest.class);
@@ -39,6 +40,7 @@ public class TraverseGraphByObjectsRequestTest extends AbstractRequestTest {
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
     assertTrue(request.getIncludeRetracted());
+    assertEquals(Integer.valueOf(10), request.getLimit());
     assertEquals("g.out()", request.getQuery());
   }
 
@@ -83,11 +85,45 @@ public class TraverseGraphByObjectsRequestTest extends AbstractRequestTest {
   }
 
   @Test
+  public void testRequestValidationFailsOnBadLimit() {
+    Set<ConstraintViolation<TraverseGraphByObjectsRequest>> violations = getValidator().validate(new TraverseGraphByObjectsRequest()
+            .setObjects(set(UUID.randomUUID().toString()))
+            .setQuery("g.out()")
+            .setLimit(-1)
+    );
+
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "limit");
+  }
+
+
+  @Test
   public void testRequestValidationWithBothIdAndTypeValue() {
     Set<ConstraintViolation<TraverseGraphByObjectsRequest>> violations = getValidator().validate(new TraverseGraphByObjectsRequest()
             .setObjects(set(UUID.randomUUID().toString(), "ThreatActor/Sofacy"))
             .setQuery("g.out()")
     );
     assertEquals(0, violations.size());
+  }
+
+  @Test
+  public void testFromObjectRequest() {
+    long after = 1470000000000L;
+    long before = 1480000000000L;
+    TraverseGraphByObjectsRequest request = TraverseGraphByObjectsRequest.from(
+            new TraverseGraphRequest()
+                    .setQuery("g.out()")
+                    .setLimit(10)
+                    .setIncludeRetracted(true)
+                    .setAfter(after)
+                    .setBefore(before),
+            "test");
+
+    assertEquals(set("test"), request.getObjects());
+    assertEquals(after, request.getAfter().longValue());
+    assertEquals(before, request.getBefore().longValue());
+    assertTrue(request.getIncludeRetracted());
+    assertEquals(Integer.valueOf(10), request.getLimit());
+    assertEquals("g.out()", request.getQuery());
   }
 }

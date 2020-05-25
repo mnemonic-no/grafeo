@@ -16,6 +16,7 @@ public class TraverseGraphRequestTest extends AbstractRequestTest {
             "before : '2016-11-30T15:47:00Z'," +
             "after : '2016-11-30T15:47:01Z'," +
             "includeRetracted : true," +
+            "limit: 10," +
             "query : 'g.out()'" +
             "}";
     TraverseGraphRequest request = getMapper().readValue(json, TraverseGraphRequest.class);
@@ -23,6 +24,7 @@ public class TraverseGraphRequestTest extends AbstractRequestTest {
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
     assertTrue(request.getIncludeRetracted());
+    assertEquals(Integer.valueOf(10), request.getLimit());
     assertEquals("g.out()", request.getQuery());
   }
 
@@ -49,6 +51,17 @@ public class TraverseGraphRequestTest extends AbstractRequestTest {
     );
     assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "query");
+  }
+
+  @Test
+  public void testRequestValidationFailsOnBadLimit() {
+    Set<ConstraintViolation<TraverseGraphRequest>> violations = getValidator().validate(new TraverseGraphRequest()
+            .setQuery("g.out()")
+            .setLimit(-1)
+    );
+
+    assertEquals(1, violations.size());
+    assertPropertyInvalid(violations, "limit");
   }
 
   @Test

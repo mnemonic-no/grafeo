@@ -92,6 +92,7 @@ public class TraverseByObjectSearchDelegateTest {
                     .setIncludeRetracted(true)
                     .setAfter(after)
                     .setBefore(before)
+                    .setLimit(10)
             );
 
     Iterator<ObjectRecord> searchResult = set(new ObjectRecord().setId(objectId1), new ObjectRecord().setId(objectId2)).iterator();
@@ -106,6 +107,7 @@ public class TraverseByObjectSearchDelegateTest {
               assertTrue(traverseParams.isIncludeRetracted());
               assertEquals(after, traverseParams.getAfterTimestamp());
               assertEquals(before, traverseParams.getBeforeTimestamp());
+              assertEquals(10, traverseParams.getLimit());
               return true;
             }));
   }

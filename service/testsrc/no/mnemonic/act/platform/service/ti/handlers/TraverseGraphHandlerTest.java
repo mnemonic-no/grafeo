@@ -147,6 +147,55 @@ public class TraverseGraphHandlerTest {
     assertEquals(0, result.size());
   }
 
+  @Test
+  public void testTraverseGraphWithLimit() throws Exception {
+    // Create three vertices and two facts
+    // source -> destination1
+    // source -> destination2
+    ObjectRecord source = mockObjectRecord(mockObjectType(), "sourceValue");
+    ObjectRecord destination1 = mockObjectRecord(mockObjectType(), "destination1Value");
+    ObjectRecord destination2 = mockObjectRecord(mockObjectType(), "destination2Value");
+
+    UUID fact1ID = UUID.randomUUID();
+    FactTypeStruct factTypeStruct = mockFactType("someFactType");
+    FactRecord fact1 = new FactRecord()
+            .setId(fact1ID)
+            .setTypeID(factTypeStruct.getId())
+            .setSourceObject(source)
+            .setDestinationObject(destination1);
+    when(objectFactDao.getFact(fact1ID)).thenReturn(fact1);
+    when(factResponseConverter.apply(fact1)).thenReturn(Fact.builder().setId(fact1.getId()).build());
+
+    UUID fact2ID = UUID.randomUUID();
+    FactRecord fact2 = new FactRecord()
+            .setId(fact2ID)
+            .setTypeID(factTypeStruct.getId())
+            .setSourceObject(source)
+            .setDestinationObject(destination2);
+    when(objectFactDao.getFact(fact2ID)).thenReturn(fact2);
+    when(factResponseConverter.apply(fact2)).thenReturn(Fact.builder().setId(fact2.getId()).build());
+
+    // Return both facts when searching
+    when(objectFactDao.searchFacts(
+            argThat(criteria -> criteria.getObjectID().contains(source.getId()))))
+            .thenAnswer(x -> ResultContainer.<FactRecord>builder()
+                    .setValues(list(fact1, fact2).iterator())
+                   .build());
+
+    // Limit the search to 1 edge
+    ResultSet<?> resultSet = handler.traverse(
+            set(source.getId()),
+            "g.outE()",
+            TraverseParams.builder().setLimit(1).build());
+
+    // Expect 1 edge due to the limit
+    List<?> result = ListUtils.list(resultSet.iterator());
+    assertEquals(1, result.size());
+    assertTrue(result.get(0) instanceof Fact);
+    // One of the facts must be in the result
+    assertTrue(set(fact1ID, fact2ID).contains(((Fact) result.get(0)).getId()));
+  }
+
   private ObjectTypeStruct mockObjectType() {
     UUID objectTypeID = UUID.randomUUID();
     ObjectTypeStruct objectTypeStruct = ObjectTypeStruct.builder()

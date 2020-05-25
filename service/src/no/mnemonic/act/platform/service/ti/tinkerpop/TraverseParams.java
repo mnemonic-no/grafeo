@@ -11,11 +11,13 @@ public class TraverseParams {
   private final boolean includeRetracted;
   private final Long beforeTimestamp;
   private final Long afterTimestamp;
+  private final int limit;
 
-  private TraverseParams(Boolean includeRetracted, Long beforeTimestamp, Long afterTimestamp) {
+  private TraverseParams(Boolean includeRetracted, Long beforeTimestamp, Long afterTimestamp, Integer limit) {
     this.includeRetracted = ObjectUtils.ifNull(includeRetracted, false);
     this.beforeTimestamp = beforeTimestamp;
     this.afterTimestamp = afterTimestamp;
+    this.limit = ObjectUtils.ifNull(limit, 25);
   }
 
   public Boolean isIncludeRetracted() {
@@ -30,6 +32,10 @@ public class TraverseParams {
     return afterTimestamp;
   }
 
+  public int getLimit() {
+    return limit;
+  }
+
   public static Builder builder() { return new Builder(); }
 
   public static class Builder {
@@ -37,11 +43,12 @@ public class TraverseParams {
     private Boolean includeRetracted;
     private Long beforeTimestamp;
     private Long afterTimestamp;
+    private Integer limit;
 
     private Builder() {}
 
     public TraverseParams build() {
-      return new TraverseParams(includeRetracted, beforeTimestamp, afterTimestamp);
+      return new TraverseParams(includeRetracted, beforeTimestamp, afterTimestamp, limit);
     }
 
     public Builder setIncludeRetracted(Boolean includeRetracted) {
@@ -56,6 +63,11 @@ public class TraverseParams {
 
     public Builder setAfterTimestamp(Long afterTimestamp) {
       this.afterTimestamp = afterTimestamp;
+      return this;
+    }
+
+    public Builder setLimit(Integer limit) {
+      this.limit = limit;
       return this;
     }
   }
