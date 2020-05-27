@@ -12,6 +12,7 @@ import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.ResultStash;
 import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -63,6 +64,7 @@ public class TraverseEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
+  @RolesAllowed("traverseFactObjects")
   public Response traversebyObjectId(
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectIdRequest request
@@ -97,6 +99,7 @@ public class TraverseEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
+  @RolesAllowed("traverseFactObjects")
   public Response traverseByObjectTypeValue(
           @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
           @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
@@ -122,6 +125,7 @@ public class TraverseEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
+  @RolesAllowed("traverseFactObjects")
   public Response traverseByObjects(
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectsRequest request
           ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {

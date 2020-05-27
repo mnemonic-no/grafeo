@@ -14,6 +14,7 @@ import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.ResultStash;
 import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -51,6 +52,7 @@ public class FactTypeEndpoint {
           @ApiResponse(code = 404, message = "Requested FactType does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
+  @RolesAllowed("viewTypes")
   public Response getFactTypeById(
           @PathParam("id") @ApiParam(value = "UUID of the requested FactType.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
@@ -70,6 +72,7 @@ public class FactTypeEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
+  @RolesAllowed("viewTypes")
   public Response searchFactTypes()
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildResponse(service.searchFactTypes(credentialsResolver.getRequestHeader(), new SearchFactTypeRequest()));
@@ -102,6 +105,7 @@ public class FactTypeEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
+  @RolesAllowed("addTypes")
   public Response createFactType(
           @ApiParam(value = "Request to create FactType.") @NotNull @Valid CreateFactTypeRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
@@ -131,6 +135,7 @@ public class FactTypeEndpoint {
           @ApiResponse(code = 404, message = "FactType does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
+  @RolesAllowed("updateTypes")
   public Response updateFactType(
           @PathParam("id") @ApiParam(value = "UUID of FactType.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to update FactType.") @NotNull @Valid UpdateFactTypeRequest request
