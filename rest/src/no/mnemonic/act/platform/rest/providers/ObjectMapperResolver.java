@@ -22,6 +22,10 @@ public class ObjectMapperResolver implements ContextResolver<ObjectMapper> {
             .build();
   }
 
+  public static ObjectMapper getInstance() {
+    return mapper;
+  }
+
   @Override
   public ObjectMapper getContext(Class<?> type) {
     return mapper;

@@ -10,6 +10,8 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -17,16 +19,15 @@ import static org.junit.Assert.assertTrue;
 
 public class ResultStashSerializerTest {
 
-  private static final ObjectMapper mapper = new ObjectMapperResolver().getContext(null);
+  private static final ObjectMapper mapper = ObjectMapperResolver.getInstance();
 
   @Test
   public void testSerializationOfNumericFields() throws Exception {
-    String json = mapper.writeValueAsString(ResultStash.builder()
+    String json = toJson(ResultStash.builder()
             .setStatus(Response.Status.OK)
             .setCount(25)
             .setLimit(100)
-            .buildResponse()
-            .getEntity());
+            .buildResponse());
     JsonNode result = mapper.readTree(json);
 
     assertTrue(result.isObject());
@@ -37,10 +38,9 @@ public class ResultStashSerializerTest {
 
   @Test
   public void testSerializationOfActionError() throws Exception {
-    String json = mapper.writeValueAsString(ResultStash.builder()
+    String json = toJson(ResultStash.builder()
             .addActionError("message", "template", "field", "parameter")
-            .buildResponse()
-            .getEntity());
+            .buildResponse());
     JsonNode result = mapper.readTree(json);
 
     assertTrue(result.get("messages").isArray());
@@ -55,10 +55,9 @@ public class ResultStashSerializerTest {
 
   @Test
   public void testSerializationOfFieldError() throws Exception {
-    String json = mapper.writeValueAsString(ResultStash.builder()
+    String json = toJson(ResultStash.builder()
             .addFieldError("message", "template", "field", "parameter")
-            .buildResponse()
-            .getEntity());
+            .buildResponse());
     JsonNode result = mapper.readTree(json);
 
     assertTrue(result.get("messages").isArray());
@@ -73,10 +72,9 @@ public class ResultStashSerializerTest {
 
   @Test
   public void testSerializationOfSingleObject() throws Exception {
-    String json = mapper.writeValueAsString(ResultStash.builder()
+    String json = toJson(ResultStash.builder()
             .setData(Fact.builder().setId(UUID.randomUUID()).build())
-            .buildResponse()
-            .getEntity());
+            .buildResponse());
     JsonNode result = mapper.readTree(json);
 
     assertTrue(result.get("data").isObject());
@@ -85,10 +83,9 @@ public class ResultStashSerializerTest {
 
   @Test
   public void testSerializationOfList() throws Exception {
-    String json = mapper.writeValueAsString(ResultStash.builder()
+    String json = toJson(ResultStash.builder()
             .setData(ListUtils.list(Fact.builder().setId(UUID.randomUUID()).build()))
-            .buildResponse()
-            .getEntity());
+            .buildResponse());
     JsonNode result = mapper.readTree(json);
 
     assertTrue(result.get("data").isArray());
@@ -98,10 +95,9 @@ public class ResultStashSerializerTest {
 
   @Test
   public void testSerializationOfSet() throws Exception {
-    String json = mapper.writeValueAsString(ResultStash.builder()
+    String json = toJson(ResultStash.builder()
             .setData(SetUtils.set(Fact.builder().setId(UUID.randomUUID()).build()))
-            .buildResponse()
-            .getEntity());
+            .buildResponse());
     JsonNode result = mapper.readTree(json);
 
     assertTrue(result.get("data").isArray());
@@ -111,16 +107,22 @@ public class ResultStashSerializerTest {
 
   @Test
   public void testSerializationOfResultSet() throws Exception {
-    String json = mapper.writeValueAsString(ResultStash.builder()
+    String json = toJson(ResultStash.builder()
             .setData(StreamingResultSet.<Fact>builder()
                     .setValues(ListUtils.list(Fact.builder().setId(UUID.randomUUID()).build()))
                     .build())
-            .buildResponse()
-            .getEntity());
+            .buildResponse());
     JsonNode result = mapper.readTree(json);
 
     assertTrue(result.get("data").isArray());
     assertEquals(1, result.get("data").size());
     assertEquals(1, result.get("size").asInt());
+  }
+
+  private String toJson(Response response) throws Exception {
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      ((StreamingOutput) response.getEntity()).write(baos);
+      return baos.toString();
+    }
   }
 }

@@ -13,6 +13,7 @@ import no.mnemonic.services.common.api.ResultSet;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -98,7 +99,14 @@ public class ResultStash<T> {
       return Response
               .status(status)
               .type(MediaType.APPLICATION_JSON_TYPE)
-              .entity(new ResultStash<>(status.getStatusCode(), limit, count, messages, data))
+              .entity((StreamingOutput) output -> {
+                // Manually write ResultStash to output in order to stream results to clients.
+                // This will use ResultStashSerializer as configured in ObjectMapperResolver.
+                try (JsonGenerator gen = ObjectMapperResolver.getInstance().getFactory().createGenerator(output)) {
+                  gen.writeObject(new ResultStash<>(status.getStatusCode(), limit, count, messages, data));
+                  gen.flush();
+                }
+              })
               .build();
     }
 
