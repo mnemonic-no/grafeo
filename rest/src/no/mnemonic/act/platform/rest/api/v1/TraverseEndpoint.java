@@ -5,8 +5,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.OperationTimeoutException;
-import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectIdRequest;
-import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectTypeValueRequest;
+import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectsRequest;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.ResultStash;
@@ -67,9 +66,11 @@ public class TraverseEndpoint {
   @RolesAllowed("traverseFactObjects")
   public Response traversebyObjectId(
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
-          @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectIdRequest request
+          @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return buildResponse(service.traverse(credentialsResolver.getRequestHeader(), request.setId(id)));
+    return buildResponse(service.traverse(
+            credentialsResolver.getRequestHeader(),
+            TraverseGraphByObjectsRequest.from(request, id.toString())));
   }
 
   @POST
@@ -103,9 +104,11 @@ public class TraverseEndpoint {
   public Response traverseByObjectTypeValue(
           @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
           @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
-          @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectTypeValueRequest request
+          @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return buildResponse(service.traverse(credentialsResolver.getRequestHeader(), request.setType(type).setValue(value)));
+    return buildResponse(service.traverse(
+            credentialsResolver.getRequestHeader(),
+            TraverseGraphByObjectsRequest.from(request, type + "/" + value)));
   }
 
   @POST
@@ -128,7 +131,7 @@ public class TraverseEndpoint {
   @RolesAllowed("traverseFactObjects")
   public Response traverseByObjects(
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectsRequest request
-          ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
+  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return buildResponse(service.traverse(credentialsResolver.getRequestHeader(), request));
   }
 }

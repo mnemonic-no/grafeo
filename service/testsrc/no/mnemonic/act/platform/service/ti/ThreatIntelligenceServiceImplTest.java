@@ -309,26 +309,6 @@ public class ThreatIntelligenceServiceImplTest {
   }
 
   @Test
-  public void testTraverseByObjectIdCallsDelegate() throws Exception {
-    TraverseByObjectIdDelegate delegate = mock(TraverseByObjectIdDelegate.class);
-    when(delegateProvider.get(TraverseByObjectIdDelegate.class)).thenReturn(delegate);
-
-    TraverseGraphByObjectIdRequest request = new TraverseGraphByObjectIdRequest();
-    service.traverse(RequestHeader.builder().build(), request);
-    verify(delegate).handle(request);
-  }
-
-  @Test
-  public void testTraverseByObjectTypeValueCallsDelegate() throws Exception {
-    TraverseByObjectTypeValueDelegate delegate = mock(TraverseByObjectTypeValueDelegate.class);
-    when(delegateProvider.get(TraverseByObjectTypeValueDelegate.class)).thenReturn(delegate);
-
-    TraverseGraphByObjectTypeValueRequest request = new TraverseGraphByObjectTypeValueRequest();
-    service.traverse(RequestHeader.builder().build(), request);
-    verify(delegate).handle(request);
-  }
-
-  @Test
   public void testTraverseByObjectsCallsDelegate() throws Exception {
     TraverseByObjectsDelegate delegate = mock(TraverseByObjectsDelegate.class);
     when(delegateProvider.get(TraverseByObjectsDelegate.class)).thenReturn(delegate);

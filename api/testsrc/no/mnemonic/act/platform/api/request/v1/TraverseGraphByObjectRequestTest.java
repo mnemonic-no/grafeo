@@ -4,12 +4,11 @@ import org.junit.Test;
 
 import javax.validation.ConstraintViolation;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TraverseGraphByObjectIdRequestTest extends AbstractRequestTest {
+public class TraverseGraphByObjectRequestTest extends AbstractRequestTest {
 
   @Test
   public void testDecodeRequest() throws Exception {
@@ -19,7 +18,7 @@ public class TraverseGraphByObjectIdRequestTest extends AbstractRequestTest {
             "includeRetracted : true," +
             "query : 'g.out()'" +
             "}";
-    TraverseGraphByObjectIdRequest request = getMapper().readValue(json, TraverseGraphByObjectIdRequest.class);
+    TraverseGraphByObjectRequest request = getMapper().readValue(json, TraverseGraphByObjectRequest.class);
 
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
@@ -29,16 +28,14 @@ public class TraverseGraphByObjectIdRequestTest extends AbstractRequestTest {
 
   @Test
   public void testRequestValidationFailsOnNull() {
-    Set<ConstraintViolation<TraverseGraphByObjectIdRequest>> violations = getValidator().validate(new TraverseGraphByObjectIdRequest());
-    assertEquals(2, violations.size());
-    assertPropertyInvalid(violations, "id");
+    Set<ConstraintViolation<TraverseGraphByObjectRequest>> violations = getValidator().validate(new TraverseGraphByObjectRequest());
+    assertEquals(1, violations.size());
     assertPropertyInvalid(violations, "query");
   }
 
   @Test
   public void testRequestValidationFailsOnEmpty() {
-    Set<ConstraintViolation<TraverseGraphByObjectIdRequest>> violations = getValidator().validate(new TraverseGraphByObjectIdRequest()
-            .setId(UUID.randomUUID())
+    Set<ConstraintViolation<TraverseGraphByObjectRequest>> violations = getValidator().validate(new TraverseGraphByObjectRequest()
             .setQuery("")
     );
     assertEquals(1, violations.size());
@@ -47,8 +44,7 @@ public class TraverseGraphByObjectIdRequestTest extends AbstractRequestTest {
 
   @Test
   public void testRequestValidationFailsOnBlank() {
-    Set<ConstraintViolation<TraverseGraphByObjectIdRequest>> violations = getValidator().validate(new TraverseGraphByObjectIdRequest()
-            .setId(UUID.randomUUID())
+    Set<ConstraintViolation<TraverseGraphByObjectRequest>> violations = getValidator().validate(new TraverseGraphByObjectRequest()
             .setQuery(" ")
     );
     assertEquals(1, violations.size());
@@ -57,7 +53,6 @@ public class TraverseGraphByObjectIdRequestTest extends AbstractRequestTest {
 
   @Test
   public void testRequestValidationSucceeds() {
-    assertTrue(getValidator().validate(new TraverseGraphByObjectIdRequest().setId(UUID.randomUUID()).setQuery("g.out()")).isEmpty());
+    assertTrue(getValidator().validate(new TraverseGraphByObjectRequest().setQuery("g.out()")).isEmpty());
   }
-
 }

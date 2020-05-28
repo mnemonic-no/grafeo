@@ -87,4 +87,13 @@ public class TraverseGraphByObjectsRequest implements ValidatingRequest {
     this.after = after;
     return this;
   }
+
+  public static TraverseGraphByObjectsRequest from(TraverseGraphByObjectRequest request, String object) {
+    return new TraverseGraphByObjectsRequest()
+            .setQuery(request.getQuery())
+            .setAfter(request.getAfter())
+            .setBefore(request.getBefore())
+            .setIncludeRetracted(request.getIncludeRetracted())
+            .addObject(object);
+  }
 }
