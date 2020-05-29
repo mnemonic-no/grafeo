@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
+import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
@@ -22,6 +23,8 @@ import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConve
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
+import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -56,6 +59,8 @@ public class FactCreateHandlerTest {
   private FactResponseConverter factResponseConverter;
   @Mock
   private TriggerContext triggerContext;
+  @Mock
+  private Credentials credentials;
 
   private FactCreateHandler handler;
 
@@ -106,22 +111,29 @@ public class FactCreateHandlerTest {
     verify(organizationResolver).resolveOrganization(origin.getOrganizationID());
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
+  public void testResolveOrganizationFallbackToCurrentUserOrganizationInvalidCredentials() throws Exception {
+    when(securityContext.getCredentials()).thenReturn(credentials);
+    when(organizationResolver.resolveCurrentUserAffiliation(any())).thenThrow(InvalidCredentialsException.class);
+    assertThrows(AuthenticationFailedException.class, () -> handler.resolveOrganization(null, new OriginEntity()));
+    verify(organizationResolver).resolveCurrentUserAffiliation(credentials);
+  }
+
+  @Test
   public void testResolveOrganizationFallbackToCurrentUserOrganizationNotExists() throws Exception {
-    when(securityContext.getCurrentUserOrganizationID()).thenReturn(UUID.randomUUID());
-    handler.resolveOrganization(null, new OriginEntity());
+    when(securityContext.getCredentials()).thenReturn(credentials);
+    assertThrows(InvalidArgumentException.class, () -> handler.resolveOrganization(null, new OriginEntity()));
+    verify(organizationResolver).resolveCurrentUserAffiliation(credentials);
   }
 
   @Test
   public void testResolveOrganizationFallbackToCurrentUserFetchesExistingOrganization() throws Exception {
-    UUID currentUserOrganizationID = UUID.randomUUID();
     Organization organization = Organization.builder().build();
-    when(securityContext.getCurrentUserOrganizationID()).thenReturn(currentUserOrganizationID);
-    when(organizationResolver.resolveOrganization(currentUserOrganizationID)).thenReturn(organization);
+    when(securityContext.getCredentials()).thenReturn(credentials);
+    when(organizationResolver.resolveCurrentUserAffiliation(any())).thenReturn(organization);
 
     assertSame(organization, handler.resolveOrganization(null, new OriginEntity()));
-    verify(securityContext).getCurrentUserOrganizationID();
-    verify(organizationResolver).resolveOrganization(currentUserOrganizationID);
+    verify(organizationResolver).resolveCurrentUserAffiliation(credentials);
   }
 
   @Test(expected = InvalidArgumentException.class)
@@ -188,6 +200,15 @@ public class FactCreateHandlerTest {
   }
 
   @Test
+  public void testResolveOriginNonProvidedFailsOnCurrentUser() throws Exception {
+    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(securityContext.getCredentials()).thenReturn(credentials);
+    when(subjectResolver.resolveCurrentUser(any())).thenThrow(InvalidCredentialsException.class);
+    assertThrows(AuthenticationFailedException.class, () -> handler.resolveOrigin(null));
+    verify(subjectResolver).resolveCurrentUser(credentials);
+  }
+
+  @Test
   public void testResolveOriginNonProvidedCreatesNewOrigin() throws Exception {
     UUID currentUserID = UUID.randomUUID();
     Subject currentUser = Subject.builder()
@@ -197,12 +218,13 @@ public class FactCreateHandlerTest {
             .build();
     OriginEntity newOrigin = new OriginEntity().setId(currentUserID);
     when(securityContext.getCurrentUserID()).thenReturn(currentUserID);
-    when(subjectResolver.resolveSubject(currentUserID)).thenReturn(currentUser);
+    when(securityContext.getCredentials()).thenReturn(credentials);
+    when(subjectResolver.resolveCurrentUser(any())).thenReturn(currentUser);
     when(originManager.saveOrigin(notNull())).thenReturn(newOrigin);
 
     assertSame(newOrigin, handler.resolveOrigin(null));
     verify(originManager).getOrigin(currentUserID);
-    verify(subjectResolver).resolveSubject(currentUserID);
+    verify(subjectResolver).resolveCurrentUser(credentials);
     verify(originManager).saveOrigin(argThat(entity -> {
       assertEquals(currentUserID, entity.getId());
       assertNotNull(entity.getNamespaceID());
@@ -223,7 +245,8 @@ public class FactCreateHandlerTest {
             .setOrganization(Organization.builder().setId(UUID.randomUUID()).build().toInfo())
             .build();
     when(securityContext.getCurrentUserID()).thenReturn(currentUserID);
-    when(subjectResolver.resolveSubject(currentUserID)).thenReturn(currentUser);
+    when(securityContext.getCredentials()).thenReturn(credentials);
+    when(subjectResolver.resolveCurrentUser(any())).thenReturn(currentUser);
     when(originManager.getOrigin(currentUser.getName())).thenReturn(new OriginEntity()
             .setId(UUID.randomUUID())
             .setName(currentUser.getName()));

@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.auth;
 
 import no.mnemonic.services.common.auth.model.FunctionIdentity;
 import no.mnemonic.services.common.auth.model.OrganizationIdentity;
+import no.mnemonic.services.common.auth.model.SessionDescriptor;
 import no.mnemonic.services.common.auth.model.SubjectIdentity;
 
 import java.util.UUID;
@@ -52,5 +53,13 @@ public interface IdentityResolver {
    * @return Subject UUID
    */
   UUID resolveSubjectUUID(SubjectIdentity identity);
+
+  /**
+   * Maps a SessionDescriptor to the UUID of the Subject identified by the given descriptor.
+   *
+   * @param descriptor Implementation-specific SessionDescriptor
+   * @return Subject UUID
+   */
+  UUID resolveSubjectUUID(SessionDescriptor descriptor);
 
 }

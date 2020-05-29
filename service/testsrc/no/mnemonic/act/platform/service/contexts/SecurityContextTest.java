@@ -3,17 +3,14 @@ package no.mnemonic.act.platform.service.contexts;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.UnexpectedAuthenticationFailedException;
-import no.mnemonic.act.platform.api.model.v1.Organization;
-import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.auth.IdentityResolver;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.service.TestSecurityContext;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.common.auth.model.OrganizationIdentity;
+import no.mnemonic.services.common.auth.model.SessionDescriptor;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -34,11 +31,9 @@ public class SecurityContextTest {
   @Mock
   private IdentityResolver identityResolver;
   @Mock
-  private OrganizationResolver organizationResolver;
-  @Mock
-  private SubjectResolver subjectResolver;
-  @Mock
   private Credentials credentials;
+  @Mock
+  private SessionDescriptor sessionDescriptor;
   @Mock
   private OrganizationIdentity organization;
 
@@ -47,32 +42,22 @@ public class SecurityContextTest {
   @Before
   public void setUp() {
     initMocks(this);
-    context = new TestSecurityContext(accessController, identityResolver, organizationResolver, subjectResolver, credentials);
+    context = new TestSecurityContext(accessController, identityResolver, credentials);
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateContextWithoutAccessControllerThrowsException() {
-    new TestSecurityContext(null, identityResolver, organizationResolver, subjectResolver, credentials);
+    new TestSecurityContext(null, identityResolver, credentials);
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateContextWithoutIdentityResolverThrowsException() {
-    new TestSecurityContext(accessController, null, organizationResolver, subjectResolver, credentials);
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateContextWithoutOrganizationResolverThrowsException() {
-    new TestSecurityContext(accessController, identityResolver, null, subjectResolver, credentials);
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateContextWithoutSubjectResolverThrowsException() {
-    new TestSecurityContext(accessController, identityResolver, organizationResolver, null, credentials);
+    new TestSecurityContext(accessController, null, credentials);
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateContextWithoutCredentialsThrowsException() {
-    new TestSecurityContext(accessController, identityResolver, organizationResolver, subjectResolver, null);
+    new TestSecurityContext(accessController, identityResolver, null);
   }
 
   @Test(expected = IllegalStateException.class)
@@ -81,14 +66,14 @@ public class SecurityContextTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void testSetContextTwice() throws Exception {
+  public void testSetContextTwice() {
     try (SecurityContext ignored = SecurityContext.set(context)) {
       SecurityContext.set(context);
     }
   }
 
   @Test
-  public void testSetAndGetContext() throws Exception {
+  public void testSetAndGetContext() {
     assertFalse(SecurityContext.isSet());
 
     try (SecurityContext ctx = SecurityContext.set(context)) {
@@ -161,27 +146,15 @@ public class SecurityContextTest {
   @Test
   public void testGetCurrentUserID() throws Exception {
     UUID currentUserID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    when(subjectResolver.resolveCurrentUser(credentials)).thenReturn(Subject.builder().setId(currentUserID).build());
+    when(accessController.validate(credentials)).thenReturn(sessionDescriptor);
+    when(identityResolver.resolveSubjectUUID(sessionDescriptor)).thenReturn(currentUserID);
     assertEquals(currentUserID, context.getCurrentUserID());
   }
 
   @Test(expected = UnexpectedAuthenticationFailedException.class)
   public void testGetCurrentUserIdThrowsUnexpectedAuthenticationFailedException() throws Exception {
-    when(subjectResolver.resolveCurrentUser(credentials)).thenThrow(InvalidCredentialsException.class);
+    when(accessController.validate(credentials)).thenThrow(InvalidCredentialsException.class);
     context.getCurrentUserID();
-  }
-
-  @Test
-  public void testGetCurrentUserOrganizationID() throws Exception {
-    UUID currentUserOrganizationID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    when(organizationResolver.resolveCurrentUserAffiliation(credentials)).thenReturn(Organization.builder().setId(currentUserOrganizationID).build());
-    assertEquals(currentUserOrganizationID, context.getCurrentUserOrganizationID());
-  }
-
-  @Test(expected = UnexpectedAuthenticationFailedException.class)
-  public void testGetCurrentUserOrganizationIdThrowsUnexpectedAuthenticationFailedException() throws Exception {
-    when(organizationResolver.resolveCurrentUserAffiliation(credentials)).thenThrow(InvalidCredentialsException.class);
-    context.getCurrentUserOrganizationID();
   }
 
   @Test

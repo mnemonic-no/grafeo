@@ -4,8 +4,6 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.auth.IdentityResolver;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -36,12 +34,10 @@ public class TiSecurityContext extends SecurityContext {
 
   private TiSecurityContext(AccessController accessController,
                             IdentityResolver identityResolver,
-                            OrganizationResolver organizationResolver,
-                            SubjectResolver subjectResolver,
                             Credentials credentials,
                             ObjectFactDao objectFactDao,
                             Function<UUID, List<FactAclEntity>> aclResolver) {
-    super(accessController, identityResolver, organizationResolver, subjectResolver, credentials);
+    super(accessController, identityResolver, credentials);
     this.objectFactDao = objectFactDao;
     this.aclResolver = aclResolver;
   }
@@ -271,8 +267,6 @@ public class TiSecurityContext extends SecurityContext {
   public static class Builder {
     private AccessController accessController;
     private IdentityResolver identityResolver;
-    private OrganizationResolver organizationResolver;
-    private SubjectResolver subjectResolver;
     private Credentials credentials;
     private ObjectFactDao objectFactDao;
     private Function<UUID, List<FactAclEntity>> aclResolver;
@@ -283,7 +277,7 @@ public class TiSecurityContext extends SecurityContext {
     public TiSecurityContext build() {
       ObjectUtils.notNull(objectFactDao, "'objectFactDao' not set in SecurityContext.");
       ObjectUtils.notNull(aclResolver, "'aclResolver' not set in SecurityContext.");
-      return new TiSecurityContext(accessController, identityResolver, organizationResolver, subjectResolver, credentials, objectFactDao, aclResolver);
+      return new TiSecurityContext(accessController, identityResolver, credentials, objectFactDao, aclResolver);
     }
 
     public Builder setAccessController(AccessController accessController) {
@@ -293,16 +287,6 @@ public class TiSecurityContext extends SecurityContext {
 
     public Builder setIdentityResolver(IdentityResolver identityResolver) {
       this.identityResolver = identityResolver;
-      return this;
-    }
-
-    public Builder setOrganizationResolver(OrganizationResolver organizationResolver) {
-      this.organizationResolver = organizationResolver;
-      return this;
-    }
-
-    public Builder setSubjectResolver(SubjectResolver subjectResolver) {
-      this.subjectResolver = subjectResolver;
       return this;
     }
 

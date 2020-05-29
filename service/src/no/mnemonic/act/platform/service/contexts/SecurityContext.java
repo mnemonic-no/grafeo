@@ -4,8 +4,6 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.UnexpectedAuthenticationFailedException;
 import no.mnemonic.act.platform.auth.IdentityResolver;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
@@ -26,17 +24,11 @@ public abstract class SecurityContext implements AutoCloseable {
   private static final ThreadLocal<SecurityContext> currentContext = new ThreadLocal<>();
   private final AccessController accessController;
   private final IdentityResolver identityResolver;
-  private final OrganizationResolver organizationResolver;
-  private final SubjectResolver subjectResolver;
   private final Credentials credentials;
 
-  protected SecurityContext(AccessController accessController, IdentityResolver identityResolver,
-                            OrganizationResolver organizationResolver, SubjectResolver subjectResolver,
-                            Credentials credentials) {
+  protected SecurityContext(AccessController accessController, IdentityResolver identityResolver, Credentials credentials) {
     this.accessController = ObjectUtils.notNull(accessController, "'accessController' not set in SecurityContext.");
     this.identityResolver = ObjectUtils.notNull(identityResolver, "'identityResolver' not set in SecurityContext.");
-    this.organizationResolver = ObjectUtils.notNull(organizationResolver, "'organizationResolver' not set in SecurityContext.");
-    this.subjectResolver = ObjectUtils.notNull(subjectResolver, "'subjectResolver' not set in SecurityContext.");
     this.credentials = ObjectUtils.notNull(credentials, "'credentials' not set in SecurityContext.");
   }
 
@@ -87,8 +79,17 @@ public abstract class SecurityContext implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     currentContext.remove();
+  }
+
+  /**
+   * Return the user's credentials stored in SecurityContext.
+   *
+   * @return Stored credentials
+   */
+  public Credentials getCredentials() {
+    return credentials;
   }
 
   /**
@@ -135,23 +136,10 @@ public abstract class SecurityContext implements AutoCloseable {
    */
   public UUID getCurrentUserID() {
     try {
-      return subjectResolver.resolveCurrentUser(credentials).getId();
+      //noinspection unchecked
+      return identityResolver.resolveSubjectUUID(accessController.validate(credentials));
     } catch (InvalidCredentialsException ex) {
       // getCurrentUserID() should only be called in a context with an already authenticated user.
-      throw new UnexpectedAuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
-    }
-  }
-
-  /**
-   * Return the ID of the current user's organization.
-   *
-   * @return ID of current user's organization
-   */
-  public UUID getCurrentUserOrganizationID() {
-    try {
-      return organizationResolver.resolveCurrentUserAffiliation(credentials).getId();
-    } catch (InvalidCredentialsException ex) {
-      // getCurrentUserOrganizationID() should only be called in a context with an already authenticated user.
       throw new UnexpectedAuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
     }
   }

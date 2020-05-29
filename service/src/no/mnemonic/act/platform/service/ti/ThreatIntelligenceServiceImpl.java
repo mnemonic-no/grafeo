@@ -7,8 +7,6 @@ import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.auth.IdentityResolver;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.service.Service;
@@ -27,8 +25,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
 
   private final AccessController accessController;
   private final IdentityResolver identityResolver;
-  private final OrganizationResolver organizationResolver;
-  private final SubjectResolver subjectResolver;
   private final FactManager factManager;
   private final ObjectFactDao objectFactDao;
   private final DelegateProvider delegateProvider;
@@ -36,15 +32,11 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   @Inject
   public ThreatIntelligenceServiceImpl(AccessController accessController,
                                        IdentityResolver identityResolver,
-                                       OrganizationResolver organizationResolver,
-                                       SubjectResolver subjectResolver,
                                        FactManager factManager,
                                        ObjectFactDao objectFactDao,
                                        DelegateProvider delegateProvider) {
     this.accessController = accessController;
     this.identityResolver = identityResolver;
-    this.organizationResolver = organizationResolver;
-    this.subjectResolver = subjectResolver;
     this.factManager = factManager;
     this.objectFactDao = objectFactDao;
     this.delegateProvider = delegateProvider;
@@ -55,8 +47,6 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return TiSecurityContext.builder()
             .setAccessController(accessController)
             .setIdentityResolver(identityResolver)
-            .setOrganizationResolver(organizationResolver)
-            .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
             .setAclResolver(factManager::fetchFactAcl)

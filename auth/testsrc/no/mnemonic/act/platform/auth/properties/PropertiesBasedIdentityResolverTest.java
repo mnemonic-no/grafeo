@@ -3,9 +3,11 @@ package no.mnemonic.act.platform.auth.properties;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
+import no.mnemonic.act.platform.auth.properties.model.SubjectDescriptor;
 import no.mnemonic.act.platform.auth.properties.model.SubjectIdentifier;
 import no.mnemonic.services.common.auth.model.FunctionIdentity;
 import no.mnemonic.services.common.auth.model.OrganizationIdentity;
+import no.mnemonic.services.common.auth.model.SessionDescriptor;
 import no.mnemonic.services.common.auth.model.SubjectIdentity;
 import org.junit.Test;
 
@@ -66,4 +68,16 @@ public class PropertiesBasedIdentityResolverTest {
     resolver.resolveSubjectUUID(new SubjectIdentity() {});
   }
 
+  @Test
+  public void testResolveSubjectUuidFromSessionDescriptor() {
+    UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    SubjectIdentifier identifier = SubjectIdentifier.builder().setGlobalID(id).build();
+    SessionDescriptor descriptor = SubjectDescriptor.builder().setIdentifier(identifier).build();
+    assertEquals(id, resolver.resolveSubjectUUID(descriptor));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testResolveSubjectUuidFromSessionDescriptorWithWrongDescriptorType() {
+    resolver.resolveSubjectUUID(new SessionDescriptor() {});
+  }
 }

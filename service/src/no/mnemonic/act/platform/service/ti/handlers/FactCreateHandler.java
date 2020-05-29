@@ -25,6 +25,7 @@ import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -100,7 +101,7 @@ public class FactCreateHandler {
     }
 
     // As a last resort fall back to the current user's Organization.
-    return fetchOrganization(securityContext.getCurrentUserOrganizationID().toString());
+    return resolveCurrentUserAffiliation();
   }
 
   /**
@@ -134,7 +135,7 @@ public class FactCreateHandler {
     if (origin != null) return origin;
 
     // Create an Origin for the current user if it doesn't exist yet.
-    Subject currentUser = subjectResolver.resolveSubject(securityContext.getCurrentUserID());
+    Subject currentUser = resolveCurrentUser();
     return originManager.saveOrigin(new OriginEntity()
             .setId(securityContext.getCurrentUserID())
             .setNamespaceID(GLOBAL_NAMESPACE) // For now everything will just be part of the global namespace.
@@ -298,6 +299,28 @@ public class FactCreateHandler {
     }
 
     return origin;
+  }
+
+  private Subject resolveCurrentUser() throws AuthenticationFailedException {
+    try {
+      return subjectResolver.resolveCurrentUser(securityContext.getCredentials());
+    } catch (InvalidCredentialsException ex) {
+      throw new AuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
+  }
+
+  private Organization resolveCurrentUserAffiliation() throws AuthenticationFailedException, InvalidArgumentException {
+    try {
+      Organization affiliation = organizationResolver.resolveCurrentUserAffiliation(securityContext.getCredentials());
+      if (affiliation != null) return affiliation;
+
+      // That the current user doesn't have an affiliation is an unlikely edge case, but better handle it, just in case.
+      throw new InvalidArgumentException()
+              .addValidationError("Unable to determine Organization for current user. Please specify Organization.",
+                      "current.user.organization.not.exist", "organization", "N/A");
+    } catch (InvalidCredentialsException ex) {
+      throw new AuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
   }
 
   private String createOriginName(Subject currentUser) {

@@ -3,8 +3,6 @@ package no.mnemonic.act.platform.service.ti;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.auth.IdentityResolver;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.service.ti.delegates.*;
@@ -27,10 +25,6 @@ public class ThreatIntelligenceServiceImplTest {
   @Mock
   private IdentityResolver identityResolver;
   @Mock
-  private OrganizationResolver organizationResolver;
-  @Mock
-  private SubjectResolver subjectResolver;
-  @Mock
   private FactManager factManager;
   @Mock
   private ObjectFactDao objectFactDao;
@@ -45,8 +39,6 @@ public class ThreatIntelligenceServiceImplTest {
     service = new ThreatIntelligenceServiceImpl(
             accessController,
             identityResolver,
-            organizationResolver,
-            subjectResolver,
             factManager,
             objectFactDao,
             delegateProvider

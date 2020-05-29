@@ -2,10 +2,7 @@ package no.mnemonic.act.platform.service.ti;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
-import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.auth.IdentityResolver;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -19,6 +16,7 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.common.auth.model.OrganizationIdentity;
+import no.mnemonic.services.common.auth.model.SessionDescriptor;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -43,11 +41,9 @@ public class TiSecurityContextTest {
   @Mock
   private IdentityResolver identityResolver;
   @Mock
-  private OrganizationResolver organizationResolver;
-  @Mock
-  private SubjectResolver subjectResolver;
-  @Mock
   private Credentials credentials;
+  @Mock
+  private SessionDescriptor sessionDescriptor;
   @Mock
   private OrganizationIdentity organization;
   @Mock
@@ -65,8 +61,6 @@ public class TiSecurityContextTest {
     context = TiSecurityContext.builder()
             .setAccessController(accessController)
             .setIdentityResolver(identityResolver)
-            .setOrganizationResolver(organizationResolver)
-            .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
             .setAclResolver(aclResolver)
@@ -78,8 +72,6 @@ public class TiSecurityContextTest {
     TiSecurityContext.builder()
             .setAccessController(accessController)
             .setIdentityResolver(identityResolver)
-            .setOrganizationResolver(organizationResolver)
-            .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
             .setAclResolver(aclResolver)
             .build();
@@ -90,8 +82,6 @@ public class TiSecurityContextTest {
     TiSecurityContext.builder()
             .setAccessController(accessController)
             .setIdentityResolver(identityResolver)
-            .setOrganizationResolver(organizationResolver)
-            .setSubjectResolver(subjectResolver)
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
             .build();
@@ -434,7 +424,8 @@ public class TiSecurityContextTest {
 
   private UUID mockCurrentUser() throws Exception {
     UUID currentUserID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    when(subjectResolver.resolveCurrentUser(any())).thenReturn(Subject.builder().setId(currentUserID).build());
+    when(accessController.validate(credentials)).thenReturn(sessionDescriptor);
+    when(identityResolver.resolveSubjectUUID(sessionDescriptor)).thenReturn(currentUserID);
     return currentUserID;
   }
 

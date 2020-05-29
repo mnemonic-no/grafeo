@@ -3,9 +3,11 @@ package no.mnemonic.act.platform.auth.properties;
 import no.mnemonic.act.platform.auth.IdentityResolver;
 import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
+import no.mnemonic.act.platform.auth.properties.model.SubjectDescriptor;
 import no.mnemonic.act.platform.auth.properties.model.SubjectIdentifier;
 import no.mnemonic.services.common.auth.model.FunctionIdentity;
 import no.mnemonic.services.common.auth.model.OrganizationIdentity;
+import no.mnemonic.services.common.auth.model.SessionDescriptor;
 import no.mnemonic.services.common.auth.model.SubjectIdentity;
 
 import java.util.UUID;
@@ -48,4 +50,12 @@ public class PropertiesBasedIdentityResolver implements IdentityResolver {
     return SubjectIdentifier.class.cast(identity).getGlobalID();
   }
 
+  @Override
+  public UUID resolveSubjectUUID(SessionDescriptor descriptor) {
+    if (!(descriptor instanceof SubjectDescriptor)) {
+      throw new IllegalArgumentException("Cannot handle the type of provided descriptor.");
+    }
+
+    return resolveSubjectUUID(SubjectDescriptor.class.cast(descriptor).getIdentifier());
+  }
 }
