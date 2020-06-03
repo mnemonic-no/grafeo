@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
 import no.mnemonic.act.platform.service.ti.helpers.GremlinSandboxExtension;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.FactEdge;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ObjectVertex;
@@ -45,6 +46,7 @@ public class TraverseGraphHandler {
   private final FactRetractionHandler factRetractionHandler;
   private final ObjectResponseConverter objectResponseConverter;
   private final FactResponseConverter factResponseConverter;
+  private final PropertyHelper propertyHelper;
 
   private long scriptExecutionTimeout = SCRIPT_EXECUTION_TIMEOUT;
 
@@ -54,13 +56,15 @@ public class TraverseGraphHandler {
                               ObjectFactTypeResolver objectFactTypeResolver,
                               ObjectResponseConverter objectResponseConverter,
                               FactResponseConverter factResponseConverter,
-                              FactRetractionHandler factRetractionHandler) {
+                              FactRetractionHandler factRetractionHandler,
+                              PropertyHelper propertyHelper) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
     this.objectFactTypeResolver = objectFactTypeResolver;
     this.objectResponseConverter = objectResponseConverter;
     this.factResponseConverter = factResponseConverter;
     this.factRetractionHandler = factRetractionHandler;
+    this.propertyHelper = propertyHelper;
   }
 
   /**
@@ -151,7 +155,7 @@ public class TraverseGraphHandler {
       Stream<Object> objectStream = IteratorUtils.stream(iterator)
               .map(this::tinkerpopToApi)
               .filter(Objects::nonNull);
-      
+
       if (traverseParams.getLimit() > 0) {
         objectStream = objectStream.limit(traverseParams.getLimit());
       }
@@ -195,6 +199,7 @@ public class TraverseGraphHandler {
             .setFactRetractionHandler(factRetractionHandler)
             .setSecurityContext(securityContext)
             .setTraverseParams(traverseParams)
+            .setPropertyHelper(propertyHelper)
             .build();
   }
 

@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -14,19 +13,21 @@ import static org.apache.tinkerpop.gremlin.structure.Property.Exceptions.propert
 import static org.apache.tinkerpop.gremlin.structure.VertexProperty.Exceptions.metaPropertiesNotSupported;
 
 /**
- * Base class for all exposed properties from an Object. Every subclass holds one property related to an Object.
+ * Exposes Object properties as Vertex properties.
  *
- * @param <V> Type of property value
  */
-abstract class ObjectProperty<V> implements VertexProperty<V> {
+public class ObjectProperty implements VertexProperty<String> {
 
-  private final ObjectRecord object;
+  private final String key;
+  private final String value;
+
   private final ObjectVertex owner;
   private final UUID id;
 
-  private ObjectProperty(ObjectRecord object, ObjectVertex owner) {
-    this.object = ObjectUtils.notNull(object, "'object' is null!");
+  public ObjectProperty(ObjectVertex owner, String key, String value) {
     this.owner = ObjectUtils.notNull(owner, "'owner' is null!");
+    this.key = key;
+    this.value = value;
     this.id = UUID.randomUUID(); // Generate a random ID for each new instance.
   }
 
@@ -61,28 +62,15 @@ abstract class ObjectProperty<V> implements VertexProperty<V> {
   }
 
   @Override
+  public String key() {return key; }
+
+  @Override
+  public String value() {
+    return value;
+  }
+
+  @Override
   public String toString() {
     return StringFactory.propertyString(this);
-  }
-
-  protected ObjectRecord getObject() {
-    // Need to expose 'object' to inner static classes.
-    return object;
-  }
-
-  static class Value extends ObjectProperty<String> {
-    Value(ObjectRecord object, ObjectVertex owner) {
-      super(object, owner);
-    }
-
-    @Override
-    public String key() {
-      return "value";
-    }
-
-    @Override
-    public String value() {
-      return getObject().getValue();
-    }
   }
 }

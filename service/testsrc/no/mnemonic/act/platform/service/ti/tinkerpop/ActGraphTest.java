@@ -3,8 +3,8 @@ package no.mnemonic.act.platform.service.ti.tinkerpop;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
-import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.exceptions.GraphOperationException;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -256,10 +256,11 @@ public class ActGraphTest extends AbstractGraphTest {
     when(getObjectFactTypeResolver().toObjectTypeStruct(objectType.getId())).thenReturn(objectType);
     when(getObjectFactDao().getObject(objectRecord.getId())).thenReturn(objectRecord);
 
-    return new ObjectVertex(
-            getActGraph(),
-            objectRecord,
-            objectType);
+    return ObjectVertex.builder()
+            .setGraph(getActGraph())
+            .setObjectRecord(objectRecord)
+            .setObjectType(objectType)
+            .build();
   }
 
   private Edge createEdge() {

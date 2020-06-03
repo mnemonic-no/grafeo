@@ -3,9 +3,12 @@ package no.mnemonic.act.platform.dao.elastic;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 class DocumentTestUtils {
 
@@ -59,7 +62,13 @@ class DocumentTestUtils {
     assertEquals(expected.getAcl(), actual.getAcl());
     assertEquals(expected.getObjectCount(), actual.getObjectCount());
 
-    assertObjectDocument(expected.getObjects().iterator().next(), actual.getObjects().iterator().next());
+    expected.getObjects().forEach(o -> {
+      Optional<ObjectDocument> actualMatch = actual.getObjects()
+              .stream()
+              .filter(x -> Objects.equals(x.getId(), o.getId()))
+              .findFirst();
+      assertTrue(actualMatch.isPresent());
+      assertObjectDocument(o, actualMatch.get());
+    });
   }
-
 }

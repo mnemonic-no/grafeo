@@ -77,6 +77,20 @@ public class FactSearchCriteria {
     }
   }
 
+  public enum FactBinding {
+    meta(0), oneLegged(1), twoLegged(2);
+
+    private final int objectCount;
+
+    FactBinding(int objectCount) {
+      this.objectCount = objectCount;
+    }
+
+    public int getObjectCount() {
+      return objectCount;
+    }
+  }
+
   // Filter returned Facts based on those fields.
   private final Set<UUID> factID;
   private final Set<UUID> factTypeID;
@@ -104,6 +118,9 @@ public class FactSearchCriteria {
   private final Number maxNumber;
   private final Set<NumberFieldStrategy> numberFieldStrategy;
   private final MatchStrategy numberMatchStrategy;
+
+  // Number of objects associated with fact
+  private final FactBinding factBinding;
 
   // Additional search options.
   private final int limit;
@@ -134,7 +151,8 @@ public class FactSearchCriteria {
                              MatchStrategy numberMatchStrategy,
                              int limit,
                              UUID currentUserID,
-                             Set<UUID> availableOrganizationID) {
+                             Set<UUID> availableOrganizationID,
+                             FactBinding factBinding) {
     if (currentUserID == null) throw new IllegalArgumentException("Missing required field 'currentUserID'.");
     if (CollectionUtils.isEmpty(availableOrganizationID))
       throw new IllegalArgumentException("Missing required field 'availableOrganizationID'.");
@@ -156,6 +174,7 @@ public class FactSearchCriteria {
     this.limit = limit;
     this.currentUserID = currentUserID;
     this.availableOrganizationID = availableOrganizationID;
+    this.factBinding = factBinding;
 
     // Set default values for strategies if not provided by user.
     this.keywordFieldStrategy = !CollectionUtils.isEmpty(keywordFieldStrategy) ? keywordFieldStrategy :
@@ -359,6 +378,15 @@ public class FactSearchCriteria {
   }
 
   /**
+   * Filter by fact binding, either one-legged, two-legged or meta-fact.
+   *
+   * @return The fact binding to filter by
+   */
+  public FactBinding getFactBinding() {
+    return factBinding;
+  }
+
+  /**
    * Restrict the maximum amount of returned Facts. The amount actually returned might be smaller.
    *
    * @return Maximum amount of returned Facts
@@ -418,6 +446,8 @@ public class FactSearchCriteria {
     private Set<NumberFieldStrategy> numberFieldStrategy;
     private MatchStrategy numberMatchStrategy;
 
+    private FactBinding factBinding;
+
     // Additional search options.
     private int limit;
 
@@ -431,7 +461,8 @@ public class FactSearchCriteria {
     public FactSearchCriteria build() {
       return new FactSearchCriteria(factID, factTypeID, factValue, inReferenceTo, organizationID, originID, objectID, objectTypeID,
               objectValue, keywords, keywordFieldStrategy, keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy,
-              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, limit, currentUserID, availableOrganizationID);
+              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, limit, currentUserID,
+              availableOrganizationID, factBinding);
     }
 
     public Builder setFactID(Set<UUID> factID) {
@@ -591,6 +622,11 @@ public class FactSearchCriteria {
 
     public Builder setNumberMatchStrategy(MatchStrategy numberMatchStrategy) {
       this.numberMatchStrategy = numberMatchStrategy;
+      return this;
+    }
+
+    public Builder setFactBinding(FactBinding factBinding) {
+      this.factBinding = factBinding;
       return this;
     }
 

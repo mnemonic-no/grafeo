@@ -17,6 +17,7 @@ import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
@@ -53,6 +54,9 @@ public class ActGraphIT {
   private static ObjectFactDao objectFactDao;
   private static FactSearchManager factSearchManager;
   private static ObjectFactTypeResolver objectFactTypeResolver;
+  private static FactTypeRequestResolver factTypeRequestResolver;
+  private static FactRetractionHandler factRetractionHandler;
+  private static PropertyHelper propertyHelper;
   private static TiSecurityContext mockSecurityContext;
   private static ObjectTypeEntity ipType;
   private static ObjectTypeEntity domainType;
@@ -123,6 +127,10 @@ public class ActGraphIT {
             new FactAclEntryRecordConverter(),
             new FactCommentRecordConverter());
     objectFactTypeResolver = new ObjectFactTypeResolver(factManager, objectManager);
+
+    factTypeRequestResolver = new FactTypeRequestResolver(factManager);
+    factRetractionHandler = new FactRetractionHandler(factTypeRequestResolver, factSearchManager, mockSecurityContext);
+    propertyHelper = new PropertyHelper(factRetractionHandler, objectFactDao, objectFactTypeResolver, mockSecurityContext);
 
     clusterManager.startComponent();
     clientFactory.startComponent();
@@ -219,6 +227,7 @@ public class ActGraphIT {
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContextNoAccess)
             .setFactRetractionHandler(factRetractionHandler)
+            .setPropertyHelper(propertyHelper)
             .setTraverseParams(TraverseParams.builder().build())
             .build()
             .traversal();
@@ -345,6 +354,7 @@ public class ActGraphIT {
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(mockSecurityContext)
             .setFactRetractionHandler(factRetractionHandler)
+            .setPropertyHelper(propertyHelper)
             .setTraverseParams(traverseParams)
             .build()
             .traversal();

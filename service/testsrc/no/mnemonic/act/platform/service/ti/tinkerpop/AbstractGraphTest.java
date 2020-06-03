@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -27,6 +29,8 @@ abstract class AbstractGraphTest {
   @Mock
   private FactRetractionHandler factRetractionHandler;
   @Mock
+  PropertyHelper propertyHelper;
+  @Mock
   private TiSecurityContext securityContext;
 
   private ActGraph actGraph;
@@ -39,6 +43,8 @@ abstract class AbstractGraphTest {
     when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
     when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
 
+    when(propertyHelper.getOneLeggedFactsAsProperties(any(), any())).thenReturn(list());
+
     actGraph = createActGraph(TraverseParams.builder().build());
   }
 
@@ -49,6 +55,8 @@ abstract class AbstractGraphTest {
   ObjectFactTypeResolver getObjectFactTypeResolver() { return objectFactTypeResolver; }
 
   FactRetractionHandler getFactRetractionHandler() { return factRetractionHandler; }
+
+  PropertyHelper getPropertyHelper() { return propertyHelper; }
 
   TiSecurityContext getSecurityContext() { return securityContext; }
 
@@ -62,6 +70,7 @@ abstract class AbstractGraphTest {
             .setObjectTypeFactResolver(getObjectFactTypeResolver())
             .setSecurityContext(getSecurityContext())
             .setFactRetractionHandler(getFactRetractionHandler())
+            .setPropertyHelper(getPropertyHelper())
             .setTraverseParams(traverseParams)
             .build();
   }

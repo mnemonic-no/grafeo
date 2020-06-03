@@ -4,7 +4,6 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
-import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -21,6 +20,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+import static no.mnemonic.commons.utilities.collections.MapUtils.map;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -77,14 +77,8 @@ public class FactEdgeTest {
 
   @Test
   public void testVerticesWithDirectionIn() {
-    ObjectVertex destination = new ObjectVertex(
-            actGraph,
-            new ObjectRecord().setId(UUID.randomUUID()),
-            ObjectTypeStruct.builder().build());
-    ObjectVertex source = new ObjectVertex(
-            actGraph,
-            new ObjectRecord().setId(UUID.randomUUID()),
-            ObjectTypeStruct.builder().build());
+    ObjectVertex destination = createVertex();
+    ObjectVertex source = createVertex();
 
     Edge edge = new FactEdge(
             actGraph,
@@ -100,14 +94,8 @@ public class FactEdgeTest {
 
   @Test
   public void testVerticesWithDirectionOut() {
-    ObjectVertex destination = new ObjectVertex(
-            actGraph,
-            new ObjectRecord().setId(UUID.randomUUID()),
-            ObjectTypeStruct.builder().build());
-    ObjectVertex source = new ObjectVertex(
-            actGraph,
-            new ObjectRecord().setId(UUID.randomUUID()),
-            ObjectTypeStruct.builder().build());
+    ObjectVertex destination = createVertex();
+    ObjectVertex source = createVertex();
 
     Edge edge = new FactEdge(
             actGraph,
@@ -123,14 +111,8 @@ public class FactEdgeTest {
 
   @Test
   public void testVerticesWithDirectionBoth() {
-    ObjectVertex destination = new ObjectVertex(
-            actGraph,
-            new ObjectRecord().setId(UUID.randomUUID()),
-            ObjectTypeStruct.builder().build());
-    ObjectVertex source = new ObjectVertex(
-            actGraph,
-            new ObjectRecord().setId(UUID.randomUUID()),
-            ObjectTypeStruct.builder().build());
+    ObjectVertex destination = createVertex();
+    ObjectVertex source = createVertex();
 
     Edge edge = new FactEdge(
             actGraph,
@@ -218,7 +200,7 @@ public class FactEdgeTest {
     Edge edge = createEdge();
 
     // Test that the following properties exists on the edge.
-    Map<String, Object> expected = MapUtils.map(
+    Map<String, Object> expected = map(
             T("factID", edge.id().toString()),
             T("value", "value"),
             T("inReferenceToID", "00000000-0000-0000-0000-000000000001"),
@@ -263,10 +245,10 @@ public class FactEdgeTest {
 
   @Test
   public void testReturnOutThenInOnVertexIterator() {
-    FactTypeStruct factTypeStruct = FactTypeStruct.builder().setId(UUID.randomUUID()).setName("someFactType").build();
+    FactTypeStruct factType = FactTypeStruct.builder().setId(UUID.randomUUID()).setName("someFactType").build();
     FactRecord factRecord = new FactRecord()
             .setId(UUID.randomUUID())
-            .setTypeID(factTypeStruct.getId())
+            .setTypeID(factType.getId())
             .setValue("value")
             .setInReferenceToID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000002"))
@@ -277,19 +259,21 @@ public class FactEdgeTest {
             .setTimestamp(123456789L)
             .setLastSeenTimestamp(987654321L);
 
-    ObjectVertex source = new ObjectVertex(
-            actGraph,
-            new ObjectRecord().setId(UUID.randomUUID()),
-            ObjectTypeStruct.builder().setId(UUID.randomUUID()).setName("someObjectType").build());
-    ObjectVertex destination = new ObjectVertex(
-            actGraph,
-            new ObjectRecord().setId(UUID.randomUUID()),
-            ObjectTypeStruct.builder().setId(UUID.randomUUID()).setName("someOtherObjectType").build());
+    ObjectVertex source = ObjectVertex.builder()
+            .setGraph(actGraph)
+            .setObjectRecord(new ObjectRecord().setId(UUID.randomUUID()))
+            .setObjectType(ObjectTypeStruct.builder().setId(UUID.randomUUID()).setName("someObjectType").build())
+            .build();
+    ObjectVertex destination = ObjectVertex.builder()
+            .setGraph(actGraph)
+            .setObjectRecord(new ObjectRecord().setId(UUID.randomUUID()))
+            .setObjectType(ObjectTypeStruct.builder().setId(UUID.randomUUID()).setName("someOtherObjectType").build())
+            .build();
 
     FactEdge edge = new FactEdge(
             actGraph,
             factRecord,
-            factTypeStruct,
+            factType,
             destination,
             source
     );
@@ -305,16 +289,24 @@ public class FactEdgeTest {
     assertFalse(vertices.hasNext());
   }
 
+  private ObjectVertex createVertex() {
+    return ObjectVertex.builder()
+            .setGraph(actGraph)
+            .setObjectType(ObjectTypeStruct.builder().build())
+            .setObjectRecord(new ObjectRecord().setId(UUID.randomUUID()))
+            .build();
+  }
+
   private Edge createEdge() {
 
-    FactTypeStruct factTypeStruct = FactTypeStruct.builder()
+    FactTypeStruct factType = FactTypeStruct.builder()
             .setId(UUID.randomUUID())
             .setName("someFactType")
             .build();
 
     FactRecord factRecord = new FactRecord()
             .setId(UUID.randomUUID())
-            .setTypeID(factTypeStruct.getId())
+            .setTypeID(factType.getId())
             .setValue("value")
             .setInReferenceToID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000002"))
@@ -325,30 +317,34 @@ public class FactEdgeTest {
             .setTimestamp(123456789L)
             .setLastSeenTimestamp(987654321L);
 
-    ObjectTypeStruct objectTypeStruct = ObjectTypeStruct.builder()
+    ObjectTypeStruct objectType = ObjectTypeStruct.builder()
             .setId(UUID.randomUUID())
             .setName("someObjectType")
             .build();
-    ObjectVertex source = new ObjectVertex(
-            actGraph,
+    ObjectVertex source = ObjectVertex.builder()
+            .setGraph(actGraph)
+            .setObjectRecord(
             new ObjectRecord()
                     .setId(UUID.randomUUID())
                     .setValue("someObjectValue")
-                    .setTypeID(objectTypeStruct.getId()),
-            objectTypeStruct);
+                    .setTypeID(objectType.getId()))
+            .setObjectType(objectType)
+            .build();
 
-    ObjectVertex destination = new ObjectVertex(
-            actGraph,
+    ObjectVertex destination = ObjectVertex.builder()
+            .setGraph(actGraph)
+            .setObjectRecord(
             new ObjectRecord()
                     .setId(UUID.randomUUID())
                     .setValue("someOtherObjectValue")
-                    .setTypeID(objectTypeStruct.getId()),
-            objectTypeStruct);
+                    .setTypeID(objectType.getId()))
+            .setObjectType(objectType)
+            .build();
 
     return new FactEdge(
             actGraph,
             factRecord,
-            factTypeStruct,
+            factType,
             destination,
             source
     );

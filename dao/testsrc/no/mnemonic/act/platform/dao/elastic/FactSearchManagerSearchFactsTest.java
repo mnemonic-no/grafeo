@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.dao.elastic;
 
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria.FactBinding;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
@@ -443,6 +444,20 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
             .setMaxNumber(0.3f)
             .addNumberFieldStrategy(FactSearchCriteria.NumberFieldStrategy.certainty));
     testSearchFacts(criteria, accessibleFact);
+  }
+
+  @Test
+  public void testSearchFactsFilterByFactBinding() {
+    ObjectDocument obj1 = createObjectDocument();
+    ObjectDocument obj2 = createObjectDocument();
+
+    FactDocument oneLeggedFact = indexFact(d -> d.setObjects(set(obj1)));
+    FactDocument twoLeggedFact = indexFact(d -> d.setObjects(set(obj1, obj2)));
+    FactDocument metaFact = indexFact(d -> d.setObjects(set()));
+
+    testSearchFacts(createFactSearchCriteria(c -> c.setFactBinding(FactBinding.meta)), metaFact);
+    testSearchFacts(createFactSearchCriteria(c -> c.setFactBinding(FactBinding.oneLegged)), oneLeggedFact);
+    testSearchFacts(createFactSearchCriteria(c -> c.setFactBinding(FactBinding.twoLegged)), twoLeggedFact);
   }
 
   @Test

@@ -17,7 +17,9 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -30,6 +32,8 @@ public class ElementFactoryTest {
   @Mock
   private FactRetractionHandler factRetractionHandler;
   @Mock
+  private PropertyHelper propertyHelper;
+  @Mock
   private TiSecurityContext securityContext;
 
   private ElementFactory elementFactory;
@@ -38,11 +42,14 @@ public class ElementFactoryTest {
   public void setup() {
     initMocks(this);
 
+    when(propertyHelper.getOneLeggedFactsAsProperties(any(), any())).thenReturn(list());
+
     ActGraph actGraph = ActGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContext)
             .setFactRetractionHandler(factRetractionHandler)
+            .setPropertyHelper(propertyHelper)
             .setTraverseParams(TraverseParams.builder().build())
             .build();
     elementFactory = ElementFactory.builder().setOwner(actGraph).build();
@@ -182,7 +189,7 @@ public class ElementFactoryTest {
   }
 
   private ObjectRecord mockObject(ObjectTypeStruct objectTypeStruct) {
-    ObjectRecord object = new ObjectRecord().setTypeID(objectTypeStruct.getId()).setId(UUID.randomUUID());
+    ObjectRecord object = new ObjectRecord().setTypeID(objectTypeStruct.getId()).setId(UUID.randomUUID()).setValue("test");
     when(objectFactDao.getObject(object.getId())).thenReturn(object);
     return object;
   }

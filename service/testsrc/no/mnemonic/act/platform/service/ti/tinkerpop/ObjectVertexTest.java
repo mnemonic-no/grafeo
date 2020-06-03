@@ -6,18 +6,20 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
-import no.mnemonic.commons.utilities.collections.MapUtils;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+import static no.mnemonic.commons.utilities.collections.MapUtils.map;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.apache.tinkerpop.gremlin.structure.Direction.*;
 import static org.junit.Assert.*;
@@ -29,24 +31,33 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testCreateVertexWithoutGraph() {
-    assertThrows(RuntimeException.class, () -> new ObjectVertex(null, new ObjectRecord(), ObjectTypeStruct.builder().build()));
+    assertThrows(RuntimeException.class, () -> ObjectVertex.builder()
+            .setObjectRecord(new ObjectRecord())
+            .setObjectType(ObjectTypeStruct.builder().build())
+            .build());
   }
 
   @Test
   public void testCreateVertexWithoutObject() {
-    assertThrows(RuntimeException.class, () -> new ObjectVertex(getActGraph(), null, ObjectTypeStruct.builder().build()));
+    assertThrows(RuntimeException.class, () -> ObjectVertex.builder()
+            .setGraph(getActGraph())
+            .setObjectType(ObjectTypeStruct.builder().build())
+            .build());
   }
 
   @Test
   public void testCreateVertexWithoutObjectType() {
-    assertThrows(RuntimeException.class, () -> new ObjectVertex(getActGraph(), new ObjectRecord(), null));
+    assertThrows(RuntimeException.class, () -> ObjectVertex.builder()
+            .setGraph(getActGraph())
+            .setObjectRecord(new ObjectRecord())
+            .build());
   }
 
   @Test
   public void testCreateVertexFromObject() {
     ObjectRecord object = new ObjectRecord().setTypeID(UUID.randomUUID());
     ObjectTypeStruct type = ObjectTypeStruct.builder().setName("someObjectType").setId(UUID.randomUUID()).build();
-    Vertex vertex = new ObjectVertex(getActGraph(), object, type);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(object).setObjectType(type).build();
 
     assertEquals(object.getId(), vertex.id());
     assertEquals("someObjectType", vertex.label());
@@ -71,7 +82,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             x -> ResultContainer.<FactRecord>builder().setValues(list(bidirectionalFact).iterator()).build()
     );
 
-    Vertex vertex = new ObjectVertex(getActGraph(), source, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(source).setObjectType(objectType).build();
 
     assertTrue(vertex.edges(BOTH).hasNext());
     assertTrue(vertex.edges(OUT).hasNext());
@@ -95,7 +106,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             x -> ResultContainer.<FactRecord>builder().setValues(list(factRecord).iterator()).build()
     );
 
-    Vertex vertex = new ObjectVertex(getActGraph(), source, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(source).setObjectType(objectType).build();
 
     assertTrue(vertex.edges(BOTH).hasNext());
     assertFalse(vertex.edges(IN).hasNext());
@@ -119,7 +130,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             x -> ResultContainer.<FactRecord>builder().setValues(list(factRecord).iterator()).build()
     );
 
-    Vertex vertex = new ObjectVertex(getActGraph(), destination, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(destination).setObjectType(objectType).build();
 
     assertTrue(vertex.edges(BOTH).hasNext());
     assertTrue(vertex.edges(IN).hasNext());
@@ -153,7 +164,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
               return ResultContainer.<FactRecord>builder().build();
             });
 
-    Vertex vertex = new ObjectVertex(getActGraph(), source, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(source).setObjectType(objectType).build();
 
     assertTrue(vertex.edges(BOTH, "someFactType").hasNext());
     assertFalse(vertex.edges(BOTH, "nonExistingType").hasNext());
@@ -177,7 +188,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             x -> ResultContainer.<FactRecord>builder().setValues(list(bidirectionalFact).iterator()).build()
     );
 
-    Vertex vertex = new ObjectVertex(getActGraph(), source, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(source).setObjectType(objectType).build();
 
     assertTrue(vertex.vertices(BOTH).hasNext());
     assertTrue(vertex.vertices(OUT).hasNext());
@@ -201,7 +212,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             x -> ResultContainer.<FactRecord>builder().setValues(list(factRecord).iterator()).build()
     );
 
-    Vertex vertex = new ObjectVertex(getActGraph(), source, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(source).setObjectType(objectType).build();
 
     assertTrue(vertex.vertices(BOTH).hasNext());
     assertFalse(vertex.vertices(IN).hasNext());
@@ -225,7 +236,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             x -> ResultContainer.<FactRecord>builder().setValues(list(factRecord).iterator()).build()
     );
 
-    Vertex vertex = new ObjectVertex(getActGraph(), destination, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(destination).setObjectType(objectType).build();
 
     assertTrue(vertex.vertices(BOTH).hasNext());
     assertTrue(vertex.vertices(IN).hasNext());
@@ -261,16 +272,19 @@ public class ObjectVertexTest extends AbstractGraphTest {
               return ResultContainer.<FactRecord>builder().build();
             });
 
-    Vertex vertex = new ObjectVertex(getActGraph(), source, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(source).setObjectType(objectType).build();
 
     assertTrue(vertex.vertices(BOTH, "someFactType").hasNext());
     assertFalse(vertex.vertices(BOTH, "nonExistingType").hasNext());
   }
 
   @Test
-  public void testPropertiesWithAllProperties() {
+  public void testPropertiesWithDefaultProperties() {
     Vertex vertex = createVertex();
-    assertTrue(vertex.properties().hasNext());
+
+    List<VertexProperty<Object>> props = list(vertex.properties());
+    assertEquals(1, props.size());
+    assertEquals("value", props.get(0).key());
   }
 
   @Test
@@ -281,8 +295,55 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testPropertiesWithMatchingProperty() {
-    Vertex vertex = createVertex();
-    assertTrue(vertex.properties("value").hasNext());
+    ObjectVertex objectVertex = ObjectVertex.builder()
+            .setGraph(getActGraph())
+            .setObjectRecord(new ObjectRecord()
+                    .setId(UUID.randomUUID())
+                    .setValue("someObjectValue"))
+            .setObjectType(ObjectTypeStruct.builder()
+                    .setId(UUID.randomUUID())
+                    .setName("someObjectType")
+                    .build())
+            .setProperties(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("b", "2")))
+            .build();
+
+    assertEquals(set("vp[a->1]", "vp[b->2]", "vp[value->someObjectValue]"), set(objectVertex.properties(), Object::toString));
+    assertEquals(set("vp[a->1]", "vp[b->2]"), set(objectVertex.properties("a", "b"), Object::toString));
+  }
+
+  @Test
+  public void testPropertiesWithSameName() {
+    ObjectVertex objectVertex = ObjectVertex.builder()
+            .setGraph(getActGraph())
+            .setObjectRecord(new ObjectRecord()
+                    .setId(UUID.randomUUID())
+                    .setValue("someObjectValue"))
+            .setObjectType(ObjectTypeStruct.builder()
+                    .setId(UUID.randomUUID())
+                    .setName("someObjectType")
+                    .build())
+            .setProperties(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("a", "2")))
+            .build();
+
+    assertEquals(set("vp[a->1]", "vp[a->2]"), set(objectVertex.properties("a"), Object::toString));
+  }
+
+  // Note: There should never be a one-legged fact type with name "value". This is just makin sure it will work
+  @Test
+  public void testPropertiesWithNameValue() {
+    ObjectVertex objectVertex = ObjectVertex.builder()
+            .setGraph(getActGraph())
+            .setObjectRecord(new ObjectRecord()
+                    .setId(UUID.randomUUID())
+                    .setValue("someObjectValue"))
+            .setObjectType(ObjectTypeStruct.builder()
+                    .setId(UUID.randomUUID())
+                    .setName("someObjectType")
+                    .build())
+            .setProperties(list(new PropertyEntry<>("value", "1")))
+            .build();
+
+    assertEquals(set("vp[value->someObjectValue]", "vp[value->1]"), set(objectVertex.properties(), Object::toString));
   }
 
   /* The following tests are adapted from gremlin-test VertexTest. */
@@ -324,7 +385,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   public void testGetPropertyKeysOnVertex() {
     Vertex vertex = createVertex();
     // Test that the following properties exists on the vertex.
-    Map<String, String> expected = MapUtils.map(
+    Map<String, String> expected = map(
             T("value", "someObjectValue")
     );
 
@@ -455,7 +516,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             x -> ResultContainer.<FactRecord>builder().setValues(list(bidirectionalFact).iterator()).build()
     );
 
-    Vertex vertex = new ObjectVertex(actGraph, source, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(source).setObjectType(objectType).build();
 
     assertFalse(vertex.edges(BOTH).hasNext());
     assertFalse(vertex.edges(OUT).hasNext());
@@ -472,10 +533,11 @@ public class ObjectVertexTest extends AbstractGraphTest {
             .setBeforeTimestamp(beforeTimestamp)
             .build());
 
-    Vertex vertex = new ObjectVertex(
-            timeFilterGraph,
-            new ObjectRecord().setTypeID(UUID.randomUUID()),
-            ObjectTypeStruct.builder().setName("someObjectType").setId(UUID.randomUUID()).build());
+    Vertex vertex = ObjectVertex.builder()
+            .setGraph(timeFilterGraph)
+            .setObjectRecord(new ObjectRecord().setTypeID(UUID.randomUUID()))
+            .setObjectType(ObjectTypeStruct.builder().setName("someObjectType").setId(UUID.randomUUID()).build())
+            .build();
 
     // Don't care about the answer
     when(getActGraph().getObjectFactDao().searchFacts(any()))
@@ -513,7 +575,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
     when(getFactRetractionHandler().isRetracted(retractedFact)).thenReturn(true);
 
     // Should have no edges since the fact is retracted
-    Vertex vertex = new ObjectVertex(actGraphNoRetractions, source, objectType);
+    Vertex vertex = ObjectVertex.builder().setGraph(actGraphNoRetractions).setObjectRecord(source).setObjectType(objectType).build();
 
     assertFalse(vertex.edges(BOTH).hasNext());
     assertFalse(vertex.edges(OUT).hasNext());
@@ -521,16 +583,16 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   private Vertex createVertex() {
-    ObjectTypeStruct objectTypeStruct = ObjectTypeStruct.builder()
+    ObjectTypeStruct objectType = ObjectTypeStruct.builder()
             .setId(UUID.randomUUID())
             .setName("someObjectType")
             .build();
 
     ObjectRecord object = new ObjectRecord()
             .setId(UUID.randomUUID())
-            .setTypeID(objectTypeStruct.getId())
+            .setTypeID(objectType.getId())
             .setValue("someObjectValue");
 
-    return new ObjectVertex(getActGraph(), object, objectTypeStruct);
+    return ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(object).setObjectType(objectType).build();
   }
 }

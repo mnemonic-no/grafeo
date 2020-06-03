@@ -8,8 +8,8 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.FactEdge;
-import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ObjectVertex;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
@@ -17,6 +17,7 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -87,6 +88,7 @@ public class ElementFactory {
       return vertexCache.get(id);
     } catch (Exception ignored) {
       // If vertex cannot be fetched, e.g. because 'id' references a non-existing Object, just return null.
+      LOGGER.warning(ignored, "Failed to get vertex with id = %s.", id);
       return null;
     }
   }
@@ -123,7 +125,17 @@ public class ElementFactory {
                 ObjectTypeStruct objectTypeStruct = ObjectUtils.notNull(
                         owner.getObjectFactTypeResolver().toObjectTypeStruct(objectRecord.getTypeID()),
                         String.format("ObjectType with id = %s does not exist.", objectRecord.getTypeID()));
-                return new ObjectVertex(owner, objectRecord, objectTypeStruct);
+
+                List<PropertyEntry<String>> props = owner.getPropertyHelper().getOneLeggedFactsAsProperties(
+                        objectRecord.getId(),
+                        owner.getTraverseParams());
+
+                return ObjectVertex.builder()
+                        .setGraph(owner)
+                        .setObjectRecord(objectRecord)
+                        .setObjectType(objectTypeStruct)
+                        .setProperties(props)
+                        .build();
               }
             });
   }

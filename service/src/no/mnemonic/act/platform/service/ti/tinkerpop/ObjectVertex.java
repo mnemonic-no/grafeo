@@ -5,7 +5,9 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
@@ -13,7 +15,7 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
 import java.util.*;
 
-import static no.mnemonic.act.platform.service.ti.tinkerpop.ObjectProperty.Value;
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static no.mnemonic.commons.utilities.collections.SetUtils.union;
 import static org.apache.tinkerpop.gremlin.structure.Direction.*;
@@ -32,13 +34,17 @@ public class ObjectVertex implements Vertex {
   private final ActGraph graph;
   private final ObjectRecord object;
   private final ObjectFactTypeResolver.ObjectTypeStruct type;
-  private final Set<VertexProperty> allProperties;
+  private final Set<VertexProperty<String>> allProperties;
 
-  public ObjectVertex(ActGraph graph, ObjectRecord object, ObjectFactTypeResolver.ObjectTypeStruct type) {
+  private ObjectVertex(ActGraph graph,
+                       ObjectRecord object,
+                       ObjectFactTypeResolver.ObjectTypeStruct type,
+                       List<PropertyEntry<String>> properties) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
     this.object = ObjectUtils.notNull(object, "'object' is null!");
     this.type = ObjectUtils.notNull(type, "'type' is null!");
-    this.allProperties = Collections.unmodifiableSet(getAllProperties()); // Generate properties set only once.
+    // Generate properties set only once.
+    this.allProperties = Collections.unmodifiableSet(getAllProperties(ObjectUtils.notNull(properties, "'properties' is null!")));
   }
 
   @Override
@@ -118,6 +124,10 @@ public class ObjectVertex implements Vertex {
     return this.object;
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
   @Override
   public String toString() {
     return StringFactory.vertexString(this);
@@ -136,10 +146,13 @@ public class ObjectVertex implements Vertex {
     return Objects.hash(id());
   }
 
-  private Set<VertexProperty> getAllProperties() {
-    // Currently, only one property is exposed. Object statistics would be interesting as well, but this requires an
-    // external index in order to allow efficient graph traversals.
-    return set(new Value(object, this));
+  private Set<VertexProperty<String>> getAllProperties(List<PropertyEntry<String>> properties) {
+    // Add any dynamic properties to the object value property
+    // Object statistics would be interesting as well, but this requires an external index in order to allow efficient
+    // graph traversals.
+    Set<VertexProperty<String>> set = set(new ObjectProperty(this, "value", object.getValue()));
+    properties.forEach( p -> set.add(new ObjectProperty(this, p.getName(), p.getValue())));
+    return set;
   }
 
   static boolean matchesDirection(FactRecord fact, ObjectRecord object, Direction direction) {
@@ -161,5 +174,43 @@ public class ObjectVertex implements Vertex {
             (Objects.equals(object.getId(), sourceObject.getId()) && direction == OUT) ||
             // object <-- fact -- anyObject
             (Objects.equals(object.getId(), destinationObject.getId()) && direction == IN);
+  }
+
+  public static class Builder {
+    private ActGraph graph;
+    private ObjectRecord objectRecord;
+    private ObjectFactTypeResolver.ObjectTypeStruct objectType;
+    private List<PropertyEntry<String>> properties;
+
+    private Builder() {}
+
+    public ObjectVertex build() {
+      return new ObjectVertex(graph, objectRecord, objectType, ObjectUtils.ifNull(properties, list()));
+    }
+
+    public Builder setGraph(ActGraph graph) {
+      this.graph = graph;
+      return this;
+    }
+
+    public Builder setObjectRecord(ObjectRecord objectRecord) {
+      this.objectRecord = objectRecord;
+      return this;
+    }
+
+    public Builder setObjectType(ObjectFactTypeResolver.ObjectTypeStruct objectType) {
+      this.objectType = objectType;
+      return this;
+    }
+
+    public Builder setProperties(List<PropertyEntry<String>> properties) {
+      this.properties = properties;
+      return this;
+    }
+
+    public Builder addProperty(PropertyEntry<String> property) {
+      this.properties = ListUtils.addToList(this.properties, property);
+      return this;
+    }
   }
 }

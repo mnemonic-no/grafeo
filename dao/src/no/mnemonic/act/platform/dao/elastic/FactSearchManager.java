@@ -581,6 +581,10 @@ public class FactSearchManager implements LifecycleAspect {
     if (!CollectionUtils.isEmpty(criteria.getObjectValue())) {
       rootQuery.filter(nestedQuery("objects", termsQuery("objects.value", criteria.getObjectValue()), ScoreMode.None));
     }
+
+    if (criteria.getFactBinding() != null) {
+      rootQuery.filter(termQuery("objectCount", criteria.getFactBinding().getObjectCount()));
+    }
   }
 
   private void applyKeywordSearchQuery(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {

@@ -11,26 +11,27 @@ import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
 import no.mnemonic.commons.utilities.collections.ListUtils;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class TraverseGraphHandlerTest {
@@ -47,6 +48,8 @@ public class TraverseGraphHandlerTest {
   private TiSecurityContext securityContext;
   @Mock
   private FactRetractionHandler factRetractionHandler;
+  @Mock
+  private PropertyHelper propertyHelper;
 
   private TraverseGraphHandler handler;
 
@@ -56,7 +59,8 @@ public class TraverseGraphHandlerTest {
 
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
     when(securityContext.getCurrentUserID()).thenReturn(new UUID(0, 1));
-    when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(new UUID(0, 1)));
+    when(securityContext.getAvailableOrganizationID()).thenReturn(set(new UUID(0, 1)));
+    when(propertyHelper.getOneLeggedFactsAsProperties(any(), any())).thenReturn(list());
 
     handler = new TraverseGraphHandler(
             securityContext,
@@ -64,7 +68,8 @@ public class TraverseGraphHandlerTest {
             objectFactTypeResolver,
             objectResponseConverter,
             factResponseConverter,
-            factRetractionHandler).setScriptExecutionTimeout(5000);
+            factRetractionHandler,
+            propertyHelper).setScriptExecutionTimeout(5000);
   }
 
   @Test
@@ -106,6 +111,23 @@ public class TraverseGraphHandlerTest {
     List<?> result = ListUtils.list(resultSet.iterator());
     assertEquals(1, result.size());
     assertEquals("someValue", result.get(0));
+  }
+
+  @Test
+  public void testTraverseGraphReturnProperties() throws Exception {
+    ObjectRecord source = mockObjectRecord(mockObjectType(), "someValue");
+    ObjectRecord destination = mockObjectRecord(mockObjectType(), "someOther");
+    mockFact(source, destination);
+    when(propertyHelper.getOneLeggedFactsAsProperties(eq(source.getId()), any()))
+            .thenReturn(ListUtils.list(
+                    new PropertyEntry<>("name", "test"),
+                    new PropertyEntry<>("otherProp", "something")));
+
+    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.properties()", TraverseParams.builder().build());
+
+    Set<?> result = set(resultSet.iterator());
+    assertEquals(3, result.size());
+    assertEquals(set("vp[value->someValue]", "vp[name->test]", "vp[otherProp->something]"), result);
   }
 
   @Test
