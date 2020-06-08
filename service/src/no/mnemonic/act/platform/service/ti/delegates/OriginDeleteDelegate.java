@@ -64,10 +64,10 @@ public class OriginDeleteDelegate implements Delegate {
   private void checkDeletePermission(OriginEntity entity) throws AccessDeniedException, AuthenticationFailedException {
     if (entity.getOrganizationID() != null) {
       // Check specific delete permission for the Origin.
-      securityContext.checkPermission(TiFunctionConstants.deleteOrigins, entity.getOrganizationID());
+      securityContext.checkPermission(TiFunctionConstants.deleteThreatIntelOrigin, entity.getOrganizationID());
     } else {
       // Only check general delete permission.
-      securityContext.checkPermission(TiFunctionConstants.deleteOrigins);
+      securityContext.checkPermission(TiFunctionConstants.deleteThreatIntelOrigin);
     }
   }
 

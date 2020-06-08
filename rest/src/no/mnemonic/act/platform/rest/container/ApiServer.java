@@ -24,7 +24,7 @@ public class ApiServer implements LifecycleAspect {
   private final Server server = new Server();
 
   @Inject
-  public ApiServer(@Named("api.server.port") String port, GuiceResteasyBootstrapServletContextListener listener) {
+  public ApiServer(@Named("act.api.server.port") String port, GuiceResteasyBootstrapServletContextListener listener) {
     this.port = Integer.parseInt(port);
     this.listener = listener;
   }

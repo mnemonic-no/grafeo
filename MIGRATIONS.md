@@ -2,6 +2,48 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Rename configuration properties and functions] - 2020-06-05
+Most configuration properties and functions have been renamed. Change the configuration files (`application.properties` and `acl.properties`) according to the tables below.
+
+### Configuration properties
+Old Name | New Name
+-------- | --------
+access.controller.properties.file | act.access.controller.properties.configuration.file
+access.controller.read.interval | act.access.controller.properties.reload.interval
+cassandra.data.center | act.cassandra.data.center
+cassandra.port | act.cassandra.port
+cassandra.contact.points | act.cassandra.contact.points
+elasticsearch.port | act.elasticsearch.port
+elasticsearch.contact.points | act.elasticsearch.contact.points
+smb.client.url | act.smb.client.url
+smb.client.username | act.smb.client.username
+smb.client.password | act.smb.client.password
+smb.queue.name | act.smb.queue.name
+smb.server.url | act.smb.server.url
+smb.server.username | act.smb.server.username
+smb.server.password | act.smb.server.password
+api.server.port | act.api.server.port
+cors.allowed.origins | act.api.cors.allowed.origins
+
+### Functions
+Old Name | New Name
+-------- | --------
+addTypes | addThreatIntelType
+updateTypes | updateThreatIntelType
+viewTypes | viewThreatIntelType
+addOrigins | addThreatIntelOrigin
+deleteOrigins | deleteThreatIntelOrigin
+updateOrigins | updateThreatIntelOrigin
+viewOrigins | viewThreatIntelOrigin
+addFactObjects | addThreatIntelFact
+traverseFactObjects | traverseThreatIntelFact
+viewFactObjects | viewThreatIntelFact
+addFactComments | addThreatIntelFactComment
+viewFactComments | viewThreatIntelFactComment
+grantFactAccess | grantThreatIntelFactAccess
+viewFactAccess | viewThreatIntelFactAccess
+unlimitedSearch | unlimitedThreatIntelSearch
+
 ## [Move retracted hint to Cassandra] - 2019-11-05
 Moving the retracted hint from ElasticSearch to Cassandra requires changes to the Cassandra schema.
 

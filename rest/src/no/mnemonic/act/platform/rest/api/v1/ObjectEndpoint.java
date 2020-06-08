@@ -52,7 +52,7 @@ public class ObjectEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewFactObjects")
+  @RolesAllowed("viewThreatIntelFact")
   public Response getObjectById(
           @PathParam("id") @ApiParam(value = "UUID of the requested Object.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
@@ -75,7 +75,7 @@ public class ObjectEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewFactObjects")
+  @RolesAllowed("viewThreatIntelFact")
   public Response getObjectByTypeValue(
           @PathParam("type") @ApiParam(value = "Type name of the requested Object.") @NotBlank String type,
           @PathParam("value") @ApiParam(value = "Value of the requested Object.") @NotBlank String value
@@ -103,7 +103,7 @@ public class ObjectEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewFactObjects")
+  @RolesAllowed("viewThreatIntelFact")
   public Response searchObjectFactsById(
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to limit the returned Facts.") @NotNull @Valid SearchObjectFactsRequest request
@@ -131,7 +131,7 @@ public class ObjectEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewFactObjects")
+  @RolesAllowed("viewThreatIntelFact")
   public Response searchObjectFactsByTypeValue(
           @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
           @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
@@ -167,7 +167,7 @@ public class ObjectEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("traverseFactObjects")
+  @RolesAllowed("traverseThreatIntelFact")
   public Response traverseObjectById(
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectIdRequest request
@@ -202,7 +202,7 @@ public class ObjectEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("traverseFactObjects")
+  @RolesAllowed("traverseThreatIntelFact")
   public Response traverseObjectByTypeValue(
           @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
           @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
@@ -247,7 +247,7 @@ public class ObjectEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewFactObjects")
+  @RolesAllowed("viewThreatIntelFact")
   public Response searchObjects(
           @ApiParam(value = "Request to search for Objects.") @NotNull @Valid SearchObjectRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
@@ -274,7 +274,7 @@ public class ObjectEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("traverseFactObjects")
+  @RolesAllowed("traverseThreatIntelFact")
   public Response traverseObjects(
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectSearchRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {

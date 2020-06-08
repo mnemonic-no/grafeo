@@ -43,10 +43,10 @@ public class SmbServer implements LifecycleAspect {
   public SmbServer(ThreatIntelligenceService service,
                    ServiceSessionFactory sessionFactory,
                    MessageSerializer messageSerializer,
-                   @Named(value = "smb.queue.name") String queueName,
-                   @Named(value = "smb.server.url") String contextURL,
-                   @Named(value = "smb.server.username") String userName,
-                   @Named(value = "smb.server.password") String password) {
+                   @Named(value = "act.smb.queue.name") String queueName,
+                   @Named(value = "act.smb.server.url") String contextURL,
+                   @Named(value = "act.smb.server.username") String userName,
+                   @Named(value = "act.smb.server.password") String password) {
     this.service = service;
     this.sessionFactory = sessionFactory;
     this.messageSerializer = messageSerializer;

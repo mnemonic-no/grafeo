@@ -33,7 +33,7 @@ public class ObjectTypeSearchDelegate implements Delegate {
 
   public ResultSet<ObjectType> handle(SearchObjectTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(TiFunctionConstants.viewTypes);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelType);
 
     // No filtering is defined in SearchObjectTypeRequest yet, just fetch all ObjectTypes.
     List<ObjectType> types = objectManager

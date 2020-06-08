@@ -41,7 +41,7 @@ public class OriginGetByIdDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchOriginWithoutGeneralViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewOrigins);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelOrigin);
     delegate.handle(new GetOriginByIdRequest().setId(UUID.randomUUID()));
   }
 
@@ -67,7 +67,7 @@ public class OriginGetByIdDelegateTest {
 
     verify(originResolver).apply(origin.getId());
     verify(originResponseConverter).apply(origin);
-    verify(securityContext).checkPermission(TiFunctionConstants.viewOrigins);
+    verify(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelOrigin);
     verify(securityContext).checkReadPermission(origin);
   }
 }

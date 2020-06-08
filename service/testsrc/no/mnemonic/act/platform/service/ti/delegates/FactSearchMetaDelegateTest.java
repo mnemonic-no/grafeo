@@ -45,7 +45,7 @@ public class FactSearchMetaDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testSearchMetaFactsWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelFact);
     delegate.handle(new SearchMetaFactsRequest());
   }
 

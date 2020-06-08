@@ -45,7 +45,7 @@ public class OriginSearchDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testSearchOriginWithoutGeneralViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewOrigins);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelOrigin);
     delegate.handle(new SearchOriginRequest());
   }
 

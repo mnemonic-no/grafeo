@@ -55,7 +55,7 @@ public class OriginDeleteDelegateTest {
   public void testDeleteOriginNoDeletePermissionWithoutOrganization() throws Exception {
     OriginEntity entity = new OriginEntity().setId(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.deleteOrigins);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.deleteThreatIntelOrigin);
     delegate.handle(new DeleteOriginRequest().setId(entity.getId()));
   }
 
@@ -65,7 +65,7 @@ public class OriginDeleteDelegateTest {
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.deleteOrigins, entity.getOrganizationID());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.deleteThreatIntelOrigin, entity.getOrganizationID());
     delegate.handle(new DeleteOriginRequest().setId(entity.getId()));
   }
 

@@ -61,7 +61,7 @@ public class FactTypeUpdateDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testUpdateFactTypeWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.updateTypes);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.updateThreatIntelType);
     delegate.handle(new UpdateFactTypeRequest());
   }
 

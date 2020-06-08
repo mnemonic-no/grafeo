@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static no.mnemonic.act.platform.service.ti.TiFunctionConstants.viewFactObjects;
-import static no.mnemonic.act.platform.service.ti.TiFunctionConstants.viewOrigins;
+import static no.mnemonic.act.platform.service.ti.TiFunctionConstants.viewThreatIntelFact;
+import static no.mnemonic.act.platform.service.ti.TiFunctionConstants.viewThreatIntelOrigin;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
@@ -94,14 +94,14 @@ public class TiSecurityContextTest {
 
   @Test
   public void testCheckReadPermissionWithAccessModePublic() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
     context.checkReadPermission(new FactEntity().setAccessMode(AccessMode.Public));
-    verify(accessController).hasPermission(credentials, viewFactObjects);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionWithAccessModePublicNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
     context.checkReadPermission(new FactEntity().setAccessMode(AccessMode.Public));
   }
 
@@ -111,9 +111,9 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
 
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
     context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test
@@ -127,7 +127,7 @@ public class TiSecurityContextTest {
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -136,7 +136,7 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
 
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(false);
     context.checkReadPermission(fact);
   }
 
@@ -150,7 +150,7 @@ public class TiSecurityContextTest {
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -161,7 +161,7 @@ public class TiSecurityContextTest {
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test
@@ -170,20 +170,20 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(null);
 
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
     context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test
   public void testHasReadPermissionReturnsTrueOnAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
     assertTrue(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
   }
 
   @Test
   public void testHasReadPermissionReturnsFalseOnNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
     assertFalse(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
   }
 
@@ -194,14 +194,14 @@ public class TiSecurityContextTest {
 
   @Test
   public void testCheckReadPermissionForFactRecordWithAccessModePublic() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
     context.checkReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public));
-    verify(accessController).hasPermission(credentials, viewFactObjects);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionForFactRecordWithAccessModePublicNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
     context.checkReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public));
   }
 
@@ -211,9 +211,9 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.RoleBased);
 
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
     context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test
@@ -225,7 +225,7 @@ public class TiSecurityContextTest {
             .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUser()));
 
     context.checkReadPermission(fact);
-    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -234,7 +234,7 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.RoleBased);
 
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(false);
     context.checkReadPermission(fact);
   }
 
@@ -246,7 +246,7 @@ public class TiSecurityContextTest {
             .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUser()));
 
     context.checkReadPermission(fact);
-    verify(accessController, never()).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -264,20 +264,20 @@ public class TiSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(null);
 
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
     context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test
   public void testHasReadPermissionForFactRecordReturnsTrueOnAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
     assertTrue(context.hasReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public)));
   }
 
   @Test
   public void testHasReadPermissionForFactRecordReturnsFalseOnNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
     assertFalse(context.hasReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public)));
   }
 
@@ -305,7 +305,7 @@ public class TiSecurityContextTest {
   public void testCheckReadPermissionForObjectRecordWithAccessToFact() throws Exception {
     ObjectRecord object = mockCheckPermissionForObjectRecord(true);
     context.checkReadPermission(object);
-    verify(accessController).hasPermission(credentials, viewFactObjects);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact);
   }
 
   @Test
@@ -316,10 +316,10 @@ public class TiSecurityContextTest {
     mockAvailableOrganization();
     when(objectFactDao.searchFacts(notNull()))
             .thenReturn(ResultContainer.<FactRecord>builder().setValues(ListUtils.list(fact, fact, fact).iterator()).build());
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false, true, false);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false, true, false);
 
     context.checkReadPermission(new ObjectRecord().setId(UUID.randomUUID()));
-    verify(accessController, times(2)).hasPermission(credentials, viewFactObjects);
+    verify(accessController, times(2)).hasPermission(credentials, viewThreatIntelFact);
   }
 
   @Test
@@ -341,39 +341,39 @@ public class TiSecurityContextTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionForOriginWithOrganizationNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewOrigins, organization)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelOrigin, organization)).thenReturn(false);
     context.checkReadPermission(new OriginEntity().setOrganizationID(UUID.randomUUID()));
   }
 
   @Test
   public void testCheckReadPermissionForOriginWithOrganizationAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewOrigins, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelOrigin, organization)).thenReturn(true);
     context.checkReadPermission(new OriginEntity().setOrganizationID(UUID.randomUUID()));
-    verify(accessController).hasPermission(credentials, viewOrigins, organization);
+    verify(accessController).hasPermission(credentials, viewThreatIntelOrigin, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionForOriginWithoutOrganizationNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewOrigins)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelOrigin)).thenReturn(false);
     context.checkReadPermission(new OriginEntity());
   }
 
   @Test
   public void testCheckReadPermissionForOriginWithoutOrganizationAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewOrigins)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelOrigin)).thenReturn(true);
     context.checkReadPermission(new OriginEntity());
-    verify(accessController).hasPermission(credentials, viewOrigins);
+    verify(accessController).hasPermission(credentials, viewThreatIntelOrigin);
   }
 
   @Test
   public void testHasReadPermissionForOriginReturnsTrueOnAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewOrigins)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewThreatIntelOrigin)).thenReturn(true);
     assertTrue(context.hasReadPermission(new OriginEntity()));
   }
 
   @Test
   public void testHasReadPermissionForOriginReturnsFalseOnNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewOrigins)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewThreatIntelOrigin)).thenReturn(false);
     assertFalse(context.hasReadPermission(new OriginEntity()));
   }
 
@@ -417,7 +417,7 @@ public class TiSecurityContextTest {
     when(objectFactDao.searchFacts(notNull()))
             .thenReturn(ResultContainer.<FactRecord>builder().setValues(ListUtils.list(fact).iterator()).build());
     // Mock access to bound Facts.
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(result);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(result);
 
     return object;
   }

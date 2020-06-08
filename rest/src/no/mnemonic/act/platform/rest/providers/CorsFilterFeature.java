@@ -17,7 +17,7 @@ public class CorsFilterFeature implements Feature {
   private final Set<String> allowedOrigins;
 
   @Inject
-  public CorsFilterFeature(@Named("cors.allowed.origins") String allowedOrigins) {
+  public CorsFilterFeature(@Named("act.api.cors.allowed.origins") String allowedOrigins) {
     this.allowedOrigins = SetUtils.set(allowedOrigins.split(","));
   }
 

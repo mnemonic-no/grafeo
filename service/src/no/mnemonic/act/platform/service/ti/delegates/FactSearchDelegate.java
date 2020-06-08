@@ -30,7 +30,7 @@ public class FactSearchDelegate implements Delegate {
 
   public ResultSet<Fact> handle(SearchFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFact);
     return factSearchHandler.search(requestConverter.apply(request), request.getIncludeRetracted());
   }
 }

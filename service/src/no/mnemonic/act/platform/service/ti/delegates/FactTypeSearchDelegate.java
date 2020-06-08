@@ -33,7 +33,7 @@ public class FactTypeSearchDelegate implements Delegate {
 
   public ResultSet<FactType> handle(SearchFactTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(TiFunctionConstants.viewTypes);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelType);
 
     // No filtering is defined in SearchFactTypeRequest yet, just fetch all FactTypes.
     List<FactType> types = factManager

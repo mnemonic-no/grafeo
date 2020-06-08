@@ -28,8 +28,8 @@ public class PropertiesBasedAccessControllerModuleTest {
     @Override
     protected void configure() {
       install(new PropertiesBasedAccessControllerModule());
-      bind(String.class).annotatedWith(Names.named("access.controller.properties.file")).toInstance("test.properties");
-      bind(String.class).annotatedWith(Names.named("access.controller.read.interval")).toInstance("60000");
+      bind(String.class).annotatedWith(Names.named("act.access.controller.properties.configuration.file")).toInstance("test.properties");
+      bind(String.class).annotatedWith(Names.named("act.access.controller.properties.reload.interval")).toInstance("60000");
     }
   }
 

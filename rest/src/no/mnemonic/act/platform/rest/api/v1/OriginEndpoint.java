@@ -50,7 +50,7 @@ public class OriginEndpoint {
           @ApiResponse(code = 404, message = "Requested Origin does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewOrigins")
+  @RolesAllowed("viewThreatIntelOrigin")
   public Response getOriginById(
           @PathParam("id") @ApiParam(value = "UUID of the requested Origin.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
@@ -70,7 +70,7 @@ public class OriginEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewOrigins")
+  @RolesAllowed("viewThreatIntelOrigin")
   public Response searchOrigins(
           @QueryParam("includeDeleted") @ApiParam(value = "Include deleted Origins (default false)") Boolean includeDeleted,
           @QueryParam("limit") @ApiParam(value = "Limit the number of returned Origins (default 25, 0 means all)") @Min(0) Integer limit
@@ -100,7 +100,7 @@ public class OriginEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("addOrigins")
+  @RolesAllowed("addThreatIntelOrigin")
   public Response createOrigin(
           @ApiParam(value = "Request to create Origin.") @NotNull @Valid CreateOriginRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
@@ -128,7 +128,7 @@ public class OriginEndpoint {
           @ApiResponse(code = 404, message = "Origin does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("updateOrigins")
+  @RolesAllowed("updateThreatIntelOrigin")
   public Response updateOrigin(
           @PathParam("id") @ApiParam(value = "UUID of Origin.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to update Origin.") @NotNull @Valid UpdateOriginRequest request
@@ -150,7 +150,7 @@ public class OriginEndpoint {
           @ApiResponse(code = 404, message = "Origin does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("deleteOrigins")
+  @RolesAllowed("deleteThreatIntelOrigin")
   public Response deleteOrigin(
           @PathParam("id") @ApiParam(value = "UUID of Origin.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {

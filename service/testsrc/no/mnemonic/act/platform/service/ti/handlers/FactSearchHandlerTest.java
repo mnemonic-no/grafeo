@@ -62,7 +62,7 @@ public class FactSearchHandlerTest {
   public void testSearchFactsWithoutLimit() throws Exception {
     mockSearch(1);
 
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.unlimitedSearch);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.unlimitedThreatIntelSearch);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(0));
     ResultSet<Fact> result = handler.search(criteria, null);
@@ -76,7 +76,7 @@ public class FactSearchHandlerTest {
   public void testSearchFactsWithLimitAboveMaxLimit() throws Exception {
     mockSearch(1);
 
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.unlimitedSearch);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.unlimitedThreatIntelSearch);
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setLimit(10001));
     ResultSet<Fact> result = handler.search(criteria, null);
@@ -97,7 +97,7 @@ public class FactSearchHandlerTest {
     assertEquals(10001, result.getCount());
     assertEquals(10001, ListUtils.list(result.iterator()).size());
 
-    verify(securityContext).checkPermission(TiFunctionConstants.unlimitedSearch);
+    verify(securityContext).checkPermission(TiFunctionConstants.unlimitedThreatIntelSearch);
   }
 
   @Test

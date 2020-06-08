@@ -70,8 +70,8 @@ public abstract class AbstractEndpointTest {
     protected void configure() {
       install(new TiRestModule());
       bind(ThreatIntelligenceService.class).toInstance(tiService);
-      bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(port));
-      bind(String.class).annotatedWith(Names.named("cors.allowed.origins")).toInstance("http://www.example.org");
+      bind(String.class).annotatedWith(Names.named("act.api.server.port")).toInstance(String.valueOf(port));
+      bind(String.class).annotatedWith(Names.named("act.api.cors.allowed.origins")).toInstance("http://www.example.org");
     }
 
   }

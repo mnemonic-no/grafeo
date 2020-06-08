@@ -45,7 +45,7 @@ public class TraverseByObjectsDelegate implements Delegate {
 
   public ResultSet<?> handle(TraverseGraphByObjectsRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.traverseThreatIntelFact);
 
     Set<ObjectRecord> objects = new HashSet<>();
     for (String objectIdentifier : request.getObjects()) {

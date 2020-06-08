@@ -64,7 +64,7 @@ public class TiSecurityContext extends SecurityContext {
 
     if (fact.getAccessMode() == AccessMode.Public) {
       // Only verify that user has general permission to view Facts.
-      checkPermission(TiFunctionConstants.viewFactObjects);
+      checkPermission(TiFunctionConstants.viewThreatIntelFact);
       // Access allowed because user is generally allowed to view Facts.
       return;
     }
@@ -81,7 +81,7 @@ public class TiSecurityContext extends SecurityContext {
 
     // Fallback to role-based access control and verify that user has access to Facts of a specific organization.
     // This also catches the case where AccessMode == RoleBased and user is not in the Fact's ACL.
-    checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+    checkPermission(TiFunctionConstants.viewThreatIntelFact, fact.getOrganizationID());
   }
 
   /**
@@ -96,7 +96,7 @@ public class TiSecurityContext extends SecurityContext {
 
     if (fact.getAccessMode() == FactRecord.AccessMode.Public) {
       // Only verify that user has general permission to view Facts.
-      checkPermission(TiFunctionConstants.viewFactObjects);
+      checkPermission(TiFunctionConstants.viewThreatIntelFact);
       // Access allowed because user is generally allowed to view Facts.
       return;
     }
@@ -114,7 +114,7 @@ public class TiSecurityContext extends SecurityContext {
 
     // Fallback to role-based access control and verify that user has access to Facts of a specific organization.
     // This also catches the case where AccessMode == RoleBased and user is not in the Fact's ACL.
-    checkPermission(TiFunctionConstants.viewFactObjects, fact.getOrganizationID());
+    checkPermission(TiFunctionConstants.viewThreatIntelFact, fact.getOrganizationID());
   }
 
   /**
@@ -159,10 +159,10 @@ public class TiSecurityContext extends SecurityContext {
 
     if (origin.getOrganizationID() != null) {
       // Check that the user has view permission for the organization the Origin belongs to.
-      checkPermission(TiFunctionConstants.viewOrigins, origin.getOrganizationID());
+      checkPermission(TiFunctionConstants.viewThreatIntelOrigin, origin.getOrganizationID());
     } else {
       // Only check that the user has general view permission.
-      checkPermission(TiFunctionConstants.viewOrigins);
+      checkPermission(TiFunctionConstants.viewThreatIntelOrigin);
     }
   }
 

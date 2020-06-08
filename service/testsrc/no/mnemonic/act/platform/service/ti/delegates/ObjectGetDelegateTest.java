@@ -56,7 +56,7 @@ public class ObjectGetDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByIdWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelFact);
     delegate.handle(new GetObjectByIdRequest());
   }
 
@@ -91,7 +91,7 @@ public class ObjectGetDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByTypeValueWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelFact);
     delegate.handle(new GetObjectByTypeValueRequest());
   }
 

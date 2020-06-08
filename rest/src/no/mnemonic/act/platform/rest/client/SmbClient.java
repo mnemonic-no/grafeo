@@ -42,10 +42,10 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
   private final String password;
 
   @Inject
-  public SmbClient(@Named(value = "smb.queue.name") String queueName,
-                   @Named(value = "smb.client.url") String contextURL,
-                   @Named(value = "smb.client.username") String userName,
-                   @Named(value = "smb.client.password") String password) {
+  public SmbClient(@Named(value = "act.smb.queue.name") String queueName,
+                   @Named(value = "act.smb.client.url") String contextURL,
+                   @Named(value = "act.smb.client.username") String userName,
+                   @Named(value = "act.smb.client.password") String password) {
     this.queueName = queueName;
     this.contextURL = contextURL;
     this.userName = userName;

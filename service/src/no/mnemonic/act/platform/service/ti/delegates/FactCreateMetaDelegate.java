@@ -59,7 +59,7 @@ public class FactCreateMetaDelegate implements Delegate {
     requestedFactType = factTypeRequestResolver.resolveFactType(request.getType());
 
     // Verify that user is allowed to add Facts for the requested organization.
-    securityContext.checkPermission(TiFunctionConstants.addFactObjects, requestedOrganization.getId());
+    securityContext.checkPermission(TiFunctionConstants.addThreatIntelFact, requestedOrganization.getId());
 
     // Validate that requested Fact matches its FactType.
     factCreateHandler.assertValidFactValue(requestedFactType, request.getValue());

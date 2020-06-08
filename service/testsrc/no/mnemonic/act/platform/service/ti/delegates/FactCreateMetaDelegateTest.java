@@ -92,7 +92,7 @@ public class FactCreateMetaDelegateTest {
     when(factRequestResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
     mockFetchingOrganization();
     mockFetchingFactType();
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.addFactObjects, organization.getId());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.addThreatIntelFact, organization.getId());
     delegate.handle(createRequest());
   }
 

@@ -9,13 +9,13 @@ import javax.inject.Provider;
 public class ClusterManagerProvider implements Provider<ClusterManager> {
 
   @Inject
-  @Named("cassandra.data.center")
+  @Named("act.cassandra.data.center")
   private String dataCenter;
   @Inject
-  @Named("cassandra.port")
+  @Named("act.cassandra.port")
   private String port;
   @Inject
-  @Named("cassandra.contact.points")
+  @Named("act.cassandra.contact.points")
   private String contactPoints;
 
   @Override

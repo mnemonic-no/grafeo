@@ -39,7 +39,7 @@ public class ObjectTypeGetByIdDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectTypeWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewTypes);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelType);
     delegate.handle(new GetObjectTypeByIdRequest());
   }
 

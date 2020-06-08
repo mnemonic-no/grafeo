@@ -11,10 +11,10 @@ import javax.inject.Singleton;
 public class PropertiesBasedAccessControllerProvider implements Provider<PropertiesBasedAccessController> {
 
   @Inject
-  @Named("access.controller.properties.file")
+  @Named("act.access.controller.properties.configuration.file")
   private String propertiesFile;
   @Inject
-  @Named("access.controller.read.interval")
+  @Named("act.access.controller.properties.reload.interval")
   private String readInterval;
 
   // There should only be one instance of this access controller. Ever.

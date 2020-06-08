@@ -40,7 +40,7 @@ public class ObjectTypeSearchDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectTypesWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewTypes);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelType);
     delegate.handle(new SearchObjectTypeRequest());
   }
 

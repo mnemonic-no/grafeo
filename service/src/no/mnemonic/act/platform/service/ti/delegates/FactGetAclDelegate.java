@@ -40,7 +40,7 @@ public class FactGetAclDelegate implements Delegate {
     // Verify that user is allowed to access the Fact.
     securityContext.checkReadPermission(fact);
     // Verify that user is allowed to view the Fact's ACL.
-    securityContext.checkPermission(TiFunctionConstants.viewFactAccess, fact.getOrganizationID());
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFactAccess, fact.getOrganizationID());
     // Fetch ACL for Fact.
     List<AclEntry> acl = ListUtils.list(fact.getAcl(), aclEntryResponseConverter);
 

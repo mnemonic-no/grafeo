@@ -37,10 +37,10 @@ public class OriginCreateDelegate implements Delegate {
       // Check that that the requested organization exists.
       assertOrganizationExists(request);
       // Check add permission for requested organization.
-      securityContext.checkPermission(TiFunctionConstants.addOrigins, request.getOrganization());
+      securityContext.checkPermission(TiFunctionConstants.addThreatIntelOrigin, request.getOrganization());
     } else {
       // Only check general add permission.
-      securityContext.checkPermission(TiFunctionConstants.addOrigins);
+      securityContext.checkPermission(TiFunctionConstants.addThreatIntelOrigin);
     }
 
     // Check that Origin doesn't exist yet (by name).

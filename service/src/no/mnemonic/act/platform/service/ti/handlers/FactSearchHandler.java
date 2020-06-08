@@ -44,8 +44,8 @@ public class FactSearchHandler {
    * Search for Facts based on the given {@link FactSearchCriteria}. It will make sure that only Facts a user has
    * access to will be returned. Facts are streamed out from the database while the returned ResultSet is consumed.
    * <p>
-   * If the user has the 'unlimitedSearch' permission the result size won't be limited, otherwise the maximum number
-   * of returned results will be capped at 10.000.
+   * If the user has the 'unlimitedThreatIntelSearch' permission the result size won't be limited, otherwise the
+   * maximum number of returned results will be capped at 10.000.
    *
    * @param criteria         Search criteria matched against existing Facts
    * @param includeRetracted Whether retracted Facts should be included in the result (false by default)
@@ -76,7 +76,7 @@ public class FactSearchHandler {
 
   private int calculateLimit(FactSearchCriteria criteria) {
     try {
-      securityContext.checkPermission(TiFunctionConstants.unlimitedSearch);
+      securityContext.checkPermission(TiFunctionConstants.unlimitedThreatIntelSearch);
       return Math.max(criteria.getLimit(), 0);
     } catch (AccessDeniedException | AuthenticationFailedException ignored) {
       // User isn't allowed to return unlimited search results, thus, apply system-defined maximum limit.

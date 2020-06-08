@@ -3,21 +3,21 @@ package no.mnemonic.act.platform.service.ti;
 import no.mnemonic.services.common.auth.model.NamedFunction;
 
 public enum TiFunctionConstants implements NamedFunction {
-  addTypes,
-  updateTypes,
-  viewTypes,
-  addOrigins,
-  deleteOrigins,
-  updateOrigins,
-  viewOrigins,
-  addFactObjects,
-  traverseFactObjects,
-  viewFactObjects,
-  addFactComments,
-  viewFactComments,
-  grantFactAccess,
-  viewFactAccess,
-  unlimitedSearch;
+  addThreatIntelType,
+  updateThreatIntelType,
+  viewThreatIntelType,
+  addThreatIntelOrigin,
+  deleteThreatIntelOrigin,
+  updateThreatIntelOrigin,
+  viewThreatIntelOrigin,
+  addThreatIntelFact,
+  traverseThreatIntelFact,
+  viewThreatIntelFact,
+  addThreatIntelFactComment,
+  viewThreatIntelFactComment,
+  grantThreatIntelFactAccess,
+  viewThreatIntelFactAccess,
+  unlimitedThreatIntelSearch;
 
   @Override
   public String getName() {

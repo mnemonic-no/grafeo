@@ -12,10 +12,10 @@ import javax.inject.Provider;
 public class ClientFactoryProvider implements Provider<ClientFactory> {
 
   @Inject
-  @Named("elasticsearch.port")
+  @Named("act.elasticsearch.port")
   private String port;
   @Inject
-  @Named("elasticsearch.contact.points")
+  @Named("act.elasticsearch.contact.points")
   private String contactPoints;
 
   @Override

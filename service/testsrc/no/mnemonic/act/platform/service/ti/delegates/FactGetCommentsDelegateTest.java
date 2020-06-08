@@ -53,7 +53,7 @@ public class FactGetCommentsDelegateTest {
   public void testGetFactCommentsNoViewPermission() throws Exception {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.viewFactComments), any());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.viewThreatIntelFactComment), any());
 
     delegate.handle(request);
   }

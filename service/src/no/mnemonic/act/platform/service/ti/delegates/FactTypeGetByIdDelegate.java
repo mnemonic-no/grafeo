@@ -30,7 +30,7 @@ public class FactTypeGetByIdDelegate implements Delegate {
 
   public FactType handle(GetFactTypeByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    securityContext.checkPermission(TiFunctionConstants.viewTypes);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelType);
     return factTypeResponseConverter.apply(factTypeRequestResolver.fetchExistingFactType(request.getId()));
   }
 }

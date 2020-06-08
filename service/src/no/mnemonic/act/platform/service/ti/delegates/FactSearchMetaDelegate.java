@@ -36,7 +36,7 @@ public class FactSearchMetaDelegate implements Delegate {
   public ResultSet<Fact> handle(SearchMetaFactsRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Verify that user is allowed to view Facts.
-    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFact);
     // Fetch referenced Fact, verify that it exists and that user is allowed to access the Fact.
     securityContext.checkReadPermission(factRequestResolver.resolveFact(request.getFact()));
     // Search for meta Facts bound to the referenced Fact.

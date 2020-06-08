@@ -43,7 +43,7 @@ public class TraverseByObjectSearchDelegate implements Delegate {
 
   public ResultSet<?> handle(TraverseGraphByObjectSearchRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.traverseThreatIntelFact);
 
     // Search for Objects and use the result as starting points for the graph traversal.
     // The search will only return Objects the current user has access to, thus, there is no need to check

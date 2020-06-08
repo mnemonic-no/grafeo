@@ -80,14 +80,14 @@ public class TraverseGraphDelegate implements Delegate {
 
   public ResultSet<?> handle(TraverseByObjectIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.traverseThreatIntelFact);
 
     return handle(objectFactDao.getObject(request.getId()), request.getQuery());
   }
 
   public ResultSet<?> handle(TraverseByObjectTypeValueRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.traverseThreatIntelFact);
     objectTypeHandler.assertObjectTypeExists(request.getType(), "type");
 
     return handle(objectFactDao.getObject(request.getType(), request.getValue()), request.getQuery());
@@ -95,7 +95,7 @@ public class TraverseGraphDelegate implements Delegate {
 
   public ResultSet<?> handle(TraverseByObjectSearchRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    securityContext.checkPermission(TiFunctionConstants.traverseFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.traverseThreatIntelFact);
 
     // Search for Objects and use the result as starting points for the graph traversal.
     // The search will only return Objects the current user has access to, thus, there is no need to check

@@ -31,7 +31,7 @@ public class FactGetByIdDelegate implements Delegate {
 
   public Fact handle(GetFactByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFact);
     FactRecord record = factRequestResolver.resolveFact(request.getId());
     securityContext.checkReadPermission(record);
     return factResponseConverter.apply(record);

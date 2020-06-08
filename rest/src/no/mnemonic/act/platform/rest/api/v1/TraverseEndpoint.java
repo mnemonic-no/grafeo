@@ -64,7 +64,7 @@ public class TraverseEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("traverseFactObjects")
+  @RolesAllowed("traverseThreatIntelFact")
   public Response traversebyObjectId(
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphRequest request
@@ -101,7 +101,7 @@ public class TraverseEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("traverseFactObjects")
+  @RolesAllowed("traverseThreatIntelFact")
   public Response traverseByObjectTypeValue(
           @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
           @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
@@ -129,7 +129,7 @@ public class TraverseEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("traverseFactObjects")
+  @RolesAllowed("traverseThreatIntelFact")
   public Response traverseByObjects(
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectsRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
@@ -156,7 +156,7 @@ public class TraverseEndpoint {
           @ApiResponse(code = 408, message = "Execution of this operation timed out."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("traverseFactObjects")
+  @RolesAllowed("traverseThreatIntelFact")
   public Response traverseByObjectSearch(
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphByObjectSearchRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {

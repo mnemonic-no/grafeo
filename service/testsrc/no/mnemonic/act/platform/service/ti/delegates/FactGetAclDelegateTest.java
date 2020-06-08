@@ -53,7 +53,7 @@ public class FactGetAclDelegateTest {
   public void testGetFactAclNoViewPermission() throws Exception {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.viewFactAccess), any());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(TiFunctionConstants.viewThreatIntelFactAccess), any());
 
     delegate.handle(request);
   }

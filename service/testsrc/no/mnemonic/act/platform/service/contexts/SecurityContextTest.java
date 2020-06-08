@@ -17,7 +17,7 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.service.ti.TiFunctionConstants.viewFactObjects;
+import static no.mnemonic.act.platform.service.ti.TiFunctionConstants.viewThreatIntelFact;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -101,46 +101,46 @@ public class SecurityContextTest {
 
   @Test
   public void testCheckPermissionWithAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(true);
-    context.checkPermission(viewFactObjects);
-    verify(accessController).hasPermission(credentials, viewFactObjects);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
+    context.checkPermission(viewThreatIntelFact);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckPermissionThrowsAccessDeniedException() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenReturn(false);
-    context.checkPermission(viewFactObjects);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
+    context.checkPermission(viewThreatIntelFact);
   }
 
   @Test(expected = AuthenticationFailedException.class)
   public void testCheckPermissionThrowsAuthenticationFailedException() throws Exception {
-    when(accessController.hasPermission(credentials, viewFactObjects)).thenThrow(InvalidCredentialsException.class);
-    context.checkPermission(viewFactObjects);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenThrow(InvalidCredentialsException.class);
+    context.checkPermission(viewThreatIntelFact);
   }
 
   @Test
   public void testCheckPermissionForOrganizationWithAccess() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(true);
-    context.checkPermission(viewFactObjects, organizationID);
-    verify(accessController).hasPermission(credentials, viewFactObjects, organization);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
+    context.checkPermission(viewThreatIntelFact, organizationID);
+    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckPermissionForOrganizationThrowsAccessDeniedException() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenReturn(false);
-    context.checkPermission(viewFactObjects, organizationID);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(false);
+    context.checkPermission(viewThreatIntelFact, organizationID);
   }
 
   @Test(expected = AuthenticationFailedException.class)
   public void testCheckPermissionForOrganizationThrowsAuthenticationFailedException() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
-    when(accessController.hasPermission(credentials, viewFactObjects, organization)).thenThrow(InvalidCredentialsException.class);
-    context.checkPermission(viewFactObjects, organizationID);
+    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenThrow(InvalidCredentialsException.class);
+    context.checkPermission(viewThreatIntelFact, organizationID);
   }
 
   @Test

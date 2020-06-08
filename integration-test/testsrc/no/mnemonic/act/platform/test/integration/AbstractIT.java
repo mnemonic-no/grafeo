@@ -344,18 +344,18 @@ public abstract class AbstractIT {
       install(new TiServerModule());
       // Configuration
       String smbServerUrl = "tcp://" + DockerTestUtils.getDockerHost() + ":" + activemq.getExposedHostPort(61616);
-      bind(String.class).annotatedWith(Names.named("access.controller.properties.file")).toInstance(ACL_FILE);
-      bind(String.class).annotatedWith(Names.named("access.controller.read.interval")).toInstance("60000");
+      bind(String.class).annotatedWith(Names.named("act.access.controller.properties.configuration.file")).toInstance(ACL_FILE);
+      bind(String.class).annotatedWith(Names.named("act.access.controller.properties.reload.interval")).toInstance("60000");
       bind(String.class).annotatedWith(Names.named("trigger.administration.service.configuration.directory")).toInstance(RESOURCES_FOLDER);
-      bind(String.class).annotatedWith(Names.named("cassandra.data.center")).toInstance("datacenter1");
-      bind(String.class).annotatedWith(Names.named("cassandra.contact.points")).toInstance(DockerTestUtils.getDockerHost());
-      bind(String.class).annotatedWith(Names.named("cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
-      bind(String.class).annotatedWith(Names.named("elasticsearch.contact.points")).toInstance(DockerTestUtils.getDockerHost());
-      bind(String.class).annotatedWith(Names.named("elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
-      bind(String.class).annotatedWith(Names.named("smb.queue.name")).toInstance("Service.ACT");
-      bind(String.class).annotatedWith(Names.named("smb.server.url")).toInstance(smbServerUrl);
-      bind(String.class).annotatedWith(Names.named("smb.server.username")).toInstance("admin");
-      bind(String.class).annotatedWith(Names.named("smb.server.password")).toInstance("admin");
+      bind(String.class).annotatedWith(Names.named("act.cassandra.data.center")).toInstance("datacenter1");
+      bind(String.class).annotatedWith(Names.named("act.cassandra.contact.points")).toInstance(DockerTestUtils.getDockerHost());
+      bind(String.class).annotatedWith(Names.named("act.cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
+      bind(String.class).annotatedWith(Names.named("act.elasticsearch.contact.points")).toInstance(DockerTestUtils.getDockerHost());
+      bind(String.class).annotatedWith(Names.named("act.elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
+      bind(String.class).annotatedWith(Names.named("act.smb.queue.name")).toInstance("Service.ACT");
+      bind(String.class).annotatedWith(Names.named("act.smb.server.url")).toInstance(smbServerUrl);
+      bind(String.class).annotatedWith(Names.named("act.smb.server.username")).toInstance("admin");
+      bind(String.class).annotatedWith(Names.named("act.smb.server.password")).toInstance("admin");
     }
   }
 
@@ -366,12 +366,12 @@ public abstract class AbstractIT {
       install(new TiClientModule());
       // Configuration
       String smbClientUrl = "tcp://" + DockerTestUtils.getDockerHost() + ":" + activemq.getExposedHostPort(61616);
-      bind(String.class).annotatedWith(Names.named("api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
-      bind(String.class).annotatedWith(Names.named("cors.allowed.origins")).toInstance("http://www.example.org");
-      bind(String.class).annotatedWith(Names.named("smb.queue.name")).toInstance("Service.ACT");
-      bind(String.class).annotatedWith(Names.named("smb.client.url")).toInstance(smbClientUrl);
-      bind(String.class).annotatedWith(Names.named("smb.client.username")).toInstance("admin");
-      bind(String.class).annotatedWith(Names.named("smb.client.password")).toInstance("admin");
+      bind(String.class).annotatedWith(Names.named("act.api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
+      bind(String.class).annotatedWith(Names.named("act.api.cors.allowed.origins")).toInstance("http://www.example.org");
+      bind(String.class).annotatedWith(Names.named("act.smb.queue.name")).toInstance("Service.ACT");
+      bind(String.class).annotatedWith(Names.named("act.smb.client.url")).toInstance(smbClientUrl);
+      bind(String.class).annotatedWith(Names.named("act.smb.client.username")).toInstance("admin");
+      bind(String.class).annotatedWith(Names.named("act.smb.client.password")).toInstance("admin");
     }
   }
 }

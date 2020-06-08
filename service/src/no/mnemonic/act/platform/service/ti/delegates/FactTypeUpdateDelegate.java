@@ -43,7 +43,7 @@ public class FactTypeUpdateDelegate implements Delegate {
 
   public FactType handle(UpdateFactTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    securityContext.checkPermission(TiFunctionConstants.updateTypes);
+    securityContext.checkPermission(TiFunctionConstants.updateThreatIntelType);
 
     FactTypeEntity entity = factTypeRequestResolver.fetchExistingFactType(request.getId());
     if (Objects.equals(entity.getId(), factTypeRequestResolver.resolveRetractionFactType().getId())) {

@@ -73,7 +73,7 @@ public class FactRetractDelegate implements Delegate {
     requestedOrganization = factCreateHandler.resolveOrganization(request.getOrganization(), requestedOrigin);
 
     // Verify that user is allowed to add Facts for the requested organization.
-    securityContext.checkPermission(TiFunctionConstants.addFactObjects, requestedOrganization.getId());
+    securityContext.checkPermission(TiFunctionConstants.addThreatIntelFact, requestedOrganization.getId());
 
     // Save everything in database.
     FactRecord retractionFact = saveRetractionFact(request, factToRetract);

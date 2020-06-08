@@ -54,7 +54,7 @@ public class ObjectSearchFactsDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testSearchObjectFactsWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelFact);
     delegate.handle(new SearchObjectFactsRequest());
   }
 

@@ -50,7 +50,7 @@ public class ObjectSearchDelegate implements Delegate {
 
   public ResultSet<Object> handle(SearchObjectRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFact);
 
     FactSearchCriteria criteria = requestConverter.apply(request);
     ResultContainer<ObjectRecord> searchResult = objectFactDao.searchObjects(criteria);

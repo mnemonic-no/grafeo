@@ -41,7 +41,7 @@ public class ObjectSearchFactsDelegate implements Delegate {
 
   public ResultSet<Fact> handle(SearchObjectFactsRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(TiFunctionConstants.viewFactObjects);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFact);
     assertRequest(request);
     // Resolve Object based on parameters set in request.
     ObjectRecord object = resolveObject(request);

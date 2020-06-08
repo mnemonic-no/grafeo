@@ -32,7 +32,7 @@ public class OriginGetByIdDelegate implements Delegate {
   public Origin handle(GetOriginByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Verify that the user is allowed to view Origins in general.
-    securityContext.checkPermission(TiFunctionConstants.viewOrigins);
+    securityContext.checkPermission(TiFunctionConstants.viewThreatIntelOrigin);
 
     // Fetch Origin and verify that it exists.
     OriginEntity entity = originResolver.apply(request.getId());

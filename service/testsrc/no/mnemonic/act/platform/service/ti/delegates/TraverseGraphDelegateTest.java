@@ -101,7 +101,7 @@ public class TraverseGraphDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testTraverseGraphByObjectIdWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseThreatIntelFact);
     delegate.handle(new TraverseByObjectIdRequest());
   }
 
@@ -150,7 +150,7 @@ public class TraverseGraphDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testTraverseGraphByObjectTypeValueWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseThreatIntelFact);
     delegate.handle(new TraverseByObjectTypeValueRequest());
   }
 
@@ -210,7 +210,7 @@ public class TraverseGraphDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testTraverseGraphByObjectSearchWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseFactObjects);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.traverseThreatIntelFact);
     delegate.handle(new TraverseByObjectSearchRequest());
   }
 
