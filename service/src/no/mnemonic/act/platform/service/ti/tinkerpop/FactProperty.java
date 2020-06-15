@@ -1,31 +1,40 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.UUID;
 
 import static org.apache.tinkerpop.gremlin.structure.Property.Exceptions.propertyRemovalNotSupported;
 
 /**
- * Base class for all exposed properties from a Fact. Every subclass holds one property related to a Fact.
+ * Class for exposed properties of a Fact.
  *
  * @param <V> Type of property value
  */
-abstract class FactProperty<V> implements Property<V> {
+class FactProperty<V> implements Property<V> {
+  private final String key;
+  private final V value;
 
-  private final FactRecord fact;
   private final FactEdge owner;
 
-  private FactProperty(FactRecord fact, FactEdge owner) {
-    this.fact = ObjectUtils.notNull(fact, "'fact' is null!");
+  public FactProperty(FactEdge owner, String key, V value) {
     this.owner = ObjectUtils.notNull(owner, "'owner' is null!");
+    this.key = ObjectUtils.notNull(key, "'key' is null!");
+    this.value = value;
+  }
+
+  @Override
+  public String key() {
+    return key;
+  }
+
+  @Override
+  public V value() throws NoSuchElementException {
+    return value;
   }
 
   @Override
@@ -48,188 +57,17 @@ abstract class FactProperty<V> implements Property<V> {
     return StringFactory.propertyString(this);
   }
 
-  protected FactRecord getFact() {
-    // Need to expose 'fact' to inner static classes.
-    return fact;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    FactProperty<?> that = (FactProperty<?>) o;
+    return key.equals(that.key) &&
+            Objects.equals(value, that.value);
   }
 
-  static class FactID extends FactProperty<String> {
-    FactID(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "factID";
-    }
-
-    @Override
-    public String value() {
-      return ObjectUtils.ifNotNull(getFact().getId(), Objects::toString);
-    }
-  }
-
-  static class Value extends FactProperty<String> {
-    Value(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "value";
-    }
-
-    @Override
-    public String value() {
-      return getFact().getValue();
-    }
-  }
-
-  static class InReferenceToID extends FactProperty<String> {
-    InReferenceToID(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "inReferenceToID";
-    }
-
-    @Override
-    public String value() {
-      return ObjectUtils.ifNotNull(getFact().getInReferenceToID(), UUID::toString);
-    }
-  }
-
-  static class OrganizationID extends FactProperty<String> {
-    OrganizationID(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "organizationID";
-    }
-
-    @Override
-    public String value() {
-      return ObjectUtils.ifNotNull(getFact().getOrganizationID(), UUID::toString);
-    }
-  }
-
-  static class OriginID extends FactProperty<String> {
-    OriginID(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "originID";
-    }
-
-    @Override
-    public String value() {
-      return ObjectUtils.ifNotNull(getFact().getOriginID(), UUID::toString);
-    }
-  }
-
-  static class Trust extends FactProperty<Float> {
-    Trust(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "trust";
-    }
-
-    @Override
-    public Float value() {
-      return getFact().getTrust();
-    }
-  }
-
-  static class Confidence extends FactProperty<Float> {
-    Confidence(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "confidence";
-    }
-
-    @Override
-    public Float value() {
-      return getFact().getConfidence();
-    }
-  }
-
-  static class Certainty extends FactProperty<Float> {
-    Certainty(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "certainty";
-    }
-
-    @Override
-    public Float value() {
-      float certainty = getFact().getTrust() * getFact().getConfidence();
-      // Round 'certainty' to two decimal points.
-      return BigDecimal.valueOf(certainty)
-              .setScale(2, RoundingMode.HALF_UP)
-              .floatValue();
-    }
-  }
-
-  static class AccessMode extends FactProperty<String> {
-    AccessMode(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "accessMode";
-    }
-
-    @Override
-    public String value() {
-      return ObjectUtils.ifNotNull(getFact().getAccessMode(), Enum::name);
-    }
-  }
-
-  static class Timestamp extends FactProperty<Long> {
-    Timestamp(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "timestamp";
-    }
-
-    @Override
-    public Long value() {
-      return getFact().getTimestamp();
-    }
-  }
-
-  static class LastSeenTimestamp extends FactProperty<Long> {
-    LastSeenTimestamp(FactRecord fact, FactEdge owner) {
-      super(fact, owner);
-    }
-
-    @Override
-    public String key() {
-      return "lastSeenTimestamp";
-    }
-
-    @Override
-    public Long value() {
-      return getFact().getLastSeenTimestamp();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(key, value);
   }
 }

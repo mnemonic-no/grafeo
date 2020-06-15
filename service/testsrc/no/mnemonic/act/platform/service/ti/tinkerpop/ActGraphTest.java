@@ -95,6 +95,7 @@ public class ActGraphTest extends AbstractGraphTest {
 
     Set<Edge> expected = SetUtils.set(getActGraph().getElementFactory().getEdge((UUID)edge.id()));
     Set<Edge> actual = SetUtils.set(getActGraph().edges(expected.iterator().next()));
+
     assertEquals(expected, actual);
   }
 

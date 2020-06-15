@@ -2,18 +2,19 @@ package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static no.mnemonic.act.platform.service.ti.tinkerpop.FactProperty.*;
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.apache.tinkerpop.gremlin.structure.Edge.Exceptions.edgeRemovalNotSupported;
 
 /**
@@ -26,15 +27,20 @@ public class FactEdge implements Edge {
   private final FactTypeStruct type;
   private final Vertex inVertex;
   private final Vertex outVertex;
-  private final Set<Property> allProperties;
+  private final Set<Property<?>> properties;
 
-  public FactEdge(ActGraph graph, FactRecord fact, FactTypeStruct type, Vertex inVertex, Vertex outVertex) {
+  private FactEdge(ActGraph graph,
+                   FactRecord fact,
+                   FactTypeStruct type,
+                   Vertex inVertex,
+                   Vertex outVertex,
+                   List<PropertyEntry<?>> properties) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
     this.fact = ObjectUtils.notNull(fact, "'fact' is null!");
     this.type = ObjectUtils.notNull(type, "'type' is null!");
     this.inVertex = ObjectUtils.notNull(inVertex, "'inVertex' is null!");
     this.outVertex = ObjectUtils.notNull(outVertex, "'outVertex' is null!");
-    this.allProperties = Collections.unmodifiableSet(getAllProperties()); // Generate properties set only once.
+    this.properties = Collections.unmodifiableSet(getAllProperties(ObjectUtils.notNull(properties, "'properties is null!'")));
   }
 
   @Override
@@ -69,8 +75,8 @@ public class FactEdge implements Edge {
   @Override
   public <V> Iterator<Property<V>> properties(String... propertyKeys) {
     //noinspection unchecked
-    return allProperties.stream()
-            .filter(property -> SetUtils.set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
+    return properties.stream()
+            .filter(property -> set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
             .map(property -> (Property<V>) property)
             .iterator();
   }
@@ -107,22 +113,63 @@ public class FactEdge implements Edge {
     return Objects.hash(id());
   }
 
-  private Set<Property> getAllProperties() {
-    // Currently, those properties only expose information directly from a Fact. Some additional interesting properties
-    // would be e.g. organizationName or originName, but those are not directly available. Maybe it would be good to
-    // expose complex OrganizationProperty and OriginProperty properties instead of one simple property per field?
-    return SetUtils.set(
-            new FactID(fact, this),
-            new Value(fact, this),
-            new InReferenceToID(fact, this),
-            new OrganizationID(fact, this),
-            new OriginID(fact, this),
-            new Trust(fact, this),
-            new Confidence(fact, this),
-            new Certainty(fact, this),
-            new AccessMode(fact, this),
-            new Timestamp(fact, this),
-            new LastSeenTimestamp(fact, this)
-    );
+  private Set<Property<?>> getAllProperties(List<PropertyEntry<?>> properties) {
+    return properties.stream().map(p -> new FactProperty<>(this, p.getName(), p.getValue())).collect(Collectors.toSet());
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+
+    private ActGraph graph;
+    private FactRecord fact;
+    private FactTypeStruct type;
+    private Vertex inVertex;
+    private Vertex outVertex;
+    private List<PropertyEntry<?>> properties;
+
+    private Builder() {
+    }
+
+    public FactEdge build() {
+      return new FactEdge(graph, fact, type, inVertex, outVertex, ObjectUtils.ifNull(properties, list()));
+    }
+
+    public Builder setGraph(ActGraph graph) {
+      this.graph = graph;
+      return this;
+    }
+
+    public Builder setFactRecord(FactRecord fact) {
+      this.fact = fact;
+      return this;
+    }
+
+    public Builder setFactType(FactTypeStruct type) {
+      this.type = type;
+      return this;
+    }
+
+    public Builder setInVertex(Vertex inVertex) {
+      this.inVertex = inVertex;
+      return this;
+    }
+
+    public Builder setOutVertex(Vertex outVertex) {
+      this.outVertex = outVertex;
+      return this;
+    }
+
+    public Builder setProperties(List<PropertyEntry<?>> properties) {
+      this.properties = properties;
+      return this;
+    }
+
+    public Builder addProperty(PropertyEntry<?> property) {
+      this.properties = ListUtils.addToList(this.properties, property);
+      return this;
+    }
   }
 }

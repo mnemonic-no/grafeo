@@ -4,7 +4,8 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
-import no.mnemonic.commons.utilities.collections.SetUtils;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
+import no.mnemonic.commons.utilities.collections.MapUtils;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
@@ -15,12 +16,11 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
-import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
-import static no.mnemonic.commons.utilities.collections.MapUtils.map;
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -35,40 +35,68 @@ public class FactEdgeTest {
     initMocks(this);
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateEdgeWithoutGraph() {
-    new FactEdge(null, new FactRecord(), FactTypeStruct.builder().build(), mock(Vertex.class), mock(Vertex.class));
+    assertThrows(RuntimeException.class, () -> {
+      FactEdge.builder()
+              .setFactRecord(new FactRecord())
+              .setFactType(FactTypeStruct.builder().build())
+              .setInVertex(mock(Vertex.class))
+              .setOutVertex(mock(Vertex.class))
+              .build();
+    });
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateEdgeWithoutFact() {
-    new FactEdge(actGraph, null, FactTypeStruct.builder().build(), mock(Vertex.class), mock(Vertex.class));
+    assertThrows(RuntimeException.class, () -> FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactType(FactTypeStruct.builder().build())
+            .setInVertex(mock(Vertex.class))
+            .setOutVertex(mock(Vertex.class))
+            .build());
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateEdgeWithoutFactType() {
-    new FactEdge(actGraph, new FactRecord(), null, mock(Vertex.class), mock(Vertex.class));
+    assertThrows(RuntimeException.class, () -> FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(new FactRecord())
+            .setInVertex(mock(Vertex.class))
+            .setOutVertex(mock(Vertex.class))
+            .build());
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateEdgeWithoutInVertex() {
-    new FactEdge(actGraph, new FactRecord(), FactTypeStruct.builder().build(), null, mock(Vertex.class));
+    assertThrows(RuntimeException.class, () -> FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(new FactRecord())
+            .setFactType(FactTypeStruct.builder().build())
+            .setOutVertex(mock(Vertex.class))
+            .build());
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateEdgeWithoutOutVertex() {
-    new FactEdge(actGraph, new FactRecord(), FactTypeStruct.builder().build(), mock(Vertex.class), null);
+    assertThrows(RuntimeException.class, () -> FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(new FactRecord())
+            .setFactType(FactTypeStruct.builder().build())
+            .setInVertex(mock(Vertex.class))
+            .build());
   }
 
   @Test
   public void testCreateEdge() {
     UUID factId = UUID.randomUUID();
-    FactEdge edge = new FactEdge(
-            actGraph,
-            new FactRecord().setId(factId),
-            FactTypeStruct.builder().setId(UUID.randomUUID()).setName("someType").build(),
-            mock(Vertex.class),
-            mock(Vertex.class));
+    FactEdge edge = FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(new FactRecord().setId(factId))
+            .setFactType(FactTypeStruct.builder().setId(UUID.randomUUID()).setName("someType").build())
+            .setInVertex(mock(Vertex.class))
+            .setOutVertex(mock(Vertex.class))
+            .build();
 
     assertEquals(factId, edge.id());
     assertSame(actGraph, edge.graph());
@@ -80,12 +108,13 @@ public class FactEdgeTest {
     ObjectVertex destination = createVertex();
     ObjectVertex source = createVertex();
 
-    Edge edge = new FactEdge(
-            actGraph,
-            new FactRecord(),
-            FactTypeStruct.builder().build(),
-            destination,
-            source);
+    Edge edge = FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(new FactRecord())
+            .setFactType(FactTypeStruct.builder().build())
+            .setInVertex(destination)
+            .setOutVertex(source)
+            .build();
 
     Iterator<Vertex> vertices = edge.vertices(Direction.IN);
     assertSame(destination.id(), vertices.next().id());
@@ -97,12 +126,13 @@ public class FactEdgeTest {
     ObjectVertex destination = createVertex();
     ObjectVertex source = createVertex();
 
-    Edge edge = new FactEdge(
-            actGraph,
-            new FactRecord(),
-            FactTypeStruct.builder().build(),
-            destination,
-            source);
+    Edge edge = FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(new FactRecord())
+            .setFactType(FactTypeStruct.builder().build())
+            .setInVertex(destination)
+            .setOutVertex(source)
+            .build();
 
     Iterator<Vertex> vertices = edge.vertices(Direction.OUT);
     assertSame(source.id(), vertices.next().id());
@@ -114,12 +144,13 @@ public class FactEdgeTest {
     ObjectVertex destination = createVertex();
     ObjectVertex source = createVertex();
 
-    Edge edge = new FactEdge(
-            actGraph,
-            new FactRecord(),
-            FactTypeStruct.builder().build(),
-            destination,
-            source);
+    Edge edge = FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(new FactRecord())
+            .setFactType(FactTypeStruct.builder().build())
+            .setInVertex(destination)
+            .setOutVertex(source)
+            .build();
 
     Iterator<Vertex> vertices = edge.vertices(Direction.BOTH);
     assertSame(source.id(), vertices.next().id());
@@ -128,9 +159,9 @@ public class FactEdgeTest {
   }
 
   @Test
-  public void testPropertiesWithAllProperties() {
+  public void testPropertiesWithDefaultProperties() {
     Edge edge = createEdge();
-    assertTrue(edge.properties().hasNext());
+    assertFalse(edge.properties().hasNext());
   }
 
   @Test
@@ -141,8 +172,29 @@ public class FactEdgeTest {
 
   @Test
   public void testPropertiesWithMatchingProperty() {
-    Edge edge = createEdge();
+    Edge edge = createEdge(list(new PropertyEntry<>("value", "test")));
     assertTrue(edge.properties("value").hasNext());
+  }
+
+  @Test
+  public void testPropertiesWithMetaFacts() {
+    Edge edge = FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(new FactRecord())
+            .setFactType(FactTypeStruct.builder()
+                    .setId(UUID.randomUUID())
+                    .setName("someFactType")
+                    .build())
+            .setInVertex(createVertex())
+            .setOutVertex(createVertex())
+            .setProperties(list(
+                    new PropertyEntry<>("meta/tlp", "green"),
+                    new PropertyEntry<>("meta/observationTime", "2")))
+            .build();
+
+    Map<String, Property<Object>> props = MapUtils.map(edge.properties(), p -> MapUtils.Pair.T(p.key(), p));
+    assertEquals("green", props.get("meta/tlp").value());
+    assertEquals("2", props.get("meta/observationTime").value());
   }
 
   /* The following tests are adapted from gremlin-test EdgeTest. */
@@ -175,59 +227,23 @@ public class FactEdgeTest {
 
   @Test
   public void testAutotypeStringProperties() {
-    Edge edge = createEdge();
+    Edge edge = createEdge(list(new PropertyEntry<>("value", "value")));
     String value = edge.value("value");
     assertEquals("value", value);
   }
 
   @Test
   public void testAutotypeLongProperties() {
-    Edge edge = createEdge();
+    Edge edge = createEdge(list(new PropertyEntry<>("timestamp", 123456789L)));
     long timestamp = edge.value("timestamp");
     assertEquals(123456789L, timestamp);
   }
 
   @Test
   public void testAutotypeFloatProperties() {
-    Edge edge = createEdge();
+    Edge edge = createEdge(list(new PropertyEntry<>("trust", 0.3f)));
     float trust = edge.value("trust");
     assertEquals(0.3f, trust, 0.0);
-  }
-
-  @Test
-  public void testGetPropertyKeysOnEdge() {
-
-    Edge edge = createEdge();
-
-    // Test that the following properties exists on the edge.
-    Map<String, Object> expected = map(
-            T("factID", edge.id().toString()),
-            T("value", "value"),
-            T("inReferenceToID", "00000000-0000-0000-0000-000000000001"),
-            T("organizationID", "00000000-0000-0000-0000-000000000002"),
-            T("originID", "00000000-0000-0000-0000-000000000003"),
-            T("trust", 0.3f),
-            T("confidence", 0.5f),
-            T("certainty", 0.15f),
-            T("accessMode", "Public"),
-            T("timestamp", 123456789L),
-            T("lastSeenTimestamp", 987654321L)
-    );
-
-    Set<String> keys = edge.keys();
-    Set<Property<Object>> properties = SetUtils.set(edge.properties());
-
-    assertEquals(expected.size(), keys.size());
-    assertEquals(expected.size(), properties.size());
-
-    for (Map.Entry<String, Object> entry : expected.entrySet()) {
-      assertTrue(keys.contains(entry.getKey()));
-
-      Property<Object> property = edge.property(entry.getKey());
-      assertEquals(entry.getValue(), property.value());
-      assertEquals(StringFactory.propertyString(property), property.toString());
-      assertSame(edge, property.element());
-    }
   }
 
   @Test
@@ -270,13 +286,13 @@ public class FactEdgeTest {
             .setObjectType(ObjectTypeStruct.builder().setId(UUID.randomUUID()).setName("someOtherObjectType").build())
             .build();
 
-    FactEdge edge = new FactEdge(
-            actGraph,
-            factRecord,
-            factType,
-            destination,
-            source
-    );
+    FactEdge edge = FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(factRecord)
+            .setFactType(factType)
+            .setInVertex(destination)
+            .setOutVertex(source)
+            .build();
 
     assertEquals(source.id(), edge.outVertex().id());
     assertEquals(destination.id(), edge.inVertex().id());
@@ -298,6 +314,10 @@ public class FactEdgeTest {
   }
 
   private Edge createEdge() {
+    return createEdge(list());
+  }
+
+  private Edge createEdge(List<PropertyEntry<?>> props) {
 
     FactTypeStruct factType = FactTypeStruct.builder()
             .setId(UUID.randomUUID())
@@ -311,6 +331,7 @@ public class FactEdgeTest {
             .setInReferenceToID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000002"))
             .setOriginID(UUID.fromString("00000000-0000-0000-0000-000000000003"))
+            .setAddedByID(UUID.fromString("00000000-0000-0000-0000-000000000004"))
             .setTrust(0.3f)
             .setConfidence(0.5f)
             .setAccessMode(FactRecord.AccessMode.Public)
@@ -324,29 +345,30 @@ public class FactEdgeTest {
     ObjectVertex source = ObjectVertex.builder()
             .setGraph(actGraph)
             .setObjectRecord(
-            new ObjectRecord()
-                    .setId(UUID.randomUUID())
-                    .setValue("someObjectValue")
-                    .setTypeID(objectType.getId()))
+                    new ObjectRecord()
+                            .setId(UUID.randomUUID())
+                            .setValue("someObjectValue")
+                            .setTypeID(objectType.getId()))
             .setObjectType(objectType)
             .build();
 
     ObjectVertex destination = ObjectVertex.builder()
             .setGraph(actGraph)
             .setObjectRecord(
-            new ObjectRecord()
-                    .setId(UUID.randomUUID())
-                    .setValue("someOtherObjectValue")
-                    .setTypeID(objectType.getId()))
+                    new ObjectRecord()
+                            .setId(UUID.randomUUID())
+                            .setValue("someOtherObjectValue")
+                            .setTypeID(objectType.getId()))
             .setObjectType(objectType)
             .build();
 
-    return new FactEdge(
-            actGraph,
-            factRecord,
-            factType,
-            destination,
-            source
-    );
+    return FactEdge.builder()
+            .setGraph(actGraph)
+            .setFactRecord(factRecord)
+            .setFactType(factType)
+            .setInVertex(destination)
+            .setOutVertex(source)
+            .setProperties(props)
+            .build();
   }
 }

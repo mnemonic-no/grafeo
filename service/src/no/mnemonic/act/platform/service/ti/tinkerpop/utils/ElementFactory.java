@@ -100,7 +100,16 @@ public class ElementFactory {
     Vertex inVertex = getVertex(factRecord.getSourceObject().getId());
     Vertex outVertex = getVertex(factRecord.getDestinationObject().getId());
 
-    return new FactEdge(owner, factRecord, factTypeStruct, inVertex, outVertex);
+    List<PropertyEntry<?>> props = owner.getPropertyHelper().getFactProperties(factRecord, owner.getTraverseParams());
+
+    return FactEdge.builder()
+            .setGraph(owner)
+            .setFactRecord(factRecord)
+            .setFactType(factTypeStruct)
+            .setInVertex(inVertex)
+            .setOutVertex(outVertex)
+            .setProperties(props)
+            .build();
   }
 
   public static Builder builder() {
@@ -126,8 +135,8 @@ public class ElementFactory {
                         owner.getObjectFactTypeResolver().toObjectTypeStruct(objectRecord.getTypeID()),
                         String.format("ObjectType with id = %s does not exist.", objectRecord.getTypeID()));
 
-                List<PropertyEntry<String>> props = owner.getPropertyHelper().getOneLeggedFactsAsProperties(
-                        objectRecord.getId(),
+                List<PropertyEntry<?>> props = owner.getPropertyHelper().getObjectProperties(
+                        objectRecord,
                         owner.getTraverseParams());
 
                 return ObjectVertex.builder()

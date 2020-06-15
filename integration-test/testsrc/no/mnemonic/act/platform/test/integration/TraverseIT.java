@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.test.integration;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectsRequest;
@@ -10,7 +11,11 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import org.junit.Test;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
+import static org.junit.Assert.assertEquals;
 
 public class TraverseIT extends AbstractIT {
 
@@ -73,5 +78,21 @@ public class TraverseIT extends AbstractIT {
                     .setQuery("g.outE()")
                     .setObjects(set(object.getId().toString())),
             fact.getId());
+  }
+
+  @Test
+  public void testTraverseWithEdgeProperties() throws Exception {
+    // Create a Fact and a related meta Fact in the database ...
+    FactRecord referencedFact = createFact();
+    FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
+    createMetaFact(referencedFact, metaFactType, f -> f.setValue("metaValue"));
+
+    Response response = request("/v1/traverse/objects").post(Entity.json(new TraverseGraphByObjectsRequest()
+            .setQuery("g.outE().properties('meta/MetaFactType')")
+            .setObjects(set(referencedFact.getSourceObject().getId().toString()))));
+    assertEquals(200, response.getStatus());
+    ArrayNode data = (ArrayNode) getPayload(response);
+    assertEquals(1, data.size());
+    assertEquals("p[meta/MetaFactType->metaValue]", data.get(0).textValue());
   }
 }

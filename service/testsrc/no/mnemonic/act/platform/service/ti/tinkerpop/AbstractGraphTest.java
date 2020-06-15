@@ -43,7 +43,7 @@ abstract class AbstractGraphTest {
     when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
     when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
 
-    when(propertyHelper.getOneLeggedFactsAsProperties(any(), any())).thenReturn(list());
+    when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());
 
     actGraph = createActGraph(TraverseParams.builder().build());
   }

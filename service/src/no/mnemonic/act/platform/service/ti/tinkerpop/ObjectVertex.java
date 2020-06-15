@@ -14,6 +14,7 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
@@ -34,12 +35,12 @@ public class ObjectVertex implements Vertex {
   private final ActGraph graph;
   private final ObjectRecord object;
   private final ObjectFactTypeResolver.ObjectTypeStruct type;
-  private final Set<VertexProperty<String>> allProperties;
+  private final Set<VertexProperty<?>> allProperties;
 
   private ObjectVertex(ActGraph graph,
                        ObjectRecord object,
                        ObjectFactTypeResolver.ObjectTypeStruct type,
-                       List<PropertyEntry<String>> properties) {
+                       List<PropertyEntry<?>> properties) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
     this.object = ObjectUtils.notNull(object, "'object' is null!");
     this.type = ObjectUtils.notNull(type, "'type' is null!");
@@ -146,13 +147,10 @@ public class ObjectVertex implements Vertex {
     return Objects.hash(id());
   }
 
-  private Set<VertexProperty<String>> getAllProperties(List<PropertyEntry<String>> properties) {
-    // Add any dynamic properties to the object value property
-    // Object statistics would be interesting as well, but this requires an external index in order to allow efficient
-    // graph traversals.
-    Set<VertexProperty<String>> set = set(new ObjectProperty(this, "value", object.getValue()));
-    properties.forEach( p -> set.add(new ObjectProperty(this, p.getName(), p.getValue())));
-    return set;
+  private Set<VertexProperty<?>> getAllProperties(List<PropertyEntry<?>> properties) {
+    return properties.stream()
+            .map(p -> new ObjectProperty<>(this, p.getName(), p.getValue()))
+            .collect(Collectors.toSet());
   }
 
   static boolean matchesDirection(FactRecord fact, ObjectRecord object, Direction direction) {
@@ -180,7 +178,7 @@ public class ObjectVertex implements Vertex {
     private ActGraph graph;
     private ObjectRecord objectRecord;
     private ObjectFactTypeResolver.ObjectTypeStruct objectType;
-    private List<PropertyEntry<String>> properties;
+    private List<PropertyEntry<?>> properties;
 
     private Builder() {}
 
@@ -203,12 +201,12 @@ public class ObjectVertex implements Vertex {
       return this;
     }
 
-    public Builder setProperties(List<PropertyEntry<String>> properties) {
+    public Builder setProperties(List<PropertyEntry<?>> properties) {
       this.properties = properties;
       return this;
     }
 
-    public Builder addProperty(PropertyEntry<String> property) {
+    public Builder addProperty(PropertyEntry<?> property) {
       this.properties = ListUtils.addToList(this.properties, property);
       return this;
     }

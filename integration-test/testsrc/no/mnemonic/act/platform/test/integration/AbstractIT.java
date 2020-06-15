@@ -274,6 +274,7 @@ public abstract class AbstractIT {
             .setId(UUID.randomUUID())
             .setTypeID(factType.getId())
             .setValue("factValue")
+            .setAddedByID(UUID.fromString("00000000-0000-0000-0000-000000000009"))
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOriginID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.RoleBased)

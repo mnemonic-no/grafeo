@@ -20,6 +20,7 @@ import java.util.UUID;
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -36,6 +37,8 @@ public class ElementFactoryTest {
   @Mock
   private TiSecurityContext securityContext;
 
+  private ActGraph actGraph;
+
   private ElementFactory elementFactory;
 
   @Before
@@ -44,7 +47,7 @@ public class ElementFactoryTest {
 
     when(propertyHelper.getOneLeggedFactsAsProperties(any(), any())).thenReturn(list());
 
-    ActGraph actGraph = ActGraph.builder()
+    actGraph = ActGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContext)
@@ -67,7 +70,7 @@ public class ElementFactoryTest {
   }
 
   @Test
-  public void testCreateEdges() {
+  public void testCreateEdge() {
     FactTypeStruct factTypeMock = mockFactType();
     ObjectTypeStruct objectTypeMock = mockObjectType();
     ObjectRecord objectA = mockObject(objectTypeMock);
@@ -108,6 +111,24 @@ public class ElementFactoryTest {
   }
 
   @Test
+  public void testCreateEdgeWithProperties() {
+    FactTypeStruct factTypeMock = mockFactType();
+    ObjectTypeStruct objectTypeMock = mockObjectType();
+    ObjectRecord objectA = mockObject(objectTypeMock);
+    ObjectRecord objectB = mockObject(objectTypeMock);
+
+    FactRecord factRecord = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setTypeID(factTypeMock.getId())
+            .setBidirectionalBinding(true)
+            .setDestinationObject(objectA)
+            .setSourceObject(objectB);
+    elementFactory.createEdge(factRecord);
+
+    verify(propertyHelper).getFactProperties(factRecord, actGraph.getTraverseParams());
+  }
+
+  @Test
   public void testGetEdgeWithNullId() {
     assertNull(elementFactory.getEdge(null));
   }
@@ -130,7 +151,7 @@ public class ElementFactoryTest {
             .setSourceObject(objectSource)
             .setDestinationObject(objectDestination));
 
-    Edge second = elementFactory.getEdge((UUID)first.id());
+    Edge second = elementFactory.getEdge((UUID) first.id());
 
     assertSame(first, second);
   }

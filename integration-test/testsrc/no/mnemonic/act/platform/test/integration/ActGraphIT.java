@@ -1,11 +1,14 @@
 package no.mnemonic.act.platform.test.integration;
 
+import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.ClientFactory;
@@ -17,11 +20,12 @@ import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
-import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
+import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
@@ -130,7 +134,10 @@ public class ActGraphIT {
 
     factTypeRequestResolver = new FactTypeRequestResolver(factManager);
     factRetractionHandler = new FactRetractionHandler(factTypeRequestResolver, factSearchManager, mockSecurityContext);
-    propertyHelper = new PropertyHelper(factRetractionHandler, objectFactDao, objectFactTypeResolver, mockSecurityContext);
+    SubjectResolver subjectResolver = mock(SubjectResolver.class);
+    OrganizationResolver organizationResolver = mock(OrganizationResolver.class);
+    propertyHelper = new PropertyHelper(factRetractionHandler, objectFactDao, objectFactTypeResolver, mockSecurityContext,
+            subjectResolver, organizationResolver, new OriginResolver(new OriginManager(clusterManager), subjectResolver));
 
     clusterManager.startComponent();
     clientFactory.startComponent();

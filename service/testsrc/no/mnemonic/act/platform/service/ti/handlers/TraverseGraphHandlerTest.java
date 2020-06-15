@@ -60,7 +60,7 @@ public class TraverseGraphHandlerTest {
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
     when(securityContext.getCurrentUserID()).thenReturn(new UUID(0, 1));
     when(securityContext.getAvailableOrganizationID()).thenReturn(set(new UUID(0, 1)));
-    when(propertyHelper.getOneLeggedFactsAsProperties(any(), any())).thenReturn(list());
+    when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());
 
     handler = new TraverseGraphHandler(
             securityContext,
@@ -106,6 +106,9 @@ public class TraverseGraphHandlerTest {
     ObjectRecord destination = mockObjectRecord(mockObjectType(), "someOther");
     mockFact(source, destination);
 
+    when(propertyHelper.getObjectProperties(eq(source), any()))
+            .thenReturn(ListUtils.list(new PropertyEntry<>("value", "someValue")));
+
     ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.values('value')", TraverseParams.builder().build());
 
     List<?> result = ListUtils.list(resultSet.iterator());
@@ -118,16 +121,16 @@ public class TraverseGraphHandlerTest {
     ObjectRecord source = mockObjectRecord(mockObjectType(), "someValue");
     ObjectRecord destination = mockObjectRecord(mockObjectType(), "someOther");
     mockFact(source, destination);
-    when(propertyHelper.getOneLeggedFactsAsProperties(eq(source.getId()), any()))
+    when(propertyHelper.getObjectProperties(eq(source), any()))
             .thenReturn(ListUtils.list(
                     new PropertyEntry<>("name", "test"),
-                    new PropertyEntry<>("otherProp", "something")));
+                    new PropertyEntry<>("value", "someValue")));
 
     ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.properties()", TraverseParams.builder().build());
 
     Set<?> result = set(resultSet.iterator());
-    assertEquals(3, result.size());
-    assertEquals(set("vp[value->someValue]", "vp[name->test]", "vp[otherProp->something]"), result);
+    assertEquals(2, result.size());
+    assertEquals(set("vp[value->someValue]", "vp[name->test]"), result);
   }
 
   @Test

@@ -243,7 +243,6 @@ public class ObjectVertexTest extends AbstractGraphTest {
     assertFalse(vertex.vertices(OUT).hasNext());
   }
 
-
   @Test
   public void testVerticesFilterByLabel() {
 
@@ -283,8 +282,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
     Vertex vertex = createVertex();
 
     List<VertexProperty<Object>> props = list(vertex.properties());
-    assertEquals(1, props.size());
-    assertEquals("value", props.get(0).key());
+    assertEquals(0, props.size());
   }
 
   @Test
@@ -307,7 +305,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
             .setProperties(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("b", "2")))
             .build();
 
-    assertEquals(set("vp[a->1]", "vp[b->2]", "vp[value->someObjectValue]"), set(objectVertex.properties(), Object::toString));
+    assertEquals(set("vp[a->1]", "vp[b->2]"), set(objectVertex.properties(), Object::toString));
     assertEquals(set("vp[a->1]", "vp[b->2]"), set(objectVertex.properties("a", "b"), Object::toString));
   }
 
@@ -326,24 +324,6 @@ public class ObjectVertexTest extends AbstractGraphTest {
             .build();
 
     assertEquals(set("vp[a->1]", "vp[a->2]"), set(objectVertex.properties("a"), Object::toString));
-  }
-
-  // Note: There should never be a one-legged fact type with name "value". This is just makin sure it will work
-  @Test
-  public void testPropertiesWithNameValue() {
-    ObjectVertex objectVertex = ObjectVertex.builder()
-            .setGraph(getActGraph())
-            .setObjectRecord(new ObjectRecord()
-                    .setId(UUID.randomUUID())
-                    .setValue("someObjectValue"))
-            .setObjectType(ObjectTypeStruct.builder()
-                    .setId(UUID.randomUUID())
-                    .setName("someObjectType")
-                    .build())
-            .setProperties(list(new PropertyEntry<>("value", "1")))
-            .build();
-
-    assertEquals(set("vp[value->someObjectValue]", "vp[value->1]"), set(objectVertex.properties(), Object::toString));
   }
 
   /* The following tests are adapted from gremlin-test VertexTest. */
@@ -376,14 +356,14 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testAutotypeStringProperties() {
-    Vertex vertex = createVertex();
+    Vertex vertex = createVertex(list(new PropertyEntry<>("value", "someObjectValue")));
     String value = vertex.value("value");
     assertEquals("someObjectValue", value);
   }
 
   @Test
   public void testGetPropertyKeysOnVertex() {
-    Vertex vertex = createVertex();
+    Vertex vertex = createVertex(list(new PropertyEntry<>("value", "someObjectValue")));
     // Test that the following properties exists on the vertex.
     Map<String, String> expected = map(
             T("value", "someObjectValue")
@@ -583,6 +563,10 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   private Vertex createVertex() {
+    return createVertex(list());
+  }
+
+  private Vertex createVertex(List<PropertyEntry<?>> props) {
     ObjectTypeStruct objectType = ObjectTypeStruct.builder()
             .setId(UUID.randomUUID())
             .setName("someObjectType")
@@ -593,6 +577,11 @@ public class ObjectVertexTest extends AbstractGraphTest {
             .setTypeID(objectType.getId())
             .setValue("someObjectValue");
 
-    return ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(object).setObjectType(objectType).build();
+    return ObjectVertex.builder()
+            .setGraph(getActGraph())
+            .setObjectRecord(object)
+            .setObjectType(objectType)
+            .setProperties(props)
+            .build();
   }
 }
