@@ -140,13 +140,15 @@ public class ObjectEndpoint {
     return buildResponse(service.searchObjectFacts(credentialsResolver.getRequestHeader(), request.setObjectType(type).setObjectValue(value)));
   }
 
+  @Deprecated
   @POST
   @Path("/uuid/{id}/traverse")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Traverse the Object/Fact graph starting at a specific Object.",
-          notes = "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal. " +
+          notes = "Deprecated, use 'v1/traverse/object/{id}' instead.\n\n" +
+                  "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal. " +
                   "Objects are represented as graph vertices and Facts as graph edges. The labels of vertices and edges " +
                   "are the names of the corresponding ObjectTypes and FactTypes, respectively.\n\n" +
                   "The traversal query contained in the request must be a valid Gremlin query [0,1]. Inside the query the " +
@@ -175,13 +177,15 @@ public class ObjectEndpoint {
     return buildResponse(service.traverseGraph(credentialsResolver.getRequestHeader(), request.setId(id)));
   }
 
+  @Deprecated
   @POST
   @Path("/{type}/{value}/traverse")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Traverse the Object/Fact graph starting at a specific Object.",
-          notes = "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal. " +
+          notes = "Deprecated, use 'v1/traverse/object/{type}/{value}' instead.\n\n" +
+                  "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal. " +
                   "Objects are represented as graph vertices and Facts as graph edges. The labels of vertices and edges " +
                   "are the names of the corresponding ObjectTypes and FactTypes, respectively.\n\n" +
                   "The traversal query contained in the request must be a valid Gremlin query [0,1]. Inside the query the " +
@@ -254,13 +258,15 @@ public class ObjectEndpoint {
     return buildResponse(service.searchObjects(credentialsResolver.getRequestHeader(), request));
   }
 
+  @Deprecated
   @POST
   @Path("/traverse")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Traverse the Object/Fact graph after performing an Object search.",
-          notes = "This operation performs first an Object search and then traverses the graph of Objects and Facts " +
+          notes = "Deprecated, use 'v1/traverse/object/search' instead.\n\n" +
+                  "This operation performs first an Object search and then traverses the graph of Objects and Facts " +
                   "starting at the Objects returned from the Object search. For more information about Object search " +
                   "see '/v1/object/search' and about graph traversal '/v1/object/{type}/{value}/traverse'. This operation " +
                   "accepts the same search parameters than '/v1/object/search' in addition to a Gremlin query for the " +

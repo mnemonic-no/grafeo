@@ -185,18 +185,21 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
     return delegateProvider.get(FactGrantAccessDelegate.class).handle(request);
   }
 
+  @Deprecated
   @Override
   public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return delegateProvider.get(TraverseGraphDelegate.class).handle(request);
   }
 
+  @Deprecated
   @Override
   public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return delegateProvider.get(TraverseGraphDelegate.class).handle(request);
   }
 
+  @Deprecated
   @Override
   public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {

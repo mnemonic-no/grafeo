@@ -3,6 +3,21 @@ All notable changes to this project will be documented in this file. Also see [M
 
 The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Traverse endpoints] - 2020-06-18
+### Added
+- REST endpoint for traversing from a specific object, `POST /v1/traverse/object/{id}`
+- REST endpoint for traversing from a specific object, `POST /v1/traverse/object/{type}/{value}`
+- REST endpoint for traversing from set of objects, `POST /v1/traverse/objects`
+- REST endpoint for traversing from object search, `POST /v1/traverse/objects/search`
+- Traversal now supports filtering by time, retraction and limit 
+- Traversal now exposes one-legged facts as object properties
+- Traversal now exposes meta-facts and retraction status as fact properties
+ 
+### Deprecated
+- REST endpoint `POST /v1/object/{id}/traverse`, use `POST /v1/traverse/object/{id}`
+- REST endpoint `POST /v1/object/{type}/{value}/traverse`, use `POST /v1/traverse/object/{type}/{value}`
+- REST endpoint `POST /v1/object/traverse`, use `POST /v1/traverse/objects/search`
+
 ## [Origin, Trust & Confidence] - 2019-09-18
 ### Added
 - REST endpoint for retrieval of an Origin by ID, `GET /v1/origin/uuid/{id}`.

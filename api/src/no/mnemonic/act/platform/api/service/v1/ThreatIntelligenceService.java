@@ -364,7 +364,10 @@ public interface ThreatIntelligenceService extends Service {
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
    * @throws OperationTimeoutException     If the graph traversal timed out.
+   *
+   * @deprecated see {@link #traverse(RequestHeader, TraverseGraphByObjectsRequest)} instead
    */
+  @Deprecated
   default ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     throw new UnsupportedOperationException();
@@ -380,7 +383,10 @@ public interface ThreatIntelligenceService extends Service {
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
    * @throws OperationTimeoutException     If the graph traversal timed out.
+   *
+   * @deprecated see {@link #traverse(RequestHeader, TraverseGraphByObjectsRequest)} instead
    */
+  @Deprecated
   default ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     throw new UnsupportedOperationException();
@@ -396,7 +402,10 @@ public interface ThreatIntelligenceService extends Service {
    * @throws AuthenticationFailedException If the user could not be authenticated.
    * @throws InvalidArgumentException      If the request contains invalid parameters.
    * @throws OperationTimeoutException     If the graph traversal timed out.
+   *
+   * @deprecated see {@link #traverse(RequestHeader, TraverseGraphByObjectSearchRequest)} instead
    */
+  @Deprecated
   default ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     throw new UnsupportedOperationException();

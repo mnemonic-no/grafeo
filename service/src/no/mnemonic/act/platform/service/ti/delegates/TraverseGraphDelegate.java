@@ -41,6 +41,10 @@ import java.util.concurrent.TimeoutException;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
+/**
+ * @deprecated see {@link TraverseByObjectsDelegate} and {@link TraverseByObjectSearchDelegate}
+ */
+@Deprecated
 public class TraverseGraphDelegate implements Delegate {
 
   private static final String SCRIPT_ENGINE = "gremlin-groovy";
