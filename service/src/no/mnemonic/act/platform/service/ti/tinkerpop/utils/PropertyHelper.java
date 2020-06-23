@@ -11,7 +11,6 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
@@ -20,6 +19,8 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static no.mnemonic.commons.utilities.ObjectUtils.ifNotNull;
+import static no.mnemonic.commons.utilities.ObjectUtils.ifNotNullDo;
 import static no.mnemonic.commons.utilities.collections.ListUtils.addToList;
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 
@@ -172,10 +173,10 @@ public class PropertyHelper {
     List<PropertyEntry<?>> props = list();
 
     addToList(props, new PropertyEntry<>("value", factRecord.getValue()));
-    addToList(props, ObjectUtils.ifNotNull(factRecord.getOrganizationID(), o -> new PropertyEntry<>("organizationID", o.toString())));
-    addToList(props, ObjectUtils.ifNotNull(factRecord.getOriginID(), o -> new PropertyEntry<>("originID", o.toString())));
-    addToList(props, ObjectUtils.ifNotNull(factRecord.getAddedByID(), o -> new PropertyEntry<>("addedByID", o.toString())));
-    addToList(props, ObjectUtils.ifNotNull(factRecord.getAccessMode(), e -> new PropertyEntry<>("accessMode", e.name())));
+    addToList(props, ifNotNull(factRecord.getOrganizationID(), o -> new PropertyEntry<>("organizationID", o.toString())));
+    addToList(props, ifNotNull(factRecord.getOriginID(), o -> new PropertyEntry<>("originID", o.toString())));
+    addToList(props, ifNotNull(factRecord.getAddedByID(), o -> new PropertyEntry<>("addedByID", o.toString())));
+    addToList(props, ifNotNull(factRecord.getAccessMode(), e -> new PropertyEntry<>("accessMode", e.name())));
     addToList(props, new PropertyEntry<>("timestamp", factRecord.getTimestamp()));
     addToList(props, new PropertyEntry<>("lastSeenTimestamp", factRecord.getLastSeenTimestamp()));
     addToList(props, new PropertyEntry<>("trust", factRecord.getTrust()));
@@ -183,9 +184,9 @@ public class PropertyHelper {
     addToList(props, new PropertyEntry<>("certainty", certainty));
 
     addToList(props, new PropertyEntry<>("isRetracted", factRetractionHandler.isRetracted(factRecord)));
-    addToList(props, ObjectUtils.ifNotNull(subjectResolver.resolveSubject(factRecord.getAddedByID()), s -> new PropertyEntry<>("addedByName", s.getName())));
-    addToList(props, ObjectUtils.ifNotNull(organizationResolver.resolveOrganization(factRecord.getOrganizationID()), o -> new PropertyEntry<>("organizationName", o.getName())));
-    addToList(props, ObjectUtils.ifNotNull(originResolver.apply(factRecord.getOriginID()), o -> new PropertyEntry<>("originName", o.getName())));
+    ifNotNullDo(factRecord.getAddedByID(), (id) -> addToList(props, ifNotNull(subjectResolver.resolveSubject(id), s -> new PropertyEntry<>("addedByName", s.getName()))));
+    ifNotNullDo(factRecord.getOrganizationID(), id -> addToList(props, ifNotNull(organizationResolver.resolveOrganization(id), o -> new PropertyEntry<>("organizationName", o.getName()))));
+    ifNotNullDo(factRecord.getOriginID(), id -> addToList(props, ifNotNull(originResolver.apply(id), o -> new PropertyEntry<>("originName", o.getName()))));
 
     return props;
   }

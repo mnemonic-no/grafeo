@@ -26,8 +26,7 @@ import java.util.stream.Collectors;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
@@ -339,6 +338,42 @@ public class PropertyHelperTest {
 
     assertEqualMaps(expected, props);
   }
+
+  @Test
+  public void testGetStaticFactPropertiesMissingData() {
+    FactRecord fact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setValue("someValue")
+            .setOrganizationID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.Public)
+            .setTimestamp(1L)
+            .setLastSeenTimestamp(2L)
+            .setAddedByID(UUID.randomUUID());
+
+    Map<String, ?> props = MapUtils.map(helper.getStaticFactProperties(fact), p -> T(p.getName(), p.getValue()));
+
+    assertEquals(fact.getOrganizationID().toString(), props.get("organizationID"));
+    assertEquals(fact.getOriginID().toString(), props.get("originID"));
+    assertEquals(fact.getAddedByID().toString(), props.get("addedByID"));
+    assertNull(props.get("organizationName"));
+    assertNull(props.get("originName"));
+    assertNull(props.get("addedByName"));
+  }
+
+  @Test
+  public void testGetStaticFactPropertiesWithEmptyFact() {
+    Map<String, ?> props = MapUtils.map(helper.getStaticFactProperties(new FactRecord()), p -> T(p.getName(), p.getValue()));
+
+    assertEquals(0.0f, props.get("trust"));
+    assertEquals(0.0f, props.get("confidence"));
+    assertEquals(0.0f, props.get("certainty"));
+    assertEquals(0L, props.get("timestamp"));
+    assertEquals(0L, props.get("lastSeenTimestamp"));
+    assertNull(props.get("value"));
+
+  }
+
 
   @Test
   public void testGetFactPropsInputValidation() {
