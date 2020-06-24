@@ -19,7 +19,7 @@ public class TraverseGraphByObjectsRequest implements ValidatingRequest {
 
   @ApiModelProperty(
           value = "Set of object identifiers. Takes Object UUID or Object identified by 'type/value')",
-          example = "['123e4567-e89b-12d3-a456-426655440000', 'ThreatActor/Sofacy'}]",
+          example = "['123e4567-e89b-12d3-a456-426655440000', 'ThreatActor/Sofacy']",
           required = true)
   @NotEmpty
   private Set<String> objects;
