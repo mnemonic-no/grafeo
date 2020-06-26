@@ -19,8 +19,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 
 * Java 8 for running the application.
 * Maven for managing dependencies, building the code, running the unit tests, etc.
-* An installation of [Apache Cassandra](https://cassandra.apache.org/) for storage. Any version of Apache Cassandra 3.x is support.
-  * Import the Cassandra database schema from `deployment-service/resources/cassandra.cql`.
+* An installation of [Apache Cassandra](https://cassandra.apache.org/) for storage. Any version of Apache Cassandra 3.x is supported.
 * An installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch) for indexing. Version 6.8 of Elasticsearch is required.
 * (Optional) An installation of [ActiveMQ](https://activemq.apache.org/) for the multi-node environment.
 * (Optional) An installation of [Docker](https://www.docker.com/) for running the integration tests.

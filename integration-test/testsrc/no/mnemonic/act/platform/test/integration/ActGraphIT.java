@@ -74,7 +74,6 @@ public class ActGraphIT {
           .setImageName("cassandra")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
-          .setSetupScript("setup.cql")
           .build();
 
   private static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()

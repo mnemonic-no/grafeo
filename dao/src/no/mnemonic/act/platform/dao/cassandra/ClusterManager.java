@@ -1,15 +1,23 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.DriverException;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.google.common.io.CharStreams;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.mapper.CassandraMapper;
 import no.mnemonic.commons.component.ComponentException;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -17,10 +25,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
+
 public class ClusterManager implements LifecycleAspect {
 
   private static final long INITIALIZATION_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
   private static final Logger LOGGER = Logging.getLogger(ClusterManager.class);
+  private static final String KEYSPACE_CQL = "keyspace.cql";
 
   private CqlSession session;
   private CassandraMapper cassandraMapper;
@@ -37,6 +48,21 @@ public class ClusterManager implements LifecycleAspect {
 
   @Override
   public void startComponent() {
+    initializeSession();
+
+    if (!keyspaceExists()) {
+      LOGGER.info("Keyspace '%s' does not exist, create it and initialize schema.", KEY_SPACE);
+      initializeKeyspace();
+    }
+  }
+
+  @Override
+  public void stopComponent() {
+    // Close session to free up any resources.
+    if (session != null) session.close();
+  }
+
+  private void initializeSession() {
     if (session == null) {
       // Configure and create a session connecting to Cassandra.
       CompletableFuture<CqlSession> future = CqlSession.builder()
@@ -73,15 +99,34 @@ public class ClusterManager implements LifecycleAspect {
     }
   }
 
+  private void initializeKeyspace() {
+    try (InputStream stream = ClusterManager.class.getClassLoader().getResourceAsStream(KEYSPACE_CQL);
+         InputStreamReader reader = new InputStreamReader(stream)) {
+      // Read the whole .cql file and split on semi-colon which separates CQL queries. Execute each query separately.
+      for (String query : CharStreams.toString(reader).split(";")) {
+        if (StringUtils.isBlank(query)) continue;
+        session.execute(query.trim());
+      }
+    } catch (DriverException | IOException ex) {
+      LOGGER.error(ex, "Error when initializing keyspace and schema.");
+      throw new ComponentException("Error when initializing keyspace and schema.", ex);
+    }
+
+    LOGGER.info("Successfully initialized keyspace '%s' and schema.", KEY_SPACE);
+  }
+
+  private boolean keyspaceExists() {
+    // Fetch all existing keyspaces from the system table and check if 'act' exists.
+    for (Row row : session.execute("SELECT * FROM system_schema.keyspaces")) {
+      if (Objects.equals(KEY_SPACE, row.getString("keyspace_name"))) return true;
+    }
+
+    return false;
+  }
+
   private void failComponentOnStart(Exception ex) {
     LOGGER.warning(ex, "Could not connect to Cassandra. Shutting down component.");
     throw new ComponentException("Could not connect to Cassandra. Shutting down component.", ex);
-  }
-
-  @Override
-  public void stopComponent() {
-    // Close session to free up any resources.
-    if (session != null) session.close();
   }
 
   public CassandraMapper getCassandraMapper() {

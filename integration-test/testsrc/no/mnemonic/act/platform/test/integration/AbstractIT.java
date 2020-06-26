@@ -64,7 +64,6 @@ public abstract class AbstractIT {
           .setImageName("cassandra")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
-          .setSetupScript("setup.cql")
           .setTruncateScript("truncate.cql")
           .build();
 
