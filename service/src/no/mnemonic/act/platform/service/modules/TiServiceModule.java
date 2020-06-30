@@ -8,13 +8,13 @@ import no.mnemonic.act.platform.auth.properties.module.PropertiesBasedAccessCont
 import no.mnemonic.act.platform.dao.DaoModule;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.service.aspects.*;
+import no.mnemonic.act.platform.service.providers.TriggerEventConsumerProvider;
 import no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl;
 import no.mnemonic.act.platform.service.ti.caches.ResponseCachesModule;
 import no.mnemonic.act.platform.service.validators.DefaultValidatorFactory;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
-import no.mnemonic.services.triggers.pipeline.worker.InMemoryQueueWorker;
 import no.mnemonic.services.triggers.service.TriggerAdministrationServiceImpl;
 
 import java.util.Collection;
@@ -45,8 +45,10 @@ public class TiServiceModule extends AbstractModule {
     }
 
     // Configure the ActionTriggers' pipeline worker and administration service.
-    bind(TriggerEventConsumer.class).to(InMemoryQueueWorker.class).in(Scopes.SINGLETON);
-    bind(TriggerAdministrationService.class).to(TriggerAdministrationServiceImpl.class).in(Scopes.SINGLETON);
+    bind(TriggerEventConsumer.class).toProvider(TriggerEventConsumerProvider.class).in(Scopes.SINGLETON);
+    // Can't be a Singleton because Guice would instantiate it eagerly, however, as TriggerEventConsumer
+    // is already a Singleton TriggerAdministrationService will only be instantiated once.
+    bind(TriggerAdministrationService.class).to(TriggerAdministrationServiceImpl.class);
 
     // Bind the concrete implementation classes of the ThreatIntelligenceService.
     bind(ValidatorFactory.class).to(DefaultValidatorFactory.class).in(Scopes.SINGLETON);

@@ -33,6 +33,9 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 - Rename field `source` to `origin` in Fact and Search APIs (**breaking**).
 
 ## [Miscellaneous]
+### Added
+- (2020-06-26) Added configuration option `act.action.triggers.enabled` to enable/disable the action triggers framework.
+
 ### Changed
 - (2020-04-17) In Create APIs (create Fact, create meta Fact, retract Fact) related entities (`organization`, `origin`, `acl`)
 can be specified by either UUID or name. If an entity cannot be resolved a 412 response will be returned.

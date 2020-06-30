@@ -346,6 +346,7 @@ public abstract class AbstractIT {
       String smbServerUrl = "tcp://" + DockerTestUtils.getDockerHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("act.access.controller.properties.configuration.file")).toInstance(ACL_FILE);
       bind(String.class).annotatedWith(Names.named("act.access.controller.properties.reload.interval")).toInstance("60000");
+      bind(String.class).annotatedWith(Names.named("act.action.triggers.enabled")).toInstance("true");
       bind(String.class).annotatedWith(Names.named("trigger.administration.service.configuration.directory")).toInstance(RESOURCES_FOLDER);
       bind(String.class).annotatedWith(Names.named("act.cassandra.data.center")).toInstance("datacenter1");
       bind(String.class).annotatedWith(Names.named("act.cassandra.contact.points")).toInstance(DockerTestUtils.getDockerHost());
