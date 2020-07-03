@@ -32,7 +32,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 ##### Testing
 
 * Download a Cassandra image by `docker pull cassandra`.
-* Download an Elasticsearch image by `docker pull docker.elastic.co/elasticsearch/elasticsearch:6.8.9`.
+* Download an Elasticsearch image by `docker pull docker.elastic.co/elasticsearch/elasticsearch:6.8.10`.
 * Download an ActiveMQ image by `docker pull webcenter/activemq`.
 * Execute `mvn clean install` for running all tests including integration tests.
 * Execute `mvn clean install -DskipSlowTests` for skipping the integration tests.

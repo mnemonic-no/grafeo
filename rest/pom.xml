@@ -141,6 +141,11 @@
       <artifactId>swagger-jaxrs</artifactId>
       <version>${swagger.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-core</artifactId>
+      <version>${swagger.version}</version>
+    </dependency>
     <!-- test jars -->
     <dependency>
       <groupId>no.mnemonic.commons</groupId>

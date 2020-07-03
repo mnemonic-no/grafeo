@@ -79,7 +79,7 @@ public class ActGraphIT {
   private static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
-          .setImageName("elasticsearch/elasticsearch:6.8.9")
+          .setImageName("elasticsearch/elasticsearch:6.8.10")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
           .addEnvironmentVariable("xpack.security.enabled", "false")
