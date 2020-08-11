@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import no.mnemonic.act.platform.api.json.RoundingFloatSerializer;
-import no.mnemonic.act.platform.api.json.TimestampSerializer;
+import no.mnemonic.act.platform.utilities.json.RoundingFloatSerializer;
+import no.mnemonic.act.platform.utilities.json.TimestampSerializer;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 

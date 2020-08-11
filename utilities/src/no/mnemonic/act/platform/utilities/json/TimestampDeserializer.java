@@ -1,4 +1,4 @@
-package no.mnemonic.act.platform.api.json;
+package no.mnemonic.act.platform.utilities.json;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;

@@ -1,0 +1,49 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>act-platform-seb-model</artifactId>
+  <packaging>jar</packaging>
+
+  <name>ACT platform - seb-model</name>
+  <description>Definition of the Model for the Service Event Bus (SEB)</description>
+
+  <parent>
+    <groupId>no.mnemonic.act.platform</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.0.35-SNAPSHOT</version>
+  </parent>
+
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <testSourceDirectory>testsrc</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>../</directory>
+        <includes>
+          <include>LICENSE</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+
+  <dependencies>
+    <!-- runtime dependencies -->
+    <dependency>
+      <groupId>no.mnemonic.act.platform</groupId>
+      <artifactId>act-platform-utilities</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>utilities</artifactId>
+      <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <!-- test jars -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>

@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.api.request.v1;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import no.mnemonic.act.platform.api.json.RoundingFloatDeserializer;
+import no.mnemonic.act.platform.utilities.json.RoundingFloatDeserializer;
 import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;

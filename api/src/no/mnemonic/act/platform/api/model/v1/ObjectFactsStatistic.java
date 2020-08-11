@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.api.model.v1;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import no.mnemonic.act.platform.api.json.TimestampSerializer;
+import no.mnemonic.act.platform.utilities.json.TimestampSerializer;
 
 @ApiModel(description = "Statistics about Facts of a specific type bound to one Object. Statistics are collected per FactType.")
 public class ObjectFactsStatistic {

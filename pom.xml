@@ -94,6 +94,8 @@
     <module>dao</module>
     <module>rest</module>
     <module>service</module>
+    <module>seb-model</module>
+    <module>utilities</module>
     <module>integration-test</module>
     <module>deployment-combined</module>
     <module>deployment-rest</module>
