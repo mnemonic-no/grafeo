@@ -29,6 +29,7 @@ public class ClientFactory implements LifecycleAspect {
 
   private static final long INITIALIZATION_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
   private static final long INITIALIZATION_RETRY_WAIT = TimeUnit.SECONDS.toMillis(2);
+  private static final long SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final Logger LOGGER = Logging.getLogger(ClientFactory.class);
 
   private final int port;
@@ -52,7 +53,9 @@ public class ClientFactory implements LifecycleAspect {
               .map(s -> new HttpHost(s, port))
               .collect(Collectors.toSet());
       // Initialize the high-level REST client which sends the actual requests to ElasticSearch.
-      client = new RestHighLevelClient(RestClient.builder(hosts.toArray(new HttpHost[contactPoints.size()])));
+      client = new RestHighLevelClient(RestClient.builder(hosts.toArray(new HttpHost[contactPoints.size()]))
+              .setRequestConfigCallback(builder -> builder.setSocketTimeout((int) SOCKET_TIMEOUT))
+      );
 
       // Wait until ElasticSearch becomes available.
       if (!waitForConnection(client)) {
