@@ -34,6 +34,8 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Added
+- (2020-08-14) Added `includeStatistics` parameter to `POST /v1/object/search` endpoint to specify whether Object statistics
+should be included in the response. The endpoint omits statistics by default now (**breaking**).
 - (2020-06-26) Added configuration option `act.action.triggers.enabled` to enable/disable the action triggers framework.
 
 ### Changed

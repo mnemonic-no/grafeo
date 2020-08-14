@@ -14,18 +14,16 @@ import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
-import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectRequestConverter;
+import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 
 public class ObjectSearchDelegate implements Delegate {
 
@@ -59,7 +57,7 @@ public class ObjectSearchDelegate implements Delegate {
     return StreamingResultSet.<Object>builder()
             .setCount(searchResult.getCount())
             .setLimit(criteria.getLimit())
-            .setValues(new AddStatisticsIterator(searchResult))
+            .setValues(new AddStatisticsIterator(searchResult, request.isIncludeStatistics()))
             .build();
   }
 
@@ -75,10 +73,12 @@ public class ObjectSearchDelegate implements Delegate {
     private static final int MAXIMUM_BATCH_SIZE = 1000;
 
     private final ResultContainer<ObjectRecord> input;
+    private final boolean includeStatistics;
     private Iterator<Object> output;
 
-    private AddStatisticsIterator(ResultContainer<ObjectRecord> input) {
+    private AddStatisticsIterator(ResultContainer<ObjectRecord> input, boolean includeStatistics) {
       this.input = input;
+      this.includeStatistics = includeStatistics;
     }
 
     @Override
@@ -111,22 +111,32 @@ public class ObjectSearchDelegate implements Delegate {
         return Collections.emptyIterator();
       }
 
-      // Use the Object IDs to retrieve the Fact statistics for one batch of Objects.
-      ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
-              .setObjectID(SetUtils.set(currentBatch, ObjectRecord::getId))
-              .setCurrentUserID(securityContext.getCurrentUserID())
-              .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
-              .build();
-      ObjectStatisticsContainer statistics = objectFactDao.calculateObjectStatistics(criteria);
-
       // Don't explicitly check access to each Object here as this would be too expensive because it requires fetching
       // Facts for each Object. Rely on the access control implemented in ElasticSearch instead. Accidentally returning
       // non-accessible Objects because of an error in the ElasticSearch access control implementation would only leak
       // the information that the Object exists (plus potentially the Fact statistics) and will not give further access
       // to any Facts.
       return currentBatch.stream()
-              .map(new ObjectResponseConverter(objectTypeConverter, factTypeConverter, statistics::getStatistics))
+              .map(new ObjectResponseConverter(objectTypeConverter, factTypeConverter, initializeStatisticsResolver(currentBatch)))
               .iterator();
+    }
+
+    private Function<UUID, Collection<ObjectStatisticsContainer.FactStatistic>> initializeStatisticsResolver(List<ObjectRecord> currentBatch) {
+      Function<UUID, Collection<ObjectStatisticsContainer.FactStatistic>> resolver = id -> Collections.emptyList();
+
+      // Only include statistics if the user has explicitly asked for it.
+      if (includeStatistics) {
+        // Use the Object IDs to retrieve the Fact statistics for one batch of Objects.
+        ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
+                .setObjectID(SetUtils.set(currentBatch, ObjectRecord::getId))
+                .setCurrentUserID(securityContext.getCurrentUserID())
+                .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
+                .build();
+        ObjectStatisticsContainer statistics = objectFactDao.calculateObjectStatistics(criteria);
+        resolver = statistics::getStatistics;
+      }
+
+      return resolver;
     }
   }
 }

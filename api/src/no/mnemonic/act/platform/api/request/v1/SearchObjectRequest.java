@@ -58,6 +58,8 @@ public class SearchObjectRequest implements ValidatingRequest {
   @ApiModelProperty(value = "Limit the number of returned Objects (default 25, 0 means all)", example = "25")
   @Min(0)
   private Integer limit;
+  @ApiModelProperty(value = "Specify whether Object statistics should be included in the response (omitted by default)")
+  private boolean includeStatistics;
 
   public String getKeywords() {
     return keywords;
@@ -231,6 +233,15 @@ public class SearchObjectRequest implements ValidatingRequest {
 
   public SearchObjectRequest setLimit(Integer limit) {
     this.limit = limit;
+    return this;
+  }
+
+  public boolean isIncludeStatistics() {
+    return includeStatistics;
+  }
+
+  public SearchObjectRequest setIncludeStatistics(boolean includeStatistics) {
+    this.includeStatistics = includeStatistics;
     return this;
   }
 

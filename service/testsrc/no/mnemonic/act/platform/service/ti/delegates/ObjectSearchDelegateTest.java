@@ -10,9 +10,9 @@ import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectRequestConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
-import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectRequestConverter;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
@@ -92,12 +92,26 @@ public class ObjectSearchDelegateTest {
   }
 
   @Test
-  public void testSearchObjectsSingleBatch() throws Exception {
+  public void testSearchObjectsSkipStatistics() throws Exception {
+    int count = 3;
+    when(objectFactDao.searchObjects(any())).thenReturn(createSearchResult(count));
+
+    ResultSet<Object> result = delegate.handle(new SearchObjectRequest().setIncludeStatistics(false));
+    assertEquals(25, result.getLimit());
+    assertEquals(count, result.getCount());
+    assertEquals(count, ListUtils.list(result.iterator()).size());
+
+    verify(objectFactDao).searchObjects(notNull());
+    verify(objectFactDao, never()).calculateObjectStatistics(any());
+  }
+
+  @Test
+  public void testSearchObjectsSingleBatchIncludeStatistics() throws Exception {
     int count = 3;
     when(objectFactDao.searchObjects(any())).thenReturn(createSearchResult(count));
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
 
-    ResultSet<Object> result = delegate.handle(new SearchObjectRequest());
+    ResultSet<Object> result = delegate.handle(new SearchObjectRequest().setIncludeStatistics(true));
     assertEquals(25, result.getLimit());
     assertEquals(count, result.getCount());
     assertEquals(count, ListUtils.list(result.iterator()).size());
@@ -112,12 +126,12 @@ public class ObjectSearchDelegateTest {
   }
 
   @Test
-  public void testSearchObjectsMultipleBatches() throws Exception {
+  public void testSearchObjectsMultipleBatchesIncludeStatistics() throws Exception {
     int count = 1001;
     when(objectFactDao.searchObjects(any())).thenReturn(createSearchResult(count));
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
 
-    ResultSet<Object> result = delegate.handle(new SearchObjectRequest());
+    ResultSet<Object> result = delegate.handle(new SearchObjectRequest().setIncludeStatistics(true));
     assertEquals(count, result.getCount());
     assertEquals(count, ListUtils.list(result.iterator()).size());
 

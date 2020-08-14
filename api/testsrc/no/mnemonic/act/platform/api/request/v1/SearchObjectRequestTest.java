@@ -32,7 +32,8 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
             "dimension : 'trust'," +
             "before : '2016-11-30T15:47:00Z'," +
             "after : '2016-11-30T15:47:01Z'," +
-            "limit : 25" +
+            "limit : 25," +
+            "includeStatistics : true" +
             "}", objectID, factID);
 
     SearchObjectRequest request = getMapper().readValue(json, SearchObjectRequest.class);
@@ -51,6 +52,7 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
     assertEquals(25, request.getLimit().intValue());
+    assertTrue(request.isIncludeStatistics());
   }
 
   @Test
