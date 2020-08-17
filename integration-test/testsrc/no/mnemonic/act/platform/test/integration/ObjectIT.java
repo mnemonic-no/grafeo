@@ -71,16 +71,6 @@ public class ObjectIT extends AbstractIT {
   }
 
   @Test
-  public void testSearchObjects() throws Exception {
-    // Create an Object and a related Fact in the database ...
-    ObjectRecord object = createObject();
-    createFact(object);
-
-    // ... and check that the Object can be found via the REST API.
-    fetchAndAssertList("/v1/object/search", new SearchObjectRequest(), object.getId());
-  }
-
-  @Test
   public void testSearchObjectsWithFiltering() throws Exception {
     // Create multiple Objects and related Facts in the database ...
     ObjectTypeEntity objectType = createObjectType();
@@ -106,7 +96,6 @@ public class ObjectIT extends AbstractIT {
             new TraverseByObjectIdRequest().setQuery("g.outE()"), fact.getId());
     fetchAndAssertList(String.format("/v1/object/%s/%s/traverse", objectType.getName(), object.getValue()),
             new TraverseByObjectTypeValueRequest().setQuery("g.outE()"), fact.getId());
-    fetchAndAssertList("/v1/object/traverse", new TraverseByObjectSearchRequest().setQuery("g.outE()"), fact.getId());
   }
 
   @Test

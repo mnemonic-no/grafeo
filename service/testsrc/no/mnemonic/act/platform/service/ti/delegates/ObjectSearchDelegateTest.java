@@ -25,8 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -56,11 +55,11 @@ public class ObjectSearchDelegateTest {
 
     // Mocks required for request converter.
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
+            .setKeywords("Hello World!")
             .setLimit(25)
             .setCurrentUserID(UUID.randomUUID())
             .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
             .build());
-
 
     delegate = new ObjectSearchDelegate(
             securityContext,
@@ -71,10 +70,20 @@ public class ObjectSearchDelegateTest {
     );
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testSearchObjectsWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelFact);
-    delegate.handle(new SearchObjectRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchObjectRequest()));
+  }
+
+  @Test
+  public void testSearchObjectsUnboundedRequest() throws Exception {
+    when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
+            .setLimit(25)
+            .setCurrentUserID(UUID.randomUUID())
+            .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
+            .build());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchObjectRequest()));
   }
 
   @Test

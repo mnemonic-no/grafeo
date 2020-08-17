@@ -51,6 +51,10 @@ public class ObjectSearchDelegate implements Delegate {
     securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFact);
 
     FactSearchCriteria criteria = requestConverter.apply(request);
+    if (criteria.isUnbounded()) {
+      throw new AccessDeniedException("Unbounded searches are not allowed. Specify at least one search parameter (in addition to 'limit').");
+    }
+
     ResultContainer<ObjectRecord> searchResult = objectFactDao.searchObjects(criteria);
 
     // Return search result and add statistics while iterating over the result.

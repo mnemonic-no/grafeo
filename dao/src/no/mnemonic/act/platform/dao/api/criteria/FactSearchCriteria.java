@@ -1,6 +1,7 @@
 package no.mnemonic.act.platform.dao.api.criteria;
 
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -411,6 +412,29 @@ public class FactSearchCriteria {
    */
   public Set<UUID> getAvailableOrganizationID() {
     return availableOrganizationID;
+  }
+
+  /**
+   * Returns true if the criteria is effectively unbounded, i.e. no criteria is specified which would reduce the search result.
+   * Note that 'limit' isn't included here which means that true will be returned if only 'limit' is given.
+   *
+   * @return Whether the criteria is effectively unbounded
+   */
+  public boolean isUnbounded() {
+    return CollectionUtils.isEmpty(factID) &&
+            CollectionUtils.isEmpty(factTypeID) &&
+            CollectionUtils.isEmpty(factValue) &&
+            CollectionUtils.isEmpty(inReferenceTo) &&
+            CollectionUtils.isEmpty(organizationID) &&
+            CollectionUtils.isEmpty(originID) &&
+            CollectionUtils.isEmpty(objectID) &&
+            CollectionUtils.isEmpty(objectTypeID) &&
+            CollectionUtils.isEmpty(objectValue) &&
+            StringUtils.isBlank(keywords) &&
+            startTimestamp == null &&
+            endTimestamp == null &&
+            minNumber == null &&
+            maxNumber == null;
   }
 
   public static Builder builder() {

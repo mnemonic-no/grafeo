@@ -39,6 +39,8 @@ should be included in the response. The endpoint omits statistics by default now
 - (2020-06-26) Added configuration option `act.action.triggers.enabled` to enable/disable the action triggers framework.
 
 ### Changed
+- (2020-08-14) The `POST /v1/object/search` and `POST /v1/fact/search` endpoints now return with a 403 if the search request
+does not specify any search parameters. Users must provide at least one parameter (in addition to `limit`).
 - (2020-04-17) In Create APIs (create Fact, create meta Fact, retract Fact) related entities (`organization`, `origin`, `acl`)
 can be specified by either UUID or name. If an entity cannot be resolved a 412 response will be returned.
 - (2020-04-17) When granting a Subject access to an existing Fact the Subject can be specified by either UUID or name.

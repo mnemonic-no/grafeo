@@ -51,15 +51,6 @@ public class FactIT extends AbstractIT {
   }
 
   @Test
-  public void testSearchFacts() throws Exception {
-    // Create a Fact in the database ...
-    FactRecord fact = createFact();
-
-    // ... and check that it can be found via the REST API.
-    fetchAndAssertList("/v1/fact/search", new SearchFactRequest(), fact.getId());
-  }
-
-  @Test
   public void testSearchFactsWithFiltering() throws Exception {
     // Create multiple Facts in the database ...
     ObjectTypeEntity objectType = createObjectType();

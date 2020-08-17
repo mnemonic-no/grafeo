@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.request.SearchFactRequestConverter;
@@ -31,6 +32,12 @@ public class FactSearchDelegate implements Delegate {
   public ResultSet<Fact> handle(SearchFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFact);
-    return factSearchHandler.search(requestConverter.apply(request), request.getIncludeRetracted());
+
+    FactSearchCriteria criteria = requestConverter.apply(request);
+    if (criteria.isUnbounded()) {
+      throw new AccessDeniedException("Unbounded searches are not allowed. Specify at least one search parameter (in addition to 'limit').");
+    }
+
+    return factSearchHandler.search(criteria, request.getIncludeRetracted());
   }
 }
