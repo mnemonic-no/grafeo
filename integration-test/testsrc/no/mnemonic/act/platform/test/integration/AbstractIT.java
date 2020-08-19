@@ -70,14 +70,10 @@ public abstract class AbstractIT {
   private static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
-          .setImageName("elasticsearch/elasticsearch:6.8.10")
+          .setImageName("elasticsearch/elasticsearch:7.8.1")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
-          .addEnvironmentVariable("xpack.security.enabled", "false")
-          .addEnvironmentVariable("xpack.monitoring.enabled", "false")
-          .addEnvironmentVariable("xpack.ml.enabled", "false")
-          .addEnvironmentVariable("xpack.graph.enabled", "false")
-          .addEnvironmentVariable("xpack.watcher.enabled", "false")
+          .addEnvironmentVariable("discovery.type", "single-node")
           .build();
 
   private static DockerResource activemq = DockerResource.builder()

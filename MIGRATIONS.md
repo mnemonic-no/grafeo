@@ -2,6 +2,20 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Upgrade ElasticSearch to 7.8] - 2020-07-31
+Follow the general upgrade guide to upgrade ElasticSearch to version 7.8: https://www.elastic.co/guide/en/elasticsearch/reference/7.8/setup-upgrade.html
+
+Afterwards adjust the following cluster setting:
+```
+curl -X PUT "localhost:9200/_cluster/settings" -H 'Content-Type: application/json' -d'
+{
+  "persistent" : {
+    "search.max_buckets" : 65535
+  }
+}
+'
+```
+
 ## [Rename configuration properties and functions] - 2020-06-05
 Most configuration properties and functions have been renamed. Change the configuration files (`application.properties` and `acl.properties`) according to the tables below.
 

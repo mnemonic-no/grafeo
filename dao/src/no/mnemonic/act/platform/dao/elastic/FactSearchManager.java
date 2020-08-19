@@ -48,9 +48,9 @@ import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.HasAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
-import org.elasticsearch.search.aggregations.metrics.max.Max;
-import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
+import org.elasticsearch.search.aggregations.metrics.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.Max;
+import org.elasticsearch.search.aggregations.metrics.TopHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import javax.inject.Inject;
@@ -75,7 +75,6 @@ import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 public class FactSearchManager implements LifecycleAspect {
 
   private static final String INDEX_NAME = "act";
-  private static final String TYPE_NAME = "_doc";
   private static final String MAPPINGS_JSON = "mappings.json";
   private static final int MAX_RESULT_WINDOW = 10_000; // Must be the same value as specified in mappings.json.
 
@@ -135,7 +134,7 @@ public class FactSearchManager implements LifecycleAspect {
     GetResponse response;
 
     try {
-      GetRequest request = new GetRequest(INDEX_NAME, TYPE_NAME, id.toString());
+      GetRequest request = new GetRequest(INDEX_NAME, id.toString());
       response = clientFactory.getClient().get(request, RequestOptions.DEFAULT);
     } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, String.format("Could not perform request to fetch Fact with id = %s.", id));
@@ -162,7 +161,8 @@ public class FactSearchManager implements LifecycleAspect {
     IndexResponse response;
 
     try {
-      IndexRequest request = new IndexRequest(INDEX_NAME, TYPE_NAME, fact.getId().toString())
+      IndexRequest request = new IndexRequest(INDEX_NAME)
+              .id(fact.getId().toString())
               .setRefreshPolicy(isTestEnvironment ? WriteRequest.RefreshPolicy.IMMEDIATE : WriteRequest.RefreshPolicy.NONE)
               .source(FACT_DOCUMENT_WRITER.writeValueAsBytes(fact), XContentType.JSON);
       response = clientFactory.getClient().index(request, RequestOptions.DEFAULT);
@@ -213,7 +213,7 @@ public class FactSearchManager implements LifecycleAspect {
 
     LOGGER.info("Successfully retrieved %d existing Facts.", result.size());
     return SearchResult.<FactDocument>builder()
-            .setCount((int) response.getHits().getTotalHits())
+            .setCount((int) response.getHits().getTotalHits().value)
             .setValues(result)
             .build();
   }
@@ -250,7 +250,7 @@ public class FactSearchManager implements LifecycleAspect {
     return ScrollingSearchResult.<FactDocument>builder()
             .setInitialBatch(createFactsBatch(response))
             .setFetchNextBatch(this::fetchNextFactsBatch)
-            .setCount((int) response.getHits().getTotalHits())
+            .setCount((int) response.getHits().getTotalHits().value)
             .build();
   }
 
@@ -416,7 +416,7 @@ public class FactSearchManager implements LifecycleAspect {
 
   private ScrollingSearchResult.ScrollingBatch<FactDocument> createFactsBatch(SearchResponse response) {
     List<FactDocument> values = retrieveFactDocuments(response);
-    LOGGER.debug("Successfully retrieved next batch of search results (batch: %d, total: %d).", values.size(), response.getHits().getTotalHits());
+    LOGGER.debug("Successfully retrieved next batch of search results (batch: %d, total: %d).", values.size(), response.getHits().getTotalHits().value);
 
     boolean finished = values.size() < searchScrollSize;
     if (finished) {
@@ -457,7 +457,6 @@ public class FactSearchManager implements LifecycleAspect {
             .query(buildFactExistenceQuery(criteria));
     return new SearchRequest()
             .indices(INDEX_NAME)
-            .types(TYPE_NAME)
             .source(sourceBuilder);
   }
 
@@ -467,7 +466,6 @@ public class FactSearchManager implements LifecycleAspect {
             .query(buildFactsQuery(criteria));
     return new SearchRequest()
             .indices(INDEX_NAME)
-            .types(TYPE_NAME)
             .scroll(searchScrollExpiration)
             .source(sourceBuilder);
   }
@@ -478,7 +476,6 @@ public class FactSearchManager implements LifecycleAspect {
             .aggregation(buildObjectsAggregation(criteria));
     return new SearchRequest()
             .indices(INDEX_NAME)
-            .types(TYPE_NAME)
             .source(sourceBuilder);
   }
 
@@ -488,7 +485,6 @@ public class FactSearchManager implements LifecycleAspect {
             .aggregation(buildObjectStatisticsAggregation(criteria));
     return new SearchRequest()
             .indices(INDEX_NAME)
-            .types(TYPE_NAME)
             .source(sourceBuilder);
   }
 
