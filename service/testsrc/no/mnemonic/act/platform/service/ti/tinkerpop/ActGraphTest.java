@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.tinkerpop.exceptions.GraphOperationException;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
@@ -268,6 +269,6 @@ public class ActGraphTest extends AbstractGraphTest {
     FactRecord fact = mockFact(
             mockObjectRecord(mockObjectType(), "someValue"),
             mockObjectRecord(mockObjectType(), "someOtherValue"));
-    return getActGraph().getElementFactory().createEdge(fact);
+    return getActGraph().getElementFactory().createEdge(fact, fact.getSourceObject().getId());
   }
 }

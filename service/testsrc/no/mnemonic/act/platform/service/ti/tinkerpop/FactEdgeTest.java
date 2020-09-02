@@ -98,7 +98,7 @@ public class FactEdgeTest {
             .setOutVertex(mock(Vertex.class))
             .build();
 
-    assertEquals(factId, edge.id());
+    assertNotNull(edge.id());
     assertSame(actGraph, edge.graph());
     assertEquals("someType", edge.label());
   }

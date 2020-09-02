@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
+import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
@@ -190,9 +191,35 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
     Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(source).setObjectType(objectType).build();
 
-    assertTrue(vertex.vertices(BOTH).hasNext());
-    assertTrue(vertex.vertices(OUT).hasNext());
-    assertTrue(vertex.vertices(IN).hasNext());
+    assertEquals(set(destination.getId()), set(vertex.vertices(OUT), Element::id));
+    assertEquals(set(source.getId()), set(vertex.vertices(IN), Element::id));
+    assertEquals(set(source.getId(), destination.getId()), set(vertex.vertices(BOTH), Element::id));
+  }
+
+  @Test
+  public void testVerticesWithDirectionBiDirectionalReverse() {
+    ObjectTypeStruct objectType = mockObjectType();
+    ObjectRecord source = mockObjectRecord(objectType, "someValue");
+    ObjectRecord destination = mockObjectRecord(objectType, "someOthervalue");
+
+    FactRecord bidirectionalFact = new FactRecord()
+            .setBidirectionalBinding(true)
+            .setId(UUID.randomUUID())
+            .setTypeID(mockFactType("someType").getId())
+            .setValue("someValue")
+            .setSourceObject(source)
+            .setDestinationObject(destination);
+
+    when(getActGraph().getObjectFactDao().searchFacts(notNull())).thenAnswer(
+            x -> ResultContainer.<FactRecord>builder().setValues(list(bidirectionalFact).iterator()).build()
+    );
+
+    // Since the fact is bidirectional, traversing from the destination object should find the source
+    Vertex vertex = ObjectVertex.builder().setGraph(getActGraph()).setObjectRecord(destination).setObjectType(objectType).build();
+
+    assertEquals(set(source.getId(), destination.getId()), set(vertex.vertices(BOTH), Element::id));
+    assertEquals(set(source.getId()), set(vertex.vertices(OUT), Element::id));
+    assertEquals(set(destination.getId()), set(vertex.vertices(IN), Element::id));
   }
 
   @Test

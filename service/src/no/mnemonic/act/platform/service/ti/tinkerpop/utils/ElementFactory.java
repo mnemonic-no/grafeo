@@ -1,9 +1,6 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop.utils;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.google.common.cache.*;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
@@ -14,11 +11,16 @@ import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolve
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * Helper class for creation and retrieval of edges and vertices which implements simple caching.
@@ -29,13 +31,20 @@ public class ElementFactory {
   private static final Logger LOGGER = Logging.getLogger(ElementFactory.class);
 
   private final ActGraph owner;
+
+  // Maps the triplet (factID, inVertex, outVertex) to UUID returned by Edge.id().
+  // Needed in order to identify entry in 'edgeCache'.
+  private final Map<EdgeID, UUID> edgeIdMap;
   // Cache for created edges. This cache is manually populated by createEdges().
+
   private final Cache<UUID, Edge> edgeCache;
+
   // Cache for created vertices. This cache is automatically populated.
   private final LoadingCache<UUID, Vertex> vertexCache;
 
   private ElementFactory(ActGraph owner) {
     this.owner = ObjectUtils.notNull(owner, "'owner is null!'");
+    this.edgeIdMap = new ConcurrentHashMap<>();
     this.edgeCache = createEdgeCache();
     this.vertexCache = createVertexCache();
   }
@@ -52,26 +61,25 @@ public class ElementFactory {
   }
 
   /**
-   * Convert FactRecord to Edge
-   * <p>
-   * Edges are cached. New edges will be created and cached if it is not
-   * found in the cache.
+   * Creates an Edge based on a FactRecord. The result is cached. The sourceId and direction is needed
+   * in order to represent bidirectional facts as edges. A bidirectional factRecord is either
+   * an incoming or outgoing edge based on the vertex you are currently on when traversing (sourceId)
    *
-   * Returns null if the conversion failed.
-   *
-   * @param factRecord FactRecord to convert
-   * @return Edge      The edge, or null if the record is invalid.
+   * @param factRecord A factRecord
+   * @param sourceId   The vertex from which you are traversing
+   * @return An Edge
    */
-  public Edge createEdge(FactRecord factRecord) {
-    if (factRecord == null) return null;
-
-    try {
-      return edgeCache.get(factRecord.getId(), () -> fetchEdge(factRecord));
-    } catch (Exception e) {
-      // Ignore the exception and just return null
-      LOGGER.warning(e, "Failed to create edge for FactRecord with id = %s.", factRecord.getId());
+  public Edge createEdge(FactRecord factRecord, UUID sourceId) {
+    if (factRecord == null || factRecord.getSourceObject() == null || factRecord.getDestinationObject() == null) {
       return null;
     }
+
+    // We need to figure out which vertexes should be source/destination
+    boolean shouldFlip = shouldFlipSourceAndDestination(factRecord, sourceId);
+    UUID inVertexId = shouldFlip ? factRecord.getDestinationObject().getId() : factRecord.getSourceObject().getId();
+    UUID outVertexId = shouldFlip ? factRecord.getSourceObject().getId() : factRecord.getDestinationObject().getId();
+
+    return createAndCache(factRecord, inVertexId, outVertexId);
   }
 
   /**
@@ -93,12 +101,49 @@ public class ElementFactory {
     }
   }
 
-  private Edge fetchEdge(FactRecord factRecord) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /**
+   * Given a source from which you are traversing, decide if the vertexes should
+   * be flipped or not when converting a FactRecord to an Edge
+   * <p>
+   * Edges must be flipped for bidirectional facts if the sourceId is not the same as the factRecord source.
+   *
+   * @param factRecord The factrecord
+   * @param sourceId   Identifies the vertex from which one is traversing
+   * @return true if the source and destination should be flipped
+   */
+  private boolean shouldFlipSourceAndDestination(FactRecord factRecord, UUID sourceId) {
+    if (!factRecord.isBidirectionalBinding()) return false;
+
+    boolean sameSource = Objects.equals(factRecord.getSourceObject().getId(), sourceId);
+    return !sameSource;
+  }
+
+  private Edge createAndCache(FactRecord factRecord, UUID inVertexId, UUID outVertexId) {
+    // Try to fetch edge from cache first (but only if 'edgeID' is mapped, otherwise edge is not cached).
+    EdgeID edgeID = new EdgeID(factRecord.getId(), inVertexId, outVertexId);
+
+    Edge edge = ObjectUtils.ifNotNull(edgeIdMap.get(edgeID), edgeCache::getIfPresent);
+
+    if (edge == null) {
+      // Edge is not present in cache, create new instance and cache it for later access.
+      edge = fetchEdge(factRecord, inVertexId, outVertexId);
+      edgeIdMap.put(edgeID, (UUID) edge.id());
+      edgeCache.put((UUID) edge.id(), edge);
+    }
+
+    return edge;
+  }
+
+  private Edge fetchEdge(FactRecord factRecord, UUID inVertexId, UUID outVertexId) {
     FactTypeStruct factTypeStruct = this.owner
             .getObjectFactTypeResolver()
             .toFactTypeStruct(factRecord.getTypeID());
-    Vertex inVertex = getVertex(factRecord.getSourceObject().getId());
-    Vertex outVertex = getVertex(factRecord.getDestinationObject().getId());
+    Vertex inVertex = getVertex(inVertexId);
+    Vertex outVertex = getVertex(outVertexId);
 
     List<PropertyEntry<?>> props = owner.getPropertyHelper().getFactProperties(factRecord, owner.getTraverseParams());
 
@@ -112,13 +157,11 @@ public class ElementFactory {
             .build();
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
 
   private Cache<UUID, Edge> createEdgeCache() {
     return CacheBuilder.newBuilder()
             .maximumSize(CACHE_MAXIMUM_SIZE)
+            .removalListener(this::cleanUpEdgeCache)
             .build();
   }
 
@@ -149,6 +192,16 @@ public class ElementFactory {
             });
   }
 
+  private void cleanUpEdgeCache(RemovalNotification notification) {
+    // Need to clean up 'edgeIdMap' when an entry gets evicted.
+    if (notification.wasEvicted()) {
+      SetUtils.set(edgeIdMap.entrySet())
+              .stream()
+              .filter(entry -> Objects.equals(entry.getValue(), notification.getKey()))
+              .forEach(entry -> edgeIdMap.remove(entry.getKey()));
+    }
+  }
+
   public static class Builder {
     private ActGraph owner;
 
@@ -162,6 +215,37 @@ public class ElementFactory {
     public Builder setOwner(ActGraph owner) {
       this.owner = owner;
       return this;
+    }
+  }
+
+  /**
+   * Required since an edge in the datamodel can be bidirectional. EdgeID makes it possible for a single
+   * bidirectional edge to be used by Tinkerpop in both directions.
+   */
+  private static class EdgeID {
+    private final UUID factID;
+    private final UUID inVertex;
+    private final UUID outVertex;
+
+    private EdgeID(UUID factID, UUID inVertex, UUID outVertex) {
+      this.factID = factID;
+      this.inVertex = inVertex;
+      this.outVertex = outVertex;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      EdgeID that = (EdgeID) o;
+      return Objects.equals(factID, that.factID) &&
+              Objects.equals(inVertex, that.inVertex) &&
+              Objects.equals(outVertex, that.outVertex);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(factID, inVertex, outVertex);
     }
   }
 }

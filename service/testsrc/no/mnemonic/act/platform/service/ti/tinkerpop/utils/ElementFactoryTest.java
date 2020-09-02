@@ -65,7 +65,7 @@ public class ElementFactoryTest {
 
   @Test
   public void testToEdgeWithoutFact() {
-    assertNull(elementFactory.createEdge(null));
+    assertNull(elementFactory.createEdge(null, null));
     assertNull(elementFactory.getEdge(null));
   }
 
@@ -73,18 +73,59 @@ public class ElementFactoryTest {
   public void testCreateEdge() {
     FactTypeStruct factTypeMock = mockFactType();
     ObjectTypeStruct objectTypeMock = mockObjectType();
-    ObjectRecord objectA = mockObject(objectTypeMock);
-    ObjectRecord objectB = mockObject(objectTypeMock);
+    ObjectRecord source = mockObject(objectTypeMock);
+    ObjectRecord destination = mockObject(objectTypeMock);
 
     Edge edge = elementFactory.createEdge(new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(factTypeMock.getId())
-            .setBidirectionalBinding(true)
-            .setDestinationObject(objectA)
-            .setSourceObject(objectB));
+            .setBidirectionalBinding(false)
+            .setSourceObject(source)
+            .setDestinationObject(destination),
+            source.getId());
 
-    assertEquals(objectA.getId(), edge.outVertex().id());
-    assertEquals(objectB.getId(), edge.inVertex().id());
+    assertEquals(source.getId(), edge.inVertex().id());
+    assertEquals(destination.getId(), edge.outVertex().id());
+  }
+
+  @Test
+  public void testCreateBidirectionalEdge() {
+    FactTypeStruct factTypeMock = mockFactType();
+    ObjectTypeStruct objectTypeMock = mockObjectType();
+    ObjectRecord source = mockObject(objectTypeMock);
+    ObjectRecord destination = mockObject(objectTypeMock);
+
+    // The fact record is bidirectional, and you are standing at source
+    Edge edge = elementFactory.createEdge(new FactRecord()
+                    .setId(UUID.randomUUID())
+                    .setTypeID(factTypeMock.getId())
+                    .setBidirectionalBinding(true)
+                    .setDestinationObject(source)
+                    .setSourceObject(destination),
+            source.getId());
+
+    assertEquals(source.getId(), edge.inVertex().id());
+    assertEquals(destination.getId(), edge.outVertex().id());
+  }
+
+  @Test
+  public void testCreateBidirectionalEdgeFlipping() {
+    FactTypeStruct factTypeMock = mockFactType();
+    ObjectTypeStruct objectTypeMock = mockObjectType();
+    ObjectRecord source = mockObject(objectTypeMock);
+    ObjectRecord destination = mockObject(objectTypeMock);
+
+    // The fact record is bidirectional, and you are standing at destination. Then the edge is flipped
+    Edge edge = elementFactory.createEdge(new FactRecord()
+                    .setId(UUID.randomUUID())
+                    .setTypeID(factTypeMock.getId())
+                    .setBidirectionalBinding(true)
+                    .setDestinationObject(source)
+                    .setSourceObject(destination),
+            destination.getId());
+
+    assertEquals(source.getId(), edge.outVertex().id());
+    assertEquals(destination.getId(), edge.inVertex().id());
   }
 
   @Test
@@ -99,13 +140,15 @@ public class ElementFactoryTest {
             .setId(edgeID)
             .setTypeID(factTypeMock.getId())
             .setSourceObject(objectSource)
-            .setDestinationObject(objectDestination));
+            .setDestinationObject(objectDestination),
+            objectSource.getId());
 
     Edge second = elementFactory.createEdge(new FactRecord()
             .setId(edgeID)
             .setTypeID(factTypeMock.getId())
             .setSourceObject(objectSource)
-            .setDestinationObject(objectDestination));
+            .setDestinationObject(objectDestination),
+            objectSource.getId());
 
     assertSame(first, second);
   }
@@ -123,7 +166,7 @@ public class ElementFactoryTest {
             .setBidirectionalBinding(true)
             .setDestinationObject(objectA)
             .setSourceObject(objectB);
-    elementFactory.createEdge(factRecord);
+    elementFactory.createEdge(factRecord, objectA.getId());
 
     verify(propertyHelper).getFactProperties(factRecord, actGraph.getTraverseParams());
   }
@@ -149,7 +192,8 @@ public class ElementFactoryTest {
             .setId(UUID.randomUUID())
             .setTypeID(factTypeMock.getId())
             .setSourceObject(objectSource)
-            .setDestinationObject(objectDestination));
+            .setDestinationObject(objectDestination),
+            objectSource.getId());
 
     Edge second = elementFactory.getEdge((UUID) first.id());
 
