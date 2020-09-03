@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -35,10 +37,14 @@ public class FactIT extends AbstractIT {
   @Mock
   private static TriggerAction action;
 
+  private static CompletableFuture<Boolean> actionTriggered;
+
   @Before
   public void setup() {
     super.setup();
     initMocks(this);
+
+    actionTriggered = new CompletableFuture<>();
   }
 
   @Test
@@ -125,6 +131,7 @@ public class FactIT extends AbstractIT {
     UUID factID = getIdFromModel(getPayload(response));
 
     // ... and verify that the action was called with the correct parameters.
+    assertTrue(actionTriggered.get(5, TimeUnit.SECONDS));
     verify(action).trigger(argThat(parameters -> parameters.containsKey("addedFact")
             && Objects.equals(parameters.get("addedFact"), factID.toString())));
   }
@@ -218,6 +225,7 @@ public class FactIT extends AbstractIT {
     UUID factID = getIdFromModel(getPayload(response));
 
     // ... and verify that the action was called with the correct parameters.
+    assertTrue(actionTriggered.get(5, TimeUnit.SECONDS));
     verify(action).trigger(argThat(parameters -> parameters.containsKey("addedFact")
             && Objects.equals(parameters.get("addedFact"), factID.toString())));
   }
@@ -248,6 +256,7 @@ public class FactIT extends AbstractIT {
     UUID retractionFactID = getIdFromModel(getPayload(response));
 
     // ... and verify that the action was called with the correct parameters.
+    assertTrue(actionTriggered.get(5, TimeUnit.SECONDS));
     verify(action).trigger(argThat(parameters -> parameters.containsKey("retractionFact")
             && Objects.equals(parameters.get("retractionFact"), retractionFactID.toString())
             && parameters.containsKey("retractedFact")
@@ -436,6 +445,7 @@ public class FactIT extends AbstractIT {
     @Override
     public void trigger(Map<String, String> triggerParameters) throws ParameterException, TriggerExecutionException {
       action.trigger(triggerParameters);
+      actionTriggered.complete(true);
     }
   }
 
