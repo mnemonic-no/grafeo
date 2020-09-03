@@ -95,6 +95,7 @@
     <module>rest</module>
     <module>service</module>
     <module>seb-model</module>
+    <module>seb-producer</module>
     <module>utilities</module>
     <module>integration-test</module>
     <module>deployment-combined</module>
