@@ -124,7 +124,8 @@ public class ActGraphIT {
                     new ObjectRecordConverter(),
                     new FactAclEntryRecordConverter(), new FactCommentRecordConverter()),
             new FactAclEntryRecordConverter(),
-            new FactCommentRecordConverter());
+            new FactCommentRecordConverter(),
+            factRecord -> {});
     objectFactTypeResolver = new ObjectFactTypeResolver(factManager, objectManager);
 
     factTypeRequestResolver = new FactTypeRequestResolver(factManager);

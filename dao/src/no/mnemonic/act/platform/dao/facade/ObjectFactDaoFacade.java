@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class ObjectFactDaoFacade implements ObjectFactDao {
@@ -40,6 +41,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   private final FactRecordConverter factRecordConverter;
   private final FactAclEntryRecordConverter factAclEntryRecordConverter;
   private final FactCommentRecordConverter factCommentRecordConverter;
+  private final Consumer<FactRecord> dcReplicationConsumer;
 
   @Inject
   public ObjectFactDaoFacade(ObjectManager objectManager,
@@ -48,7 +50,8 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
                              ObjectRecordConverter objectRecordConverter,
                              FactRecordConverter factRecordConverter,
                              FactAclEntryRecordConverter factAclEntryRecordConverter,
-                             FactCommentRecordConverter factCommentRecordConverter) {
+                             FactCommentRecordConverter factCommentRecordConverter,
+                             Consumer<FactRecord> dcReplicationConsumer) {
     this.objectManager = objectManager;
     this.factManager = factManager;
     this.factSearchManager = factSearchManager;
@@ -56,6 +59,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     this.factRecordConverter = factRecordConverter;
     this.factAclEntryRecordConverter = factAclEntryRecordConverter;
     this.factCommentRecordConverter = factCommentRecordConverter;
+    this.dcReplicationConsumer = dcReplicationConsumer;
   }
 
   @Override
@@ -138,6 +142,8 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
 
     // Index new Fact in ElasticSearch.
     factSearchManager.indexFact(factRecordConverter.toDocument(record));
+    // Initiate data center replication.
+    dcReplicationConsumer.accept(record);
 
     return record;
   }
@@ -292,6 +298,8 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     FactRecord record = getFact(factID);
     // Simply reindex everything based on the fetched record.
     factSearchManager.indexFact(factRecordConverter.toDocument(record));
+    // Initiate data center replication to propagate changes.
+    dcReplicationConsumer.accept(record);
     // Return up-to-date record.
     return record;
   }

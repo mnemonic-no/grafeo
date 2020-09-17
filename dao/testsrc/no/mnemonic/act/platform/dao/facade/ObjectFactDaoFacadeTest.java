@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -50,6 +51,8 @@ public class ObjectFactDaoFacadeTest {
   private FactAclEntryRecordConverter factAclEntryRecordConverter;
   @Mock
   private FactCommentRecordConverter factCommentRecordConverter;
+  @Mock
+  private Consumer<FactRecord> dcReplicationConsumer;
 
   private ObjectFactDao dao;
 
@@ -63,7 +66,8 @@ public class ObjectFactDaoFacadeTest {
             objectRecordConverter,
             factRecordConverter,
             factAclEntryRecordConverter,
-            factCommentRecordConverter
+            factCommentRecordConverter,
+            dcReplicationConsumer
     );
   }
 
@@ -276,6 +280,15 @@ public class ObjectFactDaoFacadeTest {
     dao.storeFact(fact);
     verify(factManager).saveFactComment(notNull());
     verify(factCommentRecordConverter).toEntity(argThat(r -> r.getId() != null), eq(fact.getId()));
+  }
+
+  @Test
+  public void testStoreFactInitiatesReplication() {
+    FactRecord fact = new FactRecord();
+    when(factRecordConverter.toEntity(fact)).thenReturn(new FactEntity());
+
+    dao.storeFact(fact);
+    verify(dcReplicationConsumer).accept(fact);
   }
 
   @Test
@@ -572,6 +585,7 @@ public class ObjectFactDaoFacadeTest {
     verify(factRecordConverter).fromEntity(notNull());
     verify(factRecordConverter).toDocument(notNull());
     verify(factSearchManager, atLeastOnce()).indexFact(notNull());
+    verify(dcReplicationConsumer).accept(notNull());
   }
 
   private FactSearchCriteria createFactSearchCriteria() {

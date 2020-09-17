@@ -44,8 +44,34 @@
     </dependency>
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
+      <artifactId>component</artifactId>
+      <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>logging</artifactId>
+      <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
       <artifactId>utilities</artifactId>
       <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.messaging</groupId>
+      <artifactId>documentchannel-kafka</artifactId>
+      <version>${mnemonic.messaging.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>${guice.version}</version>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>

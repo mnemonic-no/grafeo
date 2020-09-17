@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.auth.properties.module.PropertiesBasedAccessControllerModule;
 import no.mnemonic.act.platform.dao.DaoModule;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
+import no.mnemonic.act.platform.seb.producer.modules.SebProducerModule;
 import no.mnemonic.act.platform.service.aspects.*;
 import no.mnemonic.act.platform.service.providers.TriggerEventConsumerProvider;
 import no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl;
@@ -33,6 +34,7 @@ public class TiServiceModule extends AbstractModule {
   protected void configure() {
     // Install all dependencies for the service.
     install(new DaoModule());
+    install(new SebProducerModule());
     install(new AuthenticationAspect());
     install(new ValidationAspect());
     install(new TriggerContextAspect());

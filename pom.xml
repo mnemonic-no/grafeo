@@ -291,6 +291,7 @@
             <includedLicense>The Apache Software License, Version 2.0</includedLicense>
             <!-- BSD and variants -->
             <includedLicense>BSD</includedLicense>
+            <includedLicense>BSD 2-Clause License</includedLicense>
             <includedLicense>BSD-3-Clause</includedLicense>
             <includedLicense>New BSD License</includedLicense>
             <includedLicense>The New BSD License</includedLicense>

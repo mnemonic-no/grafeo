@@ -349,6 +349,10 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("act.cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
       bind(String.class).annotatedWith(Names.named("act.elasticsearch.contact.points")).toInstance(DockerTestUtils.getDockerHost());
       bind(String.class).annotatedWith(Names.named("act.elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
+      bind(String.class).annotatedWith(Names.named("act.seb.kafka.port")).toInstance("9092");
+      bind(String.class).annotatedWith(Names.named("act.seb.kafka.contact.points")).toInstance("localhost");
+      bind(String.class).annotatedWith(Names.named("act.seb.kafka.producer.topic")).toInstance("ThreatIntel.Fact");
+      bind(String.class).annotatedWith(Names.named("act.seb.kafka.producer.enabled")).toInstance("false");
       bind(String.class).annotatedWith(Names.named("act.smb.queue.name")).toInstance("Service.ACT");
       bind(String.class).annotatedWith(Names.named("act.smb.server.url")).toInstance(smbServerUrl);
       bind(String.class).annotatedWith(Names.named("act.smb.server.username")).toInstance("admin");
