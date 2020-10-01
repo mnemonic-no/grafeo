@@ -353,6 +353,14 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("act.seb.kafka.contact.points")).toInstance("localhost");
       bind(String.class).annotatedWith(Names.named("act.seb.kafka.producer.topic")).toInstance("ThreatIntel.Fact");
       bind(String.class).annotatedWith(Names.named("act.seb.kafka.producer.enabled")).toInstance("false");
+      bind(String.class).annotatedWith(Names.named("act.seb.kafka.esengine.consumer.topics")).toInstance("ThreatIntel.Fact");
+      bind(String.class).annotatedWith(Names.named("act.seb.kafka.esengine.consumer.group")).toInstance("ACT.ESEngine");
+      bind(String.class).annotatedWith(Names.named("act.seb.kafka.esengine.consumer.enabled")).toInstance("false");
+      bind(String.class).annotatedWith(Names.named("act.hazelcast.instance.name")).toInstance(UUID.randomUUID().toString());
+      bind(String.class).annotatedWith(Names.named("act.hazelcast.group.name")).toInstance(UUID.randomUUID().toString());
+      bind(String.class).annotatedWith(Names.named("act.hazelcast.multicast.address")).toInstance("224.2.2.3");
+      bind(String.class).annotatedWith(Names.named("act.hazelcast.multicast.port")).toInstance("54327");
+      bind(String.class).annotatedWith(Names.named("act.hazelcast.multicast.enabled")).toInstance("false");
       bind(String.class).annotatedWith(Names.named("act.smb.queue.name")).toInstance("Service.ACT");
       bind(String.class).annotatedWith(Names.named("act.smb.server.url")).toInstance(smbServerUrl);
       bind(String.class).annotatedWith(Names.named("act.smb.server.username")).toInstance("admin");

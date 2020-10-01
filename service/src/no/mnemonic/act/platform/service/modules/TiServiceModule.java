@@ -3,12 +3,15 @@ package no.mnemonic.act.platform.service.modules;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.hazelcast.core.HazelcastInstance;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.auth.properties.module.PropertiesBasedAccessControllerModule;
 import no.mnemonic.act.platform.dao.DaoModule;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
+import no.mnemonic.act.platform.seb.esengine.modules.SebESEngineModule;
 import no.mnemonic.act.platform.seb.producer.modules.SebProducerModule;
 import no.mnemonic.act.platform.service.aspects.*;
+import no.mnemonic.act.platform.service.providers.HazelcastInstanceProvider;
 import no.mnemonic.act.platform.service.providers.TriggerEventConsumerProvider;
 import no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl;
 import no.mnemonic.act.platform.service.ti.caches.ResponseCachesModule;
@@ -29,12 +32,14 @@ import java.util.function.Function;
 public class TiServiceModule extends AbstractModule {
 
   private boolean skipDefaultAccessController;
+  private boolean skipDefaultHazelcastInstanceProvider;
 
   @Override
   protected void configure() {
     // Install all dependencies for the service.
     install(new DaoModule());
     install(new SebProducerModule());
+    install(new SebESEngineModule());
     install(new AuthenticationAspect());
     install(new ValidationAspect());
     install(new TriggerContextAspect());
@@ -44,6 +49,11 @@ public class TiServiceModule extends AbstractModule {
     if (!skipDefaultAccessController) {
       // Omit default access controller if the module is configured using withoutDefaultAccessController().
       install(new PropertiesBasedAccessControllerModule());
+    }
+
+    if (!skipDefaultHazelcastInstanceProvider) {
+      // Omit default Hazelcast instance provider if the module is configured using withoutDefaultHazelcastInstanceProvider().
+      bind(HazelcastInstance.class).toProvider(HazelcastInstanceProvider.class).in(Scopes.SINGLETON);
     }
 
     // Configure the ActionTriggers' pipeline worker and administration service.
@@ -72,6 +82,17 @@ public class TiServiceModule extends AbstractModule {
    */
   public TiServiceModule withoutDefaultAccessController() {
     this.skipDefaultAccessController = true;
+    return this;
+  }
+
+  /**
+   * Instruct the module to omit the default Hazelcast instance provider. In this case an alternative
+   * provider must be configured in Guice.
+   *
+   * @return this
+   */
+  public TiServiceModule withoutDefaultHazelcastInstanceProvider() {
+    this.skipDefaultHazelcastInstanceProvider = true;
     return this;
   }
 }
