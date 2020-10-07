@@ -48,35 +48,32 @@
 
     <!-- external dependencies -->
     <activemq.version>5.16.0</activemq.version>
-    <cassandra.version>4.7.2</cassandra.version>
+    <cassandra.version>4.9.0</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
     <elastic.search.version>7.8.1</elastic.search.version>
     <guava.version>29.0-jre</guava.version>
     <guice.version>4.2.3</guice.version>
     <hazelcast.version>3.12.9</hazelcast.version>
-    <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
-    <jackson.version>2.11.1</jackson.version>
+    <hibernate.validator.version>6.1.6.Final</hibernate.validator.version>
+    <jackson.version>2.11.3</jackson.version>
     <javax.el.version>3.0.1-b11</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
-    <jetty.version>9.4.30.v20200611</jetty.version>
+    <jetty.version>9.4.32.v20200930</jetty.version>
     <junit.version>4.13</junit.version>
     <log4j.version>2.13.3</log4j.version>
-    <mockito.version>3.3.3</mockito.version>
-    <!-- Verify if explicit dependency on Netty can be removed upon Cassandra driver upgrade. -->
-    <netty.version>4.1.50.Final</netty.version>
-    <resteasy.version>4.5.5.Final</resteasy.version>
+    <mockito.version>3.5.13</mockito.version>
+    <resteasy.version>4.5.8.Final</resteasy.version>
     <!-- Verify if explicit dependency on SmallRye can be removed upon RESTEasy upgrade. -->
-    <smallrye.version>1.8.1</smallrye.version>
+    <smallrye.version>1.9.1</smallrye.version>
     <swagger.version>1.6.2</swagger.version>
-    <tinkerpop.version>3.4.7</tinkerpop.version>
+    <tinkerpop.version>3.4.8</tinkerpop.version>
 
     <!-- build dependencies -->
     <maven.assembly.version>3.1.1</maven.assembly.version>
     <maven.clean.version>3.1.0</maven.clean.version>
     <maven.compiler.version>3.8.1</maven.compiler.version>
-    <maven.dependencyCheck.version>5.2.1</maven.dependencyCheck.version>
     <maven.deploy.version>2.8.2</maven.deploy.version>
     <maven.enforcer.version>1.4.1</maven.enforcer.version>
     <maven.install.version>2.5.2</maven.install.version>
@@ -270,8 +267,6 @@
           <!-- Create THIRD-PARTY file listing all dependencies. -->
           <outputDirectory>${project.build.directory}</outputDirectory>
           <thirdPartyFilename>THIRD-PARTY</thirdPartyFilename>
-          <!-- File used to specify licenses for dependencies which don't state their license in the pom.xml. -->
-          <missingFile>../buildConfig/missing-licenses.properties</missingFile>
           <!-- Check transitive dependencies in order to include them in THIRD-PARTY file. -->
           <includeTransitiveDependencies>true</includeTransitiveDependencies>
           <!-- Fail the build if a detected license is not in the white list. -->
@@ -334,34 +329,6 @@
   </build>
 
   <profiles>
-    <profile>
-      <id>dependencyCheck</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>${maven.dependencyCheck.version}</version>
-            <executions>
-              <execution>
-                <id>check-vulnerabilities</id>
-                <goals>
-                  <goal>aggregate</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <!-- The assembly analyzer is triggered but fails on Linux because it requires mono. Deactivate it because this is Java and not .NET. -->
-              <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
-              <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
-              <suppressionFiles>
-                <suppressionFile>buildConfig/vulnerability-suppression.xml</suppressionFile>
-              </suppressionFiles>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>skipSlowTests</id>
       <activation>

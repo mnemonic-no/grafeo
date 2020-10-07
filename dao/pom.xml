@@ -126,12 +126,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Force a newer version of Netty (used by Cassandra driver) in order to fix CVE-2020-11612. -->
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-handler</artifactId>
-      <version>${netty.version}</version>
-    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
