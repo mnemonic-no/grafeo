@@ -2,14 +2,17 @@ package no.mnemonic.act.platform.service.ti.resolvers.request;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.OrganizationSPI;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
+import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -18,7 +21,8 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -31,14 +35,17 @@ public class SearchByNameRequestResolverTest {
   @Mock
   private OriginManager originManager;
   @Mock
-  private OrganizationResolver organizationResolver;
+  private OrganizationSPI organizationResolver;
+  @Mock
+  private SecurityContext securityContext;
 
   private SearchByNameRequestResolver resolver;
 
   @Before
   public void setUp() {
     initMocks(this);
-    resolver = new SearchByNameRequestResolver(factManager, objectManager, originManager, organizationResolver);
+    when(securityContext.getCredentials()).thenReturn(new Credentials() {});
+    resolver = new SearchByNameRequestResolver(factManager, objectManager, originManager, organizationResolver, securityContext);
   }
 
   @Test
@@ -69,7 +76,7 @@ public class SearchByNameRequestResolverTest {
   }
 
   @Test
-  public void testResolveWithOnlyNameNotFound() {
+  public void testResolveWithOnlyNameNotFound() throws Exception {
     InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> resolver.resolveFactType(set("name1")));
     assertEquals(SetUtils.set("factType"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getProperty));
 
@@ -85,7 +92,7 @@ public class SearchByNameRequestResolverTest {
     verify(factManager).getFactType("name1");
     verify(objectManager).getObjectType("name2");
     verify(originManager).getOrigin("name3");
-    verify(organizationResolver).resolveOrganization("name4");
+    verify(organizationResolver).resolveOrganization(notNull(), eq("name4"));
   }
 
   @Test
@@ -94,7 +101,7 @@ public class SearchByNameRequestResolverTest {
     when(factManager.getFactType("name1")).thenReturn(new FactTypeEntity().setId(id));
     when(objectManager.getObjectType("name2")).thenReturn(new ObjectTypeEntity().setId(id));
     when(originManager.getOrigin("name3")).thenReturn(new OriginEntity().setId(id));
-    when(organizationResolver.resolveOrganization("name4")).thenReturn(Organization.builder().setId(id).build());
+    when(organizationResolver.resolveOrganization(notNull(), eq("name4"))).thenReturn(Organization.builder().setId(id).build());
 
     assertEquals(set(id), resolver.resolveFactType(set("name1")));
     assertEquals(set(id), resolver.resolveObjectType(set("name2")));
@@ -104,7 +111,7 @@ public class SearchByNameRequestResolverTest {
     verify(factManager).getFactType("name1");
     verify(objectManager).getObjectType("name2");
     verify(originManager).getOrigin("name3");
-    verify(organizationResolver).resolveOrganization("name4");
+    verify(organizationResolver).resolveOrganization(notNull(), eq("name4"));
   }
 
   @Test
@@ -114,11 +121,21 @@ public class SearchByNameRequestResolverTest {
     when(factManager.getFactType("name")).thenReturn(new FactTypeEntity().setId(id2));
     when(objectManager.getObjectType("name")).thenReturn(new ObjectTypeEntity().setId(id2));
     when(originManager.getOrigin("name")).thenReturn(new OriginEntity().setId(id2));
-    when(organizationResolver.resolveOrganization("name")).thenReturn(Organization.builder().setId(id2).build());
+    when(organizationResolver.resolveOrganization(notNull(), eq("name"))).thenReturn(Organization.builder().setId(id2).build());
 
     assertEquals(set(id1, id2), resolver.resolveFactType(set(id1.toString(), "name")));
     assertEquals(set(id1, id2), resolver.resolveObjectType(set(id1.toString(), "name")));
     assertEquals(set(id1, id2), resolver.resolveOrigin(set(id1.toString(), "name")));
     assertEquals(set(id1, id2), resolver.resolveOrganization(set(id1.toString(), "name")));
+  }
+
+  @Test
+  public void testResolveOrganizationWithInvalidCredentials() throws Exception {
+    when(organizationResolver.resolveOrganization(notNull(), eq("name"))).thenThrow(InvalidCredentialsException.class);
+
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> resolver.resolveOrganization(set("name")));
+    assertEquals(SetUtils.set("organization"), SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getProperty));
+
+    verify(organizationResolver).resolveOrganization(notNull(), eq("name"));
   }
 }

@@ -1,10 +1,14 @@
 package no.mnemonic.act.platform.service.ti.resolvers;
 
 import no.mnemonic.act.platform.api.model.v1.Subject;
-import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.auth.ServiceAccountSPI;
+import no.mnemonic.act.platform.auth.SubjectSPI;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.StringUtils;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
 import java.util.Objects;
@@ -20,15 +24,20 @@ import java.util.function.Function;
  */
 public class OriginResolver implements Function<UUID, OriginEntity> {
 
+  private static final Logger LOGGER = Logging.getLogger(OriginResolver.class);
   private static final String NOT_AVAILABLE_NAME = "N/A";
 
   private final OriginManager originManager;
-  private final SubjectResolver subjectResolver;
+  private final SubjectSPI subjectResolver;
+  private final ServiceAccountSPI credentialsResolver;
 
   @Inject
-  public OriginResolver(OriginManager originManager, SubjectResolver subjectResolver) {
+  public OriginResolver(OriginManager originManager,
+                        SubjectSPI subjectResolver,
+                        ServiceAccountSPI credentialsResolver) {
     this.originManager = originManager;
     this.subjectResolver = subjectResolver;
+    this.credentialsResolver = credentialsResolver;
   }
 
   @Override
@@ -41,12 +50,21 @@ public class OriginResolver implements Function<UUID, OriginEntity> {
     if (origin.getType() == OriginEntity.Type.Group) return origin;
 
     // Fetch user corresponding to Origin (should have the same id).
-    Subject user = subjectResolver.resolveSubject(origin.getId());
+    Subject user = resolveSubject(origin.getId());
     // If no user is found just return Origin.
     if (user == null) return origin;
 
     // Update fields on Origin based on resolved user and return updated Origin.
     return updateFields(origin, user);
+  }
+
+  private Subject resolveSubject(UUID id) {
+    try {
+      return subjectResolver.resolveSubject(credentialsResolver.get(), id);
+    } catch (InvalidCredentialsException ex) {
+      LOGGER.warning(ex, "Could not resolve Subject for id = %s.", id);
+      return null;
+    }
   }
 
   private OriginEntity updateFields(OriginEntity origin, Subject user) {

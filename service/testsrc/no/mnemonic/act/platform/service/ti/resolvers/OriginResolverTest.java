@@ -2,9 +2,12 @@ package no.mnemonic.act.platform.service.ti.resolvers;
 
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
-import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.auth.ServiceAccountSPI;
+import no.mnemonic.act.platform.auth.SubjectSPI;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
+import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -20,7 +23,9 @@ public class OriginResolverTest {
   @Mock
   private OriginManager originManager;
   @Mock
-  private SubjectResolver subjectResolver;
+  private SubjectSPI subjectResolver;
+  @Mock
+  private ServiceAccountSPI credentialsResolver;
 
   private OriginResolver resolver;
 
@@ -36,7 +41,8 @@ public class OriginResolverTest {
   @Before
   public void setUp() {
     initMocks(this);
-    resolver = new OriginResolver(originManager, subjectResolver);
+    when(credentialsResolver.get()).thenReturn(new Credentials() {});
+    resolver = new OriginResolver(originManager, subjectResolver, credentialsResolver);
   }
 
   @Test
@@ -57,17 +63,28 @@ public class OriginResolverTest {
   }
 
   @Test
-  public void testApplyFetchUserOriginWithoutUpdate() {
+  public void testApplyFetchUserOriginWithoutUpdate() throws Exception {
     when(originManager.getOrigin(userOrigin.getId())).thenReturn(userOrigin);
 
     assertSame(userOrigin, resolver.apply(userOrigin.getId()));
     verify(originManager).getOrigin(userOrigin.getId());
-    verify(subjectResolver).resolveSubject(userOrigin.getId());
+    verify(subjectResolver).resolveSubject(notNull(), eq(userOrigin.getId()));
     verifyNoMoreInteractions(originManager);
   }
 
   @Test
-  public void testApplyFetchUserOriginWithUpdate() {
+  public void testApplyFetchUserOriginWithInvalidCredentials() throws Exception {
+    when(originManager.getOrigin(userOrigin.getId())).thenReturn(userOrigin);
+    when(subjectResolver.resolveSubject(notNull(), eq(userOrigin.getId()))).thenThrow(InvalidCredentialsException.class);
+
+    assertSame(userOrigin, resolver.apply(userOrigin.getId()));
+    verify(originManager).getOrigin(userOrigin.getId());
+    verify(subjectResolver).resolveSubject(notNull(), eq(userOrigin.getId()));
+    verifyNoMoreInteractions(originManager);
+  }
+
+  @Test
+  public void testApplyFetchUserOriginWithUpdate() throws Exception {
     Subject userSubject = Subject.builder()
             .setId(userOrigin.getId())
             .setName("updatedName")
@@ -75,7 +92,7 @@ public class OriginResolverTest {
             .build();
 
     when(originManager.getOrigin(userOrigin.getId())).thenReturn(userOrigin);
-    when(subjectResolver.resolveSubject(userOrigin.getId())).thenReturn(userSubject);
+    when(subjectResolver.resolveSubject(notNull(), eq(userOrigin.getId()))).thenReturn(userSubject);
 
     resolver.apply(userOrigin.getId());
     verify(originManager).saveOrigin(argThat(entity -> {
@@ -86,35 +103,35 @@ public class OriginResolverTest {
   }
 
   @Test
-  public void testApplyFetchUserOriginSkipUpdateFields() {
+  public void testApplyFetchUserOriginSkipUpdateFields() throws Exception {
     Subject userSubject = Subject.builder()
             .setId(userOrigin.getId())
             .setName(" ")
             .build();
 
     when(originManager.getOrigin(userOrigin.getId())).thenReturn(userOrigin);
-    when(subjectResolver.resolveSubject(userOrigin.getId())).thenReturn(userSubject);
+    when(subjectResolver.resolveSubject(notNull(), eq(userOrigin.getId()))).thenReturn(userSubject);
 
     resolver.apply(userOrigin.getId());
     verify(originManager, never()).saveOrigin(any());
   }
 
   @Test
-  public void testApplyFetchUserOriginSkipUpdateNameNA() {
+  public void testApplyFetchUserOriginSkipUpdateNameNA() throws Exception {
     Subject userSubject = Subject.builder()
             .setId(userOrigin.getId())
             .setName("N/A")
             .build();
 
     when(originManager.getOrigin(userOrigin.getId())).thenReturn(userOrigin);
-    when(subjectResolver.resolveSubject(userOrigin.getId())).thenReturn(userSubject);
+    when(subjectResolver.resolveSubject(notNull(), eq(userOrigin.getId()))).thenReturn(userSubject);
 
     resolver.apply(userOrigin.getId());
     verify(originManager, never()).saveOrigin(any());
   }
 
   @Test
-  public void testApplyFetchUserOriginSkipUpdateNoChanges() {
+  public void testApplyFetchUserOriginSkipUpdateNoChanges() throws Exception {
     Subject userSubject = Subject.builder()
             .setId(userOrigin.getId())
             .setName(userOrigin.getName())
@@ -122,14 +139,14 @@ public class OriginResolverTest {
             .build();
 
     when(originManager.getOrigin(userOrigin.getId())).thenReturn(userOrigin);
-    when(subjectResolver.resolveSubject(userOrigin.getId())).thenReturn(userSubject);
+    when(subjectResolver.resolveSubject(notNull(), eq(userOrigin.getId()))).thenReturn(userSubject);
 
     resolver.apply(userOrigin.getId());
     verify(originManager, never()).saveOrigin(any());
   }
 
   @Test
-  public void testApplyFetchUserOriginSkipUpdateNameFromOtherOrigin() {
+  public void testApplyFetchUserOriginSkipUpdateNameFromOtherOrigin() throws Exception {
     OriginEntity otherOrigin = new OriginEntity()
             .setId(UUID.randomUUID())
             .setName("otherOrigin");
@@ -140,7 +157,7 @@ public class OriginResolverTest {
 
     when(originManager.getOrigin(userOrigin.getId())).thenReturn(userOrigin);
     when(originManager.getOrigin(otherOrigin.getName())).thenReturn(otherOrigin);
-    when(subjectResolver.resolveSubject(userOrigin.getId())).thenReturn(userSubject);
+    when(subjectResolver.resolveSubject(notNull(), eq(userOrigin.getId()))).thenReturn(userSubject);
 
     resolver.apply(userOrigin.getId());
     verify(originManager, never()).saveOrigin(any());

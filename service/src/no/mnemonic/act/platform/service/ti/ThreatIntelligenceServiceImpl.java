@@ -6,7 +6,7 @@ import no.mnemonic.act.platform.api.model.v1.*;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
-import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.service.Service;
@@ -24,14 +24,14 @@ public class ThreatIntelligenceServiceImpl implements Service, ThreatIntelligenc
   public static final UUID GLOBAL_NAMESPACE = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   private final AccessController accessController;
-  private final IdentityResolver identityResolver;
+  private final IdentitySPI identityResolver;
   private final FactManager factManager;
   private final ObjectFactDao objectFactDao;
   private final DelegateProvider delegateProvider;
 
   @Inject
   public ThreatIntelligenceServiceImpl(AccessController accessController,
-                                       IdentityResolver identityResolver,
+                                       IdentitySPI identityResolver,
                                        FactManager factManager,
                                        ObjectFactDao objectFactDao,
                                        DelegateProvider delegateProvider) {

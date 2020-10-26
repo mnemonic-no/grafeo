@@ -2,8 +2,8 @@ package no.mnemonic.act.platform.auth.properties;
 
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.auth.OrganizationSPI;
+import no.mnemonic.act.platform.auth.SubjectSPI;
 import no.mnemonic.act.platform.auth.properties.internal.*;
 import no.mnemonic.act.platform.auth.properties.model.*;
 import no.mnemonic.commons.component.LifecycleAspect;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * AccessController implementation which is based on a configuration read from a properties file.
  */
-public class PropertiesBasedAccessController implements AccessController, OrganizationResolver, SubjectResolver, LifecycleAspect {
+public class PropertiesBasedAccessController implements AccessController, OrganizationSPI, SubjectSPI, LifecycleAspect {
 
   private static final String NOT_AVAILABLE_NAME = "N/A";
   private static final long DEFAULT_READING_INTERVAL = 60_000; // milliseconds
@@ -121,13 +121,17 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   }
 
   @Override
-  public Organization resolveOrganization(UUID id) {
+  public Organization resolveOrganization(Credentials credentials, UUID id) throws InvalidCredentialsException {
+    validate(credentials);
+
     PropertiesOrganization organization = state.get().getOrganization(IdMapper.toInternalID(id));
     return ObjectUtils.ifNotNull(organization, o -> createOrganization(id, o.getName()));
   }
 
   @Override
-  public Organization resolveOrganization(String name) {
+  public Organization resolveOrganization(Credentials credentials, String name) throws InvalidCredentialsException {
+    validate(credentials);
+
     PropertiesOrganization organization = state.get().getOrganization(name);
     return ObjectUtils.ifNotNull(organization, o -> createOrganization(IdMapper.toGlobalID(o.getInternalID()), o.getName()));
   }
@@ -135,18 +139,28 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   @Override
   public Organization resolveCurrentUserAffiliation(Credentials credentials) throws InvalidCredentialsException {
     SessionDescriptor descriptor = validate(credentials);
-    UUID id = IdMapper.toGlobalID(getSubject(descriptor).getAffiliation());
-    return ObjectUtils.ifNull(resolveOrganization(id), createOrganization(id, NOT_AVAILABLE_NAME));
+    long affiliationID = getSubject(descriptor).getAffiliation();
+
+    PropertiesOrganization organization = state.get().getOrganization(affiliationID);
+    return ObjectUtils.ifNotNull(
+            organization,
+            o -> createOrganization(IdMapper.toGlobalID(affiliationID), o.getName()),
+            createOrganization(IdMapper.toGlobalID(affiliationID), NOT_AVAILABLE_NAME)
+    );
   }
 
   @Override
-  public Subject resolveSubject(UUID id) {
+  public Subject resolveSubject(Credentials credentials, UUID id) throws InvalidCredentialsException {
+    validate(credentials);
+
     PropertiesSubject subject = state.get().getSubject(IdMapper.toInternalID(id));
     return ObjectUtils.ifNotNull(subject, s -> createSubject(id, s.getName(), state.get().getOrganization(s.getAffiliation())));
   }
 
   @Override
-  public Subject resolveSubject(String name) {
+  public Subject resolveSubject(Credentials credentials, String name) throws InvalidCredentialsException {
+    validate(credentials);
+
     PropertiesSubject subject = state.get().getSubject(name);
     return ObjectUtils.ifNotNull(subject, s -> createSubject(IdMapper.toGlobalID(s.getInternalID()), s.getName(), state.get().getOrganization(s.getAffiliation())));
   }
@@ -154,7 +168,10 @@ public class PropertiesBasedAccessController implements AccessController, Organi
   @Override
   public Subject resolveCurrentUser(Credentials credentials) throws InvalidCredentialsException {
     SessionDescriptor descriptor = validate(credentials);
-    return resolveSubject(IdMapper.toGlobalID(getSubject(descriptor).getInternalID()));
+    long internalID = getSubject(descriptor).getInternalID();
+
+    PropertiesSubject subject = state.get().getSubject(internalID);
+    return ObjectUtils.ifNotNull(subject, s -> createSubject(IdMapper.toGlobalID(internalID), s.getName(), state.get().getOrganization(s.getAffiliation())));
   }
 
   @Override

@@ -1,7 +1,10 @@
 package no.mnemonic.act.platform.service.ti.resolvers.response;
 
 import no.mnemonic.act.platform.api.model.v1.Organization;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.OrganizationSPI;
+import no.mnemonic.act.platform.auth.ServiceAccountSPI;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
+import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -17,7 +20,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class OrganizationByIdResponseResolverTest {
 
   @Mock
-  private OrganizationResolver organizationResolver;
+  private OrganizationSPI organizationResolver;
+  @Mock
+  private ServiceAccountSPI credentialsResolver;
 
   private Map<UUID, Organization> responseCache;
   private OrganizationByIdResponseResolver converter;
@@ -25,8 +30,9 @@ public class OrganizationByIdResponseResolverTest {
   @Before
   public void setup() {
     initMocks(this);
+    when(credentialsResolver.get()).thenReturn(new Credentials() {});
     responseCache = new HashMap<>();
-    converter = new OrganizationByIdResponseResolver(organizationResolver, responseCache);
+    converter = new OrganizationByIdResponseResolver(organizationResolver, credentialsResolver, responseCache);
   }
 
   @Test
@@ -40,18 +46,32 @@ public class OrganizationByIdResponseResolverTest {
   }
 
   @Test
-  public void testConvertUncachedOrganization() {
+  public void testConvertUncachedOrganization() throws Exception {
     UUID id = UUID.randomUUID();
     Organization model = Organization.builder().build();
 
-    when(organizationResolver.resolveOrganization(id)).thenReturn(model);
+    when(organizationResolver.resolveOrganization(notNull(), isA(UUID.class))).thenReturn(model);
 
     assertSame(model, converter.apply(id));
-    verify(organizationResolver).resolveOrganization(id);
+    verify(organizationResolver).resolveOrganization(notNull(), eq(id));
   }
 
   @Test
-  public void testConvertUncachedOrganizationNotAvailable() {
+  public void testConvertUncachedOrganizationWithInvalidCredentials() throws Exception {
+    UUID id = UUID.randomUUID();
+    when(organizationResolver.resolveOrganization(notNull(), isA(UUID.class))).thenThrow(InvalidCredentialsException.class);
+
+    Organization model = converter.apply(id);
+
+    assertNotNull(model);
+    assertEquals(id, model.getId());
+    assertEquals("N/A", model.getName());
+
+    verify(organizationResolver).resolveOrganization(notNull(), eq(id));
+  }
+
+  @Test
+  public void testConvertUncachedOrganizationNotAvailable() throws Exception {
     UUID id = UUID.randomUUID();
     Organization model = converter.apply(id);
 
@@ -59,7 +79,7 @@ public class OrganizationByIdResponseResolverTest {
     assertEquals(id, model.getId());
     assertEquals("N/A", model.getName());
 
-    verify(organizationResolver).resolveOrganization(id);
+    verify(organizationResolver).resolveOrganization(notNull(), eq(id));
   }
 
   @Test

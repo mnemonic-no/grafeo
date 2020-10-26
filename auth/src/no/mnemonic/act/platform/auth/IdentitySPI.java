@@ -12,7 +12,7 @@ import java.util.UUID;
  * AccessController implementation-specific identities. Every AccessController implementation should also provide
  * such a resolver implementation in order to be able to easily switch out the implementation.
  */
-public interface IdentityResolver {
+public interface IdentitySPI {
 
   /**
    * Maps a Function identified by name to a FunctionIdentity.

@@ -1,7 +1,5 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop.utils;
 
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -9,7 +7,9 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.OrganizationByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.OriginByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.SubjectByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
@@ -30,18 +30,18 @@ public class PropertyHelper {
   private final TiSecurityContext securityContext;
   private final ObjectFactTypeResolver objectFactTypeResolver;
   private final FactRetractionHandler factRetractionHandler;
-  private final SubjectResolver subjectResolver;
-  private final OrganizationResolver organizationResolver;
-  private final OriginResolver originResolver;
+  private final SubjectByIdResponseResolver subjectResolver;
+  private final OrganizationByIdResponseResolver organizationResolver;
+  private final OriginByIdResponseResolver originResolver;
 
   @Inject
   public PropertyHelper(FactRetractionHandler factRetractionHandler,
                         ObjectFactDao objectFactDao,
                         ObjectFactTypeResolver objectFactTypeResolver,
                         TiSecurityContext securityContext,
-                        SubjectResolver subjectResolver,
-                        OrganizationResolver organizationResolver,
-                        OriginResolver originResolver) {
+                        SubjectByIdResponseResolver subjectResolver,
+                        OrganizationByIdResponseResolver organizationResolver,
+                        OriginByIdResponseResolver originResolver) {
     this.objectFactDao = objectFactDao;
     this.securityContext = securityContext;
     this.objectFactTypeResolver = objectFactTypeResolver;
@@ -184,8 +184,8 @@ public class PropertyHelper {
     addToList(props, new PropertyEntry<>("certainty", certainty));
 
     addToList(props, new PropertyEntry<>("isRetracted", factRetractionHandler.isRetracted(factRecord)));
-    ifNotNullDo(factRecord.getAddedByID(), (id) -> addToList(props, ifNotNull(subjectResolver.resolveSubject(id), s -> new PropertyEntry<>("addedByName", s.getName()))));
-    ifNotNullDo(factRecord.getOrganizationID(), id -> addToList(props, ifNotNull(organizationResolver.resolveOrganization(id), o -> new PropertyEntry<>("organizationName", o.getName()))));
+    ifNotNullDo(factRecord.getAddedByID(), id -> addToList(props, ifNotNull(subjectResolver.apply(id), s -> new PropertyEntry<>("addedByName", s.getName()))));
+    ifNotNullDo(factRecord.getOrganizationID(), id -> addToList(props, ifNotNull(organizationResolver.apply(id), o -> new PropertyEntry<>("organizationName", o.getName()))));
     ifNotNullDo(factRecord.getOriginID(), id -> addToList(props, ifNotNull(originResolver.apply(id), o -> new PropertyEntry<>("originName", o.getName()))));
 
     return props;

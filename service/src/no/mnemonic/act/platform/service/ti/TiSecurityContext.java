@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.service.ti;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
-import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -33,7 +33,7 @@ public class TiSecurityContext extends SecurityContext {
   private final Function<UUID, List<FactAclEntity>> aclResolver;
 
   private TiSecurityContext(AccessController accessController,
-                            IdentityResolver identityResolver,
+                            IdentitySPI identityResolver,
                             Credentials credentials,
                             ObjectFactDao objectFactDao,
                             Function<UUID, List<FactAclEntity>> aclResolver) {
@@ -266,7 +266,7 @@ public class TiSecurityContext extends SecurityContext {
 
   public static class Builder {
     private AccessController accessController;
-    private IdentityResolver identityResolver;
+    private IdentitySPI identityResolver;
     private Credentials credentials;
     private ObjectFactDao objectFactDao;
     private Function<UUID, List<FactAclEntity>> aclResolver;
@@ -285,7 +285,7 @@ public class TiSecurityContext extends SecurityContext {
       return this;
     }
 
-    public Builder setIdentityResolver(IdentityResolver identityResolver) {
+    public Builder setIdentityResolver(IdentitySPI identityResolver) {
       this.identityResolver = identityResolver;
       return this;
     }

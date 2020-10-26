@@ -87,7 +87,7 @@ public class FactRetractDelegate implements Delegate {
     return retractionFactParameter;
   }
 
-  private FactRecord saveRetractionFact(RetractFactRequest request, FactRecord factToRetract) throws InvalidArgumentException {
+  private FactRecord saveRetractionFact(RetractFactRequest request, FactRecord factToRetract) throws AuthenticationFailedException, InvalidArgumentException {
     FactRecord retractionFact = new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(retractionFactType.getId())

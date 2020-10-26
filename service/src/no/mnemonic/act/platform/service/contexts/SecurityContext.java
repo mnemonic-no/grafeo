@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.service.contexts;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.UnexpectedAuthenticationFailedException;
-import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
@@ -23,10 +23,10 @@ public abstract class SecurityContext implements AutoCloseable {
 
   private static final ThreadLocal<SecurityContext> currentContext = new ThreadLocal<>();
   private final AccessController accessController;
-  private final IdentityResolver identityResolver;
+  private final IdentitySPI identityResolver;
   private final Credentials credentials;
 
-  protected SecurityContext(AccessController accessController, IdentityResolver identityResolver, Credentials credentials) {
+  protected SecurityContext(AccessController accessController, IdentitySPI identityResolver, Credentials credentials) {
     this.accessController = ObjectUtils.notNull(accessController, "'accessController' not set in SecurityContext.");
     this.identityResolver = ObjectUtils.notNull(identityResolver, "'identityResolver' not set in SecurityContext.");
     this.credentials = ObjectUtils.notNull(credentials, "'credentials' not set in SecurityContext.");

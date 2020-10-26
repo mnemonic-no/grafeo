@@ -2,7 +2,7 @@ package no.mnemonic.act.platform.service.ti;
 
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.RequestHeader;
-import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.service.ti.delegates.*;
@@ -23,7 +23,7 @@ public class ThreatIntelligenceServiceImplTest {
   @Mock
   private AccessController accessController;
   @Mock
-  private IdentityResolver identityResolver;
+  private IdentitySPI identityResolver;
   @Mock
   private FactManager factManager;
   @Mock

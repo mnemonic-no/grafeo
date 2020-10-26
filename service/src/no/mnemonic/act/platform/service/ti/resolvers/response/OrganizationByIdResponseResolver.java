@@ -1,8 +1,12 @@
 package no.mnemonic.act.platform.service.ti.resolvers.response;
 
 import no.mnemonic.act.platform.api.model.v1.Organization;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.OrganizationSPI;
+import no.mnemonic.act.platform.auth.ServiceAccountSPI;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -11,12 +15,18 @@ import java.util.function.Function;
 
 public class OrganizationByIdResponseResolver implements Function<UUID, Organization> {
 
-  private final OrganizationResolver organizationResolver;
+  private static final Logger LOGGER = Logging.getLogger(OrganizationByIdResponseResolver.class);
+
+  private final OrganizationSPI organizationResolver;
+  private final ServiceAccountSPI credentialsResolver;
   private final Map<UUID, Organization> responseCache;
 
   @Inject
-  public OrganizationByIdResponseResolver(OrganizationResolver organizationResolver, Map<UUID, Organization> responseCache) {
+  public OrganizationByIdResponseResolver(OrganizationSPI organizationResolver,
+                                          ServiceAccountSPI credentialsResolver,
+                                          Map<UUID, Organization> responseCache) {
     this.organizationResolver = organizationResolver;
+    this.credentialsResolver = credentialsResolver;
     this.responseCache = responseCache;
   }
 
@@ -27,10 +37,19 @@ public class OrganizationByIdResponseResolver implements Function<UUID, Organiza
   }
 
   private Organization resolveUncached(UUID id) {
-    return ObjectUtils.ifNull(organizationResolver.resolveOrganization(id), Organization.builder()
+    return ObjectUtils.ifNull(resolveOrganization(id), Organization.builder()
             .setId(id)
             .setName("N/A")
             .build()
     );
+  }
+
+  private Organization resolveOrganization(UUID id) {
+    try {
+      return organizationResolver.resolveOrganization(credentialsResolver.get(), id);
+    } catch (InvalidCredentialsException ex) {
+      LOGGER.warning(ex, "Could not resolve Organization for id = %s.", id);
+      return null;
+    }
   }
 }

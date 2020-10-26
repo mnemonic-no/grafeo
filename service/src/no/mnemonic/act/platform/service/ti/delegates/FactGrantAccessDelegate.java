@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.act.platform.api.model.v1.AclEntry;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.GrantFactAccessRequest;
-import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.auth.SubjectSPI;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -18,6 +18,7 @@ import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
 import java.util.UUID;
@@ -27,14 +28,14 @@ public class FactGrantAccessDelegate implements Delegate {
   private final TiSecurityContext securityContext;
   private final ObjectFactDao objectFactDao;
   private final FactRequestResolver factRequestResolver;
-  private final SubjectResolver subjectResolver;
+  private final SubjectSPI subjectResolver;
   private final AclEntryResponseConverter aclEntryResponseConverter;
 
   @Inject
   public FactGrantAccessDelegate(TiSecurityContext securityContext,
                                  ObjectFactDao objectFactDao,
                                  FactRequestResolver factRequestResolver,
-                                 SubjectResolver subjectResolver,
+                                 SubjectSPI subjectResolver,
                                  AclEntryResponseConverter aclEntryResponseConverter) {
     this.securityContext = securityContext;
     this.objectFactDao = objectFactDao;
@@ -64,12 +65,16 @@ public class FactGrantAccessDelegate implements Delegate {
     return aclEntryResponseConverter.apply(aclEntry);
   }
 
-  private UUID resolveSubjectID(String idOrName) throws InvalidArgumentException {
+  private UUID resolveSubjectID(String idOrName) throws AuthenticationFailedException, InvalidArgumentException {
     Subject subject;
-    if (StringUtils.isUUID(idOrName)) {
-      subject = subjectResolver.resolveSubject(UUID.fromString(idOrName));
-    } else {
-      subject = subjectResolver.resolveSubject(idOrName);
+    try {
+      if (StringUtils.isUUID(idOrName)) {
+        subject = subjectResolver.resolveSubject(securityContext.getCredentials(), UUID.fromString(idOrName));
+      } else {
+        subject = subjectResolver.resolveSubject(securityContext.getCredentials(), idOrName);
+      }
+    } catch (InvalidCredentialsException ex) {
+      throw new AuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
     }
 
     if (subject != null) return subject.getId();

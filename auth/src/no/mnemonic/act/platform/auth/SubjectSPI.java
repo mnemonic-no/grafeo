@@ -8,27 +8,31 @@ import java.util.UUID;
 
 /**
  * Common interface defining functions to resolve Subjects. Note that Subjects here are ACT model objects (see {@link Subject}).
- *
+ * <p>
  * This interface can be implemented by an AccessController implementation or by another service able to resolve Subjects.
  * Whatever implementation is chosen an implementation must be provided when using a non-standard AccessController implementation.
  */
-public interface SubjectResolver {
+public interface SubjectSPI {
 
   /**
    * Resolves a Subject by its UUID. Returns NULL if no Subject with the given UUID exists.
    *
-   * @param id Subject's unique ID
+   * @param credentials Credentials of the current user
+   * @param id          Subject's unique ID
    * @return Resolved Subject
+   * @throws InvalidCredentialsException Thrown if the given credentials are invalid.
    */
-  Subject resolveSubject(UUID id);
+  Subject resolveSubject(Credentials credentials, UUID id) throws InvalidCredentialsException;
 
   /**
    * Resolves a Subject by its name. Returns NULL if no Subject with the given name exists.
    *
-   * @param name Subject's name
+   * @param credentials Credentials of the current user
+   * @param name        Subject's name
    * @return Resolved Subject
+   * @throws InvalidCredentialsException Thrown if the given credentials are invalid.
    */
-  Subject resolveSubject(String name);
+  Subject resolveSubject(Credentials credentials, String name) throws InvalidCredentialsException;
 
   /**
    * Resolves the current user as a Subject from given credentials.

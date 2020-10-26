@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.service.contexts;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.UnexpectedAuthenticationFailedException;
-import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.act.platform.service.TestSecurityContext;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.AccessController;
@@ -29,7 +29,7 @@ public class SecurityContextTest {
   @Mock
   private AccessController accessController;
   @Mock
-  private IdentityResolver identityResolver;
+  private IdentitySPI identityResolver;
   @Mock
   private Credentials credentials;
   @Mock

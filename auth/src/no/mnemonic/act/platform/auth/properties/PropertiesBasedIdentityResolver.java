@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.auth.properties;
 
-import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.SubjectDescriptor;
@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * IdentityResolver implementation for the PropertiesBasedAccessController.
  */
-public class PropertiesBasedIdentityResolver implements IdentityResolver {
+public class PropertiesBasedIdentityResolver implements IdentitySPI {
 
   @Override
   public FunctionIdentity resolveFunctionIdentity(String name) {

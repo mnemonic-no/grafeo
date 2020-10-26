@@ -1,18 +1,18 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop.utils;
 
 import no.mnemonic.act.platform.api.model.v1.Organization;
+import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.model.v1.Subject;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
-import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.OrganizationByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.OriginByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.SubjectByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -44,11 +44,11 @@ public class PropertyHelperTest {
   @Mock
   private TiSecurityContext securityContext;
   @Mock
-  private SubjectResolver subjectResolver;
+  private SubjectByIdResponseResolver subjectResolver;
   @Mock
-  private OrganizationResolver organizationResolver;
+  private OrganizationByIdResponseResolver organizationResolver;
   @Mock
-  private OriginResolver originResolver;
+  private OriginByIdResponseResolver originResolver;
 
   private PropertyHelper helper;
 
@@ -314,9 +314,9 @@ public class PropertyHelperTest {
             .setLastSeenTimestamp(2L)
             .setAddedByID(UUID.randomUUID());
 
-    when(subjectResolver.resolveSubject(fact.getAddedByID())).thenReturn(Subject.builder().setName("someSubjectName").build());
-    when(organizationResolver.resolveOrganization(fact.getOrganizationID())).thenReturn(Organization.builder().setName("someOrgName").build());
-    when(originResolver.apply(fact.getOriginID())).thenReturn(new OriginEntity().setName("someOriginName"));
+    when(subjectResolver.apply(fact.getAddedByID())).thenReturn(Subject.builder().setName("someSubjectName").build());
+    when(organizationResolver.apply(fact.getOrganizationID())).thenReturn(Organization.builder().setName("someOrgName").build());
+    when(originResolver.apply(fact.getOriginID())).thenReturn(Origin.builder().setName("someOriginName").build());
 
     Map<String, ?> props = MapUtils.map(helper.getStaticFactProperties(fact), p -> T(p.getName(), p.getValue()));
 
@@ -397,8 +397,8 @@ public class PropertyHelperTest {
     assertEquals(10, props.size());
 
     verify(objectFactDao).searchFacts(any());
-    verify(subjectResolver).resolveSubject(factRecord.getAddedByID());
-    verify(organizationResolver).resolveOrganization(factRecord.getOrganizationID());
+    verify(subjectResolver).apply(factRecord.getAddedByID());
+    verify(organizationResolver).apply(factRecord.getOrganizationID());
     verify(originResolver).apply(factRecord.getOriginID());
   }
 

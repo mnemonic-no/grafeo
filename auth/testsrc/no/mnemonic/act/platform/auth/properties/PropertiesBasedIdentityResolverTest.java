@@ -1,6 +1,6 @@
 package no.mnemonic.act.platform.auth.properties;
 
-import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.act.platform.auth.properties.model.FunctionIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.OrganizationIdentifier;
 import no.mnemonic.act.platform.auth.properties.model.SubjectDescriptor;
@@ -18,7 +18,7 @@ import static org.junit.Assert.assertTrue;
 
 public class PropertiesBasedIdentityResolverTest {
 
-  private final IdentityResolver resolver = new PropertiesBasedIdentityResolver();
+  private final IdentitySPI resolver = new PropertiesBasedIdentityResolver();
 
   @Test
   public void testResolveFunctionIdentity() {

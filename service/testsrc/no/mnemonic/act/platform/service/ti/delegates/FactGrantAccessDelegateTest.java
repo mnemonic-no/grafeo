@@ -1,10 +1,11 @@
 package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
+import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.GrantFactAccessRequest;
-import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.auth.SubjectSPI;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -12,6 +13,8 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.AclEntryResponseConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
+import no.mnemonic.services.common.auth.model.Credentials;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -32,7 +35,7 @@ public class FactGrantAccessDelegateTest {
   @Mock
   private FactRequestResolver factRequestResolver;
   @Mock
-  private SubjectResolver subjectResolver;
+  private SubjectSPI subjectResolver;
   @Mock
   private AclEntryResponseConverter aclEntryResponseConverter;
   @Mock
@@ -48,6 +51,7 @@ public class FactGrantAccessDelegateTest {
   @Before
   public void setup() {
     initMocks(this);
+    when(securityContext.getCredentials()).thenReturn(new Credentials() {});
     delegate = new FactGrantAccessDelegate(
             securityContext,
             objectFactDao,
@@ -85,13 +89,23 @@ public class FactGrantAccessDelegateTest {
   }
 
   @Test
+  public void testGrantFactAccessWithInvalidCredentials() throws Exception {
+    GrantFactAccessRequest request = createGrantAccessRequest();
+    when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
+    when(subjectResolver.resolveSubject(notNull(), eq(request.getSubject()))).thenThrow(InvalidCredentialsException.class);
+
+    assertThrows(AuthenticationFailedException.class, () -> delegate.handle(request));
+    verify(subjectResolver).resolveSubject(notNull(), eq(request.getSubject()));
+  }
+
+  @Test
   public void testGrantFactAccessSubjectNotFound() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
 
     InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
     assertEquals(set("subject.not.exist"), set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
-    verify(subjectResolver).resolveSubject(request.getSubject());
+    verify(subjectResolver).resolveSubject(notNull(), eq(request.getSubject()));
   }
 
   @Test
@@ -99,7 +113,7 @@ public class FactGrantAccessDelegateTest {
     GrantFactAccessRequest request = createGrantAccessRequest();
     FactAclEntryRecord existingEntry = createFactAclEntryRecord();
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(createFactRecord(request).addAclEntry(existingEntry));
-    when(subjectResolver.resolveSubject(subject.getName())).thenReturn(subject);
+    when(subjectResolver.resolveSubject(notNull(), eq(subject.getName()))).thenReturn(subject);
 
     delegate.handle(request);
 
@@ -113,14 +127,14 @@ public class FactGrantAccessDelegateTest {
     GrantFactAccessRequest request = createGrantAccessRequest().setSubject(subject.getId().toString());
     FactRecord fact = createFactRecord(request);
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(fact);
-    when(subjectResolver.resolveSubject(subject.getId())).thenReturn(subject);
+    when(subjectResolver.resolveSubject(notNull(), eq(subject.getId()))).thenReturn(subject);
     when(objectFactDao.storeFactAclEntry(notNull(), notNull())).then(i -> i.getArgument(1));
     when(securityContext.getCurrentUserID()).thenReturn(currentUser);
 
     delegate.handle(request);
 
     verify(objectFactDao).storeFactAclEntry(same(fact), matchFactAclEntryRecord(currentUser));
-    verify(subjectResolver).resolveSubject(subject.getId());
+    verify(subjectResolver).resolveSubject(notNull(), eq(subject.getId()));
     verify(aclEntryResponseConverter).apply(matchFactAclEntryRecord(currentUser));
   }
 
@@ -130,14 +144,14 @@ public class FactGrantAccessDelegateTest {
     GrantFactAccessRequest request = createGrantAccessRequest();
     FactRecord fact = createFactRecord(request);
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(fact);
-    when(subjectResolver.resolveSubject(subject.getName())).thenReturn(subject);
+    when(subjectResolver.resolveSubject(notNull(), eq(subject.getName()))).thenReturn(subject);
     when(objectFactDao.storeFactAclEntry(notNull(), notNull())).then(i -> i.getArgument(1));
     when(securityContext.getCurrentUserID()).thenReturn(currentUser);
 
     delegate.handle(request);
 
     verify(objectFactDao).storeFactAclEntry(same(fact), matchFactAclEntryRecord(currentUser));
-    verify(subjectResolver).resolveSubject(subject.getName());
+    verify(subjectResolver).resolveSubject(notNull(), eq(subject.getName()));
     verify(aclEntryResponseConverter).apply(matchFactAclEntryRecord(currentUser));
   }
 

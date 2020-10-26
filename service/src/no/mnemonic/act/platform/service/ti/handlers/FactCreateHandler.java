@@ -7,8 +7,8 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
-import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.auth.OrganizationSPI;
+import no.mnemonic.act.platform.auth.SubjectSPI;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
@@ -45,8 +45,8 @@ public class FactCreateHandler {
   );
 
   private final TiSecurityContext securityContext;
-  private final SubjectResolver subjectResolver;
-  private final OrganizationResolver organizationResolver;
+  private final SubjectSPI subjectResolver;
+  private final OrganizationSPI organizationResolver;
   private final OriginManager originManager;
   private final ValidatorFactory validatorFactory;
   private final ObjectFactDao objectFactDao;
@@ -55,8 +55,8 @@ public class FactCreateHandler {
 
   @Inject
   public FactCreateHandler(TiSecurityContext securityContext,
-                           SubjectResolver subjectResolver,
-                           OrganizationResolver organizationResolver,
+                           SubjectSPI subjectResolver,
+                           OrganizationSPI organizationResolver,
                            OriginManager originManager,
                            ValidatorFactory validatorFactory,
                            ObjectFactDao objectFactDao,
@@ -135,7 +135,7 @@ public class FactCreateHandler {
     if (origin != null) return origin;
 
     // Create an Origin for the current user if it doesn't exist yet.
-    Subject currentUser = resolveCurrentUser();
+    Subject currentUser = wrapInvalidCredentialsException(() -> subjectResolver.resolveCurrentUser(securityContext.getCredentials()));
     return originManager.saveOrigin(new OriginEntity()
             .setId(securityContext.getCurrentUserID())
             .setNamespaceID(GLOBAL_NAMESPACE) // For now everything will just be part of the global namespace.
@@ -152,9 +152,10 @@ public class FactCreateHandler {
    *
    * @param acl ID or name of Subjects (can be null)
    * @return Resolved Subjects (will never be null)
-   * @throws InvalidArgumentException Thrown if one or more Subjects cannot be resolved
+   * @throws AuthenticationFailedException Thrown if the current user could not be authenticated
+   * @throws InvalidArgumentException      Thrown if one or more Subjects cannot be resolved
    */
-  public List<Subject> resolveSubjects(List<String> acl) throws InvalidArgumentException {
+  public List<Subject> resolveSubjects(List<String> acl) throws AuthenticationFailedException, InvalidArgumentException {
     if (CollectionUtils.isEmpty(acl)) return Collections.emptyList();
 
     List<Subject> result = new ArrayList<>();
@@ -162,13 +163,14 @@ public class FactCreateHandler {
 
     // Loop through all entries and fetch Subjects by id or name.
     for (int i = 0; i < acl.size(); i++) {
-      Subject subject;
       String idOrName = acl.get(i);
-      if (StringUtils.isUUID(idOrName)) {
-        subject = subjectResolver.resolveSubject(UUID.fromString(idOrName));
-      } else {
-        subject = subjectResolver.resolveSubject(idOrName);
-      }
+      Subject subject = wrapInvalidCredentialsException(() -> {
+        if (StringUtils.isUUID(idOrName)) {
+          return subjectResolver.resolveSubject(securityContext.getCredentials(), UUID.fromString(idOrName));
+        } else {
+          return subjectResolver.resolveSubject(securityContext.getCredentials(), idOrName);
+        }
+      });
 
       if (subject != null) {
         result.add(subject);
@@ -270,13 +272,14 @@ public class FactCreateHandler {
     triggerContext.registerTriggerEvent(event);
   }
 
-  private Organization fetchOrganization(String idOrName) throws InvalidArgumentException {
-    Organization organization;
-    if (StringUtils.isUUID(idOrName)) {
-      organization = organizationResolver.resolveOrganization(UUID.fromString(idOrName));
-    } else {
-      organization = organizationResolver.resolveOrganization(idOrName);
-    }
+  private Organization fetchOrganization(String idOrName) throws AuthenticationFailedException, InvalidArgumentException {
+    Organization organization = wrapInvalidCredentialsException(() -> {
+      if (StringUtils.isUUID(idOrName)) {
+        return organizationResolver.resolveOrganization(securityContext.getCredentials(), UUID.fromString(idOrName));
+      } else {
+        return organizationResolver.resolveOrganization(securityContext.getCredentials(), idOrName);
+      }
+    });
 
     if (organization != null) return organization;
 
@@ -301,31 +304,31 @@ public class FactCreateHandler {
     return origin;
   }
 
-  private Subject resolveCurrentUser() throws AuthenticationFailedException {
-    try {
-      return subjectResolver.resolveCurrentUser(securityContext.getCredentials());
-    } catch (InvalidCredentialsException ex) {
-      throw new AuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
-    }
-  }
-
   private Organization resolveCurrentUserAffiliation() throws AuthenticationFailedException, InvalidArgumentException {
-    try {
-      Organization affiliation = organizationResolver.resolveCurrentUserAffiliation(securityContext.getCredentials());
-      if (affiliation != null) return affiliation;
+    Organization affiliation = wrapInvalidCredentialsException(() -> organizationResolver.resolveCurrentUserAffiliation(securityContext.getCredentials()));
+    if (affiliation != null) return affiliation;
 
-      // That the current user doesn't have an affiliation is an unlikely edge case, but better handle it, just in case.
-      throw new InvalidArgumentException()
-              .addValidationError("Unable to determine Organization for current user. Please specify Organization.",
-                      "current.user.organization.not.exist", "organization", "N/A");
-    } catch (InvalidCredentialsException ex) {
-      throw new AuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
-    }
+    // That the current user doesn't have an affiliation is an unlikely edge case, but better handle it, just in case.
+    throw new InvalidArgumentException()
+            .addValidationError("Unable to determine Organization for current user. Please specify Organization.",
+                    "current.user.organization.not.exist", "organization", "N/A");
   }
 
   private String createOriginName(Subject currentUser) {
     // There can't exist two Origins with the same name. Avoid collisions by generating a unique name if necessary.
     OriginEntity collision = originManager.getOrigin(currentUser.getName());
     return collision == null ? currentUser.getName() : String.format("%s (%s)", currentUser.getName(), UUID.randomUUID().toString().substring(0, 8));
+  }
+
+  private <T> T wrapInvalidCredentialsException(WithInvalidCredentialsException<T> wrappedMethod) throws AuthenticationFailedException {
+    try {
+      return wrappedMethod.call();
+    } catch (InvalidCredentialsException ex) {
+      throw new AuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
+  }
+
+  private interface WithInvalidCredentialsException<T> {
+    T call() throws InvalidCredentialsException;
   }
 }

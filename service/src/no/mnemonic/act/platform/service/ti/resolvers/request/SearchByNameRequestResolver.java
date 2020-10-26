@@ -2,16 +2,20 @@ package no.mnemonic.act.platform.service.ti.resolvers.request;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
-import no.mnemonic.act.platform.auth.OrganizationResolver;
+import no.mnemonic.act.platform.auth.OrganizationSPI;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
 import java.util.Collections;
@@ -32,20 +36,25 @@ import java.util.stream.Collectors;
  */
 public class SearchByNameRequestResolver {
 
+  private static final Logger LOGGER = Logging.getLogger(SearchByNameRequestResolver.class);
+
   private final FactManager factManager;
   private final ObjectManager objectManager;
   private final OriginManager originManager;
-  private final OrganizationResolver organizationResolver;
+  private final OrganizationSPI organizationResolver;
+  private final SecurityContext securityContext;
 
   @Inject
   public SearchByNameRequestResolver(FactManager factManager,
                                      ObjectManager objectManager,
                                      OriginManager originManager,
-                                     OrganizationResolver organizationResolver) {
+                                     OrganizationSPI organizationResolver,
+                                     SecurityContext securityContext) {
     this.factManager = factManager;
     this.objectManager = objectManager;
     this.originManager = originManager;
     this.organizationResolver = organizationResolver;
+    this.securityContext = securityContext;
   }
 
   /**
@@ -89,7 +98,16 @@ public class SearchByNameRequestResolver {
    * @throws InvalidArgumentException If Organizations for one or more names do not exist.
    */
   public Set<UUID> resolveOrganization(Set<String> values) throws InvalidArgumentException {
-    return resolve(values, name -> ObjectUtils.ifNotNull(organizationResolver.resolveOrganization(name), Organization::getId), "organization");
+    return resolve(values, name -> ObjectUtils.ifNotNull(resolveOrganizationByName(name), Organization::getId), "organization");
+  }
+
+  private Organization resolveOrganizationByName(String name) {
+    try {
+      return organizationResolver.resolveOrganization(securityContext.getCredentials(), name);
+    } catch (InvalidCredentialsException ex) {
+      LOGGER.info(ex, "Could not resolve Organization for name = %s.", name);
+      return null;
+    }
   }
 
   private Set<UUID> resolve(Set<String> values, Function<String, UUID> byNameResolver, String property) throws InvalidArgumentException {

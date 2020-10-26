@@ -1,8 +1,12 @@
 package no.mnemonic.act.platform.service.ti.resolvers.response;
 
 import no.mnemonic.act.platform.api.model.v1.Subject;
-import no.mnemonic.act.platform.auth.SubjectResolver;
+import no.mnemonic.act.platform.auth.ServiceAccountSPI;
+import no.mnemonic.act.platform.auth.SubjectSPI;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -11,12 +15,18 @@ import java.util.function.Function;
 
 public class SubjectByIdResponseResolver implements Function<UUID, Subject> {
 
-  private final SubjectResolver subjectResolver;
+  private static final Logger LOGGER = Logging.getLogger(SubjectByIdResponseResolver.class);
+
+  private final SubjectSPI subjectResolver;
+  private final ServiceAccountSPI credentialsResolver;
   private final Map<UUID, Subject> responseCache;
 
   @Inject
-  public SubjectByIdResponseResolver(SubjectResolver subjectResolver, Map<UUID, Subject> responseCache) {
+  public SubjectByIdResponseResolver(SubjectSPI subjectResolver,
+                                     ServiceAccountSPI credentialsResolver,
+                                     Map<UUID, Subject> responseCache) {
     this.subjectResolver = subjectResolver;
+    this.credentialsResolver = credentialsResolver;
     this.responseCache = responseCache;
   }
 
@@ -27,10 +37,19 @@ public class SubjectByIdResponseResolver implements Function<UUID, Subject> {
   }
 
   private Subject resolveUncached(UUID id) {
-    return ObjectUtils.ifNull(subjectResolver.resolveSubject(id), Subject.builder()
+    return ObjectUtils.ifNull(resolveSubject(id), Subject.builder()
             .setId(id)
             .setName("N/A")
             .build()
     );
+  }
+
+  private Subject resolveSubject(UUID id) {
+    try {
+      return subjectResolver.resolveSubject(credentialsResolver.get(), id);
+    } catch (InvalidCredentialsException ex) {
+      LOGGER.warning(ex, "Could not resolve Subject for id = %s.", id);
+      return null;
+    }
   }
 }

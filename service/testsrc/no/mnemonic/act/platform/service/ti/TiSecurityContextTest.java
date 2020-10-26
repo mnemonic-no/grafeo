@@ -2,7 +2,7 @@ package no.mnemonic.act.platform.service.ti;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
-import no.mnemonic.act.platform.auth.IdentityResolver;
+import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
@@ -39,7 +39,7 @@ public class TiSecurityContextTest {
   @Mock
   private AccessController accessController;
   @Mock
-  private IdentityResolver identityResolver;
+  private IdentitySPI identityResolver;
   @Mock
   private Credentials credentials;
   @Mock
