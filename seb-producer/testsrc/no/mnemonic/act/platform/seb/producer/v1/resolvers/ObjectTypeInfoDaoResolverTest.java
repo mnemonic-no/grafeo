@@ -15,17 +15,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class ObjectTypeInfoResolverTest {
+public class ObjectTypeInfoDaoResolverTest {
 
   @Mock
   private ObjectManager objectManager;
 
-  private ObjectTypeInfoResolver resolver;
+  private ObjectTypeInfoDaoResolver resolver;
 
   @Before
   public void setUp() {
     initMocks(this);
-    resolver = new ObjectTypeInfoResolver(objectManager);
+    resolver = new ObjectTypeInfoDaoResolver(objectManager);
   }
 
   @Test
@@ -36,7 +36,12 @@ public class ObjectTypeInfoResolverTest {
   @Test
   public void testResolveNoTypeFound() {
     UUID id = UUID.randomUUID();
-    assertNull(resolver.apply(id));
+
+    ObjectTypeInfoSEB seb = resolver.apply(id);
+    assertNotNull(seb);
+    assertEquals(id, seb.getId());
+    assertEquals("N/A", seb.getName());
+
     verify(objectManager).getObjectType(id);
   }
 

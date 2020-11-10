@@ -6,36 +6,49 @@ import no.mnemonic.act.platform.auth.ServiceAccountSPI;
 import no.mnemonic.act.platform.seb.model.v1.OrganizationInfoSEB;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class OrganizationInfoResolver implements Function<UUID, OrganizationInfoSEB> {
+public class OrganizationInfoServiceAccountResolver implements Function<UUID, OrganizationInfoSEB> {
 
-  private static final Logger LOGGER = Logging.getLogger(OrganizationInfoResolver.class);
+  private static final Logger LOGGER = Logging.getLogger(OrganizationInfoServiceAccountResolver.class);
 
   private final OrganizationSPI organizationResolver;
   private final ServiceAccountSPI credentialsResolver;
+  // This utilizes the same cache as OrganizationByIdResponseResolver as both resolvers are bound to the service account.
+  private final Map<UUID, Organization> organizationCache;
 
   @Inject
-  public OrganizationInfoResolver(OrganizationSPI organizationResolver, ServiceAccountSPI credentialsResolver) {
+  public OrganizationInfoServiceAccountResolver(OrganizationSPI organizationResolver,
+                                                ServiceAccountSPI credentialsResolver,
+                                                Map<UUID, Organization> organizationCache) {
     this.organizationResolver = organizationResolver;
     this.credentialsResolver = credentialsResolver;
+    this.organizationCache = organizationCache;
   }
 
   @Override
   public OrganizationInfoSEB apply(UUID id) {
     if (id == null) return null;
 
-    Organization organization = resolveOrganization(id);
-    if (organization == null) return null;
-
+    Organization organization = organizationCache.computeIfAbsent(id, this::resolveUncached);
     return OrganizationInfoSEB.builder()
             .setId(organization.getId())
             .setName(organization.getName())
             .build();
+  }
+
+  private Organization resolveUncached(UUID id) {
+    return ObjectUtils.ifNull(resolveOrganization(id), Organization.builder()
+            .setId(id)
+            .setName("N/A")
+            .build()
+    );
   }
 
   private Organization resolveOrganization(UUID id) {

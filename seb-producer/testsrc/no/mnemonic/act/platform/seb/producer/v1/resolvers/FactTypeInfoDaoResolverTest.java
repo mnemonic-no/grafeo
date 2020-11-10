@@ -15,17 +15,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FactTypeInfoResolverTest {
+public class FactTypeInfoDaoResolverTest {
 
   @Mock
   private FactManager factManager;
 
-  private FactTypeInfoResolver resolver;
+  private FactTypeInfoDaoResolver resolver;
 
   @Before
   public void setUp() {
     initMocks(this);
-    resolver = new FactTypeInfoResolver(factManager);
+    resolver = new FactTypeInfoDaoResolver(factManager);
   }
 
   @Test
@@ -36,7 +36,12 @@ public class FactTypeInfoResolverTest {
   @Test
   public void testResolveNoTypeFound() {
     UUID id = UUID.randomUUID();
-    assertNull(resolver.apply(id));
+
+    FactTypeInfoSEB seb = resolver.apply(id);
+    assertNotNull(seb);
+    assertEquals(id, seb.getId());
+    assertEquals("N/A", seb.getName());
+
     verify(factManager).getFactType(id);
   }
 

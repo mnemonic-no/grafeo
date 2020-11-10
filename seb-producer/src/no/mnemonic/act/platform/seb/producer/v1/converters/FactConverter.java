@@ -11,21 +11,21 @@ import java.util.function.Function;
 
 public class FactConverter implements Function<FactRecord, FactSEB> {
 
-  private final FactTypeInfoResolver typeResolver;
-  private final FactInfoResolver inReferenceToResolver;
-  private final OrganizationInfoResolver organizationResolver;
-  private final OriginInfoResolver originResolver;
-  private final SubjectInfoResolver addedByResolver;
+  private final FactTypeInfoDaoResolver typeResolver;
+  private final FactInfoDaoResolver inReferenceToResolver;
+  private final OrganizationInfoServiceAccountResolver organizationResolver;
+  private final OriginInfoDaoResolver originResolver;
+  private final SubjectInfoServiceAccountResolver addedByResolver;
   private final ObjectInfoConverter objectConverter;
   private final AclEntryConverter aclEntryConverter;
 
   @Inject
   public FactConverter(
-          FactTypeInfoResolver typeResolver,
-          FactInfoResolver inReferenceToResolver,
-          OrganizationInfoResolver organizationResolver,
-          OriginInfoResolver originResolver,
-          SubjectInfoResolver addedByResolver,
+          FactTypeInfoDaoResolver typeResolver,
+          FactInfoDaoResolver inReferenceToResolver,
+          OrganizationInfoServiceAccountResolver organizationResolver,
+          OriginInfoDaoResolver originResolver,
+          SubjectInfoServiceAccountResolver addedByResolver,
           ObjectInfoConverter objectConverter,
           AclEntryConverter aclEntryConverter
   ) {

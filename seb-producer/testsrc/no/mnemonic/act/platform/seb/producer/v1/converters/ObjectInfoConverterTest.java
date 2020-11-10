@@ -3,7 +3,7 @@ package no.mnemonic.act.platform.seb.producer.v1.converters;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.seb.model.v1.ObjectInfoSEB;
 import no.mnemonic.act.platform.seb.model.v1.ObjectTypeInfoSEB;
-import no.mnemonic.act.platform.seb.producer.v1.resolvers.ObjectTypeInfoResolver;
+import no.mnemonic.act.platform.seb.producer.v1.resolvers.ObjectTypeInfoDaoResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -19,7 +19,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class ObjectInfoConverterTest {
 
   @Mock
-  private ObjectTypeInfoResolver typeResolver;
+  private ObjectTypeInfoDaoResolver typeResolver;
 
   private ObjectInfoConverter converter;
 

@@ -8,13 +8,13 @@ import javax.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class FactInfoResolver implements Function<UUID, FactInfoSEB> {
+public class FactInfoDaoResolver implements Function<UUID, FactInfoSEB> {
 
   private final FactManager factManager;
-  private final FactTypeInfoResolver typeResolver;
+  private final FactTypeInfoDaoResolver typeResolver;
 
   @Inject
-  public FactInfoResolver(FactManager factManager, FactTypeInfoResolver typeResolver) {
+  public FactInfoDaoResolver(FactManager factManager, FactTypeInfoDaoResolver typeResolver) {
     this.factManager = factManager;
     this.typeResolver = typeResolver;
   }
@@ -26,7 +26,7 @@ public class FactInfoResolver implements Function<UUID, FactInfoSEB> {
     // Use FactManager directly instead of ObjectFactDao to avoid resolving related information
     // because only the basic information (id, type, value) is required here.
     FactEntity fact = factManager.getFact(id);
-    if (fact == null) return null;
+    if (fact == null) return FactInfoSEB.builder().setId(id).build();
 
     return FactInfoSEB.builder()
             .setId(fact.getId())

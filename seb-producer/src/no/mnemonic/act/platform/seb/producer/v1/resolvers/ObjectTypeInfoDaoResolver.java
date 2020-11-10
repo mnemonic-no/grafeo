@@ -8,12 +8,12 @@ import javax.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class ObjectTypeInfoResolver implements Function<UUID, ObjectTypeInfoSEB> {
+public class ObjectTypeInfoDaoResolver implements Function<UUID, ObjectTypeInfoSEB> {
 
   private final ObjectManager objectManager;
 
   @Inject
-  public ObjectTypeInfoResolver(ObjectManager objectManager) {
+  public ObjectTypeInfoDaoResolver(ObjectManager objectManager) {
     this.objectManager = objectManager;
   }
 
@@ -22,7 +22,12 @@ public class ObjectTypeInfoResolver implements Function<UUID, ObjectTypeInfoSEB>
     if (id == null) return null;
 
     ObjectTypeEntity type = objectManager.getObjectType(id);
-    if (type == null) return null;
+    if (type == null) {
+      return ObjectTypeInfoSEB.builder()
+              .setId(id)
+              .setName("N/A")
+              .build();
+    }
 
     return ObjectTypeInfoSEB.builder()
             .setId(type.getId())

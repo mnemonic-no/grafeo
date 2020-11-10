@@ -15,17 +15,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class OriginInfoResolverTest {
+public class OriginInfoDaoResolverTest {
 
   @Mock
   private OriginManager originManager;
 
-  private OriginInfoResolver resolver;
+  private OriginInfoDaoResolver resolver;
 
   @Before
   public void setUp() {
     initMocks(this);
-    resolver = new OriginInfoResolver(originManager);
+    resolver = new OriginInfoDaoResolver(originManager);
   }
 
   @Test
@@ -36,7 +36,12 @@ public class OriginInfoResolverTest {
   @Test
   public void testResolveNoOriginFound() {
     UUID id = UUID.randomUUID();
-    assertNull(resolver.apply(id));
+
+    OriginInfoSEB seb = resolver.apply(id);
+    assertNotNull(seb);
+    assertEquals(id, seb.getId());
+    assertEquals("N/A", seb.getName());
+
     verify(originManager).getOrigin(id);
   }
 

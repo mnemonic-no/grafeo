@@ -21,15 +21,15 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactConverterTest {
 
   @Mock
-  private FactTypeInfoResolver typeResolver;
+  private FactTypeInfoDaoResolver typeResolver;
   @Mock
-  private FactInfoResolver inReferenceToResolver;
+  private FactInfoDaoResolver inReferenceToResolver;
   @Mock
-  private OrganizationInfoResolver organizationResolver;
+  private OrganizationInfoServiceAccountResolver organizationResolver;
   @Mock
-  private OriginInfoResolver originResolver;
+  private OriginInfoDaoResolver originResolver;
   @Mock
-  private SubjectInfoResolver addedByResolver;
+  private SubjectInfoServiceAccountResolver addedByResolver;
   @Mock
   private ObjectInfoConverter objectConverter;
   @Mock

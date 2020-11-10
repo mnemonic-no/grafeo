@@ -4,8 +4,8 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.seb.model.v1.AclEntrySEB;
 import no.mnemonic.act.platform.seb.model.v1.OriginInfoSEB;
 import no.mnemonic.act.platform.seb.model.v1.SubjectInfoSEB;
-import no.mnemonic.act.platform.seb.producer.v1.resolvers.OriginInfoResolver;
-import no.mnemonic.act.platform.seb.producer.v1.resolvers.SubjectInfoResolver;
+import no.mnemonic.act.platform.seb.producer.v1.resolvers.OriginInfoDaoResolver;
+import no.mnemonic.act.platform.seb.producer.v1.resolvers.SubjectInfoServiceAccountResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -21,9 +21,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class AclEntryConverterTest {
 
   @Mock
-  private SubjectInfoResolver subjectResolver;
+  private SubjectInfoServiceAccountResolver subjectResolver;
   @Mock
-  private OriginInfoResolver originResolver;
+  private OriginInfoDaoResolver originResolver;
 
   private AclEntryConverter converter;
 

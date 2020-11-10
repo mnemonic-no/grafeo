@@ -8,12 +8,12 @@ import javax.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class FactTypeInfoResolver implements Function<UUID, FactTypeInfoSEB> {
+public class FactTypeInfoDaoResolver implements Function<UUID, FactTypeInfoSEB> {
 
   private final FactManager factManager;
 
   @Inject
-  public FactTypeInfoResolver(FactManager factManager) {
+  public FactTypeInfoDaoResolver(FactManager factManager) {
     this.factManager = factManager;
   }
 
@@ -22,7 +22,12 @@ public class FactTypeInfoResolver implements Function<UUID, FactTypeInfoSEB> {
     if (id == null) return null;
 
     FactTypeEntity type = factManager.getFactType(id);
-    if (type == null) return null;
+    if (type == null) {
+      return FactTypeInfoSEB.builder()
+              .setId(id)
+              .setName("N/A")
+              .build();
+    }
 
     return FactTypeInfoSEB.builder()
             .setId(type.getId())

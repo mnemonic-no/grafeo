@@ -8,12 +8,12 @@ import javax.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class OriginInfoResolver implements Function<UUID, OriginInfoSEB> {
+public class OriginInfoDaoResolver implements Function<UUID, OriginInfoSEB> {
 
   private final OriginManager originManager;
 
   @Inject
-  public OriginInfoResolver(OriginManager originManager) {
+  public OriginInfoDaoResolver(OriginManager originManager) {
     this.originManager = originManager;
   }
 
@@ -22,7 +22,12 @@ public class OriginInfoResolver implements Function<UUID, OriginInfoSEB> {
     if (id == null) return null;
 
     OriginEntity origin = originManager.getOrigin(id);
-    if (origin == null) return null;
+    if (origin == null) {
+      return OriginInfoSEB.builder()
+              .setId(id)
+              .setName("N/A")
+              .build();
+    }
 
     return OriginInfoSEB.builder()
             .setId(origin.getId())
