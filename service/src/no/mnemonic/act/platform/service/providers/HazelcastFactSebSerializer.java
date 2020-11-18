@@ -9,7 +9,7 @@ import no.mnemonic.act.platform.seb.model.v1.FactSEB;
 
 import java.io.IOException;
 
-class HazelcastFactSebSerializer implements ByteArraySerializer<FactSEB> {
+public class HazelcastFactSebSerializer implements ByteArraySerializer<FactSEB> {
 
   private static final ObjectMapper MAPPER = JsonMapper.builder().build();
   private static final ObjectWriter WRITER = MAPPER.writerFor(FactSEB.class);
