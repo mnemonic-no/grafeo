@@ -5,10 +5,12 @@ import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.lambda.LambdaUtils;
+import no.mnemonic.messaging.requestsink.jms.ExceptionMessage;
 import no.mnemonic.messaging.requestsink.jms.JMSRequestSink;
 import no.mnemonic.messaging.requestsink.jms.ProtocolVersion;
 import no.mnemonic.messaging.requestsink.jms.serializer.MessageSerializer;
 import no.mnemonic.messaging.requestsink.jms.serializer.XStreamMessageSerializer;
+import no.mnemonic.services.common.api.ServiceTimeOutException;
 import no.mnemonic.services.common.messagebus.ServiceMessageClient;
 import no.mnemonic.services.common.messagebus.ServiceResponseValueMessage;
 import no.mnemonic.services.common.messagebus.ServiceStreamingResultSetResponseMessage;
@@ -111,8 +113,10 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
             .addAllowedClass("java.util.Collections\\$UnmodifiableSet")
             .addAllowedClass("java.util.Collections\\$UnmodifiableList")
             // Response messages used by SMB.
+            .addAllowedClass(ExceptionMessage.class)
             .addAllowedClass(ServiceResponseValueMessage.class)
             .addAllowedClass(ServiceStreamingResultSetResponseMessage.class)
+            .addAllowedClass(ServiceTimeOutException.class)
             // Allow all response classes defined in the API (including exceptions).
             .addAllowedClass("no.mnemonic.act.platform.api.model.*")
             .addAllowedClass("no.mnemonic.act.platform.api.exceptions.*")

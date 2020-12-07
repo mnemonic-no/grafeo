@@ -40,6 +40,7 @@ public class TiServiceModule extends AbstractModule {
     install(new DaoModule());
     install(new SebProducerModule());
     install(new SebESEngineModule());
+    install(new RuntimeExceptionHandlerAspect());
     install(new AuthenticationAspect());
     install(new ValidationAspect());
     install(new TriggerContextAspect());

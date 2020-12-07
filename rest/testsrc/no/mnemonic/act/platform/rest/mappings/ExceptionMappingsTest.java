@@ -71,6 +71,13 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   }
 
   @Test
+  public void testFallbackExceptionMapperWithUnhandledRuntimeExceptionReturns500() throws Exception {
+    Response response = executeRequest(new UnhandledRuntimeException("test"));
+    assertEquals(500, response.getStatus());
+    assertMessages(getMessages(response), "An unknown server error occurred.", "unknown.server.error");
+  }
+
+  @Test
   public void testObjectNotFoundMapperReturns404() throws Exception {
     Response response = executeRequest(new ObjectNotFoundException("message", "template", "property", "value"));
     assertEquals(404, response.getStatus());
