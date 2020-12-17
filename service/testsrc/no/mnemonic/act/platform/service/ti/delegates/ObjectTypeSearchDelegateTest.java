@@ -48,6 +48,7 @@ public class ObjectTypeSearchDelegateTest {
   public void testFetchObjectTypes() throws Exception {
     List<ObjectTypeEntity> entities = ListUtils.list(new ObjectTypeEntity(), new ObjectTypeEntity(), new ObjectTypeEntity());
     when(objectManager.fetchObjectTypes()).thenReturn(entities);
+    when(objectTypeResponseConverter.apply(notNull())).thenReturn(ObjectType.builder().build());
 
     ResultSet<ObjectType> result = delegate.handle(new SearchObjectTypeRequest());
 

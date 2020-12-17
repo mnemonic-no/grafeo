@@ -63,6 +63,7 @@ public class FactGetAclDelegateTest {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
     List<FactAclEntryRecord> acl = ListUtils.list(new FactAclEntryRecord(), new FactAclEntryRecord(), new FactAclEntryRecord());
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setAcl(acl));
+    when(aclEntryResponseConverter.apply(notNull())).thenReturn(AclEntry.builder().build());
 
     ResultSet<AclEntry> result = delegate.handle(request);
 

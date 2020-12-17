@@ -41,6 +41,8 @@ public class FactSearchHandlerTest {
   @Before
   public void setUp() {
     initMocks(this);
+
+    when(factResponseConverter.apply(notNull())).thenReturn(Fact.builder().build());
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
 
     handler = new FactSearchHandler(retractionHandler, objectFactDao, securityContext, factResponseConverter);

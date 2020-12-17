@@ -38,6 +38,7 @@ public class OriginSearchDelegateTest {
     initMocks(this);
 
     when(originManager.fetchOrigins()).thenReturn(createEntities());
+    when(originResponseConverter.apply(notNull())).thenReturn(Origin.builder().build());
     when(securityContext.hasReadPermission(isA(OriginEntity.class))).thenReturn(true);
 
     delegate = new OriginSearchDelegate(securityContext, originManager, originResponseConverter);

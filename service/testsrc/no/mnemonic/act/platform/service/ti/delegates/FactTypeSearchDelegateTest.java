@@ -47,6 +47,7 @@ public class FactTypeSearchDelegateTest {
   public void testFetchFactTypes() throws Exception {
     List<FactTypeEntity> entities = ListUtils.list(new FactTypeEntity(), new FactTypeEntity(), new FactTypeEntity());
     when(factManager.fetchFactTypes()).thenReturn(entities);
+    when(factTypeResponseConverter.apply(notNull())).thenReturn(FactType.builder().build());
 
     ResultSet<FactType> result = delegate.handle(new SearchFactTypeRequest());
 

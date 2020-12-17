@@ -41,34 +41,38 @@
     <jdk.version>1.8</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.4.0</mnemonic.commons.version>
-    <mnemonic.messaging.version>1.2.27</mnemonic.messaging.version>
-    <mnemonic.services.common.version>0.3.23</mnemonic.services.common.version>
-    <mnemonic.services.triggers.version>0.0.10</mnemonic.services.triggers.version>
+    <mnemonic.commons.version>0.4.2</mnemonic.commons.version>
+    <mnemonic.messaging.version>1.2.28</mnemonic.messaging.version>
+    <mnemonic.services.common.version>0.3.26</mnemonic.services.common.version>
+    <mnemonic.services.triggers.version>0.0.11</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
     <activemq.version>5.16.0</activemq.version>
     <cassandra.version>4.9.0</cassandra.version>
     <disruptor.version>3.4.2</disruptor.version>
     <elastic.search.version>7.8.1</elastic.search.version>
-    <guava.version>29.0-jre</guava.version>
+    <guava.version>30.1-jre</guava.version>
     <guice.version>4.2.3</guice.version>
-    <hazelcast.version>3.12.9</hazelcast.version>
-    <hibernate.validator.version>6.1.6.Final</hibernate.validator.version>
-    <jackson.version>2.11.3</jackson.version>
-    <javax.el.version>3.0.1-b11</javax.el.version>
+    <hazelcast.version>3.12.11</hazelcast.version>
+    <hibernate.validator.version>6.1.7.Final</hibernate.validator.version>
+    <jackson.version>2.12.0</jackson.version>
+    <javax.el.version>3.0.1-b12</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
-    <jetty.version>9.4.32.v20200930</jetty.version>
-    <junit.version>4.13</junit.version>
-    <log4j.version>2.13.3</log4j.version>
-    <mockito.version>3.5.13</mockito.version>
+    <jetty.version>9.4.35.v20201120</jetty.version>
+    <junit.version>4.13.1</junit.version>
+    <log4j.version>2.14.0</log4j.version>
+    <mockito.version>3.6.28</mockito.version>
     <resteasy.version>4.5.8.Final</resteasy.version>
-    <!-- Verify if explicit dependency on SmallRye can be removed upon RESTEasy upgrade. -->
-    <smallrye.version>1.9.1</smallrye.version>
     <swagger.version>1.6.2</swagger.version>
-    <tinkerpop.version>3.4.8</tinkerpop.version>
+    <tinkerpop.version>3.4.9</tinkerpop.version>
+
+    <!-- force upgrade for transitive dependencies -->
+    <commons.codec.version>1.15</commons.codec.version>
+    <groovy.version>2.5.14</groovy.version>
+    <httpclient.version>4.5.13</httpclient.version>
+    <smallrye.version>1.10.0</smallrye.version>
 
     <!-- build dependencies -->
     <maven.assembly.version>3.1.1</maven.assembly.version>
@@ -119,6 +123,44 @@
       <url>https://artifactory.mnemonic.no/artifactory/mnemonic-snapshots</url>
     </snapshotRepository>
   </distributionManagement>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Force a newer version of commons-codec (used by ElasticSearch client) in order to fix SNYK-JAVA-COMMONSCODEC-561518. -->
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>${commons.codec.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <!-- Force a newer version of SmallRye (used by RESTEasy) in order to fix CVE-2020-1729. -->
+      <dependency>
+        <groupId>io.smallrye.config</groupId>
+        <artifactId>smallrye-config</artifactId>
+        <version>${smallrye.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <!-- Force a newer version of httpclient (used by RESTEasy and ElasticSearch client) in order to fix CVE-2020-13956. -->
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>${httpclient.version}</version>
+      </dependency>
+      <!-- Force a newer version of Groovy (used by TinkerPop) in order to fix CVE-2020-17521. -->
+      <dependency>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy</artifactId>
+        <version>${groovy.version}</version>
+        <classifier>indy</classifier>
+      </dependency>
+      <!-- Ensure that all modules use the same Guava version (also for transitive dependencies). -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <plugins>

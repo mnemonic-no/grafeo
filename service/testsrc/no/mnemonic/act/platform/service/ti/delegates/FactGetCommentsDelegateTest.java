@@ -63,6 +63,7 @@ public class FactGetCommentsDelegateTest {
     GetFactCommentsRequest request = new GetFactCommentsRequest().setFact(UUID.randomUUID());
     List<FactCommentRecord> comments = createComments();
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord().setComments(comments));
+    when(factCommentResponseConverter.apply(notNull())).thenReturn(FactComment.builder().build());
 
     ResultSet<FactComment> result = delegate.handle(request);
 
