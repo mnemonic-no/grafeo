@@ -362,6 +362,29 @@ public class FactManagerTest extends AbstractManagerTest {
     getFactManager().saveMetaFactBinding(binding);
   }
 
+  @Test
+  public void testSaveFactByTimestampReturnsSameEntity() {
+    FactByTimestampEntity entity = createFactByTimestamp(createAndSaveFact().getId());
+    assertSame(entity, getFactManager().saveFactByTimestamp(entity));
+  }
+
+  @Test
+  public void testSaveFactByTimestampReturnsNullOnNullInput() {
+    assertNull(getFactManager().saveFactByTimestamp(null));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testSaveFactByTimestampWithNonExistingFactThrowsException() {
+    getFactManager().saveFactByTimestamp(createFactByTimestamp(UUID.randomUUID()));
+  }
+
+  @Test(expected = ImmutableViolationException.class)
+  public void testSaveFactByTimestampTwiceThrowsException() {
+    FactByTimestampEntity entity = createFactByTimestamp(createAndSaveFact().getId());
+    getFactManager().saveFactByTimestamp(entity);
+    getFactManager().saveFactByTimestamp(entity);
+  }
+
   private FactTypeEntity createFactType() {
     return createFactType("factType");
   }
@@ -433,6 +456,13 @@ public class FactManagerTest extends AbstractManagerTest {
     return new MetaFactBindingEntity()
             .setFactID(factID)
             .setMetaFactID(UUID.randomUUID());
+  }
+
+  private FactByTimestampEntity createFactByTimestamp(UUID factID) {
+    return new FactByTimestampEntity()
+            .setHourOfDay(1609502400000L)
+            .setTimestamp(1609504200000L)
+            .setFactID(factID);
   }
 
   private FactTypeEntity createAndSaveFactType() {

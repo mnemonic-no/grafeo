@@ -195,6 +195,20 @@ public class FactManager implements LifecycleAspect {
     return binding;
   }
 
+  /* FactByTimestampEntity-related methods */
+
+  public FactByTimestampEntity saveFactByTimestamp(FactByTimestampEntity entity) {
+    if (entity == null) return null;
+    if (getFact(entity.getFactID()) == null)
+      throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", entity.getFactID()));
+    if (factDao.getFactByTimestamp(entity.getHourOfDay(), entity.getTimestamp(), entity.getFactID()) != null)
+      throw new ImmutableViolationException("It is not allowed to update a FactByTimestamp entry.");
+
+    factDao.save(entity);
+
+    return entity;
+  }
+
   /* Setters used for unit testing */
 
   FactManager withClock(Clock clock) {

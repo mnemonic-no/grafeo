@@ -26,6 +26,8 @@ import no.mnemonic.act.platform.dao.facade.utilities.MappingIterator;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import javax.inject.Inject;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
@@ -135,6 +137,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     factManager.saveFact(entity);
     saveFactObjectBindings(entity);
     saveMetaFactBindings(entity);
+    saveFactByTimestamp(entity);
 
     // Save all ACL entries and comments in Cassandra.
     saveAclEntries(record);
@@ -241,6 +244,20 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     factManager.saveMetaFactBinding(new MetaFactBindingEntity()
             .setFactID(fact.getInReferenceToID())
             .setMetaFactID(fact.getId())
+    );
+  }
+
+  private void saveFactByTimestamp(FactEntity fact) {
+    // Calculate the correct time bucket (truncate minutes, seconds, ...).
+    long hourOfDay = Instant.ofEpochMilli(fact.getTimestamp())
+            .truncatedTo(ChronoUnit.HOURS)
+            .toEpochMilli();
+
+    // Save FactByTimestamp lookup table entry.
+    factManager.saveFactByTimestamp(new FactByTimestampEntity()
+            .setHourOfDay(hourOfDay)
+            .setTimestamp(fact.getTimestamp())
+            .setFactID(fact.getId())
     );
   }
 

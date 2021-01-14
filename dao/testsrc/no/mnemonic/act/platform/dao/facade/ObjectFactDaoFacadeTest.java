@@ -255,6 +255,22 @@ public class ObjectFactDaoFacadeTest {
   }
 
   @Test
+  public void testStoreFactSavesFactByTimestamp() {
+    FactEntity entity = new FactEntity()
+            .setId(UUID.randomUUID())
+            .setTimestamp(1609504200000L);
+    when(factRecordConverter.toEntity(notNull())).thenReturn(entity);
+
+    dao.storeFact(new FactRecord());
+    verify(factManager).saveFactByTimestamp(argThat(factByTimestamp -> {
+      assertEquals(1609502400000L, factByTimestamp.getHourOfDay());
+      assertEquals(entity.getTimestamp(), factByTimestamp.getTimestamp());
+      assertEquals(entity.getId(), factByTimestamp.getFactID());
+      return true;
+    }));
+  }
+
+  @Test
   public void testStoreFactSavesAclEntry() {
     FactAclEntryRecord entry = new FactAclEntryRecord();
     FactRecord fact = new FactRecord()

@@ -2,6 +2,18 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Introduce fact_by_timestamp lookup table] - 2021-01-14
+A new Cassandra lookup table has been introduced. Execute the following CQL command against your Cassandra cluster (e.g. using cqlsh).
+
+```
+CREATE TABLE IF NOT EXISTS act.fact_by_timestamp (
+  hour_of_day BIGINT,
+  timestamp BIGINT,
+  fact_id UUID,
+  PRIMARY KEY (hour_of_day, timestamp, fact_id)
+) WITH CLUSTERING ORDER BY (timestamp ASC);
+```
+
 ## [Upgrade ElasticSearch to 7.8] - 2020-07-31
 Follow the general upgrade guide to upgrade ElasticSearch to version 7.8: https://www.elastic.co/guide/en/elasticsearch/reference/7.8/setup-upgrade.html
 

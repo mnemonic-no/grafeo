@@ -2,10 +2,7 @@ package no.mnemonic.act.platform.dao.cassandra.mapper;
 
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.mapper.annotations.*;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactCommentEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
-import no.mnemonic.act.platform.dao.cassandra.entity.MetaFactBindingEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +35,14 @@ public interface FactDao {
 
   @Query("SELECT * FROM " + KEY_SPACE + "." + MetaFactBindingEntity.TABLE + " WHERE fact_id = :id")
   PagingIterable<MetaFactBindingEntity> fetchMetaFactBindings(UUID id);
+
+  /* FactByTimestampEntity-related methods */
+
+  @Insert
+  void save(FactByTimestampEntity entity);
+
+  @Select
+  FactByTimestampEntity getFactByTimestamp(long hourOfDay, long timestamp, UUID factID);
 
   /* FactAclEntity-related methods */
 
