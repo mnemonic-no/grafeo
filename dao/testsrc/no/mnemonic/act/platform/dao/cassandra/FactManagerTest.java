@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -209,6 +210,87 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(0, ListUtils.list(getFactManager().getFacts(null)).size());
     assertEquals(0, ListUtils.list(getFactManager().getFacts(ListUtils.list())).size());
     assertEquals(0, ListUtils.list(getFactManager().getFacts(ListUtils.list(UUID.randomUUID()))).size());
+  }
+
+  @Test
+  public void testFetchFactsWithinTimeframeSingleBucket() {
+    long timestamp = 1609504200000L;
+
+    FactTypeEntity type = createAndSaveFactType();
+    FactEntity expected = createAndSaveFactWithTimestamp(type, timestamp);
+
+    List<UUID> actual = ListUtils.list(getFactManager().getFactsWithin(timestamp - 1000, timestamp + 1000), FactEntity::getId);
+    assertEquals(ListUtils.list(expected.getId()), actual);
+  }
+
+  @Test
+  public void testFetchFactsWithinTimeframeSingleBucketOutsideTimeframe() {
+    long timestamp1 = 1609504200000L;
+    long timestamp2 = timestamp1 - 2000;
+    long timestamp3 = timestamp1 + 2000;
+
+    FactTypeEntity type = createAndSaveFactType();
+    FactEntity expected = createAndSaveFactWithTimestamp(type, timestamp1);
+    createAndSaveFactWithTimestamp(type, timestamp2);
+    createAndSaveFactWithTimestamp(type, timestamp3);
+
+    List<UUID> actual = ListUtils.list(getFactManager().getFactsWithin(timestamp1 - 1000, timestamp1 + 1000), FactEntity::getId);
+    assertEquals(ListUtils.list(expected.getId()), actual);
+  }
+
+  @Test
+  public void testFetchFactsWithinTimeframeMultipleBuckets() {
+    long timestamp1 = 1609500600000L;
+    long timestamp2 = 1609504200000L;
+    long timestamp3 = 1609507800000L;
+
+    FactTypeEntity type = createAndSaveFactType();
+    FactEntity fact1 = createAndSaveFactWithTimestamp(type, timestamp1);
+    FactEntity fact2 = createAndSaveFactWithTimestamp(type, timestamp2);
+    FactEntity fact3 = createAndSaveFactWithTimestamp(type, timestamp3);
+
+    List<UUID> actual = ListUtils.list(getFactManager().getFactsWithin(timestamp1 - 1000, timestamp3 + 1000), FactEntity::getId);
+    assertEquals(ListUtils.list(fact1.getId(), fact2.getId(), fact3.getId()), actual);
+  }
+
+  @Test
+  public void testFetchFactsWithinTimeframeMultipleBucketsOutsideTimeframe() {
+    long timestamp1 = 1609500600000L;
+    long timestamp2 = 1609504200000L;
+    long timestamp3 = 1609507800000L;
+
+    FactTypeEntity type = createAndSaveFactType();
+    createAndSaveFactWithTimestamp(type, timestamp1);
+    FactEntity expected = createAndSaveFactWithTimestamp(type, timestamp2);
+    createAndSaveFactWithTimestamp(type, timestamp3);
+
+    List<UUID> actual = ListUtils.list(getFactManager().getFactsWithin(timestamp2 - 1000, timestamp2 + 1000), FactEntity::getId);
+    assertEquals(ListUtils.list(expected.getId()), actual);
+  }
+
+  @Test
+  public void testFetchFactsWithinTimeframeMultipleBucketsSkipsEmtpyBucket() {
+    long timestamp1 = 1609500600000L;
+    long timestamp2 = 1609507800000L;
+
+    FactTypeEntity type = createAndSaveFactType();
+    FactEntity fact1 = createAndSaveFactWithTimestamp(type, timestamp1);
+    FactEntity fact2 = createAndSaveFactWithTimestamp(type, timestamp2);
+
+    List<UUID> actual = ListUtils.list(getFactManager().getFactsWithin(timestamp1 - 1000, timestamp2 + 1000), FactEntity::getId);
+    assertEquals(ListUtils.list(fact1.getId(), fact2.getId()), actual);
+  }
+
+  @Test
+  public void testFetchFactsWithinTimeframeWithoutFacts() {
+    assertTrue(ListUtils.list(getFactManager().getFactsWithin(1609500600000L, 1609507800000L)).isEmpty());
+  }
+
+  @Test
+  public void testFetchFactsWithinTimeframeWithInvalidTimestamp() {
+    assertThrows(IllegalArgumentException.class, () -> getFactManager().getFactsWithin(-1, 1));
+    assertThrows(IllegalArgumentException.class, () -> getFactManager().getFactsWithin(1, -1));
+    assertThrows(IllegalArgumentException.class, () -> getFactManager().getFactsWithin(2, 1));
   }
 
   @Test
@@ -485,6 +567,19 @@ public class FactManagerTest extends AbstractManagerTest {
 
   private FactEntity createAndSaveFact(UUID typeID, String value) {
     return getFactManager().saveFact(createFact(typeID, value));
+  }
+
+  private FactEntity createAndSaveFactWithTimestamp(FactTypeEntity type, long timestamp) {
+    FactEntity fact = createFact(type.getId())
+            .setTimestamp(timestamp);
+
+    getFactManager().saveFact(fact);
+    getFactManager().saveFactByTimestamp(new FactByTimestampEntity()
+            .setHourOfDay(Instant.ofEpochMilli(timestamp).truncatedTo(ChronoUnit.HOURS).toEpochMilli())
+            .setTimestamp(timestamp)
+            .setFactID(fact.getId()));
+
+    return fact;
   }
 
   private FactAclEntity createAndSaveFactAclEntry(UUID factID) {

@@ -10,6 +10,8 @@ import no.mnemonic.act.platform.dao.cassandra.mapper.FactTypeDao;
 import no.mnemonic.act.platform.dao.cassandra.utilities.MultiFetchIterator;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
+import no.mnemonic.commons.logging.Logger;
+import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
@@ -19,12 +21,17 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Singleton
 public class FactManager implements LifecycleAspect {
+
+  private static final Logger LOGGER = Logging.getLogger(FactManager.class);
 
   @Dependency
   private final ClusterManager clusterManager;
@@ -109,6 +116,13 @@ public class FactManager implements LifecycleAspect {
   public Iterator<FactEntity> getFacts(List<UUID> id) {
     if (CollectionUtils.isEmpty(id)) return Collections.emptyIterator();
     return new MultiFetchIterator<>(partition -> factDao.fetchByID(partition).iterator(), id);
+  }
+
+  public Iterator<FactEntity> getFactsWithin(long startTimestamp, long endTimestamp) {
+    if (startTimestamp < 0 || endTimestamp < 0 || startTimestamp > endTimestamp)
+      throw new IllegalArgumentException(String.format("Invalid startTimestamp %d or endTimestamp %d.", startTimestamp, endTimestamp));
+
+    return new FactByTimestampIterator(startTimestamp, endTimestamp);
   }
 
   public FactEntity saveFact(FactEntity fact) {
@@ -216,7 +230,69 @@ public class FactManager implements LifecycleAspect {
     return this;
   }
 
-  /* Private helper methods */
+  /* Private helper methods and classes */
+
+  /**
+   * {@link Iterator} which uses the fact_by_timestamp table to look up Facts within a given timeframe.
+   * It goes through all hourly buckets within the timeframe and fetches the Facts for each bucket.
+   */
+  private class FactByTimestampIterator implements Iterator<FactEntity> {
+
+    private final long startTimestamp;
+    private final long endTimestamp;
+    private Instant currentBucket;
+    private Iterator<FactEntity> currentBatch;
+
+    private FactByTimestampIterator(long startTimestamp, long endTimestamp) {
+      LOGGER.debug("Initialize FactByTimestampIterator for startTimestamp %s and endTimestamp %s.",
+              Instant.ofEpochMilli(startTimestamp), Instant.ofEpochMilli(endTimestamp));
+
+      this.startTimestamp = startTimestamp;
+      this.endTimestamp = endTimestamp;
+
+      // Calculate the first time bucket (truncate minutes, seconds, ...).
+      currentBucket = Instant.ofEpochMilli(startTimestamp).truncatedTo(ChronoUnit.HOURS);
+    }
+
+    @Override
+    public boolean hasNext() {
+      // Handle initial batch.
+      if (currentBatch == null) {
+        currentBatch = nextBatch();
+      }
+
+      // One hourly bucket might yield zero elements. Therefore it needs to be skipped until the last bucket is reached.
+      while (!currentBatch.hasNext() && currentBucket.toEpochMilli() < endTimestamp) {
+        currentBatch = nextBatch();
+      }
+
+      return currentBatch.hasNext();
+    }
+
+    @Override
+    public FactEntity next() {
+      return currentBatch.next();
+    }
+
+    private Iterator<FactEntity> nextBatch() {
+      LOGGER.debug("Fetch next batch from Cassandra for bucket %s.", currentBucket);
+
+      // Fetch entities from the fact_by_timestamp lookup table for the current bucket and map to the IDs of Facts.
+      List<UUID> factID = StreamSupport.stream(factDao.fetchFactByTimestamp(currentBucket.toEpochMilli()).spliterator(), false)
+              // Filter out entities which aren't within the given startTimestamp/endTimestamp interval. Note that
+              // startTimestamp/endTimestamp might not be aligned with the current bucket, i.e. given with minutes, seconds...
+              .filter(byTimestamp -> byTimestamp.getTimestamp() >= startTimestamp)
+              .filter(byTimestamp -> byTimestamp.getTimestamp() < endTimestamp)
+              .map(FactByTimestampEntity::getFactID)
+              .collect(Collectors.toList());
+
+      // Advance to the next bucket for the next batch.
+      currentBucket = currentBucket.plus(1, ChronoUnit.HOURS);
+
+      // Use the Fact IDs to fetch the actual data.
+      return getFacts(factID);
+    }
+  }
 
   private LoadingCache<UUID, FactTypeEntity> createFactTypeByIdCache() {
     return CacheBuilder.newBuilder()

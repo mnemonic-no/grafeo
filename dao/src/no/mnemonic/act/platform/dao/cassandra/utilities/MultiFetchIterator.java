@@ -47,7 +47,6 @@ public class MultiFetchIterator<T> implements Iterator<T> {
     // If this is the initial batch or the current batch has be consumed completely, fetch the next batch.
     if (currentBatch == null || !currentBatch.hasNext()) {
       currentBatch = ObjectUtils.notNull(nextBatch(), "Next batch cannot be null!");
-      LOGGER.debug("Successfully fetched next batch from Cassandra.");
     }
 
     return currentBatch.hasNext();
@@ -60,6 +59,9 @@ public class MultiFetchIterator<T> implements Iterator<T> {
 
   private Iterator<T> nextBatch() {
     if (partitions.size() > nextPartition) {
+      LOGGER.debug("Fetch next batch from Cassandra for partition %d of %d total partitions.",
+              nextPartition + 1, partitions.size());
+
       // Fetch the next batch of elements for the next partition of ids.
       Iterator<T> batch = nextBatch.apply(partitions.get(nextPartition));
       nextPartition++;
