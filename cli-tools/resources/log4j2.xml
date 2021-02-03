@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+  <Properties>
+    <Property name="baseDir">${env:ACT_PLATFORM_LOGDIR:-logs}</Property>
+  </Properties>
+  <Appenders>
+    <Console name="stdout" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss} - %msg%n"/>
+    </Console>
+    <RollingRandomAccessFile name="CliLogs"
+                             immediateFlush="false"
+                             fileName="${baseDir}/cli.log"
+                             filePattern="${baseDir}/cli-%d{yyyy-MM-dd}.log.gz">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+      <!-- Create a log file per day by rolling over at midnight each day. -->
+      <CronTriggeringPolicy schedule="0 0 0 * * ?" evaluateOnStartup="true"/>
+      <!-- Delete log files older than 30 days. -->
+      <DefaultRolloverStrategy>
+        <Delete basePath="${baseDir}">
+          <IfFileName glob="cli-*.log.gz"/>
+          <IfLastModified age="30d"/>
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingRandomAccessFile>
+  </Appenders>
+  <Loggers>
+    <!-- Write everything related to the CLI application to stdout. -->
+    <AsyncLogger name="no.mnemonic.act.platform.cli.tools" level="info" additivity="true">
+      <AppenderRef ref="stdout"/>
+    </AsyncLogger>
+    <!-- Everything else goes into a file for further debugging purposes. -->
+    <AsyncRoot level="info">
+      <AppenderRef ref="CliLogs"/>
+    </AsyncRoot>
+  </Loggers>
+</Configuration>
