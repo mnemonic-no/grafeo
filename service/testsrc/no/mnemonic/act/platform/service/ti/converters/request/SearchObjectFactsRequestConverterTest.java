@@ -145,7 +145,7 @@ public class SearchObjectFactsRequestConverterTest {
     );
     assertEquals(123456789L, (long) criteria.getStartTimestamp());
     assertEquals(987654321L, (long) criteria.getEndTimestamp());
-    assertEquals(SetUtils.set(FactSearchCriteria.TimeFieldStrategy.timestamp), criteria.getTimeFieldStrategy());
+    assertEquals(SetUtils.set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
     assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getTimeMatchStrategy());
   }
 

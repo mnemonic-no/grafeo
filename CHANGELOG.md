@@ -39,6 +39,8 @@ should be included in the response. The endpoint omits statistics by default now
 - (2020-06-26) Added configuration option `act.action.triggers.enabled` to enable/disable the action triggers framework.
 
 ### Changed
+- (2021-02-19) All search and traverse endpoints with `before` and `after` parameters now filter Facts on their `lastSeenTimestamp`
+instead of `timestamp` fields.
 - (2020-08-14) The `POST /v1/object/search` and `POST /v1/fact/search` endpoints now return with a 403 if the search request
 does not specify any search parameters. Users must provide at least one parameter (in addition to `limit`).
 - (2020-04-17) In Create APIs (create Fact, create meta Fact, retract Fact) related entities (`organization`, `origin`, `acl`)

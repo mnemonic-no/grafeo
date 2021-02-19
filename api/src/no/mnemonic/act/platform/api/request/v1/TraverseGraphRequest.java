@@ -17,11 +17,11 @@ public class TraverseGraphRequest implements ValidatingRequest {
   private String query;
   @ApiModelProperty(value = "Traverse retracted Facts (default false)", example = "false")
   private Boolean includeRetracted;
-  @ApiModelProperty(value = "Only traverse Facts added before a specific timestamp",
+  @ApiModelProperty(value = "Only traverse Facts seen before a specific timestamp",
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long before;
-  @ApiModelProperty(value = "Only traverse Facts added after a specific timestamp",
+  @ApiModelProperty(value = "Only traverse Facts seen after a specific timestamp",
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;

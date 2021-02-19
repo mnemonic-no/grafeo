@@ -152,8 +152,8 @@ public class FactIT extends AbstractIT {
     // Create a Fact and multiple related meta Facts in the database ...
     FactRecord referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
-    createMetaFact(referencedFact, metaFactType, f -> f.setTimestamp(111111111));
-    FactRecord metaFact = createMetaFact(referencedFact, metaFactType, f -> f.setTimestamp(333333333));
+    createMetaFact(referencedFact, metaFactType, f -> f.setLastSeenTimestamp(111111111));
+    FactRecord metaFact = createMetaFact(referencedFact, metaFactType, f -> f.setLastSeenTimestamp(333333333));
 
     // ... and check that only one meta Fact after filtering is found via the REST API.
     fetchAndAssertList("/v1/fact/uuid/" + referencedFact.getId() + "/meta?after=" + Instant.ofEpochMilli(222222222), metaFact.getId());

@@ -96,6 +96,7 @@ public class PropertyHelper {
             .setFactBinding(FactSearchCriteria.FactBinding.oneLegged)
             .setStartTimestamp(traverseParams.getAfterTimestamp())
             .setEndTimestamp(traverseParams.getBeforeTimestamp())
+            .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
             .setCurrentUserID(securityContext.getCurrentUserID())
             .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
             .build());
@@ -146,6 +147,7 @@ public class PropertyHelper {
             .setFactBinding(FactSearchCriteria.FactBinding.meta)
             .setStartTimestamp(traverseParams.getAfterTimestamp())
             .setEndTimestamp(traverseParams.getBeforeTimestamp())
+            .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
             .setCurrentUserID(securityContext.getCurrentUserID())
             .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
             .build());

@@ -42,7 +42,7 @@ public class SearchFactRequestConverter {
                     FactSearchCriteria.NumberFieldStrategy.certainty))
             .setStartTimestamp(request.getAfter())
             .setEndTimestamp(request.getBefore())
-            .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.timestamp)
+            .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
             .setCurrentUserID(securityContext.getCurrentUserID())
             .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())

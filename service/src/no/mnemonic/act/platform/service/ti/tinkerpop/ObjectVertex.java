@@ -63,7 +63,7 @@ public class ObjectVertex implements Vertex {
                     .setFactTypeID(factTypeIds)
                     .setStartTimestamp(graph.getTraverseParams().getAfterTimestamp())
                     .setEndTimestamp(graph.getTraverseParams().getBeforeTimestamp())
-                    .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.timestamp)
+                    .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
                     .setCurrentUserID(graph.getSecurityContext().getCurrentUserID())
                     .setAvailableOrganizationID(graph.getSecurityContext().getAvailableOrganizationID())
                     .build());

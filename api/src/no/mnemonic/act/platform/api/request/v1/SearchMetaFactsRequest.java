@@ -45,10 +45,10 @@ public class SearchMetaFactsRequest implements ValidatingRequest {
   private Dimension dimension;
   @ApiModelProperty(value = "Include retracted meta Facts (default false)", example = "false")
   private Boolean includeRetracted;
-  @ApiModelProperty(value = "Only return meta Facts added before a specific timestamp", example = "2016-09-28T21:26:22Z", dataType = "string")
+  @ApiModelProperty(value = "Only return meta Facts seen before a specific timestamp", example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long before;
-  @ApiModelProperty(value = "Only return meta Facts added after a specific timestamp", example = "2016-09-28T21:26:22Z", dataType = "string")
+  @ApiModelProperty(value = "Only return meta Facts seen after a specific timestamp", example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
   @ApiModelProperty(value = "Limit the number of returned meta Facts (default 25, 0 means all)", example = "25")

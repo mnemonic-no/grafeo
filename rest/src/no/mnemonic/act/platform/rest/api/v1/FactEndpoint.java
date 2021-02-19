@@ -167,8 +167,8 @@ public class FactEndpoint {
   public Response getMetaFacts(
           @PathParam("fact") @ApiParam(value = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
           @QueryParam("includeRetracted") @ApiParam(value = "Include retracted meta Facts (default false)") Boolean includeRetracted,
-          @QueryParam("before") @ApiParam(value = "Only return meta Facts added before a specific timestamp.") String before,
-          @QueryParam("after") @ApiParam(value = "Only return meta Facts added after a specific timestamp.") String after,
+          @QueryParam("before") @ApiParam(value = "Only return meta Facts seen before a specific timestamp.") String before,
+          @QueryParam("after") @ApiParam(value = "Only return meta Facts seen after a specific timestamp.") String after,
           @QueryParam("limit") @ApiParam(value = "Limit the number of returned meta Facts (default 25, 0 means all)") @Min(0) Integer limit
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.searchMetaFacts(credentialsResolver.getRequestHeader(), new SearchMetaFactsRequest()

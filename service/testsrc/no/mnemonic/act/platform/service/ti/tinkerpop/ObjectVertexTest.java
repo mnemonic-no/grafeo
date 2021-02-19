@@ -556,6 +556,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
     verify(getObjectFactDao(), times(1)).searchFacts(argThat(criteria -> {
       assertEquals(afterTimestamp, criteria.getStartTimestamp());
       assertEquals(beforeTimestamp, criteria.getEndTimestamp());
+      assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
       return true;
     }));
   }

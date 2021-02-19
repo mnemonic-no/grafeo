@@ -153,6 +153,7 @@ public class PropertyHelperTest {
       assertEquals(FactSearchCriteria.FactBinding.oneLegged, criteria.getFactBinding());
       assertEquals(start, criteria.getStartTimestamp());
       assertEquals(end, criteria.getEndTimestamp());
+      assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
       return true;
     }));
   }
@@ -298,6 +299,7 @@ public class PropertyHelperTest {
       assertEquals(FactSearchCriteria.FactBinding.meta, criteria.getFactBinding());
       assertEquals(start, criteria.getStartTimestamp());
       assertEquals(end, criteria.getEndTimestamp());
+      assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
       return true;
     }));
   }

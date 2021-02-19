@@ -47,11 +47,11 @@ public class SearchObjectRequest implements ValidatingRequest {
   private Float maximum;
   @ApiModelProperty(value = "Specify the field used for minimum/maximum filters (default 'certainty')")
   private Dimension dimension;
-  @ApiModelProperty(value = "Only return Objects with Facts added before a specific timestamp",
+  @ApiModelProperty(value = "Only return Objects with Facts seen before a specific timestamp",
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long before;
-  @ApiModelProperty(value = "Only return Objects with Facts added after a specific timestamp",
+  @ApiModelProperty(value = "Only return Objects with Facts seen after a specific timestamp",
           example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
