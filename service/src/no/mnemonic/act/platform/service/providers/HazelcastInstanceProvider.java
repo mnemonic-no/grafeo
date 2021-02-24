@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static no.mnemonic.act.platform.seb.esengine.v1.handlers.FactKafkaToHazelcastHandler.FACT_HAZELCAST_QUEUE_NAME;
@@ -96,7 +97,8 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
     // Only allow well-known classes to be deserialized, especially it shouldn't be allowed to deserialize
     // arbitrary classes implementing Serializable to avoid deserialization vulnerabilities.
     JavaSerializationFilterConfig filterCfg = new JavaSerializationFilterConfig().setDefaultsDisabled(true);
-    filterCfg.getWhitelist().addClasses(FactSEB.class.getName());
+    // FactSEB is required for seb-esengine, HashMap for internal Hazelcast communication.
+    filterCfg.getWhitelist().addClasses(FactSEB.class.getName(), HashMap.class.getName());
     cfg.getSerializationConfig().setJavaSerializationFilterConfig(filterCfg);
   }
 
