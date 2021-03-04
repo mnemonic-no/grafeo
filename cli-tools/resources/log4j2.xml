@@ -10,17 +10,12 @@
     <RollingRandomAccessFile name="CliLogs"
                              immediateFlush="false"
                              fileName="${baseDir}/cli.log"
-                             filePattern="${baseDir}/cli-%d{yyyy-MM-dd}.log.gz">
+                             filePattern="${baseDir}/cli-%i.log.gz">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-      <!-- Create a log file per day by rolling over at midnight each day. -->
-      <CronTriggeringPolicy schedule="0 0 0 * * ?" evaluateOnStartup="true"/>
-      <!-- Delete log files older than 30 days. -->
-      <DefaultRolloverStrategy>
-        <Delete basePath="${baseDir}">
-          <IfFileName glob="cli-*.log.gz"/>
-          <IfLastModified age="30d"/>
-        </Delete>
-      </DefaultRolloverStrategy>
+      <!-- Roll over current log file when 50 MB is reached. -->
+      <SizeBasedTriggeringPolicy size="50 MB"/>
+      <!-- Keep at most 5 historic files in addition to the file currently written to. -->
+      <DefaultRolloverStrategy fileIndex="min" min="1" max="5"/>
     </RollingRandomAccessFile>
   </Appenders>
   <Loggers>
