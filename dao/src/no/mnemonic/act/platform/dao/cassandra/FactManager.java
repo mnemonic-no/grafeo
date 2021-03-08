@@ -25,7 +25,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Singleton
@@ -277,20 +276,20 @@ public class FactManager implements LifecycleAspect {
     private Iterator<FactEntity> nextBatch() {
       LOGGER.debug("Fetch next batch from Cassandra for bucket %s.", currentBucket);
 
-      // Fetch entities from the fact_by_timestamp lookup table for the current bucket and map to the IDs of Facts.
-      List<UUID> factID = StreamSupport.stream(factDao.fetchFactByTimestamp(currentBucket.toEpochMilli()).spliterator(), false)
+      // Fetch entities from the fact_by_timestamp lookup table for the current bucket and use the Fact IDs to fetch the actual data.
+      Iterator<FactEntity> facts = StreamSupport.stream(factDao.fetchFactByTimestamp(currentBucket.toEpochMilli()).spliterator(), false)
               // Filter out entities which aren't within the given startTimestamp/endTimestamp interval. Note that
               // startTimestamp/endTimestamp might not be aligned with the current bucket, i.e. given with minutes, seconds...
               .filter(byTimestamp -> byTimestamp.getTimestamp() >= startTimestamp)
               .filter(byTimestamp -> byTimestamp.getTimestamp() < endTimestamp)
-              .map(FactByTimestampEntity::getFactID)
-              .collect(Collectors.toList());
+              .map(byTimestamp -> getFact(byTimestamp.getFactID()))
+              .filter(Objects::nonNull)
+              .iterator();
 
       // Advance to the next bucket for the next batch.
       currentBucket = currentBucket.plus(1, ChronoUnit.HOURS);
 
-      // Use the Fact IDs to fetch the actual data.
-      return getFacts(factID);
+      return facts;
     }
   }
 
