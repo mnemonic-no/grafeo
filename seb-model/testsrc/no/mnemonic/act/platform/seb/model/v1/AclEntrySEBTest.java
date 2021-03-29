@@ -27,6 +27,18 @@ public class AclEntrySEBTest extends AbstractSEBTest {
   }
 
   @Test
+  public void testDecodeWithUnknownProperty() throws Exception {
+    UUID id = UUID.randomUUID();
+    String json = String.format("{" +
+            "id : '%s'," +
+            "unknown : 'Should be ignored'" +
+            "}", id);
+
+    AclEntrySEB model = getMapper().readValue(json, AclEntrySEB.class);
+    assertEquals(id, model.getId());
+  }
+
+  @Test
   public void testEncode() {
     AclEntrySEB model = AclEntrySEB.builder()
             .setId(UUID.randomUUID())

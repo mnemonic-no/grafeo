@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.seb.model.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -35,6 +36,7 @@ public class ObjectInfoSEB {
   }
 
   @JsonPOJOBuilder(withPrefix = "set")
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Builder {
     private UUID id;
     private ObjectTypeInfoSEB type;

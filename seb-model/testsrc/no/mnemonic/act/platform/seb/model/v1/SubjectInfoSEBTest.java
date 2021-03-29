@@ -23,6 +23,18 @@ public class SubjectInfoSEBTest extends AbstractSEBTest {
   }
 
   @Test
+  public void testDecodeWithUnknownProperty() throws Exception {
+    UUID id = UUID.randomUUID();
+    String json = String.format("{" +
+            "id : '%s'," +
+            "unknown : 'Should be ignored'" +
+            "}", id);
+
+    SubjectInfoSEB model = getMapper().readValue(json, SubjectInfoSEB.class);
+    assertEquals(id, model.getId());
+  }
+
+  @Test
   public void testEncode() {
     SubjectInfoSEB model = SubjectInfoSEB.builder()
             .setId(UUID.randomUUID())

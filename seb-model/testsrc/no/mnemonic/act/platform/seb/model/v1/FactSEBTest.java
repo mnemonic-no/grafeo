@@ -54,6 +54,18 @@ public class FactSEBTest extends AbstractSEBTest {
   }
 
   @Test
+  public void testDecodeWithUnknownProperty() throws Exception {
+    UUID id = UUID.randomUUID();
+    String json = String.format("{" +
+            "id : '%s'," +
+            "unknown : 'Should be ignored'" +
+            "}", id);
+
+    FactSEB model = getMapper().readValue(json, FactSEB.class);
+    assertEquals(id, model.getId());
+  }
+
+  @Test
   public void testEncode() {
     FactSEB model = FactSEB.builder()
             .setId(UUID.randomUUID())

@@ -23,6 +23,18 @@ public class OrganizationInfoSEBTest extends AbstractSEBTest {
   }
 
   @Test
+  public void testDecodeWithUnknownProperty() throws Exception {
+    UUID id = UUID.randomUUID();
+    String json = String.format("{" +
+            "id : '%s'," +
+            "unknown : 'Should be ignored'" +
+            "}", id);
+
+    OrganizationInfoSEB model = getMapper().readValue(json, OrganizationInfoSEB.class);
+    assertEquals(id, model.getId());
+  }
+
+  @Test
   public void testEncode() {
     OrganizationInfoSEB model = OrganizationInfoSEB.builder()
             .setId(UUID.randomUUID())
