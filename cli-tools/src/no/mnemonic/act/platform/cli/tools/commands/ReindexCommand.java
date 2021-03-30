@@ -46,6 +46,13 @@ public class ReindexCommand implements Runnable {
   )
   private Instant endTimestamp;
 
+  @Option(
+          description = "By default, data will be reindex from '--start' to '--end'. " +
+                  "Specify this option to reverse the order, i.e. reindex from '--end' to '--start'.",
+          names = "--reverse"
+  )
+  private boolean reverse;
+
   @Spec
   private CommandSpec spec;
 
@@ -62,7 +69,7 @@ public class ReindexCommand implements Runnable {
     Properties applicationProperties = PropertiesResolver.loadPropertiesFile(configurationFile);
     ComponentContainerWrapper wrapper = new ComponentContainerWrapper(new ReindexCommandModule(applicationProperties));
     // Execute the command inside the ComponentContainer. The implementation is delegated to CassandraToElasticSearchReindexHandler.
-    wrapper.execute(() -> wrapper.getBean(CassandraToElasticSearchReindexHandler.class).reindex(startTimestamp, endTimestamp));
+    wrapper.execute(() -> wrapper.getBean(CassandraToElasticSearchReindexHandler.class).reindex(startTimestamp, endTimestamp, reverse));
   }
 
   private static class ReindexCommandModule extends AbstractModule {

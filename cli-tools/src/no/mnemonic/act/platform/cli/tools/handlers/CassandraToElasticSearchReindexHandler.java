@@ -44,34 +44,50 @@ public class CassandraToElasticSearchReindexHandler {
    *
    * @param startTimestamp Timestamp to start reindexing
    * @param endTimestamp   Timestamp to stop reindexing
+   * @param reverse        If true reverse the reindexing order
    */
-  public void reindex(Instant startTimestamp, Instant endTimestamp) {
+  public void reindex(Instant startTimestamp, Instant endTimestamp, boolean reverse) {
     // Input validation with proper user feedback is performed by ReindexCommand, just return here.
     if (endTimestamp.isBefore(startTimestamp)) return;
 
     LOGGER.info("Reindex Facts between %s and %s.", startTimestamp, endTimestamp);
 
+    LongAdder processedFacts = new LongAdder();
+    if (!reverse) {
+      reindexFromStartToEnd(startTimestamp, endTimestamp, processedFacts);
+    } else {
+      reindexFromEndToStart(startTimestamp, endTimestamp, processedFacts);
+    }
+
+    LOGGER.info("Finished reindexing Facts, processed %d Facts in total.", processedFacts.longValue());
+  }
+
+  private void reindexFromStartToEnd(Instant startTimestamp, Instant endTimestamp, LongAdder processedFacts) {
     Instant currentBucketStart = startTimestamp;
     Instant currentBucketEnd = advanceCurrentBucketEnd(startTimestamp, endTimestamp);
-    LongAdder processedFacts = new LongAdder();
 
     // The whole time frame is partitioned into buckets defined by BUCKET_SIZE. Go through all buckets one-by-one.
     while (currentBucketStart.isBefore(endTimestamp)) {
-      LOGGER.info("Process Facts from %s to %s.", currentBucketStart, currentBucketEnd);
-
-      // Fetch all Facts inside one bucket from Cassandra, convert them to documents and index them into ElasticSearch.
-      factManager.getFactsWithin(currentBucketStart.toEpochMilli(), currentBucketEnd.toEpochMilli())
-              .forEachRemaining(fact -> {
-                factSearchManager.indexFact(factConverter.apply(fact));
-                processedFacts.increment();
-              });
+      reindexFactsWithinCurrentBucket(currentBucketStart, currentBucketEnd, processedFacts);
 
       // Continue with the next bucket until endTimestamp is reached.
       currentBucketStart = currentBucketEnd;
       currentBucketEnd = advanceCurrentBucketEnd(currentBucketEnd, endTimestamp);
     }
+  }
 
-    LOGGER.info("Finished reindexing Facts, processed %d Facts in total.", processedFacts.longValue());
+  private void reindexFromEndToStart(Instant startTimestamp, Instant endTimestamp, LongAdder processedFacts) {
+    Instant currentBucketEnd = endTimestamp;
+    Instant currentBucketStart = advanceCurrentBucketStart(endTimestamp, startTimestamp);
+
+    // The whole time frame is partitioned into buckets defined by BUCKET_SIZE. Go through all buckets one-by-one.
+    while (currentBucketEnd.isAfter(startTimestamp)) {
+      reindexFactsWithinCurrentBucket(currentBucketStart, currentBucketEnd, processedFacts);
+
+      // Continue with the next bucket until startTimestamp is reached.
+      currentBucketEnd = currentBucketStart;
+      currentBucketStart = advanceCurrentBucketStart(currentBucketStart, startTimestamp);
+    }
   }
 
   private Instant advanceCurrentBucketEnd(Instant currentBucketEnd, Instant endTimestamp) {
@@ -81,5 +97,24 @@ public class CassandraToElasticSearchReindexHandler {
     }
 
     return newEnd;
+  }
+
+  private Instant advanceCurrentBucketStart(Instant currentBucketStart, Instant startTimestamp) {
+    Instant newStart = currentBucketStart.minus(BUCKET_SIZE);
+    if (newStart.isBefore(startTimestamp)) {
+      newStart = startTimestamp;
+    }
+
+    return newStart;
+  }
+
+  private void reindexFactsWithinCurrentBucket(Instant currentBucketStart, Instant currentBucketEnd, LongAdder processedFacts) {
+    LOGGER.info("Process Facts from %s to %s.", currentBucketStart, currentBucketEnd);
+    // Fetch all Facts inside one bucket from Cassandra, convert them to documents and index them into ElasticSearch.
+    factManager.getFactsWithin(currentBucketStart.toEpochMilli(), currentBucketEnd.toEpochMilli())
+            .forEachRemaining(fact -> {
+              factSearchManager.indexFact(factConverter.apply(fact));
+              processedFacts.increment();
+            });
   }
 }
