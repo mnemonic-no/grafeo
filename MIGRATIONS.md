@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS act.fact_by_timestamp (
 ) WITH CLUSTERING ORDER BY (timestamp ASC);
 ```
 
+Adapt and execute the `migrations/001-fact-by-timestamp.py` script to populate the new table from the existing data.
+Depending on the size of your cluster this may take a while.
+
 ## [Upgrade ElasticSearch to 7.8] - 2020-07-31
 Follow the general upgrade guide to upgrade ElasticSearch to version 7.8: https://www.elastic.co/guide/en/elasticsearch/reference/7.8/setup-upgrade.html
 
