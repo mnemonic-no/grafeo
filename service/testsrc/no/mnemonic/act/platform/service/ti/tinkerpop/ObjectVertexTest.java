@@ -305,7 +305,15 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testPropertiesWithDefaultProperties() {
+  public void testPropertiesOnlyFetchedOnce() {
+    Vertex vertex = createVertex();
+
+    assertEquals(list(vertex.properties()), list(vertex.properties()));
+    verify(getPropertyHelper()).getObjectProperties(notNull(), notNull());
+  }
+
+  @Test
+  public void testPropertiesWithoutProperties() {
     Vertex vertex = createVertex();
 
     List<VertexProperty<Object>> props = list(vertex.properties());
@@ -320,36 +328,20 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testPropertiesWithMatchingProperty() {
-    ObjectVertex objectVertex = ObjectVertex.builder()
-            .setGraph(getActGraph())
-            .setObjectRecord(new ObjectRecord()
-                    .setId(UUID.randomUUID())
-                    .setValue("someObjectValue"))
-            .setObjectType(ObjectTypeStruct.builder()
-                    .setId(UUID.randomUUID())
-                    .setName("someObjectType")
-                    .build())
-            .setProperties(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("b", "2")))
-            .build();
+    when(getPropertyHelper().getObjectProperties(any(), any()))
+            .thenReturn(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("b", "2")));
 
+    Vertex objectVertex = createVertex();
     assertEquals(set("vp[a->1]", "vp[b->2]"), set(objectVertex.properties(), Object::toString));
     assertEquals(set("vp[a->1]", "vp[b->2]"), set(objectVertex.properties("a", "b"), Object::toString));
   }
 
   @Test
   public void testPropertiesWithSameName() {
-    ObjectVertex objectVertex = ObjectVertex.builder()
-            .setGraph(getActGraph())
-            .setObjectRecord(new ObjectRecord()
-                    .setId(UUID.randomUUID())
-                    .setValue("someObjectValue"))
-            .setObjectType(ObjectTypeStruct.builder()
-                    .setId(UUID.randomUUID())
-                    .setName("someObjectType")
-                    .build())
-            .setProperties(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("a", "2")))
-            .build();
+    when(getPropertyHelper().getObjectProperties(any(), any()))
+            .thenReturn(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("a", "2")));
 
+    Vertex objectVertex = createVertex();
     assertEquals(set("vp[a->1]", "vp[a->2]"), set(objectVertex.properties("a"), Object::toString));
   }
 
@@ -383,14 +375,20 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testAutotypeStringProperties() {
-    Vertex vertex = createVertex(list(new PropertyEntry<>("value", "someObjectValue")));
+    when(getPropertyHelper().getObjectProperties(any(), any()))
+            .thenReturn(list(new PropertyEntry<>("value", "someObjectValue")));
+
+    Vertex vertex = createVertex();
     String value = vertex.value("value");
     assertEquals("someObjectValue", value);
   }
 
   @Test
   public void testGetPropertyKeysOnVertex() {
-    Vertex vertex = createVertex(list(new PropertyEntry<>("value", "someObjectValue")));
+    when(getPropertyHelper().getObjectProperties(any(), any()))
+            .thenReturn(list(new PropertyEntry<>("value", "someObjectValue")));
+
+    Vertex vertex = createVertex();
     // Test that the following properties exists on the vertex.
     Map<String, String> expected = map(
             T("value", "someObjectValue")
@@ -417,7 +415,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testReturnEmptyPropertyIfKeyNonExistent() {
     Vertex vertex = createVertex();
-    VertexProperty property = vertex.property("something");
+    VertexProperty<Object> property = vertex.property("something");
     assertEquals(VertexProperty.empty(), property);
   }
 
@@ -504,8 +502,6 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testEdgesWithoutAccess() {
-    ActGraph actGraph = getActGraph();
-
     ObjectTypeStruct objectType = mockObjectType();
     ObjectRecord source = mockObjectRecord(objectType, "someValue");
     ObjectRecord destination = mockObjectRecord(objectType, "someOthervalue");
@@ -591,10 +587,6 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   private Vertex createVertex() {
-    return createVertex(list());
-  }
-
-  private Vertex createVertex(List<PropertyEntry<?>> props) {
     ObjectTypeStruct objectType = ObjectTypeStruct.builder()
             .setId(UUID.randomUUID())
             .setName("someObjectType")
@@ -609,7 +601,6 @@ public class ObjectVertexTest extends AbstractGraphTest {
             .setGraph(getActGraph())
             .setObjectRecord(object)
             .setObjectType(objectType)
-            .setProperties(props)
             .build();
   }
 }

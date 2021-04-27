@@ -17,10 +17,7 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -37,17 +34,13 @@ public class ElementFactoryTest {
   @Mock
   private TiSecurityContext securityContext;
 
-  private ActGraph actGraph;
-
   private ElementFactory elementFactory;
 
   @Before
   public void setup() {
     initMocks(this);
 
-    when(propertyHelper.getOneLeggedFactsAsProperties(any(), any())).thenReturn(list());
-
-    actGraph = ActGraph.builder()
+    ActGraph actGraph = ActGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContext)
@@ -151,24 +144,6 @@ public class ElementFactoryTest {
             objectSource.getId());
 
     assertSame(first, second);
-  }
-
-  @Test
-  public void testCreateEdgeWithProperties() {
-    FactTypeStruct factTypeMock = mockFactType();
-    ObjectTypeStruct objectTypeMock = mockObjectType();
-    ObjectRecord objectA = mockObject(objectTypeMock);
-    ObjectRecord objectB = mockObject(objectTypeMock);
-
-    FactRecord factRecord = new FactRecord()
-            .setId(UUID.randomUUID())
-            .setTypeID(factTypeMock.getId())
-            .setBidirectionalBinding(true)
-            .setDestinationObject(objectA)
-            .setSourceObject(objectB);
-    elementFactory.createEdge(factRecord, objectA.getId());
-
-    verify(propertyHelper).getFactProperties(factRecord, actGraph.getTraverseParams());
   }
 
   @Test

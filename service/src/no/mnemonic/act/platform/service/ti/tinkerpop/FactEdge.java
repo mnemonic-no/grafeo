@@ -2,18 +2,18 @@ package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
-import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
 import no.mnemonic.commons.utilities.ObjectUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.apache.tinkerpop.gremlin.structure.Edge.Exceptions.edgeRemovalNotSupported;
 
@@ -31,20 +31,18 @@ public class FactEdge implements Edge {
   private final FactTypeStruct type;
   private final Vertex inVertex;
   private final Vertex outVertex;
-  private final Set<Property<?>> properties;
+  private Set<Property<?>> allProperties = null;
 
   private FactEdge(ActGraph graph,
                    FactRecord fact,
                    FactTypeStruct type,
                    Vertex inVertex,
-                   Vertex outVertex,
-                   List<PropertyEntry<?>> properties) {
+                   Vertex outVertex) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
     this.fact = ObjectUtils.notNull(fact, "'fact' is null!");
     this.type = ObjectUtils.notNull(type, "'type' is null!");
     this.inVertex = ObjectUtils.notNull(inVertex, "'inVertex' is null!");
     this.outVertex = ObjectUtils.notNull(outVertex, "'outVertex' is null!");
-    this.properties = Collections.unmodifiableSet(getAllProperties(ObjectUtils.notNull(properties, "'properties is null!'")));
     this.edgeID = UUID.randomUUID(); // Generate a random ID for each new edge.
   }
 
@@ -79,8 +77,13 @@ public class FactEdge implements Edge {
 
   @Override
   public <V> Iterator<Property<V>> properties(String... propertyKeys) {
+    if (allProperties == null) {
+      // Resolve properties the first time they are accessed. They are cached afterwards.
+      allProperties = getAllProperties();
+    }
+
     //noinspection unchecked
-    return properties.stream()
+    return allProperties.stream()
             .filter(property -> set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
             .map(property -> (Property<V>) property)
             .iterator();
@@ -118,8 +121,12 @@ public class FactEdge implements Edge {
     return Objects.hash(id());
   }
 
-  private Set<Property<?>> getAllProperties(List<PropertyEntry<?>> properties) {
-    return properties.stream().map(p -> new FactProperty<>(this, p.getName(), p.getValue())).collect(Collectors.toSet());
+  private Set<Property<?>> getAllProperties() {
+    return graph.getPropertyHelper()
+            .getFactProperties(fact, graph.getTraverseParams())
+            .stream()
+            .map(p -> new FactProperty<>(this, p.getName(), p.getValue()))
+            .collect(Collectors.toSet());
   }
 
   public static Builder builder() {
@@ -133,13 +140,12 @@ public class FactEdge implements Edge {
     private FactTypeStruct type;
     private Vertex inVertex;
     private Vertex outVertex;
-    private List<PropertyEntry<?>> properties;
 
     private Builder() {
     }
 
     public FactEdge build() {
-      return new FactEdge(graph, fact, type, inVertex, outVertex, ObjectUtils.ifNull(properties, list()));
+      return new FactEdge(graph, fact, type, inVertex, outVertex);
     }
 
     public Builder setGraph(ActGraph graph) {
@@ -164,16 +170,6 @@ public class FactEdge implements Edge {
 
     public Builder setOutVertex(Vertex outVertex) {
       this.outVertex = outVertex;
-      return this;
-    }
-
-    public Builder setProperties(List<PropertyEntry<?>> properties) {
-      this.properties = properties;
-      return this;
-    }
-
-    public Builder addProperty(PropertyEntry<?> property) {
-      this.properties = ListUtils.addToList(this.properties, property);
       return this;
     }
   }

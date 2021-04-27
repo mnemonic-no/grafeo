@@ -5,10 +5,10 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
-import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.mockito.Mock;
@@ -29,7 +29,7 @@ abstract class AbstractGraphTest {
   @Mock
   private FactRetractionHandler factRetractionHandler;
   @Mock
-  PropertyHelper propertyHelper;
+  private PropertyHelper propertyHelper;
   @Mock
   private TiSecurityContext securityContext;
 
@@ -44,6 +44,7 @@ abstract class AbstractGraphTest {
     when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
 
     when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());
+    when(propertyHelper.getFactProperties(any(), any())).thenReturn(list());
 
     actGraph = createActGraph(TraverseParams.builder().build());
   }

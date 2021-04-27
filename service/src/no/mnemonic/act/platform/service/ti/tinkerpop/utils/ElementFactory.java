@@ -15,7 +15,6 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -145,15 +144,12 @@ public class ElementFactory {
     Vertex inVertex = getVertex(inVertexId);
     Vertex outVertex = getVertex(outVertexId);
 
-    List<PropertyEntry<?>> props = owner.getPropertyHelper().getFactProperties(factRecord, owner.getTraverseParams());
-
     return FactEdge.builder()
             .setGraph(owner)
             .setFactRecord(factRecord)
             .setFactType(factTypeStruct)
             .setInVertex(inVertex)
             .setOutVertex(outVertex)
-            .setProperties(props)
             .build();
   }
 
@@ -178,15 +174,10 @@ public class ElementFactory {
                         owner.getObjectFactTypeResolver().toObjectTypeStruct(objectRecord.getTypeID()),
                         String.format("ObjectType with id = %s does not exist.", objectRecord.getTypeID()));
 
-                List<PropertyEntry<?>> props = owner.getPropertyHelper().getObjectProperties(
-                        objectRecord,
-                        owner.getTraverseParams());
-
                 return ObjectVertex.builder()
                         .setGraph(owner)
                         .setObjectRecord(objectRecord)
                         .setObjectType(objectTypeStruct)
-                        .setProperties(props)
                         .build();
               }
             });
