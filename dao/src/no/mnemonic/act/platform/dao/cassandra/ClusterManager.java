@@ -1,8 +1,14 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
+import com.codahale.metrics.*;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DriverException;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.metadata.Node;
+import com.datastax.oss.driver.api.core.metrics.DefaultNodeMetric;
+import com.datastax.oss.driver.api.core.metrics.DefaultSessionMetric;
+import com.datastax.oss.driver.api.core.metrics.NodeMetric;
+import com.datastax.oss.driver.api.core.metrics.SessionMetric;
 import com.google.common.io.CharStreams;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.mapper.CassandraMapper;
@@ -10,6 +16,7 @@ import no.mnemonic.commons.component.ComponentException;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.commons.metrics.*;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -27,7 +34,7 @@ import java.util.stream.Collectors;
 
 import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 
-public class ClusterManager implements LifecycleAspect {
+public class ClusterManager implements LifecycleAspect, MetricAspect {
 
   private static final long INITIALIZATION_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
   private static final Logger LOGGER = Logging.getLogger(ClusterManager.class);
@@ -60,6 +67,25 @@ public class ClusterManager implements LifecycleAspect {
   public void stopComponent() {
     // Close session to free up any resources.
     if (session != null) session.close();
+  }
+
+  @Override
+  public Metrics getMetrics() throws MetricException {
+    if (session == null || !session.getMetrics().isPresent()) return new MetricsData();
+
+    com.datastax.oss.driver.api.core.metrics.Metrics driverMetrics = session.getMetrics().get();
+
+    MetricsGroup clientMetrics = new MetricsGroup();
+    // First collect metrics from the session.
+    clientMetrics.addSubMetrics("session", collectSessionMetrics(driverMetrics));
+    // Then collect individual node metrics.
+    for (Node node : session.getMetadata().getNodes().values()) {
+      // Only collect metrics about nodes from the local data center as the driver won't query nodes from other data centers.
+      if (!Objects.equals(node.getDatacenter(), dataCenter)) continue;
+      clientMetrics.addSubMetrics("node-" + node.getHostId(), collectNodeMetrics(driverMetrics, node));
+    }
+
+    return clientMetrics;
   }
 
   private void initializeSession() {
@@ -127,6 +153,61 @@ public class ClusterManager implements LifecycleAspect {
   private void failComponentOnStart(Exception ex) {
     LOGGER.warning(ex, "Could not connect to Cassandra. Shutting down component.");
     throw new ComponentException("Could not connect to Cassandra. Shutting down component.", ex);
+  }
+
+  private MetricsData collectSessionMetrics(com.datastax.oss.driver.api.core.metrics.Metrics driverMetrics) throws MetricException {
+    Gauge<?> connectedNodes = getSessionMetric(driverMetrics, DefaultSessionMetric.CONNECTED_NODES, Gauge.class);
+    Meter bytesSent = getSessionMetric(driverMetrics, DefaultSessionMetric.BYTES_SENT, Meter.class);
+    Meter bytesReceived = getSessionMetric(driverMetrics, DefaultSessionMetric.BYTES_RECEIVED, Meter.class);
+    Timer cqlRequests = getSessionMetric(driverMetrics, DefaultSessionMetric.CQL_REQUESTS, Timer.class);
+    Counter cqlClientTimeouts = getSessionMetric(driverMetrics, DefaultSessionMetric.CQL_CLIENT_TIMEOUTS, Counter.class);
+
+    return new MetricsData()
+            .addData("connectedNodes", (Integer) connectedNodes.getValue())
+            .addData("bytesSent", bytesSent.getCount())
+            .addData("bytesReceived", bytesReceived.getCount())
+            .addData("cqlRequests.count", cqlRequests.getCount())
+            .addData("cqlRequests.latency.max", cqlRequests.getSnapshot().getMax())
+            .addData("cqlRequests.latency.mean", cqlRequests.getSnapshot().getMean())
+            .addData("cqlRequests.latency.median", cqlRequests.getSnapshot().getMedian())
+            .addData("cqlRequests.latency.99percentile", cqlRequests.getSnapshot().get99thPercentile())
+            .addData("cqlClientTimeouts", cqlClientTimeouts.getCount());
+  }
+
+  private MetricsData collectNodeMetrics(com.datastax.oss.driver.api.core.metrics.Metrics driverMetrics, Node node) throws MetricException {
+    Gauge<?> openConnections = getNodeMetric(driverMetrics, node, DefaultNodeMetric.OPEN_CONNECTIONS, Gauge.class);
+    Gauge<?> availableStreams = getNodeMetric(driverMetrics, node, DefaultNodeMetric.AVAILABLE_STREAMS, Gauge.class);
+    Gauge<?> orphanedStreams = getNodeMetric(driverMetrics, node, DefaultNodeMetric.ORPHANED_STREAMS, Gauge.class);
+    Gauge<?> inFlight = getNodeMetric(driverMetrics, node, DefaultNodeMetric.IN_FLIGHT, Gauge.class);
+
+    return new MetricsData()
+            .addData("openConnections", (Integer) openConnections.getValue())
+            .addData("availableStreams", (Integer) availableStreams.getValue())
+            .addData("orphanedStreams", (Integer) orphanedStreams.getValue())
+            .addData("inFlight", (Integer) inFlight.getValue());
+  }
+
+  private <M extends Metric> M getSessionMetric(com.datastax.oss.driver.api.core.metrics.Metrics driverMetrics,
+                                                SessionMetric sessionMetric,
+                                                Class<M> type) throws MetricException {
+    Metric metric = driverMetrics.getSessionMetric(sessionMetric).orElse(null);
+    if (!type.isInstance(metric)) {
+      throw new MetricException(String.format("Failed to collect metric '%s'. Missing configuration in application.conf?", sessionMetric.getPath()));
+    }
+
+    return type.cast(metric);
+  }
+
+  private <M extends Metric> M getNodeMetric(com.datastax.oss.driver.api.core.metrics.Metrics driverMetrics,
+                                             Node node,
+                                             NodeMetric nodeMetric,
+                                             Class<M> type) throws MetricException {
+    Metric metric = driverMetrics.getNodeMetric(node, nodeMetric).orElse(null);
+    if (!type.isInstance(metric)) {
+      throw new MetricException(String.format("Failed to collect metric '%s'. Missing configuration in application.conf?", nodeMetric.getPath()));
+    }
+
+    return type.cast(metric);
   }
 
   public CassandraMapper getCassandraMapper() {

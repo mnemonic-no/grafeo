@@ -17,6 +17,7 @@ import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
+import no.mnemonic.commons.metrics.*;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
@@ -61,6 +62,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -72,7 +74,7 @@ import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
  * Class for indexing Facts into ElasticSearch as well as for retrieving and searching indexed Facts.
  */
 @Singleton
-public class FactSearchManager implements LifecycleAspect {
+public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
   private static final String INDEX_NAME = "act";
   private static final String MAPPINGS_JSON = "mappings.json";
@@ -98,6 +100,13 @@ public class FactSearchManager implements LifecycleAspect {
   private static final ObjectReader OBJECT_DOCUMENT_READER = MAPPER.readerFor(ObjectDocument.class);
   private static final ObjectWriter FACT_DOCUMENT_WRITER = MAPPER.writerFor(FactDocument.class);
 
+  private final PerformanceMonitor indexMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
+  private final PerformanceMonitor existenceMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
+  private final PerformanceMonitor factSearchInitialMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
+  private final PerformanceMonitor factSearchNextMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
+  private final PerformanceMonitor objectSearchMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
+  private final PerformanceMonitor objectStatisticsMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
+
   @Dependency
   private final ClientFactory clientFactory;
 
@@ -121,6 +130,23 @@ public class FactSearchManager implements LifecycleAspect {
   @Override
   public void stopComponent() {
     // NOOP
+  }
+
+  @Override
+  public Metrics getMetrics() throws MetricException {
+    return new MetricsData()
+            .addData("indexInvocations", indexMonitor.getTotalInvocations())
+            .addData("indexTimeSpent", indexMonitor.getTotalTimeSpent())
+            .addData("existenceInvocations", existenceMonitor.getTotalInvocations())
+            .addData("existenceTimeSpent", existenceMonitor.getTotalTimeSpent())
+            .addData("factSearchInitialInvocations", factSearchInitialMonitor.getTotalInvocations())
+            .addData("factSearchInitialTimeSpent", factSearchInitialMonitor.getTotalTimeSpent())
+            .addData("factSearchNextInvocations", factSearchNextMonitor.getTotalInvocations())
+            .addData("factSearchNextTimeSpent", factSearchNextMonitor.getTotalTimeSpent())
+            .addData("objectSearchInvocations", objectSearchMonitor.getTotalInvocations())
+            .addData("objectSearchTimeSpent", objectSearchMonitor.getTotalTimeSpent())
+            .addData("objectStatisticsInvocations", objectStatisticsMonitor.getTotalInvocations())
+            .addData("objectStatisticsTimeSpent", objectStatisticsMonitor.getTotalTimeSpent());
   }
 
   /**
@@ -160,7 +186,7 @@ public class FactSearchManager implements LifecycleAspect {
     if (fact == null || fact.getId() == null) return null;
     IndexResponse response;
 
-    try {
+    try (TimerContext ignored = TimerContext.timerMillis(indexMonitor::invoked)) {
       IndexRequest request = new IndexRequest(INDEX_NAME)
               .id(fact.getId().toString())
               .setRefreshPolicy(isTestEnvironment ? WriteRequest.RefreshPolicy.IMMEDIATE : WriteRequest.RefreshPolicy.NONE)
@@ -198,7 +224,7 @@ public class FactSearchManager implements LifecycleAspect {
     if (criteria == null) return SearchResult.<FactDocument>builder().build();
 
     SearchResponse response;
-    try {
+    try (TimerContext ignored = TimerContext.timerMillis(existenceMonitor::invoked)) {
       response = clientFactory.getClient().search(buildFactExistenceSearchRequest(criteria), RequestOptions.DEFAULT);
     } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to search for existing Facts.");
@@ -235,7 +261,7 @@ public class FactSearchManager implements LifecycleAspect {
     if (criteria == null) return ScrollingSearchResult.<FactDocument>builder().build();
 
     SearchResponse response;
-    try {
+    try (TimerContext ignored = TimerContext.timerMillis(factSearchInitialMonitor::invoked)) {
       response = clientFactory.getClient().search(buildFactsSearchRequest(criteria), RequestOptions.DEFAULT);
     } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to search for Facts.");
@@ -272,7 +298,7 @@ public class FactSearchManager implements LifecycleAspect {
     if (criteria == null) return SearchResult.<ObjectDocument>builder().build();
 
     SearchResponse response;
-    try {
+    try (TimerContext ignored = TimerContext.timerMillis(objectSearchMonitor::invoked)) {
       response = clientFactory.getClient().search(buildObjectsSearchRequest(criteria), RequestOptions.DEFAULT);
     } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to search for Objects.");
@@ -311,7 +337,7 @@ public class FactSearchManager implements LifecycleAspect {
     if (criteria == null) return ObjectStatisticsContainer.builder().build();
 
     SearchResponse response;
-    try {
+    try (TimerContext ignored = TimerContext.timerMillis(objectStatisticsMonitor::invoked)) {
       response = clientFactory.getClient().search(buildObjectStatisticsSearchRequest(criteria), RequestOptions.DEFAULT);
     } catch (ElasticsearchException | IOException ex) {
       throw logAndExit(ex, "Could not perform request to calculate Object statistics.");
@@ -396,7 +422,7 @@ public class FactSearchManager implements LifecycleAspect {
 
   private ScrollingSearchResult.ScrollingBatch<FactDocument> fetchNextFactsBatch(String scrollId) {
     SearchResponse response;
-    try {
+    try (TimerContext ignored = TimerContext.timerMillis(factSearchNextMonitor::invoked)) {
       SearchScrollRequest request = new SearchScrollRequest()
               .scrollId(scrollId)
               .scroll(searchScrollExpiration);
