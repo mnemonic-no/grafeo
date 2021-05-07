@@ -50,7 +50,7 @@
     <activemq.version>5.16.1</activemq.version>
     <cassandra.version>4.11.0</cassandra.version>
     <disruptor.version>3.4.3</disruptor.version>
-    <elastic.search.version>7.8.1</elastic.search.version>
+    <elastic.search.version>7.12.1</elastic.search.version>
     <guava.version>30.1.1-jre</guava.version>
     <guice.version>5.0.1</guice.version>
     <hazelcast.version>3.12.12</hazelcast.version>
@@ -342,6 +342,9 @@
             <includedLicense>Public Domain, per Creative Commons CC0</includedLicense>
             <!-- Others -->
             <includedLicense>Indiana University Extreme! Lab Software License</includedLicense>
+            <!-- The ElasticSearch client drags in server components, thus, we need to accept the license until the
+                 dependencies upon the server components are removed. The client is actually Apache 2 licensed. -->
+            <includedLicense>Elastic License 2.0</includedLicense>
           </includedLicenses>
         </configuration>
       </plugin>
