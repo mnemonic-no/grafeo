@@ -14,17 +14,27 @@ public class ObjectStatisticsCriteria {
   // Return statistics for those Objects.
   private final Set<UUID> objectID;
 
+  // Only calculate statistics for Facts last seen within the given time frame.
+  private final Long startTimestamp;
+  private final Long endTimestamp;
+
   // Fields required for access control on related Facts.
   private final UUID currentUserID;
   private final Set<UUID> availableOrganizationID;
 
-  private ObjectStatisticsCriteria(Set<UUID> objectID, UUID currentUserID, Set<UUID> availableOrganizationID) {
+  private ObjectStatisticsCriteria(Set<UUID> objectID,
+                                   Long startTimestamp,
+                                   Long endTimestamp,
+                                   UUID currentUserID,
+                                   Set<UUID> availableOrganizationID) {
     if (CollectionUtils.isEmpty(objectID)) throw new IllegalArgumentException("Missing required field 'objectID'.");
     if (currentUserID == null) throw new IllegalArgumentException("Missing required field 'currentUserID'.");
     if (CollectionUtils.isEmpty(availableOrganizationID))
       throw new IllegalArgumentException("Missing required field 'availableOrganizationID'.");
 
     this.objectID = objectID;
+    this.startTimestamp = startTimestamp;
+    this.endTimestamp = endTimestamp;
     this.currentUserID = currentUserID;
     this.availableOrganizationID = availableOrganizationID;
   }
@@ -36,6 +46,24 @@ public class ObjectStatisticsCriteria {
    */
   public Set<UUID> getObjectID() {
     return objectID;
+  }
+
+  /**
+   * Only calculate statistics for Facts last seen within the given time frame (start). This field is optional.
+   *
+   * @return Start of time frame
+   */
+  public Long getStartTimestamp() {
+    return startTimestamp;
+  }
+
+  /**
+   * Only calculate statistics for Facts last seen within the given time frame (end). This field is optional.
+   *
+   * @return End of time frame
+   */
+  public Long getEndTimestamp() {
+    return endTimestamp;
   }
 
   /**
@@ -64,6 +92,10 @@ public class ObjectStatisticsCriteria {
     // Return statistics for those Objects.
     private Set<UUID> objectID;
 
+    // Only calculate statistics for Facts last seen within the given time frame.
+    private Long startTimestamp;
+    private Long endTimestamp;
+
     // Fields required for access control on related Facts.
     private UUID currentUserID;
     private Set<UUID> availableOrganizationID;
@@ -72,7 +104,7 @@ public class ObjectStatisticsCriteria {
     }
 
     public ObjectStatisticsCriteria build() {
-      return new ObjectStatisticsCriteria(objectID, currentUserID, availableOrganizationID);
+      return new ObjectStatisticsCriteria(objectID, startTimestamp, endTimestamp, currentUserID, availableOrganizationID);
     }
 
     public Builder setObjectID(Set<UUID> objectID) {
@@ -82,6 +114,16 @@ public class ObjectStatisticsCriteria {
 
     public Builder addObjectID(UUID objectID) {
       this.objectID = SetUtils.addToSet(this.objectID, objectID);
+      return this;
+    }
+
+    public Builder setStartTimestamp(Long startTimestamp) {
+      this.startTimestamp = startTimestamp;
+      return this;
+    }
+
+    public Builder setEndTimestamp(Long endTimestamp) {
+      this.endTimestamp = endTimestamp;
       return this;
     }
 

@@ -61,7 +61,7 @@ public class ObjectSearchDelegate implements Delegate {
     return StreamingResultSet.<Object>builder()
             .setCount(searchResult.getCount())
             .setLimit(criteria.getLimit())
-            .setValues(new AddStatisticsIterator(searchResult, request.isIncludeStatistics()))
+            .setValues(new AddStatisticsIterator(searchResult, request))
             .build();
   }
 
@@ -77,12 +77,12 @@ public class ObjectSearchDelegate implements Delegate {
     private static final int MAXIMUM_BATCH_SIZE = 1000;
 
     private final ResultContainer<ObjectRecord> input;
-    private final boolean includeStatistics;
+    private final SearchObjectRequest request;
     private Iterator<Object> output;
 
-    private AddStatisticsIterator(ResultContainer<ObjectRecord> input, boolean includeStatistics) {
+    private AddStatisticsIterator(ResultContainer<ObjectRecord> input, SearchObjectRequest request) {
       this.input = input;
-      this.includeStatistics = includeStatistics;
+      this.request = request;
     }
 
     @Override
@@ -129,10 +129,12 @@ public class ObjectSearchDelegate implements Delegate {
       Function<UUID, Collection<ObjectStatisticsContainer.FactStatistic>> resolver = id -> Collections.emptyList();
 
       // Only include statistics if the user has explicitly asked for it.
-      if (includeStatistics) {
+      if (request.isIncludeStatistics()) {
         // Use the Object IDs to retrieve the Fact statistics for one batch of Objects.
         ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
                 .setObjectID(SetUtils.set(currentBatch, ObjectRecord::getId))
+                .setStartTimestamp(request.getAfter())
+                .setEndTimestamp(request.getBefore())
                 .setCurrentUserID(securityContext.getCurrentUserID())
                 .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
                 .build();

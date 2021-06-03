@@ -11,6 +11,7 @@ import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.rest.api.ResultStash;
 import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
+import no.mnemonic.commons.utilities.StringUtils;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -20,6 +21,8 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
@@ -54,9 +57,15 @@ public class ObjectEndpoint {
   })
   @RolesAllowed("viewThreatIntelFact")
   public Response getObjectById(
-          @PathParam("id") @ApiParam(value = "UUID of the requested Object.") @NotNull @Valid UUID id
+          @PathParam("id") @ApiParam(value = "UUID of the requested Object.") @NotNull @Valid UUID id,
+          @QueryParam("before") @ApiParam(value = "Only include Facts in statistics calculation seen before the given timestamp.") String before,
+          @QueryParam("after") @ApiParam(value = "Only include Facts in statistics calculation seen after the given timestamp.") String after
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.getObject(credentialsResolver.getRequestHeader(), new GetObjectByIdRequest().setId(id)));
+    return buildResponse(service.getObject(credentialsResolver.getRequestHeader(), new GetObjectByIdRequest()
+            .setId(id)
+            .setBefore(parseTimestamp("before", before))
+            .setAfter(parseTimestamp("after", after))
+    ));
   }
 
   @GET
@@ -78,9 +87,16 @@ public class ObjectEndpoint {
   @RolesAllowed("viewThreatIntelFact")
   public Response getObjectByTypeValue(
           @PathParam("type") @ApiParam(value = "Type name of the requested Object.") @NotBlank String type,
-          @PathParam("value") @ApiParam(value = "Value of the requested Object.") @NotBlank String value
+          @PathParam("value") @ApiParam(value = "Value of the requested Object.") @NotBlank String value,
+          @QueryParam("before") @ApiParam(value = "Only include Facts in statistics calculation seen before the given timestamp.") String before,
+          @QueryParam("after") @ApiParam(value = "Only include Facts in statistics calculation seen after the given timestamp.") String after
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    return buildResponse(service.getObject(credentialsResolver.getRequestHeader(), new GetObjectByTypeValueRequest().setType(type).setValue(value)));
+    return buildResponse(service.getObject(credentialsResolver.getRequestHeader(), new GetObjectByTypeValueRequest()
+            .setType(type)
+            .setValue(value)
+            .setBefore(parseTimestamp("before", before))
+            .setAfter(parseTimestamp("after", after))
+    ));
   }
 
   @POST
@@ -285,6 +301,14 @@ public class ObjectEndpoint {
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectSearchRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
     return buildResponse(service.traverseGraph(credentialsResolver.getRequestHeader(), request));
+  }
+
+  private Long parseTimestamp(String parameter, String timestamp) throws InvalidArgumentException {
+    try {
+      return !StringUtils.isBlank(timestamp) ? Instant.parse(timestamp).toEpochMilli() : null;
+    } catch (DateTimeParseException ex) {
+      throw new InvalidArgumentException().addValidationError(InvalidArgumentException.ErrorMessage.PARSE, parameter, timestamp);
+    }
   }
 
 }

@@ -767,11 +767,18 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   }
 
   private AggregationBuilder buildObjectStatisticsAggregation(ObjectStatisticsCriteria criteria) {
-    QueryBuilder accessControlQuery = createAccessControlQuery(criteria.getCurrentUserID(), criteria.getAvailableOrganizationID());
+    BoolQueryBuilder factsQuery = boolQuery();
+    // Always apply access control query.
+    factsQuery.filter(createAccessControlQuery(criteria.getCurrentUserID(), criteria.getAvailableOrganizationID()));
+    // Optionally omit Facts which haven't been seen within the given time frame.
+    if (criteria.getStartTimestamp() != null || criteria.getEndTimestamp() != null) {
+      factsQuery.filter(createFieldQuery("lastSeenTimestamp", criteria.getStartTimestamp(), criteria.getEndTimestamp()));
+    }
+
     QueryBuilder objectsQuery = termsQuery("objects.id", toString(criteria.getObjectID()));
 
     // 1. Reduce to only the Facts the user has access to. Non-accessible Facts won't be available in sub aggregations!
-    return filter(FILTER_FACTS_AGGREGATION_NAME, accessControlQuery)
+    return filter(FILTER_FACTS_AGGREGATION_NAME, factsQuery)
             // 2. Map to nested Object documents.
             .subAggregation(nested(NESTED_OBJECTS_AGGREGATION_NAME, "objects")
                     // 3. Reduce to only the Objects for which statistics should be calculated.

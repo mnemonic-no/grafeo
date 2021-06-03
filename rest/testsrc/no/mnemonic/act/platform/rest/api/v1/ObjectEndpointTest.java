@@ -27,11 +27,18 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
   public void testGetObjectById() throws Exception {
     UUID id = UUID.randomUUID();
     when(getTiService().getObject(any(), isA(GetObjectByIdRequest.class))).then(i -> {
-      assertEquals(id, i.<GetObjectByIdRequest>getArgument(1).getId());
+      GetObjectByIdRequest request = i.getArgument(1);
+      assertEquals(id, request.getId());
+      assertEquals(1480520820000L, (long) request.getBefore());
+      assertEquals(1480520821000L, (long) request.getAfter());
       return Object.builder().setId(id).build();
     });
 
-    Response response = target(String.format("/v1/object/uuid/%s", id)).request().get();
+    Response response = target(String.format("/v1/object/uuid/%s", id))
+            .queryParam("before", "2016-11-30T15:47:00Z")
+            .queryParam("after", "2016-11-30T15:47:01Z")
+            .request()
+            .get();
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
@@ -47,10 +54,16 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
       GetObjectByTypeValueRequest request = i.getArgument(1);
       assertEquals(type, request.getType());
       assertEquals(value, request.getValue());
+      assertEquals(1480520820000L, (long) request.getBefore());
+      assertEquals(1480520821000L, (long) request.getAfter());
       return Object.builder().setId(id).build();
     });
 
-    Response response = target(String.format("/v1/object/%s/%s", type, value)).request().get();
+    Response response = target(String.format("/v1/object/%s/%s", type, value))
+            .queryParam("before", "2016-11-30T15:47:00Z")
+            .queryParam("after", "2016-11-30T15:47:01Z")
+            .request()
+            .get();
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 

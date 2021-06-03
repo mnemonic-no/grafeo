@@ -148,6 +148,28 @@ public class ObjectSearchDelegateTest {
     verify(objectFactDao, times(2)).calculateObjectStatistics(notNull());
   }
 
+  @Test
+  public void testSearchObjectsIncludeTimeFilterInStatisticsCriteria() throws Exception {
+    int count = 3;
+    when(objectFactDao.searchObjects(any())).thenReturn(createSearchResult(count));
+    when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
+
+    SearchObjectRequest request = new SearchObjectRequest()
+            .setIncludeStatistics(true)
+            .setAfter(11111L)
+            .setBefore(22222L);
+    ResultSet<Object> result = delegate.handle(request);
+    assertEquals(count, result.getCount());
+    assertEquals(count, ListUtils.list(result.iterator()).size());
+
+    verify(objectFactDao).searchObjects(notNull());
+    verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
+      assertEquals(request.getAfter(), criteria.getStartTimestamp());
+      assertEquals(request.getBefore(), criteria.getEndTimestamp());
+      return true;
+    }));
+  }
+
   private ResultContainer<ObjectRecord> createSearchResult(int count) {
     List<ObjectRecord> records = new ArrayList<>();
     for (int i = 0; i < count; i++) {

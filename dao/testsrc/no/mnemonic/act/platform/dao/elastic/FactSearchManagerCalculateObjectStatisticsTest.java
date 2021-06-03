@@ -171,6 +171,52 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     assertEquals(2, result.getStatistics(object.getId()).size());
   }
 
+  @Test
+  public void testCalculateObjectStatisticsOmitsFactsLastSeenBeforeStartTimestamp() {
+    UUID typeID = UUID.randomUUID();
+    ObjectDocument object = createObjectDocument();
+    indexFact(d -> d.setTypeID(typeID)
+            .setTimestamp(22222)
+            .setLastSeenTimestamp(33333)
+            .addObject(object)
+    );
+    indexFact(d -> d.setTypeID(typeID)
+            .setTimestamp(11111)
+            .setLastSeenTimestamp(44444)
+            .addObject(object)
+    );
+
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.addObjectID(object.getId()).setStartTimestamp(40000L));
+    ObjectStatisticsContainer.FactStatistic statistic = getFirstStatistic(getFactSearchManager().calculateObjectStatistics(criteria), object.getId());
+    assertEquals(typeID, statistic.getFactTypeID());
+    assertEquals(1, statistic.getFactCount());
+    assertEquals(11111, statistic.getLastAddedTimestamp());
+    assertEquals(44444, statistic.getLastSeenTimestamp());
+  }
+
+  @Test
+  public void testCalculateObjectStatisticsOmitsFactsLastSeenAfterEndTimestamp() {
+    UUID typeID = UUID.randomUUID();
+    ObjectDocument object = createObjectDocument();
+    indexFact(d -> d.setTypeID(typeID)
+            .setTimestamp(22222)
+            .setLastSeenTimestamp(33333)
+            .addObject(object)
+    );
+    indexFact(d -> d.setTypeID(typeID)
+            .setTimestamp(11111)
+            .setLastSeenTimestamp(44444)
+            .addObject(object)
+    );
+
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.addObjectID(object.getId()).setEndTimestamp(40000L));
+    ObjectStatisticsContainer.FactStatistic statistic = getFirstStatistic(getFactSearchManager().calculateObjectStatistics(criteria), object.getId());
+    assertEquals(typeID, statistic.getFactTypeID());
+    assertEquals(1, statistic.getFactCount());
+    assertEquals(22222, statistic.getLastAddedTimestamp());
+    assertEquals(33333, statistic.getLastSeenTimestamp());
+  }
+
   private void assertSingleStatisticExists(ObjectStatisticsCriteria criteria, UUID objectID) {
     ObjectStatisticsContainer result = getFactSearchManager().calculateObjectStatistics(criteria);
     assertEquals(1, result.getStatisticsCount());

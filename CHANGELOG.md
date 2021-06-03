@@ -34,11 +34,15 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Added
+- (2021-06-03) Added optional `before` and `after` query parameters to endpoints fetching Objects by ID or type/value.
+Facts with their `lastSeenTimestamp` outside the given time frame are omitted from statistics calculation.
 - (2020-08-14) Added `includeStatistics` parameter to `POST /v1/object/search` endpoint to specify whether Object statistics
 should be included in the response. The endpoint omits statistics by default now (**breaking**).
 - (2020-06-26) Added configuration option `act.action.triggers.enabled` to enable/disable the action triggers framework.
 
 ### Changed
+- (2021-06-03) When searching for Objects the `before` and `after` parameters are now used to omit Facts with their
+`lastSeenTimestamp` outside the given time frame from statistics calculation (similar to the search itself).
 - (2021-02-19) All search and traverse endpoints with `before` and `after` parameters now filter Facts on their `lastSeenTimestamp`
 instead of `timestamp` fields.
 - (2020-08-14) The `POST /v1/object/search` and `POST /v1/fact/search` endpoints now return with a 403 if the search request

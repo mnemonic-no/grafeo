@@ -9,9 +9,9 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
-import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -89,6 +89,23 @@ public class ObjectGetDelegateTest {
     }));
   }
 
+  @Test
+  public void testFetchObjectByIdIncludeTimeFilterInStatisticsCriteria() throws Exception {
+    ObjectRecord object = new ObjectRecord().setId(UUID.randomUUID());
+    GetObjectByIdRequest request = new GetObjectByIdRequest()
+            .setId(object.getId())
+            .setAfter(11111L)
+            .setBefore(22222L);
+    when(objectFactDao.getObject(object.getId())).thenReturn(object);
+
+    assertNotNull(delegate.handle(request));
+    verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
+      assertEquals(request.getAfter(), criteria.getStartTimestamp());
+      assertEquals(request.getBefore(), criteria.getEndTimestamp());
+      return true;
+    }));
+  }
+
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByTypeValueWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(TiFunctionConstants.viewThreatIntelFact);
@@ -136,6 +153,23 @@ public class ObjectGetDelegateTest {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
       assertNotNull(criteria.getCurrentUserID());
       assertNotNull(criteria.getAvailableOrganizationID());
+      return true;
+    }));
+  }
+
+  @Test
+  public void testFetchObjectByTypeValueIncludeTimeFilterInStatisticsCriteria() throws Exception {
+    GetObjectByTypeValueRequest request = new GetObjectByTypeValueRequest()
+            .setType("type")
+            .setValue("value")
+            .setAfter(11111L)
+            .setBefore(22222L);
+    when(objectFactDao.getObject(request.getType(), request.getValue())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
+
+    assertNotNull(delegate.handle(request));
+    verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
+      assertEquals(request.getAfter(), criteria.getStartTimestamp());
+      assertEquals(request.getBefore(), criteria.getEndTimestamp());
       return true;
     }));
   }

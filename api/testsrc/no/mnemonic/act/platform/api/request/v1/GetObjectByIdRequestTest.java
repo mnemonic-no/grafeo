@@ -14,10 +14,12 @@ public class GetObjectByIdRequestTest extends AbstractRequestTest {
   @Test
   public void testDecodeRequest() throws Exception {
     UUID id = UUID.randomUUID();
-    String json = String.format("{ id : '%s' }", id);
+    String json = String.format("{ id : '%s', before : '2016-11-30T15:47:00Z', after : '2016-11-30T15:47:01Z' }", id);
 
     GetObjectByIdRequest request = getMapper().readValue(json, GetObjectByIdRequest.class);
     assertEquals(id, request.getId());
+    assertEquals(1480520820000L, request.getBefore().longValue());
+    assertEquals(1480520821000L, request.getAfter().longValue());
   }
 
   @Test

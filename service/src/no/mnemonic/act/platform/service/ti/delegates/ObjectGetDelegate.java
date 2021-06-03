@@ -11,10 +11,10 @@ import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 
 import javax.inject.Inject;
 
@@ -44,7 +44,7 @@ public class ObjectGetDelegate implements Delegate {
     securityContext.checkPermission(TiFunctionConstants.viewThreatIntelFact);
     ObjectRecord object = objectFactDao.getObject(request.getId());
     securityContext.checkReadPermission(object);
-    return createObjectConverter().apply(object);
+    return createObjectConverter(request.getAfter(), request.getBefore()).apply(object);
   }
 
   public Object handle(GetObjectByTypeValueRequest request)
@@ -53,13 +53,15 @@ public class ObjectGetDelegate implements Delegate {
     objectTypeHandler.assertObjectTypeExists(request.getType(), "type");
     ObjectRecord object = objectFactDao.getObject(request.getType(), request.getValue());
     securityContext.checkReadPermission(object);
-    return createObjectConverter().apply(object);
+    return createObjectConverter(request.getAfter(), request.getBefore()).apply(object);
   }
 
-  private ObjectResponseConverter createObjectConverter() {
+  private ObjectResponseConverter createObjectConverter(Long after, Long before) {
     return new ObjectResponseConverter(objectTypeConverter, factTypeConverter, id -> {
       ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
               .addObjectID(id)
+              .setStartTimestamp(after)
+              .setEndTimestamp(before)
               .setCurrentUserID(securityContext.getCurrentUserID())
               .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
               .build();

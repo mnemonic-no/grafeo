@@ -12,11 +12,13 @@ public class GetObjectByTypeValueRequestTest extends AbstractRequestTest {
 
   @Test
   public void testDecodeRequest() throws Exception {
-    String json = "{ type : 'type', value : 'value' }";
+    String json = "{ type : 'type', value : 'value', before : '2016-11-30T15:47:00Z', after : '2016-11-30T15:47:01Z' }";
 
     GetObjectByTypeValueRequest request = getMapper().readValue(json, GetObjectByTypeValueRequest.class);
     assertEquals("type", request.getType());
     assertEquals("value", request.getValue());
+    assertEquals(1480520820000L, request.getBefore().longValue());
+    assertEquals(1480520821000L, request.getAfter().longValue());
   }
 
   @Test
