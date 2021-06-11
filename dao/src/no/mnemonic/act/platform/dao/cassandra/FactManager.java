@@ -7,14 +7,12 @@ import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.cassandra.exceptions.ImmutableViolationException;
 import no.mnemonic.act.platform.dao.cassandra.mapper.FactDao;
 import no.mnemonic.act.platform.dao.cassandra.mapper.FactTypeDao;
-import no.mnemonic.act.platform.dao.cassandra.utilities.MultiFetchIterator;
 import no.mnemonic.commons.component.Dependency;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
-import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
@@ -22,7 +20,10 @@ import javax.inject.Singleton;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
@@ -110,11 +111,6 @@ public class FactManager implements LifecycleAspect {
   public FactEntity getFact(UUID id) {
     if (id == null) return null;
     return factDao.get(id);
-  }
-
-  public Iterator<FactEntity> getFacts(List<UUID> id) {
-    if (CollectionUtils.isEmpty(id)) return Collections.emptyIterator();
-    return new MultiFetchIterator<>(partition -> factDao.fetchByID(partition).iterator(), id);
   }
 
   public Iterator<FactEntity> getFactsWithin(long startTimestamp, long endTimestamp) {

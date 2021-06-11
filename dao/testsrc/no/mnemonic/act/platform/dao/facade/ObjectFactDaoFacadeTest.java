@@ -157,21 +157,18 @@ public class ObjectFactDaoFacadeTest {
   public void testSearchObjectsWithSearchResult() {
     UUID id = UUID.randomUUID();
     ObjectDocument document = new ObjectDocument().setId(id);
-    ObjectEntity entity = new ObjectEntity().setId(id);
     ObjectRecord record = new ObjectRecord().setId(id);
 
     FactSearchCriteria criteria = createFactSearchCriteria();
     when(factSearchManager.searchObjects(criteria))
             .thenReturn(SearchResult.<ObjectDocument>builder().setCount(1).addValue(document).build());
-    when(objectManager.getObjects(anyList())).thenReturn(ListUtils.list(entity).iterator());
-    when(objectRecordConverter.fromEntity(entity)).thenReturn(record);
+    when(objectResolver.getObject(id)).thenReturn(record);
 
     ResultContainer<ObjectRecord> container = dao.searchObjects(criteria);
     assertEquals(1, container.getCount());
     assertEquals(ListUtils.list(record), ListUtils.list(container));
     verify(factSearchManager).searchObjects(criteria);
-    verify(objectManager).getObjects(argThat(list -> list.contains(id)));
-    verify(objectRecordConverter).fromEntity(entity);
+    verify(objectResolver).getObject(id);
   }
 
   @Test
@@ -467,23 +464,20 @@ public class ObjectFactDaoFacadeTest {
   public void testRetrieveExistingFactsWithSearchResult() {
     UUID id = UUID.randomUUID();
     FactDocument document = new FactDocument().setId(id);
-    FactEntity entity = new FactEntity().setId(id);
     FactRecord record = new FactRecord().setId(id);
     FactExistenceSearchCriteria criteria = createFactExistenceSearchCriteria();
 
     when(factRecordConverter.toCriteria(record)).thenReturn(criteria);
     when(factSearchManager.retrieveExistingFacts(criteria))
             .thenReturn(SearchResult.<FactDocument>builder().setCount(1).addValue(document).build());
-    when(factManager.getFacts(anyList())).thenReturn(ListUtils.list(entity).iterator());
-    when(factRecordConverter.fromEntity(entity)).thenReturn(record);
+    when(factResolver.getFact(id)).thenReturn(record);
 
     ResultContainer<FactRecord> container = dao.retrieveExistingFacts(record);
     assertEquals(1, container.getCount());
     assertEquals(ListUtils.list(record), ListUtils.list(container));
     verify(factRecordConverter).toCriteria(record);
     verify(factSearchManager).retrieveExistingFacts(criteria);
-    verify(factManager).getFacts(argThat(list -> list.contains(id)));
-    verify(factRecordConverter).fromEntity(entity);
+    verify(factResolver).getFact(id);
   }
 
   @Test
@@ -502,7 +496,6 @@ public class ObjectFactDaoFacadeTest {
   public void testSearchFactsWithSearchResult() {
     UUID id = UUID.randomUUID();
     FactDocument document = new FactDocument().setId(id);
-    FactEntity entity = new FactEntity().setId(id);
     FactRecord record = new FactRecord().setId(id);
     FactSearchCriteria criteria = createFactSearchCriteria();
 
@@ -511,15 +504,13 @@ public class ObjectFactDaoFacadeTest {
                     ListUtils.list(document).iterator(), true))
             .setCount(1)
             .build());
-    when(factManager.getFacts(anyList())).thenReturn(ListUtils.list(entity).iterator());
-    when(factRecordConverter.fromEntity(entity)).thenReturn(record);
+    when(factResolver.getFact(id)).thenReturn(record);
 
     ResultContainer<FactRecord> container = dao.searchFacts(criteria);
     assertEquals(1, container.getCount());
     assertEquals(ListUtils.list(record), ListUtils.list(container));
     verify(factSearchManager).searchFacts(criteria);
-    verify(factManager).getFacts(argThat(list -> list.contains(id)));
-    verify(factRecordConverter).fromEntity(entity);
+    verify(factResolver).getFact(id);
   }
 
   @Test

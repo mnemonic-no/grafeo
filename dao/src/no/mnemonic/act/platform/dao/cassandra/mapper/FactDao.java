@@ -4,7 +4,6 @@ import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.mapper.annotations.*;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 
-import java.util.List;
 import java.util.UUID;
 
 import static com.datastax.oss.driver.api.mapper.entity.saving.NullSavingStrategy.DO_NOT_SET;
@@ -21,9 +20,6 @@ public interface FactDao {
 
   @Select
   FactEntity get(UUID id);
-
-  @Query("SELECT * FROM " + KEY_SPACE + "." + FactEntity.TABLE + " WHERE id IN :id")
-  PagingIterable<FactEntity> fetchByID(List<UUID> id);
 
   /* MetaFactBindingEntity-related methods */
 

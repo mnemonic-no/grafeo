@@ -195,24 +195,6 @@ public class FactManagerTest extends AbstractManagerTest {
   }
 
   @Test
-  public void testFetchFactsById() {
-    FactTypeEntity type = createAndSaveFactType();
-    FactEntity expected = createAndSaveFact(type.getId(), "value");
-    createAndSaveFact(type.getId(), "ignored");
-
-    List<FactEntity> actual = ListUtils.list(getFactManager().getFacts(ListUtils.list(expected.getId())));
-    assertEquals(1, actual.size());
-    assertFact(expected, actual.get(0));
-  }
-
-  @Test
-  public void testFetchFactsByIdWithUnknownId() {
-    assertEquals(0, ListUtils.list(getFactManager().getFacts(null)).size());
-    assertEquals(0, ListUtils.list(getFactManager().getFacts(ListUtils.list())).size());
-    assertEquals(0, ListUtils.list(getFactManager().getFacts(ListUtils.list(UUID.randomUUID()))).size());
-  }
-
-  @Test
   public void testFetchFactsWithinTimeframeSingleBucket() {
     long timestamp = 1609504200000L;
 

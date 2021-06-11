@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.dao.facade;
 
+import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
@@ -23,14 +24,13 @@ import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
 import no.mnemonic.act.platform.dao.facade.resolvers.CachedFactResolver;
 import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
-import no.mnemonic.act.platform.dao.facade.utilities.BatchingIterator;
-import no.mnemonic.act.platform.dao.facade.utilities.MappingIterator;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import javax.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -110,16 +110,17 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
       return ResultContainer.<ObjectRecord>builder().build();
     }
 
-    // Iterator which maps ObjectDocument to UUID.
-    Iterator<UUID> idIterator = new MappingIterator<>(searchResult.getValues().iterator(), ObjectDocument::getId);
-    // Iterator which fetches ObjectEntity from Cassandra in batches.
-    Iterator<ObjectEntity> batchingIterator = new BatchingIterator<>(idIterator, objectManager::getObjects);
-    // Iterator which maps ObjectEntity to ObjectRecord.
-    Iterator<ObjectRecord> recordIterator = new MappingIterator<>(batchingIterator, objectRecordConverter::fromEntity);
+    // Fetch Objects from Cassandra (or cache).
+    Iterator<ObjectRecord> resultsIterator = searchResult.getValues()
+            .stream()
+            .map(ObjectDocument::getId)
+            .map(objectResolver::getObject)
+            .filter(Objects::nonNull)
+            .iterator();
 
     return ResultContainer.<ObjectRecord>builder()
             .setCount(searchResult.getCount())
-            .setValues(recordIterator)
+            .setValues(resultsIterator)
             .build();
   }
 
@@ -329,16 +330,16 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   }
 
   private ResultContainer<FactRecord> createResultContainer(Iterator<FactDocument> results, int count) {
-    // Iterator which maps FactDocument to UUID.
-    Iterator<UUID> idIterator = new MappingIterator<>(results, FactDocument::getId);
-    // Iterator which fetches FactEntity from Cassandra in batches.
-    Iterator<FactEntity> batchingIterator = new BatchingIterator<>(idIterator, factManager::getFacts);
-    // Iterator which maps FactEntity to FactRecord.
-    Iterator<FactRecord> recordIterator = new MappingIterator<>(batchingIterator, factRecordConverter::fromEntity);
+    // Fetch Facts from Cassandra (or cache).
+    Iterator<FactRecord> resultsIterator = Streams.stream(results)
+            .map(FactDocument::getId)
+            .map(factResolver::getFact)
+            .filter(Objects::nonNull)
+            .iterator();
 
     return ResultContainer.<FactRecord>builder()
             .setCount(count)
-            .setValues(recordIterator)
+            .setValues(resultsIterator)
             .build();
   }
 }

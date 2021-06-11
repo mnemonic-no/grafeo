@@ -145,21 +145,6 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertNull(getObjectManager().getObject("ignored", ""));
   }
 
-  @Test
-  public void testFetchObjectsById() {
-    ObjectEntity expected = createAndSaveObjects().get(0);
-    List<ObjectEntity> actual = ListUtils.list(getObjectManager().getObjects(ListUtils.list(expected.getId())));
-    assertEquals(1, actual.size());
-    assertObject(expected, actual.get(0));
-  }
-
-  @Test
-  public void testFetchObjectsByIdWithUnknownId() {
-    assertEquals(0, ListUtils.list(getObjectManager().getObjects(null)).size());
-    assertEquals(0, ListUtils.list(getObjectManager().getObjects(ListUtils.list())).size());
-    assertEquals(0, ListUtils.list(getObjectManager().getObjects(ListUtils.list(UUID.randomUUID()))).size());
-  }
-
   @Test(expected = IllegalArgumentException.class)
   public void testSaveObjectWithNonExistingObjectType() {
     getObjectManager().saveObject(createObject());
