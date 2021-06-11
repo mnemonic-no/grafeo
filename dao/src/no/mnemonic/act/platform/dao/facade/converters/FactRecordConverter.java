@@ -4,11 +4,11 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -29,20 +29,17 @@ public class FactRecordConverter {
   private static final Logger LOGGER = Logging.getLogger(FactRecordConverter.class);
 
   private final FactManager factManager;
-  private final ObjectManager objectManager;
-  private final ObjectRecordConverter objectRecordConverter;
+  private final CachedObjectResolver objectResolver;
   private final FactAclEntryRecordConverter factAclEntryRecordConverter;
   private final FactCommentRecordConverter factCommentRecordConverter;
 
   @Inject
   public FactRecordConverter(FactManager factManager,
-                             ObjectManager objectManager,
-                             ObjectRecordConverter objectRecordConverter,
+                             CachedObjectResolver objectResolver,
                              FactAclEntryRecordConverter factAclEntryRecordConverter,
                              FactCommentRecordConverter factCommentRecordConverter) {
     this.factManager = factManager;
-    this.objectManager = objectManager;
-    this.objectRecordConverter = objectRecordConverter;
+    this.objectResolver = objectResolver;
     this.factAclEntryRecordConverter = factAclEntryRecordConverter;
     this.factCommentRecordConverter = factCommentRecordConverter;
   }
@@ -254,7 +251,7 @@ public class FactRecordConverter {
   }
 
   private ObjectRecord convertObject(UUID objectID) {
-    return objectRecordConverter.fromEntity(objectManager.getObject(objectID));
+    return objectResolver.getObject(objectID);
   }
 
   private ObjectDocument toDocument(ObjectRecord record, ObjectDocument.Direction direction) {

@@ -28,6 +28,11 @@
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>metrics</artifactId>
+      <version>${mnemonic.commons.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
       <version>${jackson.version}</version>
@@ -36,6 +41,12 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+      <scope>provided</scope>
     </dependency>
     <!-- test jars -->
     <dependency>

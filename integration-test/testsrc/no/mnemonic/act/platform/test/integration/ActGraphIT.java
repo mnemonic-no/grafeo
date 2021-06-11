@@ -15,6 +15,10 @@ import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverte
 import no.mnemonic.act.platform.dao.facade.converters.FactCommentRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedFactResolver;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
+import no.mnemonic.act.platform.dao.facade.resolvers.GuavaBackedFactResolver;
+import no.mnemonic.act.platform.dao.facade.resolvers.GuavaBackedObjectResolver;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
@@ -112,18 +116,21 @@ public class ActGraphIT {
             .setTestEnvironment(true)
             .setSearchScrollExpiration("5s")
             .setSearchScrollSize(1);
+
+    ObjectRecordConverter objectRecordConverter = new ObjectRecordConverter();
+    CachedObjectResolver objectResolver = new GuavaBackedObjectResolver(objectManager, objectRecordConverter, new GuavaBackedObjectResolver.CacheConfiguration());
+    FactRecordConverter factRecordConverter = new FactRecordConverter(factManager, objectResolver, new FactAclEntryRecordConverter(), new FactCommentRecordConverter());
+    CachedFactResolver factResolver = new GuavaBackedFactResolver(factManager, factRecordConverter, new GuavaBackedFactResolver.CacheConfiguration());
     objectFactDao = new ObjectFactDaoFacade(
             objectManager,
             factManager,
             factSearchManager,
-            new ObjectRecordConverter(),
-            new FactRecordConverter(
-                    factManager,
-                    objectManager,
-                    new ObjectRecordConverter(),
-                    new FactAclEntryRecordConverter(), new FactCommentRecordConverter()),
+            objectRecordConverter,
+            factRecordConverter,
             new FactAclEntryRecordConverter(),
             new FactCommentRecordConverter(),
+            objectResolver,
+            factResolver,
             factRecord -> {});
     objectFactTypeResolver = new ObjectFactTypeResolver(factManager, objectManager);
 

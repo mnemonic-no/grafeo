@@ -5,11 +5,11 @@ import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
@@ -28,9 +28,7 @@ public class FactRecordConverterTest {
   @Mock
   private FactManager factManager;
   @Mock
-  private ObjectManager objectManager;
-  @Mock
-  private ObjectRecordConverter objectRecordConverter;
+  private CachedObjectResolver objectResolver;
   @Mock
   private FactAclEntryRecordConverter factAclEntryRecordConverter;
   @Mock
@@ -42,13 +40,11 @@ public class FactRecordConverterTest {
   public void setUp() {
     initMocks(this);
 
-    when(objectManager.getObject(notNull())).thenReturn(new ObjectEntity());
-    when(objectRecordConverter.fromEntity(notNull())).thenReturn(new ObjectRecord());
+    when(objectResolver.getObject(notNull())).thenReturn(new ObjectRecord());
 
     converter = new FactRecordConverter(
             factManager,
-            objectManager,
-            objectRecordConverter,
+            objectResolver,
             factAclEntryRecordConverter,
             factCommentRecordConverter
     );
@@ -112,9 +108,8 @@ public class FactRecordConverterTest {
     assertNotNull(record.getDestinationObject());
     assertFalse(record.isBidirectionalBinding());
 
-    verify(objectManager).getObject(source.getObjectID());
-    verify(objectManager).getObject(destination.getObjectID());
-    verify(objectRecordConverter, times(2)).fromEntity(notNull());
+    verify(objectResolver).getObject(source.getObjectID());
+    verify(objectResolver).getObject(destination.getObjectID());
   }
 
   @Test
@@ -132,9 +127,8 @@ public class FactRecordConverterTest {
     assertNotNull(record.getDestinationObject());
     assertTrue(record.isBidirectionalBinding());
 
-    verify(objectManager).getObject(source.getObjectID());
-    verify(objectManager).getObject(destination.getObjectID());
-    verify(objectRecordConverter, times(2)).fromEntity(notNull());
+    verify(objectResolver).getObject(source.getObjectID());
+    verify(objectResolver).getObject(destination.getObjectID());
   }
 
   @Test
@@ -149,8 +143,7 @@ public class FactRecordConverterTest {
     assertNotNull(record.getDestinationObject());
     assertFalse(record.isBidirectionalBinding());
 
-    verify(objectManager).getObject(binding.getObjectID());
-    verify(objectRecordConverter).fromEntity(notNull());
+    verify(objectResolver).getObject(binding.getObjectID());
   }
 
   @Test
@@ -165,8 +158,7 @@ public class FactRecordConverterTest {
     assertNull(record.getDestinationObject());
     assertFalse(record.isBidirectionalBinding());
 
-    verify(objectManager).getObject(binding.getObjectID());
-    verify(objectRecordConverter).fromEntity(notNull());
+    verify(objectResolver).getObject(binding.getObjectID());
   }
 
   @Test
@@ -181,8 +173,7 @@ public class FactRecordConverterTest {
     assertNotNull(record.getDestinationObject());
     assertTrue(record.isBidirectionalBinding());
 
-    verify(objectManager).getObject(binding.getObjectID());
-    verify(objectRecordConverter).fromEntity(notNull());
+    verify(objectResolver).getObject(binding.getObjectID());
   }
 
   @Test

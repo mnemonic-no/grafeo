@@ -8,6 +8,10 @@ import no.mnemonic.act.platform.dao.elastic.ClientFactory;
 import no.mnemonic.act.platform.dao.elastic.ClientFactoryProvider;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.facade.ObjectFactDaoFacade;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedFactResolver;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
+import no.mnemonic.act.platform.dao.facade.resolvers.GuavaBackedFactResolver;
+import no.mnemonic.act.platform.dao.facade.resolvers.GuavaBackedObjectResolver;
 
 public class DaoModule extends AbstractModule {
 
@@ -24,6 +28,8 @@ public class DaoModule extends AbstractModule {
     bind(FactSearchManager.class);
 
     // Facade wrapping Cassandra + ElasticSearch
+    bind(CachedObjectResolver.class).to(GuavaBackedObjectResolver.class).in(Scopes.SINGLETON);
+    bind(CachedFactResolver.class).to(GuavaBackedFactResolver.class).in(Scopes.SINGLETON);
     bind(ObjectFactDao.class).to(ObjectFactDaoFacade.class);
   }
 

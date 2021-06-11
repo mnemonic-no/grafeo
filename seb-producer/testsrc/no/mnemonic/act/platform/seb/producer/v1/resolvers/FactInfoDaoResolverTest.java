@@ -1,7 +1,7 @@
 package no.mnemonic.act.platform.seb.producer.v1.resolvers;
 
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.seb.model.v1.FactInfoSEB;
 import no.mnemonic.act.platform.seb.model.v1.FactTypeInfoSEB;
 import org.junit.Before;
@@ -19,7 +19,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactInfoDaoResolverTest {
 
   @Mock
-  private FactManager factManager;
+  private ObjectFactDao objectFactDao;
   @Mock
   private FactTypeInfoDaoResolver typeResolver;
 
@@ -28,7 +28,7 @@ public class FactInfoDaoResolverTest {
   @Before
   public void setUp() {
     initMocks(this);
-    resolver = new FactInfoDaoResolver(factManager, typeResolver);
+    resolver = new FactInfoDaoResolver(objectFactDao, typeResolver);
   }
 
   @Test
@@ -44,25 +44,25 @@ public class FactInfoDaoResolverTest {
     assertNotNull(seb);
     assertEquals(id, seb.getId());
 
-    verify(factManager).getFact(id);
+    verify(objectFactDao).getFact(id);
   }
 
   @Test
   public void testResolveFactFound() {
-    FactEntity entity = new FactEntity()
+    FactRecord record = new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
             .setValue("value");
-    when(factManager.getFact(any())).thenReturn(entity);
+    when(objectFactDao.getFact(any())).thenReturn(record);
     when(typeResolver.apply(any())).thenReturn(FactTypeInfoSEB.builder().build());
 
-    FactInfoSEB seb = resolver.apply(entity.getId());
+    FactInfoSEB seb = resolver.apply(record.getId());
     assertNotNull(seb);
-    assertEquals(entity.getId(), seb.getId());
+    assertEquals(record.getId(), seb.getId());
     assertNotNull(seb.getType());
-    assertEquals(entity.getValue(), seb.getValue());
+    assertEquals(record.getValue(), seb.getValue());
 
-    verify(factManager).getFact(entity.getId());
-    verify(typeResolver).apply(entity.getTypeID());
+    verify(objectFactDao).getFact(record.getId());
+    verify(typeResolver).apply(record.getTypeID());
   }
 }

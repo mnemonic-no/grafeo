@@ -22,6 +22,8 @@ import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverte
 import no.mnemonic.act.platform.dao.facade.converters.FactCommentRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedFactResolver;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +54,10 @@ public class ObjectFactDaoFacadeTest {
   @Mock
   private FactCommentRecordConverter factCommentRecordConverter;
   @Mock
+  private CachedObjectResolver objectResolver;
+  @Mock
+  private CachedFactResolver factResolver;
+  @Mock
   private Consumer<FactRecord> dcReplicationConsumer;
 
   private ObjectFactDao dao;
@@ -67,6 +73,8 @@ public class ObjectFactDaoFacadeTest {
             factRecordConverter,
             factAclEntryRecordConverter,
             factCommentRecordConverter,
+            objectResolver,
+            factResolver,
             dcReplicationConsumer
     );
   }
@@ -74,28 +82,22 @@ public class ObjectFactDaoFacadeTest {
   @Test
   public void testGetObjectById() {
     UUID id = UUID.randomUUID();
-    ObjectEntity entity = new ObjectEntity();
     ObjectRecord record = new ObjectRecord();
-    when(objectManager.getObject(id)).thenReturn(entity);
-    when(objectRecordConverter.fromEntity(entity)).thenReturn(record);
+    when(objectResolver.getObject(id)).thenReturn(record);
 
     assertSame(record, dao.getObject(id));
-    verify(objectManager).getObject(id);
-    verify(objectRecordConverter).fromEntity(entity);
+    verify(objectResolver).getObject(id);
   }
 
   @Test
   public void testGetObjectByTypeValue() {
     String type = "type";
     String value = "value";
-    ObjectEntity entity = new ObjectEntity();
     ObjectRecord record = new ObjectRecord();
-    when(objectManager.getObject(type, value)).thenReturn(entity);
-    when(objectRecordConverter.fromEntity(entity)).thenReturn(record);
+    when(objectResolver.getObject(type, value)).thenReturn(record);
 
     assertSame(record, dao.getObject(type, value));
-    verify(objectManager).getObject(type, value);
-    verify(objectRecordConverter).fromEntity(entity);
+    verify(objectResolver).getObject(type, value);
   }
 
   @Test
@@ -175,14 +177,11 @@ public class ObjectFactDaoFacadeTest {
   @Test
   public void testGetFactById() {
     UUID id = UUID.randomUUID();
-    FactEntity entity = new FactEntity();
     FactRecord record = new FactRecord();
-    when(factManager.getFact(id)).thenReturn(entity);
-    when(factRecordConverter.fromEntity(entity)).thenReturn(record);
+    when(factResolver.getFact(id)).thenReturn(record);
 
     assertSame(record, dao.getFact(id));
-    verify(factManager).getFact(id);
-    verify(factRecordConverter).fromEntity(entity);
+    verify(factResolver).getFact(id);
   }
 
   @Test
@@ -590,15 +589,14 @@ public class ObjectFactDaoFacadeTest {
 
   private void mockReindexingOfFact(FactRecord fact) {
     // Mock methods required for reindexing.
-    when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
-    when(factRecordConverter.fromEntity(notNull())).thenReturn(new FactRecord());
+    when(factResolver.getFact(fact.getId())).thenReturn(new FactRecord());
     when(factRecordConverter.toDocument(notNull())).thenReturn(new FactDocument());
   }
 
   private void verifyReindexingOfFact(FactRecord fact) {
     // Verify reindexing.
-    verify(factManager).getFact(fact.getId());
-    verify(factRecordConverter).fromEntity(notNull());
+    verify(factResolver).evict(fact);
+    verify(factResolver).getFact(fact.getId());
     verify(factRecordConverter).toDocument(notNull());
     verify(factSearchManager, atLeastOnce()).indexFact(notNull());
     verify(dcReplicationConsumer).accept(notNull());

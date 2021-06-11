@@ -21,6 +21,8 @@ import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverte
 import no.mnemonic.act.platform.dao.facade.converters.FactCommentRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedFactResolver;
+import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
 import no.mnemonic.act.platform.dao.facade.utilities.BatchingIterator;
 import no.mnemonic.act.platform.dao.facade.utilities.MappingIterator;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
@@ -43,6 +45,8 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   private final FactRecordConverter factRecordConverter;
   private final FactAclEntryRecordConverter factAclEntryRecordConverter;
   private final FactCommentRecordConverter factCommentRecordConverter;
+  private final CachedObjectResolver objectResolver;
+  private final CachedFactResolver factResolver;
   private final Consumer<FactRecord> dcReplicationConsumer;
 
   @Inject
@@ -53,6 +57,8 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
                              FactRecordConverter factRecordConverter,
                              FactAclEntryRecordConverter factAclEntryRecordConverter,
                              FactCommentRecordConverter factCommentRecordConverter,
+                             CachedObjectResolver objectResolver,
+                             CachedFactResolver factResolver,
                              Consumer<FactRecord> dcReplicationConsumer) {
     this.objectManager = objectManager;
     this.factManager = factManager;
@@ -61,19 +67,19 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     this.factRecordConverter = factRecordConverter;
     this.factAclEntryRecordConverter = factAclEntryRecordConverter;
     this.factCommentRecordConverter = factCommentRecordConverter;
+    this.objectResolver = objectResolver;
+    this.factResolver = factResolver;
     this.dcReplicationConsumer = dcReplicationConsumer;
   }
 
   @Override
   public ObjectRecord getObject(UUID id) {
-    // Just delegate to ObjectManager and convert result.
-    return objectRecordConverter.fromEntity(objectManager.getObject(id));
+    return objectResolver.getObject(id);
   }
 
   @Override
   public ObjectRecord getObject(String type, String value) {
-    // Just delegate to ObjectManager and convert result.
-    return objectRecordConverter.fromEntity(objectManager.getObject(type, value));
+    return objectResolver.getObject(type, value);
   }
 
   @Override
@@ -119,8 +125,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
 
   @Override
   public FactRecord getFact(UUID id) {
-    // Just delegate to FactManager and convert result.
-    return factRecordConverter.fromEntity(factManager.getFact(id));
+    return factResolver.getFact(id);
   }
 
   @Override
@@ -162,7 +167,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     saveComments(record);
 
     // After everything is saved reindex Fact in ElasticSearch.
-    return reindexFact(record.getId());
+    return reindexFact(record);
   }
 
   @Override
@@ -176,7 +181,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     saveComments(record);
 
     // After everything is saved reindex Fact in ElasticSearch.
-    return reindexFact(record.getId());
+    return reindexFact(record);
   }
 
   @Override
@@ -209,7 +214,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
 
     // Save new ACL entry and reindex Fact.
     saveAclEntry(fact, aclEntry);
-    reindexFact(fact.getId());
+    reindexFact(fact);
 
     return aclEntry;
   }
@@ -220,6 +225,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
 
     // Only save new comment. It's not required to reindex Fact.
     saveComment(fact, comment);
+    factResolver.evict(fact);
 
     return comment;
   }
@@ -309,10 +315,11 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     factManager.saveFactComment(factCommentRecordConverter.toEntity(comment, fact.getId()));
   }
 
-  private FactRecord reindexFact(UUID factID) {
-    // getFact() will fetch all required information from Cassandra (the authoritative data store).
+  private FactRecord reindexFact(FactRecord fact) {
+    // Evict cached entry to force a reload from Cassandra (the authoritative data store).
     // Because of that, the returned record will contain up-to-date information.
-    FactRecord record = getFact(factID);
+    factResolver.evict(fact);
+    FactRecord record = factResolver.getFact(fact.getId());
     // Simply reindex everything based on the fetched record.
     factSearchManager.indexFact(factRecordConverter.toDocument(record));
     // Initiate data center replication to propagate changes.
