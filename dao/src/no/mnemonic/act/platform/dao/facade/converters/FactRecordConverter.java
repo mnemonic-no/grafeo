@@ -66,13 +66,23 @@ public class FactRecordConverter {
             .setConfidence(entity.getConfidence())
             .setTrust(entity.getTrust())
             .setTimestamp(entity.getTimestamp())
-            .setLastSeenTimestamp(entity.getLastSeenTimestamp())
-            .setFlags(SetUtils.set(entity.getFlags(), flag -> FactRecord.Flag.valueOf(flag.name())));
+            .setLastSeenTimestamp(entity.getLastSeenTimestamp());
+
+    for (FactEntity.Flag flag : SetUtils.set(entity.getFlags())) {
+      if (flag.isCassandraOnly()) continue;
+      record.addFlag(FactRecord.Flag.valueOf(flag.name()));
+    }
 
     // Populate with records from related entities.
     populateObjects(record, entity);
-    populateFactAcl(record);
-    populateFactComments(record);
+
+    if (entity.isSet(FactEntity.Flag.HasAcl)) {
+      populateFactAcl(record);
+    }
+
+    if (entity.isSet(FactEntity.Flag.HasComments)) {
+      populateFactComments(record);
+    }
 
     return record;
   }
@@ -100,6 +110,14 @@ public class FactRecordConverter {
             .setTimestamp(record.getTimestamp())
             .setLastSeenTimestamp(record.getLastSeenTimestamp())
             .setFlags(SetUtils.set(record.getFlags(), flag -> FactEntity.Flag.valueOf(flag.name())));
+
+    if (!CollectionUtils.isEmpty(record.getAcl())) {
+      entity.addFlag(FactEntity.Flag.HasAcl);
+    }
+
+    if (!CollectionUtils.isEmpty(record.getComments())) {
+      entity.addFlag(FactEntity.Flag.HasComments);
+    }
 
     if (record.getSourceObject() != null) {
       entity.addBinding(new FactEntity.FactObjectBinding()

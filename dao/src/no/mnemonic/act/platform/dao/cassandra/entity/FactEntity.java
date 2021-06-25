@@ -46,18 +46,26 @@ public class FactEntity implements CassandraEntity {
   private static final Logger logger = Logging.getLogger(FactEntity.class);
 
   public enum Flag implements CassandraEnum<Flag> {
-    RetractedHint(0);
+    RetractedHint(0, false),
+    HasAcl(1, true),
+    HasComments(2, true);
 
     private static final Map<Integer, Flag> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
-    private int value;
+    private final int value;
+    private final boolean cassandraOnly;
 
-    Flag(int value) {
+    Flag(int value, boolean cassandraOnly) {
       this.value = value;
+      this.cassandraOnly = cassandraOnly;
     }
 
     @Override
     public int value() {
       return value;
+    }
+
+    public boolean isCassandraOnly() {
+      return cassandraOnly;
     }
 
     public static Map<Integer, Flag> getValueMap() {
@@ -252,6 +260,10 @@ public class FactEntity implements CassandraEntity {
   public FactEntity addFlag(Flag flag) {
     this.flags = SetUtils.addToSet(this.flags, flag);
     return this;
+  }
+
+  public boolean isSet(Flag flag) {
+    return SetUtils.set(flags).contains(flag);
   }
 
   private void logAndRethrow(IOException ex, String msg) {

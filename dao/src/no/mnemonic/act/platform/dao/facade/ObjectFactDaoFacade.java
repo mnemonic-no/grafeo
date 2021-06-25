@@ -27,6 +27,7 @@ import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import javax.inject.Inject;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
@@ -48,6 +49,8 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   private final CachedObjectResolver objectResolver;
   private final CachedFactResolver factResolver;
   private final Consumer<FactRecord> dcReplicationConsumer;
+
+  private Clock clock = Clock.systemUTC();
 
   @Inject
   public ObjectFactDaoFacade(ObjectManager objectManager,
@@ -161,7 +164,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   public FactRecord refreshFact(FactRecord record) {
     if (record == null) return null;
 
-    factManager.refreshFact(record.getId());
+    updateAndSaveFact(record, entity -> entity.setLastSeenTimestamp(Instant.now(clock).toEpochMilli()));
 
     // Save new ACL entries and comments in Cassandra.
     saveAclEntries(record);
@@ -175,7 +178,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   public FactRecord retractFact(FactRecord record) {
     if (record == null) return null;
 
-    factManager.retractFact(record.getId());
+    updateAndSaveFact(record, entity -> entity.addFlag(FactEntity.Flag.RetractedHint));
 
     // Save new ACL entries and comments in Cassandra.
     saveAclEntries(record);
@@ -215,6 +218,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
 
     // Save new ACL entry and reindex Fact.
     saveAclEntry(fact, aclEntry);
+    updateAndSaveFact(fact, entity -> entity.addFlag(FactEntity.Flag.HasAcl));
     reindexFact(fact);
 
     return aclEntry;
@@ -226,6 +230,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
 
     // Only save new comment. It's not required to reindex Fact.
     saveComment(fact, comment);
+    updateAndSaveFact(fact, entity -> entity.addFlag(FactEntity.Flag.HasComments));
     factResolver.evict(fact);
 
     return comment;
@@ -316,6 +321,30 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     factManager.saveFactComment(factCommentRecordConverter.toEntity(comment, fact.getId()));
   }
 
+  private void updateAndSaveFact(FactRecord record, FactEntityUpdater updater) {
+    // Fetch Fact directly from Cassandra to avoid stale cache issues.
+    FactEntity entity = factManager.getFact(record.getId());
+    if (entity == null) {
+      // If this ever happens it's a bug in the code calling ObjectFactDaoFacade!
+      throw new IllegalStateException(String.format("Could not fetch Fact with id = %s from Cassandra.", record.getId()));
+    }
+
+    // Apply changes to entity.
+    updater.update(entity);
+
+    // Ensure that the HasAcl and HasComments flags are set.
+    if (!CollectionUtils.isEmpty(record.getAcl())) {
+      entity.addFlag(FactEntity.Flag.HasAcl);
+    }
+
+    if (!CollectionUtils.isEmpty(record.getComments())) {
+      entity.addFlag(FactEntity.Flag.HasComments);
+    }
+
+    // Write changes back to Cassandra.
+    factManager.saveFact(entity);
+  }
+
   private FactRecord reindexFact(FactRecord fact) {
     // Evict cached entry to force a reload from Cassandra (the authoritative data store).
     // Because of that, the returned record will contain up-to-date information.
@@ -341,5 +370,16 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
             .setCount(count)
             .setValues(resultsIterator)
             .build();
+  }
+
+  private interface FactEntityUpdater {
+    void update(FactEntity entity);
+  }
+
+  /* Setters used for unit testing */
+
+  ObjectFactDaoFacade withClock(Clock clock) {
+    this.clock = clock;
+    return this;
   }
 }

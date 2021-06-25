@@ -6,14 +6,11 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
-import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class FactManagerTest extends AbstractManagerTest {
 
@@ -162,13 +159,6 @@ public class FactManagerTest extends AbstractManagerTest {
     getFactManager().saveFact(createFact());
   }
 
-  @Test(expected = ImmutableViolationException.class)
-  public void testSaveFactTwiceThrowsException() {
-    FactEntity entity = createFact(createAndSaveFactType().getId());
-    getFactManager().saveFact(entity);
-    getFactManager().saveFact(entity);
-  }
-
   @Test
   public void testSaveFactReturnsSameEntity() {
     FactEntity entity = createFact(createAndSaveFactType().getId());
@@ -192,6 +182,22 @@ public class FactManagerTest extends AbstractManagerTest {
     FactEntity entity = getFactManager().getFact(factID);
     assertEquals(FactEntity.DEFAULT_CONFIDENCE, entity.getConfidence(), 0);
     assertEquals(FactEntity.DEFAULT_TRUST, entity.getTrust(), 0);
+  }
+
+  @Test
+  public void testSaveFactWithMultipleFlags() {
+    UUID factID = UUID.randomUUID();
+    UUID factTypeID = createAndSaveFactType().getId();
+
+    getFactManager().saveFact(new FactEntity()
+            .setId(factID)
+            .setTypeID(factTypeID)
+            .addFlag(FactEntity.Flag.RetractedHint)
+            .addFlag(FactEntity.Flag.HasComments)
+    );
+    FactEntity entity = getFactManager().getFact(factID);
+    assertTrue(entity.getFlags().contains(FactEntity.Flag.RetractedHint));
+    assertTrue(entity.getFlags().contains(FactEntity.Flag.HasComments));
   }
 
   @Test
@@ -273,40 +279,6 @@ public class FactManagerTest extends AbstractManagerTest {
     assertThrows(IllegalArgumentException.class, () -> getFactManager().getFactsWithin(-1, 1));
     assertThrows(IllegalArgumentException.class, () -> getFactManager().getFactsWithin(1, -1));
     assertThrows(IllegalArgumentException.class, () -> getFactManager().getFactsWithin(2, 1));
-  }
-
-  @Test
-  public void testRefreshFact() {
-    long timestamp = 123456789;
-    FactManager manager = getFactManagerWithMockedClock(timestamp);
-    FactEntity fact = createAndSaveFact();
-
-    assertEquals(fact.getLastSeenTimestamp(), manager.getFact(fact.getId()).getLastSeenTimestamp());
-    FactEntity refreshedFact = manager.refreshFact(fact.getId());
-    assertEquals(fact.getId(), refreshedFact.getId());
-    assertEquals(timestamp, refreshedFact.getLastSeenTimestamp());
-    assertEquals(timestamp, manager.getFact(fact.getId()).getLastSeenTimestamp());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testRefreshFactWithNonExistingFact() {
-    getFactManager().refreshFact(UUID.randomUUID());
-  }
-
-  @Test
-  public void testRetractFact() {
-    FactEntity fact = createAndSaveFact();
-
-    assertEquals(Collections.emptySet(), getFactManager().getFact(fact.getId()).getFlags());
-    FactEntity retractedFact = getFactManager().retractFact(fact.getId());
-    assertEquals(fact.getId(), retractedFact.getId());
-    assertEquals(Collections.singleton(FactEntity.Flag.RetractedHint), retractedFact.getFlags());
-    assertEquals(Collections.singleton(FactEntity.Flag.RetractedHint), getFactManager().getFact(fact.getId()).getFlags());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testRetractFactWithNonExistingFact() {
-    getFactManager().retractFact(UUID.randomUUID());
   }
 
   @Test
@@ -629,12 +601,6 @@ public class FactManagerTest extends AbstractManagerTest {
   private void assertMetaFactBinding(MetaFactBindingEntity expected, MetaFactBindingEntity actual) {
     assertEquals(expected.getFactID(), actual.getFactID());
     assertEquals(expected.getMetaFactID(), actual.getMetaFactID());
-  }
-
-  private FactManager getFactManagerWithMockedClock(long timestamp) {
-    Clock clock = mock(Clock.class);
-    when(clock.instant()).thenReturn(Instant.ofEpochMilli(timestamp));
-    return getFactManager().withClock(clock);
   }
 
 }

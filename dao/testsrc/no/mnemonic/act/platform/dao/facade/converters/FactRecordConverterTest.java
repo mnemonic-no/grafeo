@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -90,6 +91,15 @@ public class FactRecordConverterTest {
     assertEquals(entity.getTrust(), record.getTrust(), 0.0f);
     assertEquals(entity.getTimestamp(), record.getTimestamp());
     assertEquals(entity.getLastSeenTimestamp(), record.getLastSeenTimestamp());
+    assertEquals(SetUtils.set(FactRecord.Flag.RetractedHint), record.getFlags());
+  }
+
+  @Test
+  public void testFromEntitySkipsCassandraOnlyFlags() {
+    FactEntity entity = new FactEntity();
+    Arrays.stream(FactEntity.Flag.values()).forEach(entity::addFlag);
+
+    FactRecord record = converter.fromEntity(entity);
     assertEquals(SetUtils.set(FactRecord.Flag.RetractedHint), record.getFlags());
   }
 
@@ -221,7 +231,7 @@ public class FactRecordConverterTest {
 
   @Test
   public void testFromEntityWithAcl() {
-    FactEntity entity = new FactEntity().setId(UUID.randomUUID());
+    FactEntity entity = new FactEntity().setId(UUID.randomUUID()).addFlag(FactEntity.Flag.HasAcl);
     when(factManager.fetchFactAcl(entity.getId()))
             .thenReturn(ListUtils.list(new FactAclEntity(), new FactAclEntity(), new FactAclEntity()));
     when(factAclEntryRecordConverter.fromEntity(notNull())).thenReturn(new FactAclEntryRecord());
@@ -234,8 +244,18 @@ public class FactRecordConverterTest {
   }
 
   @Test
-  public void testFromEntityWithComments() {
+  public void testFromEntitySkipsAcl() {
     FactEntity entity = new FactEntity().setId(UUID.randomUUID());
+
+    FactRecord record = converter.fromEntity(entity);
+    assertNull(record.getAcl());
+
+    verify(factManager, never()).fetchFactAcl(entity.getId());
+  }
+
+  @Test
+  public void testFromEntityWithComments() {
+    FactEntity entity = new FactEntity().setId(UUID.randomUUID()).addFlag(FactEntity.Flag.HasComments);
     when(factManager.fetchFactComments(entity.getId()))
             .thenReturn(ListUtils.list(new FactCommentEntity(), new FactCommentEntity(), new FactCommentEntity()));
     when(factCommentRecordConverter.fromEntity(notNull())).thenReturn(new FactCommentRecord());
@@ -245,6 +265,16 @@ public class FactRecordConverterTest {
 
     verify(factManager).fetchFactComments(entity.getId());
     verify(factCommentRecordConverter, times(3)).fromEntity(notNull());
+  }
+
+  @Test
+  public void testFromEntitySkipComments() {
+    FactEntity entity = new FactEntity().setId(UUID.randomUUID());
+
+    FactRecord record = converter.fromEntity(entity);
+    assertNull(record.getComments());
+
+    verify(factManager, never()).fetchFactComments(entity.getId());
   }
 
   @Test
@@ -288,6 +318,22 @@ public class FactRecordConverterTest {
     assertEquals(record.getTimestamp(), entity.getTimestamp());
     assertEquals(record.getLastSeenTimestamp(), entity.getLastSeenTimestamp());
     assertEquals(SetUtils.set(FactEntity.Flag.RetractedHint), entity.getFlags());
+  }
+
+  @Test
+  public void testToEntityWithAcl() {
+    FactRecord record = new FactRecord().addAclEntry(new FactAclEntryRecord());
+
+    FactEntity entity = converter.toEntity(record);
+    assertTrue(entity.getFlags().contains(FactEntity.Flag.HasAcl));
+  }
+
+  @Test
+  public void testToEntityWithComments() {
+    FactRecord record = new FactRecord().addComment(new FactCommentRecord());
+
+    FactEntity entity = converter.toEntity(record);
+    assertTrue(entity.getFlags().contains(FactEntity.Flag.HasComments));
   }
 
   @Test

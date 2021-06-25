@@ -2,6 +2,10 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [HasAcl and HasComments flags] - 2021-06-25
+Two new internal flags have been introduced in order to avoid unnecessary requests towards Cassandra.
+Adapt and execute the `migrations/002-fact-has-acl-comments.py` script to update the existing data with the new flags.
+
 ## [Introduce fact_by_timestamp lookup table] - 2021-01-14
 A new Cassandra lookup table has been introduced. Execute the following CQL command against your Cassandra cluster (e.g. using cqlsh).
 

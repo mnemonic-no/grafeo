@@ -17,7 +17,6 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
@@ -41,8 +40,6 @@ public class FactManager implements LifecycleAspect {
 
   private FactTypeDao factTypeDao;
   private FactDao factDao;
-
-  private Clock clock = Clock.systemUTC();
 
   @Inject
   public FactManager(ClusterManager clusterManager) {
@@ -124,26 +121,8 @@ public class FactManager implements LifecycleAspect {
     if (fact == null) return null;
     if (getFactType(fact.getTypeID()) == null)
       throw new IllegalArgumentException(String.format("FactType with id = %s does not exist.", fact.getTypeID()));
-    if (getFact(fact.getId()) != null)
-      throw new ImmutableViolationException("It is not allowed to update a Fact");
 
     factDao.save(fact);
-    return fact;
-  }
-
-  public FactEntity refreshFact(UUID id) {
-    FactEntity fact = getFact(id);
-    if (fact == null) throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", id));
-    factDao.save(fact.setLastSeenTimestamp(Instant.now(clock).toEpochMilli()));
-
-    return fact;
-  }
-
-  public FactEntity retractFact(UUID id) {
-    FactEntity fact = getFact(id);
-    if (fact == null) throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", id));
-    factDao.save(fact.addFlag(FactEntity.Flag.RetractedHint));
-
     return fact;
   }
 
@@ -216,13 +195,6 @@ public class FactManager implements LifecycleAspect {
     factDao.save(entity);
 
     return entity;
-  }
-
-  /* Setters used for unit testing */
-
-  FactManager withClock(Clock clock) {
-    this.clock = clock;
-    return this;
   }
 
   /* Private helper methods and classes */
