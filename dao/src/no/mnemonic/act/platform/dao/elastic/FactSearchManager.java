@@ -167,7 +167,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     }
 
     if (response.isExists()) {
-      LOGGER.info("Successfully fetched Fact with id = %s.", id);
+      LOGGER.debug("Successfully fetched Fact with id = %s.", id);
       return decodeFactDocument(id, response.getSourceAsBytes());
     } else {
       // Fact isn't indexed in ElasticSearch, log warning and return null.
@@ -199,9 +199,9 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     if (response.status() != RestStatus.OK && response.status() != RestStatus.CREATED) {
       LOGGER.warning("Could not index Fact with id = %s.", fact.getId());
     } else if (response.getResult() == DocWriteResponse.Result.CREATED) {
-      LOGGER.info("Successfully indexed Fact with id = %s.", fact.getId());
+      LOGGER.debug("Successfully indexed Fact with id = %s.", fact.getId());
     } else if (response.getResult() == DocWriteResponse.Result.UPDATED) {
-      LOGGER.info("Successfully re-indexed existing Fact with id = %s.", fact.getId());
+      LOGGER.debug("Successfully re-indexed existing Fact with id = %s.", fact.getId());
     }
 
     return fact;
@@ -237,7 +237,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
     List<FactDocument> result = retrieveFactDocuments(response);
 
-    LOGGER.info("Successfully retrieved %d existing Facts.", result.size());
+    LOGGER.debug("Successfully retrieved %d existing Facts.", result.size());
     return SearchResult.<FactDocument>builder()
             .setCount((int) response.getHits().getTotalHits().value)
             .setValues(result)
@@ -272,7 +272,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
       return ScrollingSearchResult.<FactDocument>builder().build();
     }
 
-    LOGGER.info("Successfully initiated streaming of search results. Start fetching data.");
+    LOGGER.debug("Successfully initiated streaming of search results. Start fetching data.");
     return ScrollingSearchResult.<FactDocument>builder()
             .setInitialBatch(createFactsBatch(response))
             .setFetchNextBatch(this::fetchNextFactsBatch)
@@ -312,7 +312,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     int count = retrieveSearchObjectsResultCount(response);
     List<ObjectDocument> result = retrieveSearchObjectsResultValues(response);
 
-    LOGGER.info("Successfully retrieved %d Objects from a total of %d matching Objects.", result.size(), count);
+    LOGGER.debug("Successfully retrieved %d Objects from a total of %d matching Objects.", result.size(), count);
     return SearchResult.<ObjectDocument>builder()
             .setLimit(criteria.getLimit())
             .setCount(count)
@@ -350,7 +350,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
     ObjectStatisticsContainer result = retrieveObjectStatisticsResult(response);
 
-    LOGGER.info("Successfully retrieved statistics for %d Objects.", result.getStatisticsCount());
+    LOGGER.debug("Successfully retrieved statistics for %d Objects.", result.getStatisticsCount());
     return result;
   }
 
@@ -446,7 +446,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
     boolean finished = values.size() < searchScrollSize;
     if (finished) {
-      LOGGER.info("Successfully retrieved all search results. No more data available.");
+      LOGGER.debug("Successfully retrieved all search results. No more data available.");
       // Close search context when all results have been fetched. If the client doesn't consume all results the context
       // will be kept open until ElasticSearch cleans it up automatically after the expiration time elapsed.
       closeSearchContext(response.getScrollId());
