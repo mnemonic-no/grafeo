@@ -30,7 +30,6 @@ import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
-import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -77,6 +76,7 @@ public class ActGraphIT {
           .setImageName("cassandra")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
+          .skipReachabilityCheck()
           .build();
 
   private static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
@@ -85,6 +85,7 @@ public class ActGraphIT {
           .setImageName("elasticsearch/elasticsearch:7.12.1")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
+          .skipReachabilityCheck()
           .addEnvironmentVariable("discovery.type", "single-node")
           .build();
 
@@ -97,12 +98,12 @@ public class ActGraphIT {
     clusterManager = ClusterManager.builder()
             .setDataCenter("datacenter1")
             .setPort(cassandra.getExposedHostPort(9042))
-            .addContactPoint(DockerTestUtils.getDockerHost())
+            .addContactPoint(cassandra.getExposedHost())
             .build();
 
     clientFactory = ClientFactory.builder()
             .setPort(elastic.getExposedHostPort(9200))
-            .addContactPoint(DockerTestUtils.getDockerHost())
+            .addContactPoint(elastic.getExposedHost())
             .build();
 
     mockSecurityContext = mock(TiSecurityContext.class);

@@ -213,7 +213,7 @@ public class TraverseGraphDelegate implements Delegate {
     );
 
     return GremlinExecutor.build()
-            .scriptEvaluationTimeout(scriptExecutionTimeout)
+            .evaluationTimeout(scriptExecutionTimeout)
             .addPlugins(SCRIPT_ENGINE, MapUtils.map(T(GroovyCompilerGremlinPlugin.class.getName(), groovyCompilerConfig)))
             .create();
   }

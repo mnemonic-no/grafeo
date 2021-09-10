@@ -136,6 +136,13 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- Force a newer version of jnr-posix (used by Cassandra client) in order to fix SNYK-JAVA-COMGITHUBJNR-1570422. -->
+    <dependency>
+      <groupId>com.github.jnr</groupId>
+      <artifactId>jnr-posix</artifactId>
+      <version>${jnr.posix.version}</version>
+      <scope>runtime</scope>
+    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>

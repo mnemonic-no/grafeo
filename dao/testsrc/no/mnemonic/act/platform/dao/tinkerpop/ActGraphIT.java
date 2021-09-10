@@ -5,7 +5,6 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
-import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -36,6 +35,7 @@ public class ActGraphIT {
           .setImageName("cassandra")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
+          .skipReachabilityCheck()
           .build();
 
   @BeforeClass
@@ -44,7 +44,7 @@ public class ActGraphIT {
     clusterManager = ClusterManager.builder()
             .setDataCenter("datacenter1")
             .setPort(cassandra.getExposedHostPort(9042))
-            .addContactPoint(DockerTestUtils.getDockerHost())
+            .addContactPoint(cassandra.getExposedHost())
             .build();
     objectManager = new ObjectManager(clusterManager);
     factManager = new FactManager(clusterManager);

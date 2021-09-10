@@ -7,7 +7,7 @@ import no.mnemonic.act.platform.dao.tinkerpop.exceptions.GraphOperationException
 import no.mnemonic.act.platform.dao.tinkerpop.utils.ElementFactory;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
@@ -239,6 +239,16 @@ public class ActGraph implements Graph {
     }
 
     @Override
+    public boolean supportsIoRead() {
+      return false;
+    }
+
+    @Override
+    public boolean supportsIoWrite() {
+      return false;
+    }
+
+    @Override
     public Features.VariableFeatures variables() {
       return VARIABLE_FEATURES;
     }
@@ -279,6 +289,11 @@ public class ActGraph implements Graph {
     }
 
     @Override
+    public boolean supportsUpsert() {
+      return false;
+    }
+
+    @Override
     public Features.VertexPropertyFeatures properties() {
       return VERTEX_PROPERTY_FEATURES;
     }
@@ -299,12 +314,22 @@ public class ActGraph implements Graph {
     }
 
     @Override
+    public boolean supportsUpsert() {
+      return false;
+    }
+
+    @Override
     public Features.EdgePropertyFeatures properties() {
       return EDGE_PROPERTY_FEATURES;
     }
   }
 
   private static class ActGraphElementFeatures implements Features.ElementFeatures {
+    @Override
+    public boolean supportsNullPropertyValues() {
+      return true;
+    }
+
     @Override
     public boolean supportsAddProperty() {
       return false;
@@ -347,6 +372,11 @@ public class ActGraph implements Graph {
   }
 
   private static class ActGraphVertexPropertyFeatures extends ActGraphPropertyFeatures implements Features.VertexPropertyFeatures {
+    @Override
+    public boolean supportsNullPropertyValues() {
+      return true;
+    }
+
     @Override
     public boolean supportsRemoveProperty() {
       return false;

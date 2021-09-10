@@ -2,7 +2,6 @@ package no.mnemonic.act.platform.dao.elastic;
 
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import org.junit.*;
 
@@ -22,6 +21,7 @@ public abstract class AbstractManagerTest {
           .setImageName("elasticsearch/elasticsearch:7.12.1")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
+          .skipReachabilityCheck()
           .addEnvironmentVariable("discovery.type", "single-node")
           .build();
 
@@ -29,7 +29,7 @@ public abstract class AbstractManagerTest {
   public static void setup() {
     clientFactory = ClientFactory.builder()
             .setPort(elastic.getExposedHostPort(9200))
-            .addContactPoint(DockerTestUtils.getDockerHost())
+            .addContactPoint(elastic.getExposedHost())
             .build();
     clientFactory.startComponent();
   }

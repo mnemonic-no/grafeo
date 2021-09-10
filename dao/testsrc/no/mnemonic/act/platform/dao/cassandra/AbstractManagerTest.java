@@ -1,7 +1,6 @@
 package no.mnemonic.act.platform.dao.cassandra;
 
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
-import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import org.junit.*;
 
 public abstract class AbstractManagerTest {
@@ -16,6 +15,7 @@ public abstract class AbstractManagerTest {
           .setImageName("cassandra")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
+          .skipReachabilityCheck()
           .setTruncateScript("truncate.cql")
           .build();
 
@@ -24,7 +24,7 @@ public abstract class AbstractManagerTest {
     clusterManager = ClusterManager.builder()
             .setDataCenter("datacenter1")
             .setPort(cassandra.getExposedHostPort(9042))
-            .addContactPoint(DockerTestUtils.getDockerHost())
+            .addContactPoint(cassandra.getExposedHost())
             .build();
     clusterManager.startComponent();
   }

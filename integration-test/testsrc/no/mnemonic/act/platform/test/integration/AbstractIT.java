@@ -25,7 +25,6 @@ import no.mnemonic.commons.container.ComponentContainer;
 import no.mnemonic.commons.container.providers.GuiceBeanProvider;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.junit.docker.DockerResource;
-import no.mnemonic.commons.junit.docker.DockerTestUtils;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import org.junit.After;
@@ -64,6 +63,7 @@ public abstract class AbstractIT {
           .setImageName("cassandra")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
+          .skipReachabilityCheck()
           .setTruncateScript("truncate.cql")
           .build();
 
@@ -73,6 +73,7 @@ public abstract class AbstractIT {
           .setImageName("elasticsearch/elasticsearch:7.12.1")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
+          .skipReachabilityCheck()
           .addEnvironmentVariable("discovery.type", "single-node")
           .build();
 
@@ -339,16 +340,16 @@ public abstract class AbstractIT {
       install(new TiServiceModule());
       install(new TiServerModule());
       // Configuration
-      String smbServerUrl = "tcp://" + DockerTestUtils.getDockerHost() + ":" + activemq.getExposedHostPort(61616);
+      String smbServerUrl = "tcp://" + activemq.getExposedHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("act.access.controller.properties.configuration.file")).toInstance(ACL_FILE);
       bind(String.class).annotatedWith(Names.named("act.access.controller.properties.reload.interval")).toInstance("60000");
       bind(String.class).annotatedWith(Names.named("act.access.controller.properties.service.account.user.id")).toInstance("3");
       bind(String.class).annotatedWith(Names.named("act.action.triggers.enabled")).toInstance("true");
       bind(String.class).annotatedWith(Names.named("trigger.administration.service.configuration.directory")).toInstance(RESOURCES_FOLDER);
       bind(String.class).annotatedWith(Names.named("act.cassandra.data.center")).toInstance("datacenter1");
-      bind(String.class).annotatedWith(Names.named("act.cassandra.contact.points")).toInstance(DockerTestUtils.getDockerHost());
+      bind(String.class).annotatedWith(Names.named("act.cassandra.contact.points")).toInstance(cassandra.getExposedHost());
       bind(String.class).annotatedWith(Names.named("act.cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
-      bind(String.class).annotatedWith(Names.named("act.elasticsearch.contact.points")).toInstance(DockerTestUtils.getDockerHost());
+      bind(String.class).annotatedWith(Names.named("act.elasticsearch.contact.points")).toInstance(elastic.getExposedHost());
       bind(String.class).annotatedWith(Names.named("act.elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
       bind(String.class).annotatedWith(Names.named("act.seb.kafka.port")).toInstance("9092");
       bind(String.class).annotatedWith(Names.named("act.seb.kafka.contact.points")).toInstance("localhost");
@@ -375,7 +376,7 @@ public abstract class AbstractIT {
       install(new TiRestModule());
       install(new TiClientModule());
       // Configuration
-      String smbClientUrl = "tcp://" + DockerTestUtils.getDockerHost() + ":" + activemq.getExposedHostPort(61616);
+      String smbClientUrl = "tcp://" + activemq.getExposedHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("act.api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
       bind(String.class).annotatedWith(Names.named("act.api.cors.allowed.origins")).toInstance("http://www.example.org");
       bind(String.class).annotatedWith(Names.named("act.smb.queue.name")).toInstance("Service.ACT");
