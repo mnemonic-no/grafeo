@@ -421,6 +421,29 @@ public class FactManagerTest extends AbstractManagerTest {
     getFactManager().saveFactByTimestamp(entity);
   }
 
+  @Test
+  public void testSaveFactExistenceReturnsSameEntity() {
+    FactExistenceEntity entity = createFactExistence(createAndSaveFact().getId());
+    assertSame(entity, getFactManager().saveFactExistence(entity));
+  }
+
+  @Test
+  public void testSaveFactExistenceReturnsNullOnNullInput() {
+    assertNull(getFactManager().saveFactExistence(null));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testSaveFactExistenceWithNonExistingFactThrowsException() {
+    getFactManager().saveFactExistence(createFactExistence(UUID.randomUUID()));
+  }
+
+  @Test(expected = ImmutableViolationException.class)
+  public void testSaveFactExistenceTwiceThrowsException() {
+    FactExistenceEntity entity = createFactExistence(createAndSaveFact().getId());
+    getFactManager().saveFactExistence(entity);
+    getFactManager().saveFactExistence(entity);
+  }
+
   private FactTypeEntity createFactType() {
     return createFactType("factType");
   }
@@ -498,6 +521,12 @@ public class FactManagerTest extends AbstractManagerTest {
     return new FactByTimestampEntity()
             .setHourOfDay(1609502400000L)
             .setTimestamp(1609504200000L)
+            .setFactID(factID);
+  }
+
+  private FactExistenceEntity createFactExistence(UUID factID) {
+    return new FactExistenceEntity()
+            .setFactHash("abc789")
             .setFactID(factID);
   }
 

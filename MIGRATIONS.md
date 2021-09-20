@@ -2,6 +2,17 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Introduce fact_existence lookup table] - 2021-09-20
+A new Cassandra lookup table has been introduced. Execute the following CQL command against your Cassandra cluster (e.g. using cqlsh).
+
+```
+CREATE TABLE IF NOT EXISTS act.fact_existence (
+  fact_hash ASCII,
+  fact_id UUID,
+  PRIMARY KEY (fact_hash)
+);
+```
+
 ## [HasAcl and HasComments flags] - 2021-06-25
 Two new internal flags have been introduced in order to avoid unnecessary requests towards Cassandra.
 Adapt and execute the `migrations/002-fact-has-acl-comments.py` script to update the existing data with the new flags.

@@ -22,6 +22,7 @@ import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverte
 import no.mnemonic.act.platform.dao.facade.converters.FactCommentRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.dao.facade.helpers.FactRecordHasher;
 import no.mnemonic.act.platform.dao.facade.resolvers.CachedFactResolver;
 import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
@@ -144,6 +145,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     // Save new Fact and lookup tables in Cassandra.
     FactEntity entity = factRecordConverter.toEntity(record);
     factManager.saveFact(entity);
+    saveFactExistence(record);
     saveFactObjectBindings(entity);
     saveMetaFactBindings(entity);
     saveFactByTimestamp(entity);
@@ -234,6 +236,17 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     factResolver.evict(fact);
 
     return comment;
+  }
+
+  private void saveFactExistence(FactRecord fact) {
+    // Calculate hash value for given Fact.
+    String hash = FactRecordHasher.toHash(fact);
+
+    // Save FactExistence lookup table entry.
+    factManager.saveFactExistence(new FactExistenceEntity()
+            .setFactHash(hash)
+            .setFactID(fact.getId())
+    );
   }
 
   private void saveFactObjectBindings(FactEntity fact) {

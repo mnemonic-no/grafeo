@@ -197,6 +197,20 @@ public class FactManager implements LifecycleAspect {
     return entity;
   }
 
+  /* FactExistenceEntity-related methods */
+
+  public FactExistenceEntity saveFactExistence(FactExistenceEntity entity) {
+    if (entity == null) return null;
+    if (getFact(entity.getFactID()) == null)
+      throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", entity.getFactID()));
+    if (factDao.getFactExistence(entity.getFactHash()) != null)
+      throw new ImmutableViolationException("It is not allowed to update a FactExistenceEntity entry.");
+
+    factDao.save(entity);
+
+    return entity;
+  }
+
   /* Private helper methods and classes */
 
   /**

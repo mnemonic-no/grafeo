@@ -22,6 +22,7 @@ import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverte
 import no.mnemonic.act.platform.dao.facade.converters.FactCommentRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
 import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
+import no.mnemonic.act.platform.dao.facade.helpers.FactRecordHasher;
 import no.mnemonic.act.platform.dao.facade.resolvers.CachedFactResolver;
 import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -218,6 +219,19 @@ public class ObjectFactDaoFacadeTest {
     verify(factSearchManager).indexFact(document);
     verify(factRecordConverter).toEntity(argThat(r -> r.getId() != null));
     verify(factRecordConverter).toDocument(argThat(r -> r.getId() != null));
+  }
+
+  @Test
+  public void testStoreFactSavesFactExistence() {
+    FactRecord record = new FactRecord().setId(UUID.randomUUID());
+    when(factRecordConverter.toEntity(notNull())).thenReturn(new FactEntity());
+
+    dao.storeFact(record);
+    verify(factManager).saveFactExistence(argThat(factExistence -> {
+      assertEquals(FactRecordHasher.toHash(record), factExistence.getFactHash());
+      assertEquals(record.getId(), factExistence.getFactID());
+      return true;
+    }));
   }
 
   @Test

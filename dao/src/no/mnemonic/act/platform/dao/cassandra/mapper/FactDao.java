@@ -43,6 +43,14 @@ public interface FactDao {
   @Query("SELECT * FROM " + KEY_SPACE + "." + FactByTimestampEntity.TABLE + " WHERE hour_of_day = :hourOfDay")
   PagingIterable<FactByTimestampEntity> fetchFactByTimestamp(long hourOfDay);
 
+  /* FactExistenceEntity-related methods */
+
+  @Insert
+  void save(FactExistenceEntity entity);
+
+  @Select
+  FactExistenceEntity getFactExistence(String factHash);
+
   /* FactAclEntity-related methods */
 
   @Insert
