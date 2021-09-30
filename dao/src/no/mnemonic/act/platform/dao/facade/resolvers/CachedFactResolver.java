@@ -20,6 +20,14 @@ public interface CachedFactResolver {
   FactRecord getFact(UUID id);
 
   /**
+   * Retrieve a {@link FactRecord} by its hash value. Returns null if the record does not exist in the database.
+   *
+   * @param factHash Hash of Fact
+   * @return Resolved Fact or null
+   */
+  FactRecord getFact(String factHash);
+
+  /**
    * Evict a previously cached {@link FactRecord} from the cache.
    *
    * @param fact Fact to evict from cache

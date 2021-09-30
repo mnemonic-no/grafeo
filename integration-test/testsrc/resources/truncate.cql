@@ -9,3 +9,4 @@ TRUNCATE TABLE act.fact_comment;
 TRUNCATE TABLE act.fact_acl;
 TRUNCATE TABLE act.meta_fact_binding;
 TRUNCATE TABLE act.fact_by_timestamp;
+TRUNCATE TABLE act.fact_existence;

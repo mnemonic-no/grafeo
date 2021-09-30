@@ -110,6 +110,15 @@ public class FactManager implements LifecycleAspect {
     return factDao.get(id);
   }
 
+  public FactEntity getFact(String factHash) {
+    if (StringUtils.isBlank(factHash)) return null;
+
+    FactExistenceEntity existenceEntity = factDao.getFactExistence(factHash);
+    if (existenceEntity == null) return null;
+
+    return getFact(existenceEntity.getFactID());
+  }
+
   public Iterator<FactEntity> getFactsWithin(long startTimestamp, long endTimestamp) {
     if (startTimestamp < 0 || endTimestamp < 0 || startTimestamp > endTimestamp)
       throw new IllegalArgumentException(String.format("Invalid startTimestamp %d or endTimestamp %d.", startTimestamp, endTimestamp));

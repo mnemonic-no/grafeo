@@ -31,6 +31,7 @@ import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
@@ -368,7 +369,7 @@ public class FactCreateHandlerTest {
   }
 
   @Test
-  public void testRefreshExistingFact() {
+  public void testRefreshExistingFactWithElasticsearch() {
     FactRecord factToSave = new FactRecord()
             .setId(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.Public)
@@ -398,6 +399,43 @@ public class FactCreateHandlerTest {
     }));
 
     verify(objectFactDao, never()).storeFact(any());
+    verify(objectFactDao).retrieveExistingFacts(factToSave);
+    verify(factResponseConverter).apply(same(existingFact));
+  }
+
+  @Test
+  public void testRefreshExistingFactWithCassandra() {
+    handler.setUseCassandraForFactExistenceCheck(true);
+
+    FactRecord factToSave = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.Public)
+            .setOrganizationID(UUID.randomUUID());
+    mockSaveFact();
+
+    // Mock fetching of existing Fact.
+    FactRecord existingFact = new FactRecord()
+            .setId(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.RoleBased)
+            .setOrganizationID(UUID.randomUUID());
+    when(objectFactDao.retrieveExistingFact(factToSave)).thenReturn(Optional.of(existingFact));
+    when(securityContext.hasReadPermission(existingFact)).thenReturn(true);
+
+    // Mock stuff needed for refreshing Fact.
+    when(objectFactDao.refreshFact(existingFact)).thenReturn(existingFact);
+
+    List<UUID> subjectIds = list(UUID.randomUUID());
+    handler.saveFact(factToSave, "some comment", subjectIds);
+
+    verify(objectFactDao).refreshFact(argThat(fact -> {
+      assertEquals(existingFact, fact);
+      assertEquals(set("some comment"), set(fact.getComments(), FactCommentRecord::getComment));
+      assertEquals(set(subjectIds), set(fact.getAcl(), FactAclEntryRecord::getSubjectID));
+      return true;
+    }));
+
+    verify(objectFactDao, never()).storeFact(any());
+    verify(objectFactDao).retrieveExistingFact(factToSave);
     verify(factResponseConverter).apply(same(existingFact));
   }
 

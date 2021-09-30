@@ -12,6 +12,7 @@ import no.mnemonic.commons.metrics.MetricAspect;
 import no.mnemonic.commons.metrics.MetricException;
 import no.mnemonic.commons.metrics.Metrics;
 import no.mnemonic.commons.metrics.MetricsGroup;
+import no.mnemonic.commons.utilities.StringUtils;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -35,6 +36,7 @@ public class GuavaBackedFactResolver implements CachedFactResolver, MetricAspect
   private final FactManager factManager;
   private final FactRecordConverter factRecordConverter;
   private final LoadingCache<UUID, FactRecord> factByIdCache;
+  private final LoadingCache<String, UUID> factByHashCache;
 
   @Inject
   public GuavaBackedFactResolver(
@@ -45,6 +47,7 @@ public class GuavaBackedFactResolver implements CachedFactResolver, MetricAspect
     this.factManager = factManager;
     this.factRecordConverter = factRecordConverter;
     this.factByIdCache = createFactByIdCache(cacheConfiguration);
+    this.factByHashCache = createFactByHashCache(cacheConfiguration);
   }
 
   @Override
@@ -60,6 +63,19 @@ public class GuavaBackedFactResolver implements CachedFactResolver, MetricAspect
   }
 
   @Override
+  public FactRecord getFact(String factHash) {
+    if (StringUtils.isBlank(factHash)) return null;
+
+    try {
+      // Look up UUID from 'factByHashCache' and use the result to fetch the actual record from 'factByIdCache'.
+      return factByIdCache.get(factByHashCache.get(factHash));
+    } catch (ExecutionException ignored) {
+      // Failed to fetch Fact from underlying storage, return null instead.
+      return null;
+    }
+  }
+
+  @Override
   public void evict(FactRecord fact) {
     if (fact == null || fact.getId() == null) return;
     factByIdCache.invalidate(fact.getId());
@@ -68,13 +84,14 @@ public class GuavaBackedFactResolver implements CachedFactResolver, MetricAspect
   @Override
   public Metrics getMetrics() throws MetricException {
     return new MetricsGroup()
-            .addSubMetrics("factByIdCache", collectCacheMetrics(factByIdCache));
+            .addSubMetrics("factByIdCache", collectCacheMetrics(factByIdCache))
+            .addSubMetrics("factByHashCache", collectCacheMetrics(factByHashCache));
   }
 
   private LoadingCache<UUID, FactRecord> createFactByIdCache(CacheConfiguration config) {
     return CacheBuilder.newBuilder()
-            .expireAfterWrite(config.getTimeToLive())
-            .maximumSize(config.getMaximumCacheSize())
+            .expireAfterWrite(config.getByIdTimeToLive())
+            .maximumSize(config.getByIdMaximumCacheSize())
             .recordStats()
             .build(new CacheLoader<UUID, FactRecord>() {
               @Override
@@ -87,31 +104,69 @@ public class GuavaBackedFactResolver implements CachedFactResolver, MetricAspect
             });
   }
 
+  private LoadingCache<String, UUID> createFactByHashCache(CacheConfiguration config) {
+    return CacheBuilder.newBuilder()
+            .expireAfterWrite(config.getByHashTimeToLive())
+            .maximumSize(config.getByHashMaximumCacheSize())
+            .recordStats()
+            .build(new CacheLoader<String, UUID>() {
+              @Override
+              public UUID load(String key) throws Exception {
+                FactEntity entity = factManager.getFact(key);
+                if (entity == null) throw new ElementNotFoundException();
+
+                return entity.getId();
+              }
+            });
+  }
+
   /**
    * Helper class to support optional configuration parameters but still instantiate the cache in the constructor.
    */
   public static final class CacheConfiguration {
 
-    private Duration timeToLive = DEFAULT_TIME_TO_LIVE;
-    private long maximumCacheSize = DEFAULT_MAXIMUM_CACHE_SIZE;
+    private Duration byIdTimeToLive = DEFAULT_TIME_TO_LIVE;
+    private Duration byHashTimeToLive = DEFAULT_TIME_TO_LIVE;
+    private long byIdMaximumCacheSize = DEFAULT_MAXIMUM_CACHE_SIZE;
+    private long byHashMaximumCacheSize = DEFAULT_MAXIMUM_CACHE_SIZE;
 
-    public Duration getTimeToLive() {
-      return timeToLive;
+    public Duration getByIdTimeToLive() {
+      return byIdTimeToLive;
     }
 
     @Inject(optional = true)
-    public CacheConfiguration setTimeToLive(@Named("act.dao.cache.factById.ttl") long timeToLive) {
-      this.timeToLive = Duration.ofMinutes(timeToLive);
+    public CacheConfiguration setByIdTimeToLive(@Named("act.dao.cache.factById.ttl") long timeToLive) {
+      this.byIdTimeToLive = Duration.ofMinutes(timeToLive);
       return this;
     }
 
-    public long getMaximumCacheSize() {
-      return maximumCacheSize;
+    public Duration getByHashTimeToLive() {
+      return byHashTimeToLive;
     }
 
     @Inject(optional = true)
-    public CacheConfiguration setMaximumCacheSize(@Named("act.dao.cache.factById.size") long maximumCacheSize) {
-      this.maximumCacheSize = maximumCacheSize;
+    public CacheConfiguration setByHashTimeToLive(@Named("act.dao.cache.factByHash.ttl") long timeToLive) {
+      this.byHashTimeToLive = Duration.ofMinutes(timeToLive);
+      return this;
+    }
+
+    public long getByIdMaximumCacheSize() {
+      return byIdMaximumCacheSize;
+    }
+
+    @Inject(optional = true)
+    public CacheConfiguration setByIdMaximumCacheSize(@Named("act.dao.cache.factById.size") long maximumCacheSize) {
+      this.byIdMaximumCacheSize = maximumCacheSize;
+      return this;
+    }
+
+    public long getByHashMaximumCacheSize() {
+      return byHashMaximumCacheSize;
+    }
+
+    @Inject(optional = true)
+    public CacheConfiguration setByHashMaximumCacheSize(@Named("act.dao.cache.factByHash.size") long maximumCacheSize) {
+      this.byHashMaximumCacheSize = maximumCacheSize;
       return this;
     }
   }

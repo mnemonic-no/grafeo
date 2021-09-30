@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -126,6 +127,16 @@ public interface ObjectFactDao {
    * @return Container holding existing Facts, or an empty container if non exist
    */
   default ResultContainer<FactRecord> retrieveExistingFacts(FactRecord fact) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Retrieve an existing Fact which is logically the same as the supplied {@link FactRecord}.
+   *
+   * @param fact Fact to check for existence
+   * @return Existing Fact wrapped inside an {@link Optional}, or an empty {@link Optional} if non exist
+   */
+  default Optional<FactRecord> retrieveExistingFact(FactRecord fact) {
     throw new UnsupportedOperationException();
   }
 

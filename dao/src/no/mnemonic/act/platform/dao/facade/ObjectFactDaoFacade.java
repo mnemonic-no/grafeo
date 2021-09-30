@@ -31,10 +31,7 @@ import javax.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -200,6 +197,15 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     }
 
     return createResultContainer(searchResult.getValues().iterator(), searchResult.getCount());
+  }
+
+  @Override
+  public Optional<FactRecord> retrieveExistingFact(FactRecord record) {
+    if (record == null) return Optional.empty();
+
+    // Delegate resolution of Fact by its hash value to CachedFactResolver.
+    // This will return null if the Fact doesn't exist yet.
+    return Optional.ofNullable(factResolver.getFact(FactRecordHasher.toHash(record)));
   }
 
   @Override

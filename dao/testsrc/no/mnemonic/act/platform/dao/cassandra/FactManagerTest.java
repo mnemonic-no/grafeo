@@ -150,7 +150,7 @@ public class FactManagerTest extends AbstractManagerTest {
 
   @Test
   public void testGetFactWithNonExistingFact() {
-    assertNull(getFactManager().getFact(null));
+    assertNull(getFactManager().getFact((UUID) null));
     assertNull(getFactManager().getFact(UUID.randomUUID()));
   }
 
@@ -198,6 +198,25 @@ public class FactManagerTest extends AbstractManagerTest {
     FactEntity entity = getFactManager().getFact(factID);
     assertTrue(entity.getFlags().contains(FactEntity.Flag.RetractedHint));
     assertTrue(entity.getFlags().contains(FactEntity.Flag.HasComments));
+  }
+
+  @Test
+  public void testGetFactByHashReturnsNullOnInvalidInput() {
+    assertNull(getFactManager().getFact((String) null));
+    assertNull(getFactManager().getFact(""));
+    assertNull(getFactManager().getFact(" "));
+    assertNull(getFactManager().getFact("something"));
+  }
+
+  @Test
+  public void testGetFactByHashReturnsFact() {
+    FactEntity expected = createAndSaveFact();
+    FactExistenceEntity existenceEntity = createFactExistence(expected.getId());
+    getFactManager().saveFactExistence(existenceEntity);
+
+    FactEntity actual = getFactManager().getFact(existenceEntity.getFactHash());
+    assertNotNull(actual);
+    assertEquals(expected.getId(), actual.getId());
   }
 
   @Test

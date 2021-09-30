@@ -32,6 +32,7 @@ import org.mockito.Mock;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -516,6 +517,33 @@ public class ObjectFactDaoFacadeTest {
     verify(factRecordConverter).toCriteria(record);
     verify(factSearchManager).retrieveExistingFacts(criteria);
     verify(factResolver).getFact(id);
+  }
+
+  @Test
+  public void testRetrieveExistingFactWithNull() {
+    assertFalse(dao.retrieveExistingFact(null).isPresent());
+    verifyNoInteractions(factResolver);
+  }
+
+  @Test
+  public void testRetrieveExistingFactNotFound() {
+    FactRecord record = new FactRecord();
+    String hash = FactRecordHasher.toHash(record);
+
+    assertFalse(dao.retrieveExistingFact(record).isPresent());
+    verify(factResolver).getFact(hash);
+  }
+
+  @Test
+  public void testRetrieveExistingFactFound() {
+    FactRecord record = new FactRecord();
+    String hash = FactRecordHasher.toHash(record);
+    when(factResolver.getFact(hash)).thenReturn(record);
+
+    Optional<FactRecord> result = dao.retrieveExistingFact(record);
+    assertTrue(result.isPresent());
+    assertSame(record, result.get());
+    verify(factResolver).getFact(hash);
   }
 
   @Test

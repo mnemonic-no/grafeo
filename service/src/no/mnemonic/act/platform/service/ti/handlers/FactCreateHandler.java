@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
+import com.google.inject.Inject;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
@@ -27,7 +28,7 @@ import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
-import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.*;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
@@ -53,6 +54,9 @@ public class FactCreateHandler {
   private final FactResponseConverter factResponseConverter;
   private final TriggerContext triggerContext;
 
+  // By default, use Elasticsearch for backwards compatibility.
+  private boolean useCassandraForFactExistenceCheck = false;
+
   @Inject
   public FactCreateHandler(TiSecurityContext securityContext,
                            SubjectSPI subjectResolver,
@@ -70,6 +74,13 @@ public class FactCreateHandler {
     this.objectFactDao = objectFactDao;
     this.factResponseConverter = factResponseConverter;
     this.triggerContext = triggerContext;
+  }
+
+  @Inject(optional = true)
+  public FactCreateHandler setUseCassandraForFactExistenceCheck(
+          @Named("act.fact.existence.check.use.cassandra") boolean useCassandraForFactExistenceCheck) {
+    this.useCassandraForFactExistenceCheck = useCassandraForFactExistenceCheck;
+    return this;
   }
 
   /**
@@ -255,7 +266,16 @@ public class FactCreateHandler {
   }
 
   private FactRecord resolveExistingFact(FactRecord newFact) {
-    // Fetch any Facts which are logically the same as the Fact to create, apply permission check and return existing Fact if accessible.
+    // For both methods, fetch any Facts which are logically the same as the Fact to create,
+    // apply permission check and return existing Fact if accessible.
+    if (useCassandraForFactExistenceCheck) {
+      // If configured use the new Cassandra lookup table.
+      return objectFactDao.retrieveExistingFact(newFact)
+              .filter(securityContext::hasReadPermission)
+              .orElse(null);
+    }
+
+    // Otherwise, use the old method with Elasticsearch.
     return objectFactDao.retrieveExistingFacts(newFact)
             .stream()
             .filter(securityContext::hasReadPermission)

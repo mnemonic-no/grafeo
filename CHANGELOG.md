@@ -34,6 +34,10 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Added
+- (2021-09-28) A new mechanism to check for already existing Facts has been implemented. To activate the new mechanism
+add `act.fact.existence.check.use.cassandra=true` to the `application.properties` configuration file. The new mechanism
+is recommended for new installations. For existing installations the configuration should be set to `false` to avoid the
+creation of duplicated Facts. The old mechanism is deprecated and wil be removed in the future.
 - (2021-06-03) Added optional `before` and `after` query parameters to endpoints fetching Objects by ID or type/value.
 Facts with their `lastSeenTimestamp` outside the given time frame are omitted from statistics calculation.
 - (2020-08-14) Added `includeStatistics` parameter to `POST /v1/object/search` endpoint to specify whether Object statistics
