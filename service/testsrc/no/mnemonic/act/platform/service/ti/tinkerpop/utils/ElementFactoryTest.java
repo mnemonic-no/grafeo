@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
@@ -33,6 +34,8 @@ public class ElementFactoryTest {
   private PropertyHelper propertyHelper;
   @Mock
   private TiSecurityContext securityContext;
+  @Mock
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   private ElementFactory elementFactory;
 
@@ -44,6 +47,7 @@ public class ElementFactoryTest {
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(securityContext)
+            .setAccessControlCriteriaResolver(accessControlCriteriaResolver)
             .setFactRetractionHandler(factRetractionHandler)
             .setPropertyHelper(propertyHelper)
             .setTraverseParams(TraverseParams.builder().build())

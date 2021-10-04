@@ -5,18 +5,20 @@ import no.mnemonic.act.platform.api.exceptions.OperationTimeoutException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
-import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
@@ -47,6 +49,8 @@ public class TraverseGraphHandlerTest {
   @Mock
   private TiSecurityContext securityContext;
   @Mock
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
+  @Mock
   private FactRetractionHandler factRetractionHandler;
   @Mock
   private PropertyHelper propertyHelper;
@@ -58,12 +62,15 @@ public class TraverseGraphHandlerTest {
     initMocks(this);
 
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-    when(securityContext.getCurrentUserID()).thenReturn(new UUID(0, 1));
-    when(securityContext.getAvailableOrganizationID()).thenReturn(set(new UUID(0, 1)));
+    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID())
+            .build());
     when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());
 
     handler = new TraverseGraphHandler(
             securityContext,
+            accessControlCriteriaResolver,
             objectFactDao,
             objectFactTypeResolver,
             objectResponseConverter,

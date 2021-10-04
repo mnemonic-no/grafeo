@@ -5,7 +5,7 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
-import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
@@ -27,15 +27,15 @@ public class FactRetractionHandler {
 
   private final FactTypeRequestResolver factTypeRequestResolver;
   private final FactSearchManager factSearchManager;
-  private final TiSecurityContext securityContext;
+  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   @Inject
   public FactRetractionHandler(FactTypeRequestResolver factTypeRequestResolver,
                                FactSearchManager factSearchManager,
-                               TiSecurityContext securityContext) {
+                               AccessControlCriteriaResolver accessControlCriteriaResolver) {
     this.factTypeRequestResolver = factTypeRequestResolver;
     this.factSearchManager = factSearchManager;
-    this.securityContext = securityContext;
+    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
   }
 
   /**
@@ -85,8 +85,7 @@ public class FactRetractionHandler {
     FactSearchCriteria retractionsCriteria = FactSearchCriteria.builder()
             .addInReferenceTo(factID)
             .addFactTypeID(factTypeRequestResolver.resolveRetractionFactType().getId())
-            .setCurrentUserID(securityContext.getCurrentUserID())
-            .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
+            .setAccessControlCriteria(accessControlCriteriaResolver.get())
             .build();
 
     // The number of retractions will be very small (typically one), thus, it's no problem to consume all results at once.

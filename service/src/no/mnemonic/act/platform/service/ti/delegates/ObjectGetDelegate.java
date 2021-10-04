@@ -13,6 +13,7 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 
@@ -21,6 +22,7 @@ import javax.inject.Inject;
 public class ObjectGetDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
+  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
   private final ObjectFactDao objectFactDao;
   private final FactTypeByIdResponseResolver factTypeConverter;
   private final ObjectTypeByIdResponseResolver objectTypeConverter;
@@ -28,11 +30,13 @@ public class ObjectGetDelegate implements Delegate {
 
   @Inject
   public ObjectGetDelegate(TiSecurityContext securityContext,
+                           AccessControlCriteriaResolver accessControlCriteriaResolver,
                            ObjectFactDao objectFactDao,
                            FactTypeByIdResponseResolver factTypeConverter,
                            ObjectTypeByIdResponseResolver objectTypeConverter,
                            ObjectTypeHandler objectTypeHandler) {
     this.securityContext = securityContext;
+    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
     this.objectFactDao = objectFactDao;
     this.factTypeConverter = factTypeConverter;
     this.objectTypeConverter = objectTypeConverter;
@@ -62,8 +66,7 @@ public class ObjectGetDelegate implements Delegate {
               .addObjectID(id)
               .setStartTimestamp(after)
               .setEndTimestamp(before)
-              .setCurrentUserID(securityContext.getCurrentUserID())
-              .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
+              .setAccessControlCriteria(accessControlCriteriaResolver.get())
               .build();
       return objectFactDao.calculateObjectStatistics(criteria).getStatistics(id);
     });

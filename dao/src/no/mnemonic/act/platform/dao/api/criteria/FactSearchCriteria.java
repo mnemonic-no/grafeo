@@ -127,8 +127,7 @@ public class FactSearchCriteria {
   private final int limit;
 
   // Fields required for access control.
-  private final UUID currentUserID;
-  private final Set<UUID> availableOrganizationID;
+  private final AccessControlCriteria accessControlCriteria;
 
   private FactSearchCriteria(Set<UUID> factID,
                              Set<UUID> factTypeID,
@@ -151,12 +150,9 @@ public class FactSearchCriteria {
                              Set<NumberFieldStrategy> numberFieldStrategy,
                              MatchStrategy numberMatchStrategy,
                              int limit,
-                             UUID currentUserID,
-                             Set<UUID> availableOrganizationID,
+                             AccessControlCriteria accessControlCriteria,
                              FactBinding factBinding) {
-    if (currentUserID == null) throw new IllegalArgumentException("Missing required field 'currentUserID'.");
-    if (CollectionUtils.isEmpty(availableOrganizationID))
-      throw new IllegalArgumentException("Missing required field 'availableOrganizationID'.");
+    if (accessControlCriteria == null) throw new IllegalArgumentException("Missing required field 'accessControlCriteria'.");
 
     this.factID = factID;
     this.factTypeID = factTypeID;
@@ -173,8 +169,7 @@ public class FactSearchCriteria {
     this.minNumber = minNumber;
     this.maxNumber = maxNumber;
     this.limit = limit;
-    this.currentUserID = currentUserID;
-    this.availableOrganizationID = availableOrganizationID;
+    this.accessControlCriteria = accessControlCriteria;
     this.factBinding = factBinding;
 
     // Set default values for strategies if not provided by user.
@@ -397,21 +392,12 @@ public class FactSearchCriteria {
   }
 
   /**
-   * Specify the UUID of the calling user. This field is required.
+   * Specify criteria required for access control. This field is required.
    *
-   * @return UUID of calling user
+   * @return Access control criteria
    */
-  public UUID getCurrentUserID() {
-    return currentUserID;
-  }
-
-  /**
-   * Specify the Organizations the calling user has access to (by UUID). This field is required.
-   *
-   * @return UUIDs of available Organizations
-   */
-  public Set<UUID> getAvailableOrganizationID() {
-    return availableOrganizationID;
+  public AccessControlCriteria getAccessControlCriteria() {
+    return accessControlCriteria;
   }
 
   /**
@@ -476,8 +462,7 @@ public class FactSearchCriteria {
     private int limit;
 
     // Fields required for access control.
-    private UUID currentUserID;
-    private Set<UUID> availableOrganizationID;
+    private AccessControlCriteria accessControlCriteria;
 
     private Builder() {
     }
@@ -485,8 +470,7 @@ public class FactSearchCriteria {
     public FactSearchCriteria build() {
       return new FactSearchCriteria(factID, factTypeID, factValue, inReferenceTo, organizationID, originID, objectID, objectTypeID,
               objectValue, keywords, keywordFieldStrategy, keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy,
-              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, limit, currentUserID,
-              availableOrganizationID, factBinding);
+              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, limit, accessControlCriteria, factBinding);
     }
 
     public Builder setFactID(Set<UUID> factID) {
@@ -659,18 +643,8 @@ public class FactSearchCriteria {
       return this;
     }
 
-    public Builder setCurrentUserID(UUID currentUserID) {
-      this.currentUserID = currentUserID;
-      return this;
-    }
-
-    public Builder setAvailableOrganizationID(Set<UUID> availableOrganizationID) {
-      this.availableOrganizationID = availableOrganizationID;
-      return this;
-    }
-
-    public Builder addAvailableOrganizationID(UUID availableOrganizationID) {
-      this.availableOrganizationID = SetUtils.addToSet(this.availableOrganizationID, availableOrganizationID);
+    public Builder setAccessControlCriteria(AccessControlCriteria accessControlCriteria) {
+      this.accessControlCriteria = accessControlCriteria;
       return this;
     }
   }

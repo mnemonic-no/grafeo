@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.tinkerpop.exceptions.GraphOperationException;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.commons.utilities.collections.SetUtils;
-import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
@@ -29,33 +28,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class ActGraphTest extends AbstractGraphTest {
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateGraphWithoutObjectFactDao() {
-    ActGraph.builder()
-            .setSecurityContext(getSecurityContext())
-            .setObjectTypeFactResolver(getObjectFactTypeResolver())
-            .setTraverseParams(TraverseParams.builder().build())
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateGraphWithoutObjectFactTypeResolver() {
-    ActGraph.builder()
-            .setObjectFactDao(getObjectFactDao())
-            .setSecurityContext(getSecurityContext())
-            .setTraverseParams(TraverseParams.builder().build())
-            .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateGraphWithoutSecurityContext() {
-    ActGraph.builder()
-            .setObjectTypeFactResolver(getObjectFactTypeResolver())
-            .setObjectFactDao(getObjectFactDao())
-            .setTraverseParams(TraverseParams.builder().build())
-            .build();
-  }
 
   @Test(expected = GraphOperationException.class)
   public void testFetchingAllVerticesNotAllowed() {

@@ -4,12 +4,14 @@ import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OrganizationByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OriginByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.SubjectByIdResponseResolver;
@@ -44,6 +46,8 @@ public class PropertyHelperTest {
   @Mock
   private TiSecurityContext securityContext;
   @Mock
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
+  @Mock
   private SubjectByIdResponseResolver subjectResolver;
   @Mock
   private OrganizationByIdResponseResolver organizationResolver;
@@ -56,9 +60,11 @@ public class PropertyHelperTest {
   public void setUp() {
     initMocks(this);
     helper = new PropertyHelper(factRetractionHandler, objectFactDao, objectFactTypeResolver, securityContext,
-            subjectResolver, organizationResolver, originResolver);
-    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(securityContext.getAvailableOrganizationID()).thenReturn(set(UUID.randomUUID()));
+            accessControlCriteriaResolver, subjectResolver, organizationResolver, originResolver);
+    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID())
+            .build());
     when(factRetractionHandler.isRetracted(any())).thenReturn(false);
   }
 

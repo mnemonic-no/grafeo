@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.dao.elastic;
 
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
@@ -27,8 +28,7 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     FactDocument nonAccessibleFact2 = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
     ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID())
+            .setAccessControlCriteria(createAccessControlCriteria())
             .addObjectID(getFirstObjectID(accessibleFact))
             .addObjectID(getFirstObjectID(nonAccessibleFact1))
             .addObjectID(getFirstObjectID(nonAccessibleFact2))
@@ -43,8 +43,10 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     FactDocument nonAccessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
     ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .addAvailableOrganizationID(accessibleFact.getOrganizationID())
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(UUID.randomUUID())
+                    .addAvailableOrganizationID(accessibleFact.getOrganizationID())
+                    .build())
             .addObjectID(getFirstObjectID(accessibleFact))
             .addObjectID(getFirstObjectID(nonAccessibleFact))
             .build();
@@ -58,8 +60,10 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     FactDocument nonAccessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
     ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
-            .setCurrentUserID(first(accessibleFact.getAcl()))
-            .addAvailableOrganizationID(UUID.randomUUID())
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(first(accessibleFact.getAcl()))
+                    .addAvailableOrganizationID(UUID.randomUUID())
+                    .build())
             .addObjectID(getFirstObjectID(accessibleFact))
             .addObjectID(getFirstObjectID(nonAccessibleFact))
             .build();
@@ -73,8 +77,10 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     FactDocument nonAccessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
 
     ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
-            .setCurrentUserID(first(accessibleFact.getAcl()))
-            .addAvailableOrganizationID(UUID.randomUUID())
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(first(accessibleFact.getAcl()))
+                    .addAvailableOrganizationID(UUID.randomUUID())
+                    .build())
             .addObjectID(getFirstObjectID(accessibleFact))
             .addObjectID(getFirstObjectID(nonAccessibleFact))
             .build();
@@ -230,8 +236,7 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
 
   private ObjectStatisticsCriteria createObjectStatisticsCriteria(ObjectPreparation<ObjectStatisticsCriteria.Builder> preparation) {
     ObjectStatisticsCriteria.Builder builder = ObjectStatisticsCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID());
+            .setAccessControlCriteria(createAccessControlCriteria());
     if (preparation != null) {
       builder = preparation.prepare(builder);
     }

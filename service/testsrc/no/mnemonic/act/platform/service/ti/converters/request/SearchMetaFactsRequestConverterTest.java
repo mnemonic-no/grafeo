@@ -2,8 +2,9 @@ package no.mnemonic.act.platform.service.ti.converters.request;
 
 import no.mnemonic.act.platform.api.request.v1.Dimension;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
-import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.SearchByNameRequestResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
@@ -23,7 +24,7 @@ public class SearchMetaFactsRequestConverterTest {
   @Mock
   private SearchByNameRequestResolver byNameResolver;
   @Mock
-  private SecurityContext securityContext;
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   private SearchMetaFactsRequestConverter converter;
 
@@ -31,10 +32,12 @@ public class SearchMetaFactsRequestConverterTest {
   public void setup() {
     initMocks(this);
 
-    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
+    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID())
+            .build());
 
-    converter = new SearchMetaFactsRequestConverter(byNameResolver, securityContext);
+    converter = new SearchMetaFactsRequestConverter(byNameResolver, accessControlCriteriaResolver);
   }
 
   @Test
@@ -47,8 +50,7 @@ public class SearchMetaFactsRequestConverterTest {
     FactSearchCriteria criteria = converter.apply(new SearchMetaFactsRequest());
     assertEquals(SetUtils.set(FactSearchCriteria.NumberFieldStrategy.certainty), criteria.getNumberFieldStrategy());
     assertEquals(25, criteria.getLimit());
-    assertNotNull(criteria.getCurrentUserID());
-    assertNotNull(criteria.getAvailableOrganizationID());
+    assertNotNull(criteria.getAccessControlCriteria());
   }
 
   @Test

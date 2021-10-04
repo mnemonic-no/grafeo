@@ -1,18 +1,18 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
-import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.Collections;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
@@ -28,7 +28,7 @@ public class FactRetractionHandlerTest {
   @Mock
   private FactSearchManager factSearchManager;
   @Mock
-  private TiSecurityContext securityContext;
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   private FactRetractionHandler handler;
 
@@ -38,10 +38,12 @@ public class FactRetractionHandlerTest {
 
     // Common mocks used by most tests.
     when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()));
-    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
+    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID())
+            .build());
 
-    handler = new FactRetractionHandler(factTypeRequestResolver, factSearchManager, securityContext);
+    handler = new FactRetractionHandler(factTypeRequestResolver, factSearchManager, accessControlCriteriaResolver);
   }
 
   @Test
@@ -67,8 +69,7 @@ public class FactRetractionHandlerTest {
     verify(factSearchManager).searchFacts(argThat(criteria -> {
       assertEquals(set(fact.getId()), criteria.getInReferenceTo());
       assertFalse(criteria.getFactTypeID().isEmpty());
-      assertFalse(criteria.getAvailableOrganizationID().isEmpty());
-      assertNotNull(criteria.getCurrentUserID());
+      assertNotNull(criteria.getAccessControlCriteria());
       return true;
     }));
   }

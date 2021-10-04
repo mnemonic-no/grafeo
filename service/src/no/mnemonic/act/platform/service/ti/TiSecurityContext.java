@@ -13,6 +13,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.services.common.auth.AccessController;
@@ -31,6 +32,8 @@ public class TiSecurityContext extends SecurityContext {
 
   private final ObjectFactDao objectFactDao;
   private final Function<UUID, List<FactAclEntity>> aclResolver;
+  // Cannot be final as it's replaced with a mock during tests.
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   private TiSecurityContext(AccessController accessController,
                             IdentitySPI identityResolver,
@@ -40,6 +43,8 @@ public class TiSecurityContext extends SecurityContext {
     super(accessController, identityResolver, credentials);
     this.objectFactDao = objectFactDao;
     this.aclResolver = aclResolver;
+    // Create an instance explicitly because dependency inject would cause a circle.
+    this.accessControlCriteriaResolver = new AccessControlCriteriaResolver(this);
   }
 
   public static TiSecurityContext get() {
@@ -134,8 +139,7 @@ public class TiSecurityContext extends SecurityContext {
     // The user needs access to at least one bound Fact to have access to the Object.
     FactSearchCriteria boundFactsCriteria = FactSearchCriteria.builder()
             .addObjectID(object.getId())
-            .setCurrentUserID(getCurrentUserID())
-            .setAvailableOrganizationID(getAvailableOrganizationID())
+            .setAccessControlCriteria(accessControlCriteriaResolver.get())
             .build();
     Optional<FactRecord> accessibleFact = objectFactDao.searchFacts(boundFactsCriteria)
             .stream()
@@ -257,6 +261,14 @@ public class TiSecurityContext extends SecurityContext {
     } catch (AccessDeniedException | AuthenticationFailedException ignored) {
       return false;
     }
+  }
+
+  /**
+   * Replace {@link AccessControlCriteriaResolver} instance. Only use it for testing!
+   */
+  TiSecurityContext setAccessControlCriteriaResolver(AccessControlCriteriaResolver accessControlCriteriaResolver) {
+    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
+    return this;
   }
 
   private boolean isInAcl(FactEntity fact) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.common.io.CharStreams;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
@@ -564,7 +565,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     applyNumberSearchQuery(criteria, rootQuery);
 
     // Always apply access control query.
-    return rootQuery.filter(createAccessControlQuery(criteria.getCurrentUserID(), criteria.getAvailableOrganizationID()));
+    return rootQuery.filter(createAccessControlQuery(criteria.getAccessControlCriteria()));
   }
 
   private void applySimpleFilterQueries(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
@@ -665,7 +666,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             .to(endTimestamp != null && endTimestamp > 0 ? endTimestamp : null);
   }
 
-  private QueryBuilder createAccessControlQuery(UUID currentUserID, Set<UUID> availableOrganizationID) {
+  private QueryBuilder createAccessControlQuery(AccessControlCriteria accessControlCriteria) {
     // Query to verify that user has access to Fact ...
     return boolQuery()
             // ... if Fact is public.
@@ -673,14 +674,14 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             // ... if AccessMode == Explicit user must be in ACL.
             .should(boolQuery()
                     .filter(termQuery("accessMode", toString(FactDocument.AccessMode.Explicit)))
-                    .filter(termQuery("acl", toString(currentUserID)))
+                    .filter(termQuery("acl", toString(accessControlCriteria.getCurrentUserID())))
             )
             // ... if AccessMode == RoleBased user must be in ACL or have access to the owning Organization.
             .should(boolQuery()
                     .filter(termQuery("accessMode", toString(FactDocument.AccessMode.RoleBased)))
                     .filter(boolQuery()
-                            .should(termQuery("acl", toString(currentUserID)))
-                            .should(termsQuery("organizationID", toString(availableOrganizationID)))
+                            .should(termQuery("acl", toString(accessControlCriteria.getCurrentUserID())))
+                            .should(termsQuery("organizationID", toString(accessControlCriteria.getAvailableOrganizationID())))
                     )
             );
   }
@@ -769,7 +770,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private AggregationBuilder buildObjectStatisticsAggregation(ObjectStatisticsCriteria criteria) {
     BoolQueryBuilder factsQuery = boolQuery();
     // Always apply access control query.
-    factsQuery.filter(createAccessControlQuery(criteria.getCurrentUserID(), criteria.getAvailableOrganizationID()));
+    factsQuery.filter(createAccessControlQuery(criteria.getAccessControlCriteria()));
     // Optionally omit Facts which haven't been seen within the given time frame.
     if (criteria.getStartTimestamp() != null || criteria.getEndTimestamp() != null) {
       factsQuery.filter(createFieldQuery("lastSeenTimestamp", criteria.getStartTimestamp(), criteria.getEndTimestamp()));

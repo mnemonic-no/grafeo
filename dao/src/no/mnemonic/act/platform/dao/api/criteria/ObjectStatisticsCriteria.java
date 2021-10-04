@@ -19,24 +19,19 @@ public class ObjectStatisticsCriteria {
   private final Long endTimestamp;
 
   // Fields required for access control on related Facts.
-  private final UUID currentUserID;
-  private final Set<UUID> availableOrganizationID;
+  private final AccessControlCriteria accessControlCriteria;
 
   private ObjectStatisticsCriteria(Set<UUID> objectID,
                                    Long startTimestamp,
                                    Long endTimestamp,
-                                   UUID currentUserID,
-                                   Set<UUID> availableOrganizationID) {
+                                   AccessControlCriteria accessControlCriteria) {
     if (CollectionUtils.isEmpty(objectID)) throw new IllegalArgumentException("Missing required field 'objectID'.");
-    if (currentUserID == null) throw new IllegalArgumentException("Missing required field 'currentUserID'.");
-    if (CollectionUtils.isEmpty(availableOrganizationID))
-      throw new IllegalArgumentException("Missing required field 'availableOrganizationID'.");
+    if (accessControlCriteria == null) throw new IllegalArgumentException("Missing required field 'accessControlCriteria'.");
 
     this.objectID = objectID;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
-    this.currentUserID = currentUserID;
-    this.availableOrganizationID = availableOrganizationID;
+    this.accessControlCriteria = accessControlCriteria;
   }
 
   /**
@@ -67,21 +62,12 @@ public class ObjectStatisticsCriteria {
   }
 
   /**
-   * Specify the UUID of the calling user. This field is required.
+   * Specify criteria required for access control. This field is required.
    *
-   * @return UUID of calling user
+   * @return Access control criteria
    */
-  public UUID getCurrentUserID() {
-    return currentUserID;
-  }
-
-  /**
-   * Specify the Organizations the calling user has access to (by UUID). This field is required.
-   *
-   * @return UUIDs of available Organizations
-   */
-  public Set<UUID> getAvailableOrganizationID() {
-    return availableOrganizationID;
+  public AccessControlCriteria getAccessControlCriteria() {
+    return accessControlCriteria;
   }
 
   public static Builder builder() {
@@ -97,14 +83,13 @@ public class ObjectStatisticsCriteria {
     private Long endTimestamp;
 
     // Fields required for access control on related Facts.
-    private UUID currentUserID;
-    private Set<UUID> availableOrganizationID;
+    private AccessControlCriteria accessControlCriteria;
 
     private Builder() {
     }
 
     public ObjectStatisticsCriteria build() {
-      return new ObjectStatisticsCriteria(objectID, startTimestamp, endTimestamp, currentUserID, availableOrganizationID);
+      return new ObjectStatisticsCriteria(objectID, startTimestamp, endTimestamp, accessControlCriteria);
     }
 
     public Builder setObjectID(Set<UUID> objectID) {
@@ -127,18 +112,8 @@ public class ObjectStatisticsCriteria {
       return this;
     }
 
-    public Builder setCurrentUserID(UUID currentUserID) {
-      this.currentUserID = currentUserID;
-      return this;
-    }
-
-    public Builder setAvailableOrganizationID(Set<UUID> availableOrganizationID) {
-      this.availableOrganizationID = availableOrganizationID;
-      return this;
-    }
-
-    public Builder addAvailableOrganizationID(UUID availableOrganizationID) {
-      this.availableOrganizationID = SetUtils.addToSet(this.availableOrganizationID, availableOrganizationID);
+    public Builder setAccessControlCriteria(AccessControlCriteria accessControlCriteria) {
+      this.accessControlCriteria = accessControlCriteria;
       return this;
     }
   }

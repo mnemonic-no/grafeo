@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
@@ -11,17 +12,16 @@ import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectRequestConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +33,11 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class ObjectSearchDelegateTest {
 
+  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
+          .setCurrentUserID(UUID.randomUUID())
+          .addAvailableOrganizationID(UUID.randomUUID())
+          .build();
+
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
@@ -43,6 +48,8 @@ public class ObjectSearchDelegateTest {
   private ObjectTypeByIdResponseResolver objectTypeConverter;
   @Mock
   private TiSecurityContext securityContext;
+  @Mock
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   private ObjectSearchDelegate delegate;
 
@@ -50,19 +57,18 @@ public class ObjectSearchDelegateTest {
   public void setup() throws Exception {
     initMocks(this);
     // Mocks required for ElasticSearch access control.
-    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
+    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
 
     // Mocks required for request converter.
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setKeywords("Hello World!")
             .setLimit(25)
-            .setCurrentUserID(UUID.randomUUID())
-            .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
+            .setAccessControlCriteria(accessControlCriteria)
             .build());
 
     delegate = new ObjectSearchDelegate(
             securityContext,
+            accessControlCriteriaResolver,
             objectFactDao,
             requestConverter,
             factTypeConverter,
@@ -80,8 +86,7 @@ public class ObjectSearchDelegateTest {
   public void testSearchObjectsUnboundedRequest() throws Exception {
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setLimit(25)
-            .setCurrentUserID(UUID.randomUUID())
-            .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
+            .setAccessControlCriteria(accessControlCriteria)
             .build());
     assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchObjectRequest()));
   }
@@ -127,8 +132,7 @@ public class ObjectSearchDelegateTest {
 
     verify(objectFactDao).searchObjects(notNull());
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
-      assertNotNull(criteria.getCurrentUserID());
-      assertNotNull(criteria.getAvailableOrganizationID());
+      assertNotNull(criteria.getAccessControlCriteria());
       assertEquals(count, criteria.getObjectID().size());
       return true;
     }));

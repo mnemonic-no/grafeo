@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
@@ -26,6 +27,11 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class FactSearchDelegateTest {
 
+  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
+          .setCurrentUserID(UUID.randomUUID())
+          .addAvailableOrganizationID(UUID.randomUUID())
+          .build();
+
   @Mock
   private FactSearchHandler factSearchHandler;
   @Mock
@@ -42,8 +48,7 @@ public class FactSearchDelegateTest {
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setKeywords("Hello World!")
             .setLimit(25)
-            .setCurrentUserID(UUID.randomUUID())
-            .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
+            .setAccessControlCriteria(accessControlCriteria)
             .build());
     when(factSearchHandler.search(any(), any())).thenReturn(StreamingResultSet.<Fact>builder()
             .setLimit(25)
@@ -65,8 +70,7 @@ public class FactSearchDelegateTest {
   public void testSearchFactsUnboundedRequest() throws Exception {
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setLimit(25)
-            .setCurrentUserID(UUID.randomUUID())
-            .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
+            .setAccessControlCriteria(accessControlCriteria)
             .build());
     assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchFactRequest()));
   }

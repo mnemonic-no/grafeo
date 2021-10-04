@@ -16,6 +16,7 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectRequestConverter;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -28,6 +29,7 @@ import java.util.function.Function;
 public class ObjectSearchDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
+  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
   private final ObjectFactDao objectFactDao;
   private final SearchObjectRequestConverter requestConverter;
   private final FactTypeByIdResponseResolver factTypeConverter;
@@ -35,11 +37,13 @@ public class ObjectSearchDelegate implements Delegate {
 
   @Inject
   public ObjectSearchDelegate(TiSecurityContext securityContext,
+                              AccessControlCriteriaResolver accessControlCriteriaResolver,
                               ObjectFactDao objectFactDao,
                               SearchObjectRequestConverter requestConverter,
                               FactTypeByIdResponseResolver factTypeConverter,
                               ObjectTypeByIdResponseResolver objectTypeConverter) {
     this.securityContext = securityContext;
+    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
     this.objectFactDao = objectFactDao;
     this.requestConverter = requestConverter;
     this.factTypeConverter = factTypeConverter;
@@ -135,8 +139,7 @@ public class ObjectSearchDelegate implements Delegate {
                 .setObjectID(SetUtils.set(currentBatch, ObjectRecord::getId))
                 .setStartTimestamp(request.getAfter())
                 .setEndTimestamp(request.getBefore())
-                .setCurrentUserID(securityContext.getCurrentUserID())
-                .setAvailableOrganizationID(securityContext.getAvailableOrganizationID())
+                .setAccessControlCriteria(accessControlCriteriaResolver.get())
                 .build();
         ObjectStatisticsContainer statistics = objectFactDao.calculateObjectStatistics(criteria);
         resolver = statistics::getStatistics;

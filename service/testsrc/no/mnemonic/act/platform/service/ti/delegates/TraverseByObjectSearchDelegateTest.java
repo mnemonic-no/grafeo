@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectSearchRequest;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
@@ -17,7 +18,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -48,8 +48,10 @@ public class TraverseByObjectSearchDelegateTest {
     // Mocks required for request converter.
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setLimit(25)
-            .setCurrentUserID(UUID.randomUUID())
-            .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(UUID.randomUUID())
+                    .addAvailableOrganizationID(UUID.randomUUID())
+                    .build())
             .build());
 
     delegate = new TraverseByObjectSearchDelegate(

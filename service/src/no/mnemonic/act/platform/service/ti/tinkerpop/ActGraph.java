@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.service.ti.tinkerpop;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.exceptions.GraphOperationException;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ElementFactory;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
@@ -34,6 +35,7 @@ public class ActGraph implements Graph {
   private final ObjectFactTypeResolver objectFactTypeResolver;
   private final FactRetractionHandler factRetractionHandler;
   private final TiSecurityContext securityContext;
+  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
   private final TraverseParams traverseParams;
   private final PropertyHelper propertyHelper;
 
@@ -41,12 +43,14 @@ public class ActGraph implements Graph {
                    ObjectFactTypeResolver objectFactTypeResolver,
                    FactRetractionHandler factRetractionHandler,
                    TiSecurityContext securityContext,
+                   AccessControlCriteriaResolver accessControlCriteriaResolver,
                    TraverseParams traverseParams,
                    PropertyHelper propertyHelper) {
     this.objectFactDao = ObjectUtils.notNull(objectFactDao, "'objectFactDao' is null!");
     this.objectFactTypeResolver = ObjectUtils.notNull(objectFactTypeResolver, "'objectFactTypeResolver' is null!'");
     this.factRetractionHandler = ObjectUtils.notNull(factRetractionHandler, "'factRetractionHandler' is null!");
     this.securityContext = ObjectUtils.notNull(securityContext, "'securityContext' is null!");
+    this.accessControlCriteriaResolver = ObjectUtils.notNull(accessControlCriteriaResolver, "'accessControlCriteriaResolver' is null!");
     this.traverseParams = ObjectUtils.notNull(traverseParams, "'traverseParams' is null!");
     this.elementFactory = ElementFactory.builder().setOwner(this).build();
     this.propertyHelper = propertyHelper;
@@ -125,11 +129,17 @@ public class ActGraph implements Graph {
     return securityContext;
   }
 
+  public AccessControlCriteriaResolver getAccessControlCriteriaResolver() {
+    return accessControlCriteriaResolver;
+  }
+
   public TraverseParams getTraverseParams() {
     return traverseParams;
   }
 
-  public PropertyHelper getPropertyHelper() { return propertyHelper; }
+  public PropertyHelper getPropertyHelper() {
+    return propertyHelper;
+  }
 
   ElementFactory getElementFactory() {
     return elementFactory;
@@ -177,6 +187,7 @@ public class ActGraph implements Graph {
     private ObjectFactDao objectFactDao;
     private ObjectFactTypeResolver objectFactTypeResolver;
     private TiSecurityContext securityContext;
+    private AccessControlCriteriaResolver accessControlCriteriaResolver;
     private FactRetractionHandler factRetractionHandler;
     private TraverseParams traverseParams;
     private PropertyHelper propertyHelper;
@@ -186,7 +197,7 @@ public class ActGraph implements Graph {
 
     public ActGraph build() {
       return new ActGraph(objectFactDao, objectFactTypeResolver, factRetractionHandler, securityContext,
-              traverseParams, propertyHelper);
+              accessControlCriteriaResolver, traverseParams, propertyHelper);
     }
 
     public Builder setObjectFactDao(ObjectFactDao objectFactDao) {
@@ -206,6 +217,11 @@ public class ActGraph implements Graph {
 
     public Builder setSecurityContext(TiSecurityContext securityContext) {
       this.securityContext = securityContext;
+      return this;
+    }
+
+    public Builder setAccessControlCriteriaResolver(AccessControlCriteriaResolver accessControlCriteriaResolver) {
+      this.accessControlCriteriaResolver = accessControlCriteriaResolver;
       return this;
     }
 

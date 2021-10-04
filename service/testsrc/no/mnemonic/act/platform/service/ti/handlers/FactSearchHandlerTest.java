@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.service.ti.handlers;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
@@ -208,8 +209,10 @@ public class FactSearchHandlerTest {
 
   private FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {
     FactSearchCriteria.Builder builder = FactSearchCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID());
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(UUID.randomUUID())
+                    .addAvailableOrganizationID(UUID.randomUUID())
+                    .build());
     if (preparation != null) {
       builder = preparation.prepare(builder);
     }

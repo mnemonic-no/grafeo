@@ -1,15 +1,16 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.mockito.Mock;
 
@@ -32,6 +33,8 @@ abstract class AbstractGraphTest {
   private PropertyHelper propertyHelper;
   @Mock
   private TiSecurityContext securityContext;
+  @Mock
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   private ActGraph actGraph;
 
@@ -39,8 +42,10 @@ abstract class AbstractGraphTest {
   public void setup() {
     initMocks(this);
 
-    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
+    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID())
+            .build());
     when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
 
     when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());
@@ -70,6 +75,7 @@ abstract class AbstractGraphTest {
             .setObjectFactDao(getObjectFactDao())
             .setObjectTypeFactResolver(getObjectFactTypeResolver())
             .setSecurityContext(getSecurityContext())
+            .setAccessControlCriteriaResolver(accessControlCriteriaResolver)
             .setFactRetractionHandler(getFactRetractionHandler())
             .setPropertyHelper(getPropertyHelper())
             .setTraverseParams(traverseParams)

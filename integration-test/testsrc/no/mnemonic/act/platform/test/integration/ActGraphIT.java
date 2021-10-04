@@ -1,26 +1,21 @@
 package no.mnemonic.act.platform.test.integration;
 
+import com.google.inject.*;
+import com.google.inject.name.Names;
+import no.mnemonic.act.platform.dao.DaoModule;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
-import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
-import no.mnemonic.act.platform.dao.elastic.ClientFactory;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.facade.ObjectFactDaoFacade;
-import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverter;
-import no.mnemonic.act.platform.dao.facade.converters.FactCommentRecordConverter;
-import no.mnemonic.act.platform.dao.facade.converters.FactRecordConverter;
-import no.mnemonic.act.platform.dao.facade.converters.ObjectRecordConverter;
-import no.mnemonic.act.platform.dao.facade.resolvers.CachedFactResolver;
-import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
-import no.mnemonic.act.platform.dao.facade.resolvers.GuavaBackedFactResolver;
-import no.mnemonic.act.platform.dao.facade.resolvers.GuavaBackedObjectResolver;
+import no.mnemonic.act.platform.service.contexts.SecurityContext;
+import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OrganizationByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OriginByIdResponseResolver;
@@ -29,40 +24,29 @@ import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyHelper;
+import no.mnemonic.commons.container.ComponentContainer;
+import no.mnemonic.commons.container.providers.GuiceBeanProvider;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
+import org.junit.*;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ActGraphIT {
 
-  private static ClusterManager clusterManager;
-  private static ClientFactory clientFactory;
-  private static FactManager factManager;
-  private static ObjectManager objectManager;
+  private static GuiceBeanProvider daoBeanProvider;
+  private static ComponentContainer daoContainer;
   private static ObjectFactDao objectFactDao;
-  private static FactSearchManager factSearchManager;
-  private static ObjectFactTypeResolver objectFactTypeResolver;
-  private static FactTypeRequestResolver factTypeRequestResolver;
-  private static FactRetractionHandler factRetractionHandler;
-  private static PropertyHelper propertyHelper;
   private static TiSecurityContext mockSecurityContext;
   private static ObjectTypeEntity ipType;
   private static ObjectTypeEntity domainType;
@@ -72,6 +56,7 @@ public class ActGraphIT {
   private static ObjectRecord domain;
   private static ObjectRecord attack;
 
+  @ClassRule
   public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
           .setImageName("cassandra")
           .setExposedPortsRange("15000-25000")
@@ -79,7 +64,8 @@ public class ActGraphIT {
           .skipReachabilityCheck()
           .build();
 
-  private static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
+  @ClassRule
+  public static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
           .setImageName("elasticsearch/elasticsearch:7.12.1")
@@ -89,65 +75,22 @@ public class ActGraphIT {
           .addEnvironmentVariable("discovery.type", "single-node")
           .build();
 
-  @ClassRule
-  public static TestRule chain = RuleChain.outerRule(cassandra).around(elastic);
-
   @BeforeClass
   public static void initialize() {
-    // Create managers and start them up.
-    clusterManager = ClusterManager.builder()
-            .setDataCenter("datacenter1")
-            .setPort(cassandra.getExposedHostPort(9042))
-            .addContactPoint(cassandra.getExposedHost())
-            .build();
+    // Employ ComponentContainer + Guice to instantiate and manage components.
+    daoBeanProvider = new GuiceBeanProvider(new ActGraphModuleIT());
+    daoContainer = ComponentContainer.create(daoBeanProvider);
+    daoContainer.initialize();
 
-    clientFactory = ClientFactory.builder()
-            .setPort(elastic.getExposedHostPort(9200))
-            .addContactPoint(elastic.getExposedHost())
-            .build();
+    // Configure FactSearchManager with test environment in order to make indexed documents available for search immediately.
+    daoBeanProvider.getBean(FactSearchManager.class)
+            .orElseThrow(IllegalStateException::new)
+            .setTestEnvironment(true);
 
-    mockSecurityContext = mock(TiSecurityContext.class);
-    when(mockSecurityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-    when(mockSecurityContext.getCurrentUserID()).thenReturn(new UUID(0, 1));
-    when(mockSecurityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(new UUID(0, 1)));
-
-    objectManager = new ObjectManager(clusterManager);
-    factManager = new FactManager(clusterManager);
-    factSearchManager = new FactSearchManager(clientFactory)
-            .setTestEnvironment(true)
-            .setSearchScrollExpiration("5s")
-            .setSearchScrollSize(1);
-
-    ObjectRecordConverter objectRecordConverter = new ObjectRecordConverter();
-    CachedObjectResolver objectResolver = new GuavaBackedObjectResolver(objectManager, objectRecordConverter, new GuavaBackedObjectResolver.CacheConfiguration());
-    FactRecordConverter factRecordConverter = new FactRecordConverter(factManager, objectResolver, new FactAclEntryRecordConverter(), new FactCommentRecordConverter());
-    CachedFactResolver factResolver = new GuavaBackedFactResolver(factManager, factRecordConverter, new GuavaBackedFactResolver.CacheConfiguration());
-    objectFactDao = new ObjectFactDaoFacade(
-            objectManager,
-            factManager,
-            factSearchManager,
-            objectRecordConverter,
-            factRecordConverter,
-            new FactAclEntryRecordConverter(),
-            new FactCommentRecordConverter(),
-            objectResolver,
-            factResolver,
-            factRecord -> {});
-    objectFactTypeResolver = new ObjectFactTypeResolver(factManager, objectManager);
-
-    factTypeRequestResolver = new FactTypeRequestResolver(factManager);
-    factRetractionHandler = new FactRetractionHandler(factTypeRequestResolver, factSearchManager, mockSecurityContext);
-    SubjectByIdResponseResolver subjectResolver = mock(SubjectByIdResponseResolver.class);
-    OrganizationByIdResponseResolver organizationResolver = mock(OrganizationByIdResponseResolver.class);
-    OriginByIdResponseResolver originResolver = mock(OriginByIdResponseResolver.class);
-    propertyHelper = new PropertyHelper(factRetractionHandler, objectFactDao, objectFactTypeResolver, mockSecurityContext,
-            subjectResolver, organizationResolver, originResolver);
-
-    clusterManager.startComponent();
-    clientFactory.startComponent();
-    objectManager.startComponent();
-    factManager.startComponent();
-    factSearchManager.startComponent();
+    // GuiceBeanProvider only returns singleton objects, thus, an ObjectFactDao instance must be fetched directly from Guice.
+    objectFactDao = daoBeanProvider.getInjector().getInstance(ObjectFactDao.class);
+    ObjectManager objectManager = daoBeanProvider.getBean(ObjectManager.class).orElseThrow(IllegalStateException::new);
+    FactManager factManager = daoBeanProvider.getBean(FactManager.class).orElseThrow(IllegalStateException::new);
 
     // Create Objects and Facts in order to create Graph to traverse.
     // Example data
@@ -206,13 +149,18 @@ public class ActGraphIT {
     objectFactDao.storeFact(seen);
   }
 
+  @Before
+  public void setup() {
+    // Create a new SecurityContext instance with default mocking for every test.
+    mockSecurityContext = mock(TiSecurityContext.class);
+    when(mockSecurityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
+    when(mockSecurityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(mockSecurityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
+  }
+
   @AfterClass
   public static void teardown() {
-    ObjectUtils.ifNotNullDo(factManager, FactManager::stopComponent);
-    ObjectUtils.ifNotNullDo(objectManager, ObjectManager::stopComponent);
-    ObjectUtils.ifNotNullDo(factSearchManager, FactSearchManager::stopComponent);
-    ObjectUtils.ifNotNullDo(clusterManager, ClusterManager::stopComponent);
-    ObjectUtils.ifNotNullDo(clientFactory, ClientFactory::stopComponent);
+    daoContainer.destroy();
   }
 
   @Test
@@ -227,23 +175,8 @@ public class ActGraphIT {
 
   @Test
   public void testFollowEdgeWithoutFactAccess() {
-    TiSecurityContext securityContextNoAccess = mock(TiSecurityContext.class);
-    when(securityContextNoAccess.getCurrentUserID()).thenReturn(new UUID(0, 1));
-    when(securityContextNoAccess.getAvailableOrganizationID()).thenReturn(SetUtils.set(new UUID(0, 1)));
-    when(securityContextNoAccess.hasReadPermission(any(FactRecord.class))).thenReturn(false);
-
-    FactRetractionHandler factRetractionHandler = new FactRetractionHandler(new FactTypeRequestResolver(factManager), factSearchManager, mockSecurityContext);
-    GraphTraversalSource g = ActGraph.builder()
-            .setObjectFactDao(objectFactDao)
-            .setObjectTypeFactResolver(objectFactTypeResolver)
-            .setSecurityContext(securityContextNoAccess)
-            .setFactRetractionHandler(factRetractionHandler)
-            .setPropertyHelper(propertyHelper)
-            .setTraverseParams(TraverseParams.builder().build())
-            .build()
-            .traversal();
-
-    assertFalse(g.V(ip.getId()).out("resolve").hasNext());
+    when(mockSecurityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(false);
+    assertFalse(createGraph().V(ip.getId()).out("resolve").hasNext());
   }
 
   @Test
@@ -354,18 +287,14 @@ public class ActGraphIT {
   }
 
   private GraphTraversalSource createGraph(TraverseParams traverseParams) {
-    // Need a new instance every time due to caching
-    FactRetractionHandler factRetractionHandler = new FactRetractionHandler(
-            new FactTypeRequestResolver(factManager),
-            factSearchManager,
-            mockSecurityContext);
-
+    Injector injector = daoBeanProvider.getInjector();
     return ActGraph.builder()
             .setObjectFactDao(objectFactDao)
-            .setObjectTypeFactResolver(objectFactTypeResolver)
             .setSecurityContext(mockSecurityContext)
-            .setFactRetractionHandler(factRetractionHandler)
-            .setPropertyHelper(propertyHelper)
+            .setAccessControlCriteriaResolver(injector.getInstance(AccessControlCriteriaResolver.class))
+            .setObjectTypeFactResolver(injector.getInstance(ObjectFactTypeResolver.class))
+            .setFactRetractionHandler(injector.getInstance(FactRetractionHandler.class))
+            .setPropertyHelper(injector.getInstance(PropertyHelper.class))
             .setTraverseParams(traverseParams)
             .build()
             .traversal();
@@ -393,8 +322,9 @@ public class ActGraphIT {
   }
 
   private void retractFact(FactRecord factToRetract) {
-    FactTypeRequestResolver factTypeRequestResolver = new FactTypeRequestResolver(factManager);
-    FactTypeEntity retractFactType = factTypeRequestResolver.resolveRetractionFactType();
+    FactTypeEntity retractFactType = daoBeanProvider.getInjector()
+            .getInstance(FactTypeRequestResolver.class)
+            .resolveRetractionFactType();
     FactRecord retractionFact = new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(retractFactType.getId())
@@ -405,5 +335,38 @@ public class ActGraphIT {
 
     objectFactDao.storeFact(retractionFact);
     objectFactDao.retractFact(factToRetract);
+  }
+
+  private static class ActGraphModuleIT extends AbstractModule {
+    @Override
+    protected void configure() {
+      install(new DaoModule());
+
+      // Provide a noop implementation for the DC replication component (not needed here).
+      bind(new TypeLiteral<Consumer<FactRecord>>() {}).toInstance(o -> {});
+
+      // Bind SecurityContext to a mock implementation.
+      bind(SecurityContext.class).toProvider(() -> mockSecurityContext);
+      bind(TiSecurityContext.class).toProvider(() -> mockSecurityContext);
+      // Mock a few resolvers which aren't actually needed during tests.
+      bind(SubjectByIdResponseResolver.class).toInstance(mock(SubjectByIdResponseResolver.class));
+      bind(OrganizationByIdResponseResolver.class).toInstance(mock(OrganizationByIdResponseResolver.class));
+      bind(OriginByIdResponseResolver.class).toInstance(mock(OriginByIdResponseResolver.class));
+
+      // FactRetractionHandler is configured to use the ServiceRequestScope. Just bind a dummy implementation to satisfy Guice.
+      bindScope(ServiceRequestScope.class, new Scope() {
+        @Override
+        public <T> Provider<T> scope(Key<T> key, Provider<T> unscoped) {
+          return unscoped;
+        }
+      });
+
+      // Configuration required for Cassandra + ElasticSearch
+      bind(String.class).annotatedWith(Names.named("act.cassandra.data.center")).toInstance("datacenter1");
+      bind(String.class).annotatedWith(Names.named("act.cassandra.contact.points")).toInstance(cassandra.getExposedHost());
+      bind(String.class).annotatedWith(Names.named("act.cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
+      bind(String.class).annotatedWith(Names.named("act.elasticsearch.contact.points")).toInstance(elastic.getExposedHost());
+      bind(String.class).annotatedWith(Names.named("act.elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
+    }
   }
 }

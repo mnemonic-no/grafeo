@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.dao.elastic;
 
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
@@ -59,13 +60,20 @@ public abstract class AbstractManagerTest {
 
   FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {
     FactSearchCriteria.Builder builder = FactSearchCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID());
+            .setAccessControlCriteria(createAccessControlCriteria());
     if (preparation != null) {
       builder = preparation.prepare(builder);
     }
     return builder.build();
   }
+
+  AccessControlCriteria createAccessControlCriteria() {
+    return AccessControlCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID())
+            .build();
+  }
+
 
   FactDocument indexFact(ObjectPreparation<FactDocument> preparation) {
     FactDocument document = preparation != null ? preparation.prepare(createFactDocument()) : createFactDocument();

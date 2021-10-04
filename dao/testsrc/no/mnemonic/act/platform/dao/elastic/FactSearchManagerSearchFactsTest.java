@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.dao.elastic;
 
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria.FactBinding;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
@@ -31,8 +32,7 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
     FactSearchCriteria criteria = FactSearchCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID())
+            .setAccessControlCriteria(createAccessControlCriteria())
             .build();
 
     testSearchFacts(criteria, accessibleFact);
@@ -44,8 +44,10 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
     FactSearchCriteria criteria = FactSearchCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .addAvailableOrganizationID(accessibleFact.getOrganizationID())
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(UUID.randomUUID())
+                    .addAvailableOrganizationID(accessibleFact.getOrganizationID())
+                    .build())
             .build();
 
     testSearchFacts(criteria, accessibleFact);
@@ -57,8 +59,10 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
     FactSearchCriteria criteria = FactSearchCriteria.builder()
-            .setCurrentUserID(accessibleFact.getAcl().iterator().next())
-            .addAvailableOrganizationID(UUID.randomUUID())
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(accessibleFact.getAcl().iterator().next())
+                    .addAvailableOrganizationID(UUID.randomUUID())
+                    .build())
             .build();
 
     testSearchFacts(criteria, accessibleFact);
@@ -70,8 +74,10 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
 
     FactSearchCriteria criteria = FactSearchCriteria.builder()
-            .setCurrentUserID(accessibleFact.getAcl().iterator().next())
-            .addAvailableOrganizationID(UUID.randomUUID())
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(accessibleFact.getAcl().iterator().next())
+                    .addAvailableOrganizationID(UUID.randomUUID())
+                    .build())
             .build();
 
     testSearchFacts(criteria, accessibleFact);

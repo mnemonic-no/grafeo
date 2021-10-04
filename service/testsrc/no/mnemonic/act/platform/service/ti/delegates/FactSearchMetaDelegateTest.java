@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
@@ -78,8 +79,10 @@ public class FactSearchMetaDelegateTest {
     when(factRequestResolver.resolveFact(any())).thenReturn(new FactRecord());
 
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
-            .setAvailableOrganizationID(Collections.singleton(UUID.randomUUID()))
+            .setAccessControlCriteria(AccessControlCriteria.builder()
+                    .setCurrentUserID(UUID.randomUUID())
+                    .addAvailableOrganizationID(UUID.randomUUID())
+                    .build())
             .build());
     when(factSearchHandler.search(any(), any())).thenReturn(StreamingResultSet.<Fact>builder()
             .setLimit(25)

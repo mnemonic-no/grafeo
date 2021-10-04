@@ -5,11 +5,13 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import org.junit.Before;
@@ -35,6 +37,8 @@ public class ObjectGetDelegateTest {
   private ObjectTypeHandler objectTypeHandler;
   @Mock
   private TiSecurityContext securityContext;
+  @Mock
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   private ObjectGetDelegate delegate;
 
@@ -42,12 +46,15 @@ public class ObjectGetDelegateTest {
   public void setup() {
     initMocks(this);
     // Mocks required for ObjectConverter.
-    when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
-    when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(UUID.randomUUID()));
+    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
+            .setCurrentUserID(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID())
+            .build());
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
 
     delegate = new ObjectGetDelegate(
             securityContext,
+            accessControlCriteriaResolver,
             objectFactDao,
             factTypeConverter,
             objectTypeConverter,
@@ -83,8 +90,7 @@ public class ObjectGetDelegateTest {
     verify(securityContext).checkReadPermission(object);
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
-      assertNotNull(criteria.getCurrentUserID());
-      assertNotNull(criteria.getAvailableOrganizationID());
+      assertNotNull(criteria.getAccessControlCriteria());
       return true;
     }));
   }
@@ -151,8 +157,7 @@ public class ObjectGetDelegateTest {
     verify(securityContext).checkReadPermission(object);
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
-      assertNotNull(criteria.getCurrentUserID());
-      assertNotNull(criteria.getAvailableOrganizationID());
+      assertNotNull(criteria.getAccessControlCriteria());
       return true;
     }));
   }
