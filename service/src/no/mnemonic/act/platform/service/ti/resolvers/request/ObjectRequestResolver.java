@@ -43,11 +43,12 @@ public class ObjectRequestResolver {
    * Creating a new Object will fail if either the requested ObjectType does not exist or the provided Object value
    * does not pass validation against the ObjectType.
    *
-   * @param object Either UUID of Object or Object identified by pattern 'type/value'
+   * @param object   Either UUID of Object or Object identified by pattern 'type/value'
+   * @param property Name of the property in the request containing the Object; used in error messages
    * @return Resolved Object
    * @throws InvalidArgumentException If an existing Object cannot be resolved and creating a new Object fails
    */
-  public ObjectRecord resolveObject(String object) throws InvalidArgumentException {
+  public ObjectRecord resolveObject(String object, String property) throws InvalidArgumentException {
     if (StringUtils.isBlank(object)) return null;
 
     // If input is a UUID just try to fetch Object by ID.
@@ -67,38 +68,38 @@ public class ObjectRequestResolver {
     String value = matcher.group(2);
 
     // Fetch ObjectType first and validate that it exists (otherwise getObject(type, value) will thrown an IllegalArgumentException).
-    ObjectTypeEntity typeEntity = fetchObjectType(type);
+    ObjectTypeEntity typeEntity = fetchObjectType(type, property);
 
     // Try to fetch Object by type and value.
     ObjectRecord objectRecord = objectFactDao.getObject(type, value);
     if (objectRecord == null) {
       // Object doesn't exist yet, need to create it.
-      objectRecord = createObject(typeEntity, value);
+      objectRecord = createObject(typeEntity, value, property);
     }
 
     return objectRecord;
   }
 
-  private ObjectTypeEntity fetchObjectType(String type) throws InvalidArgumentException {
+  private ObjectTypeEntity fetchObjectType(String type, String property) throws InvalidArgumentException {
     ObjectTypeEntity typeEntity = objectManager.getObjectType(type);
     if (typeEntity == null) {
       throw new InvalidArgumentException()
-        .addValidationError("ObjectType does not exist.", "object.type.not.exist", "objectType", type);
+              .addValidationError("ObjectType does not exist.", "object.type.not.exist", property + ".type", type);
     }
     return typeEntity;
   }
 
-  private ObjectRecord createObject(ObjectTypeEntity type, String value) throws InvalidArgumentException {
+  private ObjectRecord createObject(ObjectTypeEntity type, String value, String property) throws InvalidArgumentException {
     Validator validator = validatorFactory.get(type.getValidator(), type.getValidatorParameter());
     if (!validator.validate(value)) {
       throw new InvalidArgumentException()
-        .addValidationError("Object did not pass validation against ObjectType.", "object.not.valid", "objectValue", value);
+              .addValidationError("Object did not pass validation against ObjectType.", "object.not.valid", property + ".value", value);
     }
 
     ObjectRecord objectRecord = new ObjectRecord()
-      .setId(UUID.randomUUID())
-      .setTypeID(type.getId())
-      .setValue(value);
+            .setId(UUID.randomUUID())
+            .setTypeID(type.getId())
+            .setValue(value);
 
     return objectFactDao.storeObject(objectRecord);
   }

@@ -124,7 +124,7 @@ public class FactCreateDelegateTest {
     InvalidArgumentException ex = assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
     assertEquals(set("invalid.source.object", "invalid.destination.object"), set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
 
-    verify(objectRequestResolver, times(2)).resolveObject("unknown");
+    verify(objectRequestResolver, times(2)).resolveObject(eq("unknown"), anyString());
   }
 
   @Test
@@ -303,9 +303,9 @@ public class FactCreateDelegateTest {
   }
 
   private void mockFetchingObjects() throws Exception {
-    when(objectRequestResolver.resolveObject(ip.getId().toString())).thenReturn(ip);
-    when(objectRequestResolver.resolveObject(domain.getId().toString())).thenReturn(domain);
-    when(objectRequestResolver.resolveObject(threatActor.getId().toString())).thenReturn(threatActor);
+    when(objectRequestResolver.resolveObject(eq(ip.getId().toString()), anyString())).thenReturn(ip);
+    when(objectRequestResolver.resolveObject(eq(domain.getId().toString()), anyString())).thenReturn(domain);
+    when(objectRequestResolver.resolveObject(eq(threatActor.getId().toString()), anyString())).thenReturn(threatActor);
   }
 
   private CreateFactRequest createRequest() {

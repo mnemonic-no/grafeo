@@ -66,8 +66,8 @@ public class FactCreateDelegate implements Delegate {
 
   private void assertValidFactObjectBindings(CreateFactRequest request) throws InvalidArgumentException {
     // Validate that either source or destination or both are set. One field can be NULL to support bindings of cardinality 1.
-    ObjectRecord source = objectRequestResolver.resolveObject(request.getSourceObject());
-    ObjectRecord destination = objectRequestResolver.resolveObject(request.getDestinationObject());
+    ObjectRecord source = objectRequestResolver.resolveObject(request.getSourceObject(), "sourceObject");
+    ObjectRecord destination = objectRequestResolver.resolveObject(request.getDestinationObject(), "destinationObject");
     if (source == null && destination == null) {
       throw new InvalidArgumentException()
               .addValidationError("Requested source Object could not be resolved.", "invalid.source.object", "sourceObject", request.getSourceObject())
@@ -97,8 +97,8 @@ public class FactCreateDelegate implements Delegate {
   }
 
   private FactRecord toFactRecord(CreateFactRequest request) throws InvalidArgumentException {
-    ObjectRecord source = objectRequestResolver.resolveObject(request.getSourceObject());
-    ObjectRecord destination = objectRequestResolver.resolveObject(request.getDestinationObject());
+    ObjectRecord source = objectRequestResolver.resolveObject(request.getSourceObject(), "sourceObject");
+    ObjectRecord destination = objectRequestResolver.resolveObject(request.getDestinationObject(), "destinationObject");
 
     return new FactRecord()
             .setId(UUID.randomUUID())

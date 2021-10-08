@@ -37,10 +37,10 @@ public class ObjectRequestResolverTest {
 
   @Test
   public void testResolveObjectWithInvalidInput() throws Exception {
-    assertNull(resolver.resolveObject(null));
-    assertNull(resolver.resolveObject(""));
-    assertNull(resolver.resolveObject("   "));
-    assertNull(resolver.resolveObject("invalid"));
+    assertNull(resolver.resolveObject(null, "object"));
+    assertNull(resolver.resolveObject("", "object"));
+    assertNull(resolver.resolveObject("   ", "object"));
+    assertNull(resolver.resolveObject("invalid", "object"));
   }
 
   @Test
@@ -50,7 +50,7 @@ public class ObjectRequestResolverTest {
 
     when(objectFactDao.getObject(id)).thenReturn(object);
 
-    assertSame(object, resolver.resolveObject(id.toString()));
+    assertSame(object, resolver.resolveObject(id.toString(), "object"));
 
     verify(objectFactDao).getObject(id);
   }
@@ -64,7 +64,7 @@ public class ObjectRequestResolverTest {
     when(objectManager.getObjectType(type)).thenReturn(new ObjectTypeEntity());
     when(objectFactDao.getObject(type, value)).thenReturn(object);
 
-    assertSame(object, resolver.resolveObject(String.format("%s/%s", type, value)));
+    assertSame(object, resolver.resolveObject(String.format("%s/%s", type, value), "object"));
 
     verify(objectManager).getObjectType(type);
     verify(objectFactDao).getObject(type, value);
@@ -78,7 +78,7 @@ public class ObjectRequestResolverTest {
 
     when(objectFactDao.storeObject(any())).thenAnswer(i -> i.getArgument(0));
 
-    ObjectRecord resolvedObject = resolver.resolveObject(String.format("%s/%s", type.getName(), value));
+    ObjectRecord resolvedObject = resolver.resolveObject(String.format("%s/%s", type.getName(), value), "object");
     assertObjectRecord(resolvedObject, type.getId(), value);
 
     verify(objectFactDao).storeObject(argThat(record -> assertObjectRecord(record, type.getId(), value)));
@@ -87,7 +87,7 @@ public class ObjectRequestResolverTest {
   @Test
   public void testCreateMissingObjectFailsOnMissingObjectType() {
     try {
-      resolver.resolveObject("ObjectType/ObjectValue");
+      resolver.resolveObject("ObjectType/ObjectValue", "object");
       fail();
     } catch (InvalidArgumentException ex) {
       assertEquals("object.type.not.exist", ex.getValidationErrors().iterator().next().getMessageTemplate());
@@ -101,7 +101,7 @@ public class ObjectRequestResolverTest {
     mockValidator(false);
 
     try {
-      resolver.resolveObject(String.format("%s/%s", type.getName(), "ObjectValue"));
+      resolver.resolveObject(String.format("%s/%s", type.getName(), "ObjectValue"), "object");
       fail();
     } catch (InvalidArgumentException ex) {
       assertEquals("object.not.valid", ex.getValidationErrors().iterator().next().getMessageTemplate());
