@@ -47,7 +47,7 @@ public class ObjectGetDelegateTest {
     initMocks(this);
     // Mocks required for ObjectConverter.
     when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
+            .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build());
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());

@@ -42,7 +42,7 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
 
     FactSearchCriteria criteria = FactSearchCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(UUID.randomUUID())
+                    .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(accessibleFact.getOrganizationID())
                     .build())
             .build();
@@ -57,7 +57,7 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
 
     FactSearchCriteria criteria = FactSearchCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(first(accessibleFact.getAcl()))
+                    .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
             .build();
@@ -72,7 +72,7 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
 
     FactSearchCriteria criteria = FactSearchCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(first(accessibleFact.getAcl()))
+                    .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
             .build();

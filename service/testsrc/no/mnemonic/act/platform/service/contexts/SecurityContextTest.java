@@ -11,6 +11,7 @@ import no.mnemonic.services.common.auth.InvalidCredentialsException;
 import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.common.auth.model.OrganizationIdentity;
 import no.mnemonic.services.common.auth.model.SessionDescriptor;
+import no.mnemonic.services.common.auth.model.SubjectIdentity;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -36,6 +37,8 @@ public class SecurityContextTest {
   private SessionDescriptor sessionDescriptor;
   @Mock
   private OrganizationIdentity organization;
+  @Mock
+  private SubjectIdentity subject;
 
   private SecurityContext context;
 
@@ -155,6 +158,20 @@ public class SecurityContextTest {
   public void testGetCurrentUserIdThrowsUnexpectedAuthenticationFailedException() throws Exception {
     when(accessController.validate(credentials)).thenThrow(InvalidCredentialsException.class);
     context.getCurrentUserID();
+  }
+
+  @Test
+  public void testGetCurrentUserIdentities() throws Exception {
+    UUID subjectID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    when(accessController.getSubjectIdentities(credentials)).thenReturn(SetUtils.set(subject));
+    when(identityResolver.resolveSubjectUUID(subject)).thenReturn(subjectID);
+    assertEquals(SetUtils.set(subjectID), context.getCurrentUserIdentities());
+  }
+
+  @Test(expected = UnexpectedAuthenticationFailedException.class)
+  public void testGetCurrentUserIdentitiesThrowsUnexpectedAuthenticationFailedException() throws Exception {
+    when(accessController.getSubjectIdentities(credentials)).thenThrow(InvalidCredentialsException.class);
+    context.getCurrentUserIdentities();
   }
 
   @Test

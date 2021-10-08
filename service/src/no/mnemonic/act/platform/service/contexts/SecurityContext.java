@@ -10,6 +10,7 @@ import no.mnemonic.services.common.auth.InvalidCredentialsException;
 import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.common.auth.model.NamedFunction;
 import no.mnemonic.services.common.auth.model.OrganizationIdentity;
+import no.mnemonic.services.common.auth.model.SubjectIdentity;
 
 import java.util.Set;
 import java.util.UUID;
@@ -140,6 +141,24 @@ public abstract class SecurityContext implements AutoCloseable {
       return identityResolver.resolveSubjectUUID(accessController.validate(credentials));
     } catch (InvalidCredentialsException ex) {
       // getCurrentUserID() should only be called in a context with an already authenticated user.
+      throw new UnexpectedAuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
+    }
+  }
+
+  /**
+   * Return the identities of the current user (ID of the current user plus any parent groups).
+   *
+   * @return Identities of the current user
+   */
+  public Set<UUID> getCurrentUserIdentities() {
+    try {
+      //noinspection unchecked
+      Set<SubjectIdentity> subjects = accessController.getSubjectIdentities(credentials);
+      return subjects.stream()
+              .map(identityResolver::resolveSubjectUUID)
+              .collect(Collectors.toSet());
+    } catch (InvalidCredentialsException ex) {
+      // getCurrentUserIdentities() should only be called in a context with an already authenticated user.
       throw new UnexpectedAuthenticationFailedException("Could not authenticate user: " + ex.getMessage());
     }
   }

@@ -39,7 +39,7 @@ public class FactRetractionHandlerTest {
     // Common mocks used by most tests.
     when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()));
     when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
+            .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build());
 

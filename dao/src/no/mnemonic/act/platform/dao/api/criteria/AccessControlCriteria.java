@@ -11,25 +11,26 @@ import java.util.UUID;
  */
 public class AccessControlCriteria {
 
-  private final UUID currentUserID;
+  private final Set<UUID> currentUserIdentities;
   private final Set<UUID> availableOrganizationID;
 
-  private AccessControlCriteria(UUID currentUserID, Set<UUID> availableOrganizationID) {
-    if (currentUserID == null) throw new IllegalArgumentException("Missing required field 'currentUserID'.");
+  private AccessControlCriteria(Set<UUID> currentUserIdentities, Set<UUID> availableOrganizationID) {
+    if (CollectionUtils.isEmpty(currentUserIdentities))
+      throw new IllegalArgumentException("Missing required field 'currentUserIdentities'.");
     if (CollectionUtils.isEmpty(availableOrganizationID))
       throw new IllegalArgumentException("Missing required field 'availableOrganizationID'.");
 
-    this.currentUserID = currentUserID;
+    this.currentUserIdentities = currentUserIdentities;
     this.availableOrganizationID = availableOrganizationID;
   }
 
   /**
-   * Specify the UUID of the calling user. This field is required.
+   * Specify the identities of the calling user (ID of the calling user plus any parent groups). This field is required.
    *
-   * @return UUID of calling user
+   * @return Identities of calling user
    */
-  public UUID getCurrentUserID() {
-    return currentUserID;
+  public Set<UUID> getCurrentUserIdentities() {
+    return currentUserIdentities;
   }
 
   /**
@@ -46,18 +47,23 @@ public class AccessControlCriteria {
   }
 
   public static class Builder {
-    private UUID currentUserID;
+    private Set<UUID> currentUserIdentities;
     private Set<UUID> availableOrganizationID;
 
     private Builder() {
     }
 
     public AccessControlCriteria build() {
-      return new AccessControlCriteria(currentUserID, availableOrganizationID);
+      return new AccessControlCriteria(currentUserIdentities, availableOrganizationID);
     }
 
-    public Builder setCurrentUserID(UUID currentUserID) {
-      this.currentUserID = currentUserID;
+    public Builder setCurrentUserIdentities(Set<UUID> currentUserIdentities) {
+      this.currentUserIdentities = currentUserIdentities;
+      return this;
+    }
+
+    public Builder addCurrentUserIdentity(UUID subjectID) {
+      this.currentUserIdentities = SetUtils.addToSet(this.currentUserIdentities, subjectID);
       return this;
     }
 

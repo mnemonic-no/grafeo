@@ -43,7 +43,7 @@ abstract class AbstractGraphTest {
     initMocks(this);
 
     when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
+            .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build());
     when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);

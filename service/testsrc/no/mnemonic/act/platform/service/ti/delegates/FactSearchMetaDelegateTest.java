@@ -80,7 +80,7 @@ public class FactSearchMetaDelegateTest {
 
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(UUID.randomUUID())
+                    .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
             .build());

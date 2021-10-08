@@ -28,7 +28,7 @@ public class AccessControlCriteriaResolver implements Supplier<AccessControlCrit
   @Override
   public AccessControlCriteria get() {
     return AccessControlCriteria.builder()
-            .setCurrentUserID(securityContext.getCurrentUserID())
+            .setCurrentUserIdentities(securityContext.getCurrentUserIdentities())
             .setAvailableOrganizationID(resolveAvailableOrganizations())
             .build();
   }

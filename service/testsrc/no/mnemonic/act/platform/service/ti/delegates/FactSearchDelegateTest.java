@@ -28,7 +28,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class FactSearchDelegateTest {
 
   private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
-          .setCurrentUserID(UUID.randomUUID())
+          .addCurrentUserIdentity(UUID.randomUUID())
           .addAvailableOrganizationID(UUID.randomUUID())
           .build();
 

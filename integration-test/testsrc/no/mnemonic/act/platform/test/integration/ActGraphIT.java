@@ -154,7 +154,7 @@ public class ActGraphIT {
     // Create a new SecurityContext instance with default mocking for every test.
     mockSecurityContext = mock(TiSecurityContext.class);
     when(mockSecurityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-    when(mockSecurityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
+    when(mockSecurityContext.getCurrentUserIdentities()).thenReturn(SetUtils.set(UUID.randomUUID()));
     when(mockSecurityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
   }
 

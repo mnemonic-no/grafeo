@@ -20,7 +20,6 @@ import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -75,7 +74,7 @@ public class TiSecurityContext extends SecurityContext {
     }
 
     if (isInAcl(fact)) {
-      // Access allowed because user is in the Fact's ACL.
+      // Access allowed because user is in the Fact's ACL, either granted directly or to a parent group.
       return;
     }
 
@@ -107,8 +106,8 @@ public class TiSecurityContext extends SecurityContext {
     }
 
     if (!CollectionUtils.isEmpty(fact.getAcl()) &&
-            fact.getAcl().stream().anyMatch(entry -> Objects.equals(getCurrentUserID(), entry.getSubjectID()))) {
-      // Access allowed because user is in the Fact's ACL.
+            fact.getAcl().stream().anyMatch(entry -> getCurrentUserIdentities().contains(entry.getSubjectID()))) {
+      // Access allowed because user is in the Fact's ACL, either granted directly or to a parent group.
       return;
     }
 
@@ -273,7 +272,7 @@ public class TiSecurityContext extends SecurityContext {
 
   private boolean isInAcl(FactEntity fact) {
     List<FactAclEntity> acl = aclResolver.apply(fact.getId());
-    return !CollectionUtils.isEmpty(acl) && acl.stream().anyMatch(entry -> getCurrentUserID().equals(entry.getSubjectID()));
+    return !CollectionUtils.isEmpty(acl) && acl.stream().anyMatch(entry -> getCurrentUserIdentities().contains(entry.getSubjectID()));
   }
 
   public static class Builder {

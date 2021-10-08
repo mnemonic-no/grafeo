@@ -44,7 +44,7 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
 
     ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(UUID.randomUUID())
+                    .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(accessibleFact.getOrganizationID())
                     .build())
             .addObjectID(getFirstObjectID(accessibleFact))
@@ -61,7 +61,7 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
 
     ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(first(accessibleFact.getAcl()))
+                    .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
             .addObjectID(getFirstObjectID(accessibleFact))
@@ -78,7 +78,7 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
 
     ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(first(accessibleFact.getAcl()))
+                    .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
             .addObjectID(getFirstObjectID(accessibleFact))

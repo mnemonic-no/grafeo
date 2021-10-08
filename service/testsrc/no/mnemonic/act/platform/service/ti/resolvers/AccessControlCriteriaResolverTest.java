@@ -19,7 +19,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class AccessControlCriteriaResolverTest {
 
-  private final UUID currentUserID = UUID.randomUUID();
+  private final Set<UUID> currentUserIdentities = SetUtils.set(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
   private final Set<UUID> availableOrganizationID = SetUtils.set(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 
   @Mock
@@ -31,7 +31,7 @@ public class AccessControlCriteriaResolverTest {
   public void setUp() {
     initMocks(this);
 
-    when(securityContext.getCurrentUserID()).thenReturn(currentUserID);
+    when(securityContext.getCurrentUserIdentities()).thenReturn(currentUserIdentities);
     when(securityContext.getAvailableOrganizationID()).thenReturn(availableOrganizationID);
 
     resolver = new AccessControlCriteriaResolver(securityContext);
@@ -41,7 +41,7 @@ public class AccessControlCriteriaResolverTest {
   public void testGetResolvesAccessControlCriteria() throws Exception {
     AccessControlCriteria criteria = resolver.get();
     assertNotNull(criteria);
-    assertEquals(currentUserID, criteria.getCurrentUserID());
+    assertEquals(currentUserIdentities, criteria.getCurrentUserIdentities());
     assertEquals(availableOrganizationID, criteria.getAvailableOrganizationID());
 
     verify(securityContext, times(availableOrganizationID.size()))
@@ -57,7 +57,7 @@ public class AccessControlCriteriaResolverTest {
 
     AccessControlCriteria criteria = resolver.get();
     assertNotNull(criteria);
-    assertEquals(currentUserID, criteria.getCurrentUserID());
+    assertEquals(currentUserIdentities, criteria.getCurrentUserIdentities());
     assertEquals(SetUtils.set(available), criteria.getAvailableOrganizationID());
   }
 }

@@ -674,13 +674,13 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             // ... if AccessMode == Explicit user must be in ACL.
             .should(boolQuery()
                     .filter(termQuery("accessMode", toString(FactDocument.AccessMode.Explicit)))
-                    .filter(termQuery("acl", toString(accessControlCriteria.getCurrentUserID())))
+                    .filter(termsQuery("acl", toString(accessControlCriteria.getCurrentUserIdentities())))
             )
             // ... if AccessMode == RoleBased user must be in ACL or have access to the owning Organization.
             .should(boolQuery()
                     .filter(termQuery("accessMode", toString(FactDocument.AccessMode.RoleBased)))
                     .filter(boolQuery()
-                            .should(termQuery("acl", toString(accessControlCriteria.getCurrentUserID())))
+                            .should(termsQuery("acl", toString(accessControlCriteria.getCurrentUserIdentities())))
                             .should(termsQuery("organizationID", toString(accessControlCriteria.getAvailableOrganizationID())))
                     )
             );

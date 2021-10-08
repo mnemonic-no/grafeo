@@ -63,7 +63,7 @@ public class TraverseGraphHandlerTest {
 
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
     when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
+            .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build());
     when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());

@@ -62,7 +62,7 @@ public class PropertyHelperTest {
     helper = new PropertyHelper(factRetractionHandler, objectFactDao, objectFactTypeResolver, securityContext,
             accessControlCriteriaResolver, subjectResolver, organizationResolver, originResolver);
     when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
+            .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build());
     when(factRetractionHandler.isRetracted(any())).thenReturn(false);

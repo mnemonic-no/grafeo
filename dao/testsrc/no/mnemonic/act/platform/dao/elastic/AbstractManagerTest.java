@@ -69,7 +69,7 @@ public abstract class AbstractManagerTest {
 
   AccessControlCriteria createAccessControlCriteria() {
     return AccessControlCriteria.builder()
-            .setCurrentUserID(UUID.randomUUID())
+            .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build();
   }

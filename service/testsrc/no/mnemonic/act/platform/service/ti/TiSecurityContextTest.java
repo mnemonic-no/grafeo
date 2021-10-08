@@ -18,7 +18,7 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.common.auth.model.OrganizationIdentity;
-import no.mnemonic.services.common.auth.model.SessionDescriptor;
+import no.mnemonic.services.common.auth.model.SubjectIdentity;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -39,7 +39,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class TiSecurityContextTest {
 
   private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
-          .setCurrentUserID(UUID.randomUUID())
+          .addCurrentUserIdentity(UUID.randomUUID())
           .addAvailableOrganizationID(UUID.randomUUID())
           .build();
 
@@ -50,9 +50,9 @@ public class TiSecurityContextTest {
   @Mock
   private Credentials credentials;
   @Mock
-  private SessionDescriptor sessionDescriptor;
-  @Mock
   private OrganizationIdentity organization;
+  @Mock
+  private SubjectIdentity subject;
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
@@ -132,7 +132,7 @@ public class TiSecurityContextTest {
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
-    UUID currentUserID = mockCurrentUser();
+    UUID currentUserID = mockCurrentUserIdentities();
     when(aclResolver.apply(any())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(currentUserID)));
 
     context.checkReadPermission(fact);
@@ -155,7 +155,7 @@ public class TiSecurityContextTest {
     FactEntity fact = new FactEntity()
             .setId(UUID.randomUUID())
             .setAccessMode(AccessMode.Explicit);
-    UUID currentUserID = mockCurrentUser();
+    UUID currentUserID = mockCurrentUserIdentities();
     when(aclResolver.apply(any())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(currentUserID)));
 
     context.checkReadPermission(fact);
@@ -232,7 +232,7 @@ public class TiSecurityContextTest {
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.RoleBased)
-            .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUser()));
+            .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUserIdentities()));
 
     context.checkReadPermission(fact);
     verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
@@ -253,7 +253,7 @@ public class TiSecurityContextTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.Explicit)
-            .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUser()));
+            .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUserIdentities()));
 
     context.checkReadPermission(fact);
     verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
@@ -429,10 +429,10 @@ public class TiSecurityContextTest {
     return object;
   }
 
-  private UUID mockCurrentUser() throws Exception {
+  private UUID mockCurrentUserIdentities() throws Exception {
     UUID currentUserID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    when(accessController.validate(credentials)).thenReturn(sessionDescriptor);
-    when(identityResolver.resolveSubjectUUID(sessionDescriptor)).thenReturn(currentUserID);
+    when(accessController.getSubjectIdentities(credentials)).thenReturn(Collections.singleton(subject));
+    when(identityResolver.resolveSubjectUUID(subject)).thenReturn(currentUserID);
     return currentUserID;
   }
 

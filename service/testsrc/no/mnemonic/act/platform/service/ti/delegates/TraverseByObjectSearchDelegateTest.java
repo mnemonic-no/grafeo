@@ -49,7 +49,7 @@ public class TraverseByObjectSearchDelegateTest {
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setLimit(25)
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(UUID.randomUUID())
+                    .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
             .build());

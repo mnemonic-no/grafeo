@@ -363,6 +363,22 @@ public class FactIT extends AbstractIT {
   }
 
   @Test
+  public void testFactAccessWithExplicitAccessViaGroup() throws Exception {
+    // Create a Fact via the REST API ...
+    CreateFactRequest request = createCreateFactRequest()
+            .setAccessMode(AccessMode.Explicit)
+            .addAcl("00000000-0000-0000-0000-000000000004");
+    Response response = request("/v1/fact", 1).post(Entity.json(request));
+    assertEquals(201, response.getStatus());
+    UUID factID = getIdFromModel(getPayload(response));
+
+    // ... and check who has access to the created Fact.
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 1).get().getStatus()); // Creator of the Fact.
+    assertEquals(200, request("/v1/fact/uuid/" + factID, 2).get().getStatus()); // Explicitly granted access via group.
+    assertEquals(403, request("/v1/fact/uuid/" + factID, 3).get().getStatus()); // Not in ACL.
+  }
+
+  @Test
   public void testFetchFactSanitizeInReferenceToFact() throws Exception {
     ObjectTypeEntity objectType = createObjectType();
     FactTypeEntity factType = createFactType(objectType.getId());

@@ -210,7 +210,7 @@ public class FactSearchHandlerTest {
   private FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {
     FactSearchCriteria.Builder builder = FactSearchCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .setCurrentUserID(UUID.randomUUID())
+                    .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build());
     if (preparation != null) {
