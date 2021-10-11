@@ -104,6 +104,23 @@ public class FactRecordConverterTest {
   }
 
   @Test
+  public void testFromEntityUsesSeparatedObjectFields() {
+    FactEntity entity = new FactEntity()
+            .setSourceObjectID(UUID.randomUUID())
+            .setDestinationObjectID(UUID.randomUUID())
+            .addFlag(FactEntity.Flag.BidirectionalBinding)
+            .addFlag(FactEntity.Flag.UsesSeparatedObjectFields);
+
+    FactRecord record = converter.fromEntity(entity);
+    assertNotNull(record.getSourceObject());
+    assertNotNull(record.getDestinationObject());
+    assertTrue(record.isBidirectionalBinding());
+
+    verify(objectResolver).getObject(entity.getSourceObjectID());
+    verify(objectResolver).getObject(entity.getDestinationObjectID());
+  }
+
+  @Test
   public void testFromEntityWithBindingOfCardinalityTwo() {
     FactEntity.FactObjectBinding source = new FactEntity.FactObjectBinding()
             .setObjectID(UUID.randomUUID())
@@ -317,7 +334,7 @@ public class FactRecordConverterTest {
     assertEquals(record.getTrust(), entity.getTrust(), 0.0f);
     assertEquals(record.getTimestamp(), entity.getTimestamp());
     assertEquals(record.getLastSeenTimestamp(), entity.getLastSeenTimestamp());
-    assertEquals(SetUtils.set(FactEntity.Flag.RetractedHint), entity.getFlags());
+    assertEquals(SetUtils.set(FactEntity.Flag.RetractedHint, FactEntity.Flag.UsesSeparatedObjectFields), entity.getFlags());
   }
 
   @Test
@@ -342,8 +359,10 @@ public class FactRecordConverterTest {
 
     FactEntity entity = converter.toEntity(record);
     assertEquals(1, entity.getBindings().size());
+    assertEquals(record.getSourceObject().getId(), entity.getSourceObjectID());
     assertEquals(record.getSourceObject().getId(), entity.getBindings().get(0).getObjectID());
     assertEquals(Direction.FactIsDestination, entity.getBindings().get(0).getDirection());
+    assertFalse(entity.isSet(FactEntity.Flag.BidirectionalBinding));
   }
 
   @Test
@@ -352,8 +371,10 @@ public class FactRecordConverterTest {
 
     FactEntity entity = converter.toEntity(record);
     assertEquals(1, entity.getBindings().size());
+    assertEquals(record.getDestinationObject().getId(), entity.getDestinationObjectID());
     assertEquals(record.getDestinationObject().getId(), entity.getBindings().get(0).getObjectID());
     assertEquals(Direction.FactIsSource, entity.getBindings().get(0).getDirection());
+    assertFalse(entity.isSet(FactEntity.Flag.BidirectionalBinding));
   }
 
   @Test
@@ -365,10 +386,13 @@ public class FactRecordConverterTest {
 
     FactEntity entity = converter.toEntity(record);
     assertEquals(2, entity.getBindings().size());
+    assertEquals(record.getSourceObject().getId(), entity.getSourceObjectID());
     assertEquals(record.getSourceObject().getId(), entity.getBindings().get(0).getObjectID());
     assertEquals(Direction.BiDirectional, entity.getBindings().get(0).getDirection());
+    assertEquals(record.getDestinationObject().getId(), entity.getDestinationObjectID());
     assertEquals(record.getDestinationObject().getId(), entity.getBindings().get(1).getObjectID());
     assertEquals(Direction.BiDirectional, entity.getBindings().get(1).getDirection());
+    assertTrue(entity.isSet(FactEntity.Flag.BidirectionalBinding));
   }
 
   @Test

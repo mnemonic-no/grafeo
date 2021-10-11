@@ -2,6 +2,17 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [New source_object_id and destination_object_id fields on fact table] - 2021-10-11
+Two new fields have been introduced on the `fact` table in Cassandra. The application code is backwards-compatible with
+existing data, however, the `bindings` field on that table is deprecated and will be removed in the future.
+
+Execute the following CQL commands against your Cassandra cluster (e.g. using cqlsh).
+
+```
+ALTER TABLE act.fact ADD source_object_id UUID;
+ALTER TABLE act.fact ADD destination_object_id UUID;
+```
+
 ## [Introduce fact_existence lookup table] - 2021-09-20
 A new Cassandra lookup table has been introduced. Execute the following CQL command against your Cassandra cluster (e.g. using cqlsh).
 

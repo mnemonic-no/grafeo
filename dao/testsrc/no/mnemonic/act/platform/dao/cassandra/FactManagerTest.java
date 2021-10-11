@@ -506,6 +506,8 @@ public class FactManagerTest extends AbstractManagerTest {
             .setTrust(0.2f)
             .setTimestamp(1)
             .setLastSeenTimestamp(2)
+            .setSourceObjectID(UUID.randomUUID())
+            .setDestinationObjectID(UUID.randomUUID())
             .setBindings(Collections.singletonList(new FactEntity.FactObjectBinding()
                     .setObjectID(UUID.randomUUID())
                     .setDirection(Direction.BiDirectional)));
@@ -626,6 +628,8 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getTrust(), actual.getTrust(), 0);
     assertEquals(expected.getTimestamp(), actual.getTimestamp());
     assertEquals(expected.getLastSeenTimestamp(), actual.getLastSeenTimestamp());
+    assertEquals(expected.getSourceObjectID(), actual.getSourceObjectID());
+    assertEquals(expected.getDestinationObjectID(), actual.getDestinationObjectID());
     assertEquals(expected.getBindingsStored(), actual.getBindingsStored());
   }
 

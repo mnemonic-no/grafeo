@@ -101,6 +101,8 @@ CREATE TABLE IF NOT EXISTS act.fact (
   timestamp BIGINT,
   last_seen_timestamp BIGINT,
   bindings VARCHAR,
+  source_object_id UUID,
+  destination_object_id UUID,
   flags SET<INT>,
   PRIMARY KEY (id)
 );

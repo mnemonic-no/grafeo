@@ -48,7 +48,11 @@ public class FactEntity implements CassandraEntity {
   public enum Flag implements CassandraEnum<Flag> {
     RetractedHint(0, false),
     HasAcl(1, true),
-    HasComments(2, true);
+    HasComments(2, true),
+    BidirectionalBinding(3, true),
+    // Flag which indicates that the 'source_object_id' and 'destination_object_id' fields are used instead of 'bindings'.
+    // 'bindings' is deprecated but kept for backwards-compatibility. It will be removed in the future.
+    UsesSeparatedObjectFields(4, true);
 
     private static final Map<Integer, Flag> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
     private final int value;
@@ -99,6 +103,10 @@ public class FactEntity implements CassandraEntity {
   // But they are also available as objects.
   @Transient
   private List<FactObjectBinding> bindings;
+  @CqlName("source_object_id")
+  private UUID sourceObjectID;
+  @CqlName("destination_object_id")
+  private UUID destinationObjectID;
   private Set<Flag> flags;
 
   public UUID getId() {
@@ -246,6 +254,24 @@ public class FactEntity implements CassandraEntity {
   public FactEntity addBinding(FactObjectBinding binding) {
     // Need to call setBindings() in order to store JSON blob.
     return setBindings(ListUtils.addToList(bindings, binding));
+  }
+
+  public UUID getSourceObjectID() {
+    return sourceObjectID;
+  }
+
+  public FactEntity setSourceObjectID(UUID sourceObjectID) {
+    this.sourceObjectID = sourceObjectID;
+    return this;
+  }
+
+  public UUID getDestinationObjectID() {
+    return destinationObjectID;
+  }
+
+  public FactEntity setDestinationObjectID(UUID destinationObjectID) {
+    this.destinationObjectID = destinationObjectID;
+    return this;
   }
 
   public Set<Flag> getFlags() {

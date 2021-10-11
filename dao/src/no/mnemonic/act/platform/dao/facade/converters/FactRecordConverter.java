@@ -119,17 +119,27 @@ public class FactRecordConverter {
       entity.addFlag(FactEntity.Flag.HasComments);
     }
 
+    if (record.isBidirectionalBinding()) {
+      entity.addFlag(FactEntity.Flag.BidirectionalBinding);
+    }
+
     if (record.getSourceObject() != null) {
+      entity.setSourceObjectID(record.getSourceObject().getId());
       entity.addBinding(new FactEntity.FactObjectBinding()
               .setObjectID(record.getSourceObject().getId())
               .setDirection(record.isBidirectionalBinding() ? Direction.BiDirectional : Direction.FactIsDestination));
     }
 
     if (record.getDestinationObject() != null) {
+      entity.setDestinationObjectID(record.getDestinationObject().getId());
       entity.addBinding(new FactEntity.FactObjectBinding()
               .setObjectID(record.getDestinationObject().getId())
               .setDirection(record.isBidirectionalBinding() ? Direction.BiDirectional : Direction.FactIsSource));
     }
+
+    // Always set this flag to distinguish between Facts which use the 'source_object_id'
+    // plus 'destination_object_id' fields and the deprecated 'bindings' field.
+    entity.addFlag(FactEntity.Flag.UsesSeparatedObjectFields);
 
     return entity;
   }
@@ -205,6 +215,22 @@ public class FactRecordConverter {
   }
 
   private void populateObjects(FactRecord record, FactEntity entity) {
+    // If 'UsesSeparatedObjectFields' is set populate Objects from the new 'source_object_id' and 'destination_object_id' fields.
+    // Otherwise, this is an 'old' Fact and the Objects need to be populated from the 'bindings' field.
+    if (entity.isSet(FactEntity.Flag.UsesSeparatedObjectFields)) {
+      populateObjectsFromSourceDestinationFields(record, entity);
+    } else {
+      populateObjectsFromBindingsField(record, entity);
+    }
+  }
+
+  private void populateObjectsFromSourceDestinationFields(FactRecord record, FactEntity entity) {
+    ObjectUtils.ifNotNullDo(entity.getSourceObjectID(), id -> record.setSourceObject(convertObject(id)));
+    ObjectUtils.ifNotNullDo(entity.getDestinationObjectID(), id -> record.setDestinationObject(convertObject(id)));
+    record.setBidirectionalBinding(entity.isSet(FactEntity.Flag.BidirectionalBinding));
+  }
+
+  private void populateObjectsFromBindingsField(FactRecord record, FactEntity entity) {
     if (CollectionUtils.isEmpty(entity.getBindings())) return;
 
     if (CollectionUtils.size(entity.getBindings()) == 1) {
