@@ -19,6 +19,12 @@ public class DefaultValidatorFactoryTest {
     assertTrue(factory.get("RegexValidator", "pattern") instanceof RegexValidator);
   }
 
+  @Test
+  public void testGetReturnsNullValidator() {
+    DefaultValidatorFactory factory = new DefaultValidatorFactory();
+    assertTrue(factory.get("NullValidator", null) instanceof NullValidator);
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void testGetRegexValidatorWithInvalidPatternThrowsException() {
     DefaultValidatorFactory factory = new DefaultValidatorFactory();

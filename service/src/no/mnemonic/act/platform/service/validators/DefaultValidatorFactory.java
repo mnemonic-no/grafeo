@@ -30,8 +30,8 @@ public class DefaultValidatorFactory implements ValidatorFactory {
 
     try {
       return cache.get(createCacheKey(validator, ObjectUtils.ifNull(parameter, "")));
-    } catch (ExecutionException e) {
-      throw new IllegalArgumentException(e.getCause());
+    } catch (ExecutionException ex) {
+      throw new IllegalArgumentException(ex.getCause().getMessage(), ex.getCause());
     }
   }
 
@@ -45,8 +45,11 @@ public class DefaultValidatorFactory implements ValidatorFactory {
     if ("RegexValidator".equals(validator)) {
       return new RegexValidator(parameter);
     }
+    if ("NullValidator".equals(validator)) {
+      return new NullValidator();
+    }
 
-    throw new Exception(String.format("Validator %s does not exist.", validator));
+    throw new Exception(String.format("Validator '%s' does not exist.", validator));
   }
 
   private String createCacheKey(String validator, String parameter) {

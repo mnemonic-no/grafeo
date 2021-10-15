@@ -12,6 +12,7 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
+import no.mnemonic.act.platform.service.validators.Validator;
 
 import javax.inject.Inject;
 import java.util.UUID;
@@ -44,7 +45,7 @@ public class ObjectTypeCreateDelegate implements Delegate {
     securityContext.checkPermission(TiFunctionConstants.addThreatIntelType);
 
     objectTypeHandler.assertObjectTypeNotExists(request.getName());
-    validatorHandler.assertValidatorExists(request.getValidator(), request.getValidatorParameter());
+    validatorHandler.assertValidator(request.getValidator(), request.getValidatorParameter(), Validator.ApplicableType.ObjectType);
 
     ObjectTypeEntity entity = new ObjectTypeEntity()
             .setId(UUID.randomUUID()) // ID needs to be provided by client.

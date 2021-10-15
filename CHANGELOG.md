@@ -34,6 +34,7 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Added
+- (2021-10-15) Added a `NullValidator` which enforces that a value is unset (null). This validator can only be used with FactTypes.
 - (2021-09-28) A new mechanism to check for already existing Facts has been implemented. To activate the new mechanism
 add `act.fact.existence.check.use.cassandra=true` to the `application.properties` configuration file. The new mechanism
 is recommended for new installations. For existing installations the configuration should be set to `false` to avoid the

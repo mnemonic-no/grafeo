@@ -10,8 +10,9 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
-import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
+import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
+import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import javax.inject.Inject;
@@ -63,7 +64,7 @@ public class FactTypeCreateDelegate implements Delegate {
     factTypeHelper.assertFactTypeNotExists(request.getName());
     factTypeHelper.assertObjectTypesToBindExist(request.getRelevantObjectBindings(), "relevantObjectBindings");
     factTypeHelper.assertFactTypesToBindExist(request.getRelevantFactBindings(), "relevantFactBindings");
-    validatorHandler.assertValidatorExists(request.getValidator(), request.getValidatorParameter());
+    validatorHandler.assertValidator(request.getValidator(), request.getValidatorParameter(), Validator.ApplicableType.FactType);
 
     FactTypeEntity entity = new FactTypeEntity()
             .setId(UUID.randomUUID()) // ID needs to be provided by client.

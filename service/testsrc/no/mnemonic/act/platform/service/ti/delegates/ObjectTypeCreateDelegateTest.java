@@ -10,6 +10,7 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
+import no.mnemonic.act.platform.service.validators.Validator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -60,7 +61,8 @@ public class ObjectTypeCreateDelegateTest {
   @Test(expected = InvalidArgumentException.class)
   public void testCreateObjectTypeValidatorNotFound() throws Exception {
     CreateObjectTypeRequest request = createRequest();
-    doThrow(InvalidArgumentException.class).when(validatorHandler).assertValidatorExists(request.getValidator(), request.getValidatorParameter());
+    doThrow(InvalidArgumentException.class)
+            .when(validatorHandler).assertValidator(request.getValidator(), request.getValidatorParameter(), Validator.ApplicableType.ObjectType);
     delegate.handle(request);
   }
 

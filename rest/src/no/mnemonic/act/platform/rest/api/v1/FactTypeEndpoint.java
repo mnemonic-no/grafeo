@@ -96,7 +96,8 @@ public class FactTypeEndpoint {
                   "* TrueValidator: It accepts a value without any validation. Use carefully as the Validator cannot be " +
                   "changed after the FactType has been created!\n" +
                   "* RegexValidator: It matches a value against a regular expression. The regular expression must be " +
-                  "provided using the 'validatorParameter' field.",
+                  "provided using the 'validatorParameter' field.\n" +
+                  "* NullValidator: It enforces that the value of a Fact is unset (null).",
           response = FactType.class,
           code = 201
   )

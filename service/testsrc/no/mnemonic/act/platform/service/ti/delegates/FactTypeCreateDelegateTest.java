@@ -10,8 +10,9 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.FactTypeResponseConverter;
-import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
 import no.mnemonic.act.platform.service.ti.handlers.ValidatorHandler;
+import no.mnemonic.act.platform.service.ti.helpers.FactTypeHelper;
+import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,9 +81,10 @@ public class FactTypeCreateDelegateTest{
   @Test
   public void testCreateFactTypeValidatorNotFound() throws InvalidArgumentException {
     CreateFactTypeRequest request = createFactTypeRequest();
-    doThrow(InvalidArgumentException.class).when(validatorHandler).assertValidatorExists(request.getValidator(), request.getValidatorParameter());
+    doThrow(InvalidArgumentException.class)
+            .when(validatorHandler).assertValidator(request.getValidator(), request.getValidatorParameter(), Validator.ApplicableType.FactType);
     assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
-    verify(validatorHandler).assertValidatorExists(request.getValidator(), request.getValidatorParameter());
+    verify(validatorHandler).assertValidator(request.getValidator(), request.getValidatorParameter(), Validator.ApplicableType.FactType);
   }
 
   @Test
