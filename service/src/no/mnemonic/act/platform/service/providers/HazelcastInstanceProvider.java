@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static no.mnemonic.act.platform.seb.esengine.v1.handlers.FactKafkaToHazelcastHandler.FACT_HAZELCAST_QUEUE_NAME;
+import static no.mnemonic.act.platform.service.providers.HazelcastBasedLockProvider.LOCK_MAP_NAME;
 
 @Singleton
 public class HazelcastInstanceProvider implements LifecycleAspect, Provider<HazelcastInstance> {
@@ -76,6 +77,7 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
     applyMulticastConfig(cfg);
     applySerializationConfig(cfg);
     applyQueueConfig(cfg);
+    applyMapConfig(cfg);
 
     return Hazelcast.getOrCreateHazelcastInstance(cfg);
   }
@@ -107,5 +109,10 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
     cfg.getQueueConfig(FACT_HAZELCAST_QUEUE_NAME)
             .setBackupCount(1)
             .setMaxSize(1_000);
+  }
+
+  private void applyMapConfig(Config cfg) {
+    // Only set backup count as this map is solely used for locking and should never contain any data.
+    cfg.getMapConfig(LOCK_MAP_NAME).setBackupCount(1);
   }
 }

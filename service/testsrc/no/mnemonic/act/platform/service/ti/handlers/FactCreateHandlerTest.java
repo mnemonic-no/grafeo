@@ -16,7 +16,9 @@ import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.dao.facade.helpers.FactRecordHasher;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
+import no.mnemonic.act.platform.service.providers.LockProvider;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
@@ -61,6 +63,8 @@ public class FactCreateHandlerTest {
   @Mock
   private TriggerContext triggerContext;
   @Mock
+  private LockProvider lockProvider;
+  @Mock
   private Credentials credentials;
 
   private FactCreateHandler handler;
@@ -69,7 +73,7 @@ public class FactCreateHandlerTest {
   public void setUp() {
     initMocks(this);
     when(securityContext.getCredentials()).thenReturn(credentials);
-    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originManager, validatorFactory, objectFactDao, factResponseConverter, triggerContext);
+    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originManager, validatorFactory, objectFactDao, factResponseConverter, triggerContext, lockProvider);
   }
 
   @Test
@@ -366,6 +370,7 @@ public class FactCreateHandlerTest {
 
     verify(objectFactDao, never()).refreshFact(any());
     verify(factResponseConverter).apply(same(factToSave));
+    verify(lockProvider).acquireLock("FactCreateHandler", FactRecordHasher.toHash(factToSave));
   }
 
   @Test

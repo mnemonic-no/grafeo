@@ -11,7 +11,9 @@ import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.seb.esengine.modules.SebESEngineModule;
 import no.mnemonic.act.platform.seb.producer.modules.SebProducerModule;
 import no.mnemonic.act.platform.service.aspects.*;
+import no.mnemonic.act.platform.service.providers.HazelcastBasedLockProvider;
 import no.mnemonic.act.platform.service.providers.HazelcastInstanceProvider;
+import no.mnemonic.act.platform.service.providers.LockProvider;
 import no.mnemonic.act.platform.service.providers.TriggerEventConsumerProvider;
 import no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl;
 import no.mnemonic.act.platform.service.ti.caches.ResponseCachesModule;
@@ -64,6 +66,7 @@ public class TiServiceModule extends AbstractModule {
     bind(TriggerAdministrationService.class).to(TriggerAdministrationServiceImpl.class);
 
     // Bind the concrete implementation classes of the ThreatIntelligenceService.
+    bind(LockProvider.class).to(HazelcastBasedLockProvider.class).in(Scopes.SINGLETON);
     bind(ValidatorFactory.class).to(DefaultValidatorFactory.class).in(Scopes.SINGLETON);
     bind(ThreatIntelligenceService.class).to(ThreatIntelligenceServiceImpl.class).in(Scopes.SINGLETON);
   }

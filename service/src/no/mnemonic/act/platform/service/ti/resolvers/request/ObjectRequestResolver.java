@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.service.providers.LockProvider;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.StringUtils;
@@ -16,19 +17,23 @@ import java.util.regex.Pattern;
 
 public class ObjectRequestResolver {
 
+  private static final String LOCK_REGION = ObjectRequestResolver.class.getSimpleName();
   private static final Pattern TYPE_VALUE_PATTERN = Pattern.compile("([^/]+)/(.+)");
 
   private final ObjectManager objectManager;
   private final ObjectFactDao objectFactDao;
   private final ValidatorFactory validatorFactory;
+  private final LockProvider lockProvider;
 
   @Inject
   public ObjectRequestResolver(ObjectManager objectManager,
                                ObjectFactDao objectFactDao,
-                               ValidatorFactory validatorFactory) {
+                               ValidatorFactory validatorFactory,
+                               LockProvider lockProvider) {
     this.objectManager = objectManager;
     this.objectFactDao = objectFactDao;
     this.validatorFactory = validatorFactory;
+    this.lockProvider = lockProvider;
   }
 
   /**
@@ -70,14 +75,19 @@ public class ObjectRequestResolver {
     // Fetch ObjectType first and validate that it exists (otherwise getObject(type, value) will thrown an IllegalArgumentException).
     ObjectTypeEntity typeEntity = fetchObjectType(type, property);
 
-    // Try to fetch Object by type and value.
-    ObjectRecord objectRecord = objectFactDao.getObject(type, value);
-    if (objectRecord == null) {
-      // Object doesn't exist yet, need to create it.
-      objectRecord = createObject(typeEntity, value, property);
-    }
+    // Need to synchronize this block because multiple requests may resolve the same Object. If the Object doesn't exist
+    // in the database yet they end up with a race condition trying to create the same Object. The DAO layer doesn't
+    // allow that which would fail the request, or worse a duplicated Object could be created.
+    try (LockProvider.Lock ignored = lockProvider.acquireLock(LOCK_REGION, object)) {
+      // Try to fetch Object by type and value.
+      ObjectRecord objectRecord = objectFactDao.getObject(type, value);
+      if (objectRecord == null) {
+        // Object doesn't exist yet, need to create it.
+        objectRecord = createObject(typeEntity, value, property);
+      }
 
-    return objectRecord;
+      return objectRecord;
+    }
   }
 
   private ObjectTypeEntity fetchObjectType(String type, String property) throws InvalidArgumentException {

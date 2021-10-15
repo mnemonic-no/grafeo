@@ -15,7 +15,9 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.dao.facade.helpers.FactRecordHasher;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
+import no.mnemonic.act.platform.service.providers.LockProvider;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
@@ -38,6 +40,7 @@ import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 
 public class FactCreateHandler {
 
+  private static final String LOCK_REGION = FactCreateHandler.class.getSimpleName();
   private static final float ORIGIN_DEFAULT_TRUST = 0.8f;
   private static final Map<FactRecord.AccessMode, Integer> ACCESS_MODE_ORDER = MapUtils.map(
           T(FactRecord.AccessMode.Public, 0),
@@ -53,6 +56,7 @@ public class FactCreateHandler {
   private final ObjectFactDao objectFactDao;
   private final FactResponseConverter factResponseConverter;
   private final TriggerContext triggerContext;
+  private final LockProvider lockProvider;
 
   // By default, use Elasticsearch for backwards compatibility.
   private boolean useCassandraForFactExistenceCheck = false;
@@ -65,7 +69,8 @@ public class FactCreateHandler {
                            ValidatorFactory validatorFactory,
                            ObjectFactDao objectFactDao,
                            FactResponseConverter factResponseConverter,
-                           TriggerContext triggerContext) {
+                           TriggerContext triggerContext,
+                           LockProvider lockProvider) {
     this.securityContext = securityContext;
     this.subjectResolver = subjectResolver;
     this.organizationResolver = organizationResolver;
@@ -74,6 +79,7 @@ public class FactCreateHandler {
     this.objectFactDao = objectFactDao;
     this.factResponseConverter = factResponseConverter;
     this.triggerContext = triggerContext;
+    this.lockProvider = lockProvider;
   }
 
   @Inject(optional = true)
@@ -230,17 +236,26 @@ public class FactCreateHandler {
    * @return The fact that was stored
    */
   public Fact saveFact(FactRecord fact, String comment, List<UUID> subjectIds) {
-    FactRecord existingFact = resolveExistingFact(fact);
+    FactRecord effectiveFact;
 
-    FactRecord effectiveFact = existingFact != null ? existingFact : fact;
-    effectiveFact = withAcl(effectiveFact, securityContext.getCurrentUserID(), subjectIds);
-    effectiveFact = withComment(effectiveFact, comment);
+    // Synchronize storing new Facts and refreshing existing Facts using the Fact's unique hash value. If two
+    // simultaneous requests try to add the same Fact one request will be delayed and will just refresh the Fact
+    // added by the other request. Note that this will only work properly when Cassandra is used for the Fact
+    // existence check. It won't work with Elasticsearch because there is a small delay until the indexed document
+    // is available for search.
+    try (LockProvider.Lock ignored = lockProvider.acquireLock(LOCK_REGION, FactRecordHasher.toHash(fact))) {
+      FactRecord existingFact = resolveExistingFact(fact);
 
-    if (existingFact != null) {
-      effectiveFact = objectFactDao.refreshFact(effectiveFact);
-    } else {
-      // Or create a new Fact.
-      effectiveFact = objectFactDao.storeFact(effectiveFact);
+      effectiveFact = existingFact != null ? existingFact : fact;
+      effectiveFact = withAcl(effectiveFact, securityContext.getCurrentUserID(), subjectIds);
+      effectiveFact = withComment(effectiveFact, comment);
+
+      if (existingFact != null) {
+        effectiveFact = objectFactDao.refreshFact(effectiveFact);
+      } else {
+        // Or create a new Fact.
+        effectiveFact = objectFactDao.storeFact(effectiveFact);
+      }
     }
 
     // Register TriggerEvent before returning added Fact.

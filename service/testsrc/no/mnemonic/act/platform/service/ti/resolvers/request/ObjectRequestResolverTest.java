@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.service.providers.LockProvider;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import org.junit.Before;
@@ -26,13 +27,15 @@ public class ObjectRequestResolverTest {
   private ObjectFactDao objectFactDao;
   @Mock
   private ValidatorFactory validatorFactory;
+  @Mock
+  private LockProvider lockProvider;
 
   private ObjectRequestResolver resolver;
 
   @Before
   public void initialize() {
     initMocks(this);
-    resolver = new ObjectRequestResolver(objectManager, objectFactDao, validatorFactory);
+    resolver = new ObjectRequestResolver(objectManager, objectFactDao, validatorFactory, lockProvider);
   }
 
   @Test
@@ -78,10 +81,12 @@ public class ObjectRequestResolverTest {
 
     when(objectFactDao.storeObject(any())).thenAnswer(i -> i.getArgument(0));
 
-    ObjectRecord resolvedObject = resolver.resolveObject(String.format("%s/%s", type.getName(), value), "object");
+    String requestedObject = String.format("%s/%s", type.getName(), value);
+    ObjectRecord resolvedObject = resolver.resolveObject(requestedObject, "object");
     assertObjectRecord(resolvedObject, type.getId(), value);
 
     verify(objectFactDao).storeObject(argThat(record -> assertObjectRecord(record, type.getId(), value)));
+    verify(lockProvider).acquireLock("ObjectRequestResolver", requestedObject);
   }
 
   @Test
