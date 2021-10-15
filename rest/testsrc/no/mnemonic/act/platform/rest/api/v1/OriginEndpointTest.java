@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.model.v1.Origin;
 import no.mnemonic.act.platform.api.request.v1.*;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.rest.AbstractEndpointTest;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -40,12 +41,14 @@ public class OriginEndpointTest extends AbstractEndpointTest {
   public void testSearchOrigins() throws Exception {
     when(getTiService().searchOrigins(any(), isA(SearchOriginRequest.class))).then(i -> {
       SearchOriginRequest request = i.getArgument(1);
+      assertEquals(SetUtils.set(SearchOriginRequest.Type.Group), request.getType());
       assertTrue(request.getIncludeDeleted());
       assertEquals(25, (int) request.getLimit());
       return StreamingResultSet.<Origin>builder().setValues(createOrigins()).build();
     });
 
     Response response = target("/v1/origin")
+            .queryParam("type", "Group")
             .queryParam("includeDeleted", true)
             .queryParam("limit", 25)
             .request()

@@ -62,6 +62,28 @@ public class OriginSearchDelegateTest {
   }
 
   @Test
+  public void testSearchOriginFilterBySingleType() throws Exception {
+    ResultSet<Origin> result = delegate.handle(new SearchOriginRequest().addType(SearchOriginRequest.Type.Group));
+
+    assertEquals(1, result.getCount());
+    assertEquals(1, ListUtils.list(result.iterator()).size());
+    verify(securityContext, times(1)).hasReadPermission(isA(OriginEntity.class));
+    verify(originResponseConverter, times(1)).apply(notNull());
+  }
+
+  @Test
+  public void testSearchOriginFilterByMultipleTypes() throws Exception {
+    ResultSet<Origin> result = delegate.handle(new SearchOriginRequest()
+            .addType(SearchOriginRequest.Type.Group)
+            .addType(SearchOriginRequest.Type.User));
+
+    assertEquals(2, result.getCount());
+    assertEquals(2, ListUtils.list(result.iterator()).size());
+    verify(securityContext, times(2)).hasReadPermission(isA(OriginEntity.class));
+    verify(originResponseConverter, times(2)).apply(notNull());
+  }
+
+  @Test
   public void testSearchOriginIncludeDeleted() throws Exception {
     ResultSet<Origin> result = delegate.handle(new SearchOriginRequest().setIncludeDeleted(true));
 
@@ -106,9 +128,9 @@ public class OriginSearchDelegateTest {
 
   private List<OriginEntity> createEntities() {
     List<OriginEntity> entities = new ArrayList<>();
-    entities.add(new OriginEntity().setId(UUID.randomUUID()));
-    entities.add(new OriginEntity().setId(UUID.randomUUID()).addFlag(OriginEntity.Flag.Deleted));
-    entities.add(new OriginEntity().setId(UUID.randomUUID()));
+    entities.add(new OriginEntity().setId(UUID.randomUUID()).setType(OriginEntity.Type.User));
+    entities.add(new OriginEntity().setId(UUID.randomUUID()).setType(OriginEntity.Type.User).addFlag(OriginEntity.Flag.Deleted));
+    entities.add(new OriginEntity().setId(UUID.randomUUID()).setType(OriginEntity.Type.Group));
     return entities;
   }
 }

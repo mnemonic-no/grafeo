@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
 import javax.validation.ConstraintViolation;
@@ -12,9 +13,10 @@ public class SearchOriginRequestTest extends AbstractRequestTest {
 
   @Test
   public void testDecodeRequest() throws Exception {
-    String json = "{ includeDeleted : true, limit : 25 }";
+    String json = "{ type : ['Group'], includeDeleted : true, limit : 25 }";
 
     SearchOriginRequest request = getMapper().readValue(json, SearchOriginRequest.class);
+    assertEquals(SetUtils.set(SearchOriginRequest.Type.Group), request.getType());
     assertTrue(request.getIncludeDeleted());
     assertEquals(25, request.getLimit().intValue());
   }

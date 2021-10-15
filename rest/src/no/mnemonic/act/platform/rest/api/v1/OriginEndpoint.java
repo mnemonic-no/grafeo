@@ -19,6 +19,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
@@ -72,10 +73,12 @@ public class OriginEndpoint {
   })
   @RolesAllowed("viewThreatIntelOrigin")
   public Response searchOrigins(
+          @QueryParam("type") @ApiParam(value = "Only return Origins having a specific type") Set<SearchOriginRequest.Type> type,
           @QueryParam("includeDeleted") @ApiParam(value = "Include deleted Origins (default false)") Boolean includeDeleted,
           @QueryParam("limit") @ApiParam(value = "Limit the number of returned Origins (default 25, 0 means all)") @Min(0) Integer limit
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildResponse(service.searchOrigins(credentialsResolver.getRequestHeader(), new SearchOriginRequest()
+            .setType(type)
             .setIncludeDeleted(includeDeleted)
             .setLimit(limit)
     ));

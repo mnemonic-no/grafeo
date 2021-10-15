@@ -12,6 +12,8 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
@@ -46,6 +48,8 @@ public class OriginSearchDelegate implements Delegate {
     int limit = ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT);
     List<Origin> origins = originManager.fetchOrigins()
             .stream()
+            // Apply 'type' filter.
+            .filter(filterByType(request))
             // Apply 'includeDeleted' filter.
             .filter(filterIncludedDeleted(request))
             // Only return accessible Origins.
@@ -61,6 +65,12 @@ public class OriginSearchDelegate implements Delegate {
             .setLimit(limit)
             .setValues(origins)
             .build();
+  }
+
+  private Predicate<OriginEntity> filterByType(SearchOriginRequest request) {
+    return origin -> CollectionUtils.isEmpty(request.getType())
+            || origin.getType() == null // Just a fail-safe, should never happen.
+            || SetUtils.set(request.getType(), Enum::name).contains(origin.getType().name());
   }
 
   private Predicate<OriginEntity> filterIncludedDeleted(SearchOriginRequest request) {
