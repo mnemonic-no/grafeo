@@ -163,7 +163,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   public FactRecord refreshFact(FactRecord record) {
     if (record == null) return null;
 
-    updateAndSaveFact(record, entity -> entity.setLastSeenTimestamp(Instant.now(clock).toEpochMilli()));
+    updateAndSaveFact(record, entity -> entity.setLastSeenTimestamp(clock.millis()));
 
     // Save new ACL entries and comments in Cassandra.
     saveAclEntries(record);

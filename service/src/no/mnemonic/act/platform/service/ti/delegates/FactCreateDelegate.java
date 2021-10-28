@@ -21,6 +21,7 @@ import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
+import java.time.Clock;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -34,6 +35,8 @@ public class FactCreateDelegate implements Delegate {
   private FactTypeEntity requestedFactType;
   private OriginEntity requestedOrigin;
   private Organization requestedOrganization;
+
+  private Clock clock = Clock.systemUTC();
 
   @Inject
   public FactCreateDelegate(TiSecurityContext securityContext,
@@ -100,6 +103,8 @@ public class FactCreateDelegate implements Delegate {
     ObjectRecord source = objectRequestResolver.resolveObject(request.getSourceObject(), "sourceObject");
     ObjectRecord destination = objectRequestResolver.resolveObject(request.getDestinationObject(), "destinationObject");
 
+    // Ensure that 'timestamp' and 'lastSeenTimestamp' are the same for newly created Facts.
+    final long now = clock.millis();
     return new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(requestedFactType.getId())
@@ -110,10 +115,17 @@ public class FactCreateDelegate implements Delegate {
             .setOriginID(requestedOrigin.getId())
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), requestedFactType.getDefaultConfidence()))
-            .setTimestamp(System.currentTimeMillis())
-            .setLastSeenTimestamp(System.currentTimeMillis())
+            .setTimestamp(now)
+            .setLastSeenTimestamp(now)
             .setSourceObject(source)
             .setDestinationObject(destination)
             .setBidirectionalBinding(request.isBidirectionalBinding());
+  }
+
+  /* Setters used for unit testing */
+
+  FactCreateDelegate withClock(Clock clock) {
+    this.clock = clock;
+    return this;
   }
 }

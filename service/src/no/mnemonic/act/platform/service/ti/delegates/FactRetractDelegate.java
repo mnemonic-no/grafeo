@@ -24,6 +24,7 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
+import java.time.Clock;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withAcl;
@@ -42,6 +43,8 @@ public class FactRetractDelegate implements Delegate {
   private FactTypeEntity retractionFactType;
   private OriginEntity requestedOrigin;
   private Organization requestedOrganization;
+
+  private Clock clock = Clock.systemUTC();
 
   @Inject
   public FactRetractDelegate(TiSecurityContext securityContext,
@@ -88,6 +91,8 @@ public class FactRetractDelegate implements Delegate {
   }
 
   private FactRecord saveRetractionFact(RetractFactRequest request, FactRecord factToRetract) throws AuthenticationFailedException, InvalidArgumentException {
+    // Ensure that 'timestamp' and 'lastSeenTimestamp' are the same for newly created Facts.
+    final long now = clock.millis();
     FactRecord retractionFact = new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(retractionFactType.getId())
@@ -98,8 +103,8 @@ public class FactRetractDelegate implements Delegate {
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), retractionFactType.getDefaultConfidence()))
             .setAccessMode(factCreateHandler.resolveAccessMode(factToRetract, request.getAccessMode()))
-            .setTimestamp(System.currentTimeMillis())
-            .setLastSeenTimestamp(System.currentTimeMillis());
+            .setTimestamp(now)
+            .setLastSeenTimestamp(now);
     retractionFact = withAcl(retractionFact, securityContext.getCurrentUserID(), ListUtils.list(factCreateHandler.resolveSubjects(request.getAcl()), Subject::getId));
     retractionFact = withComment(retractionFact, request.getComment());
 
@@ -117,5 +122,12 @@ public class FactRetractDelegate implements Delegate {
             .addContextParameter(TiServiceEvent.ContextParameter.RetractedFact.name(), retractedFact)
             .build();
     triggerContext.registerTriggerEvent(event);
+  }
+
+  /* Setters used for unit testing */
+
+  FactRetractDelegate withClock(Clock clock) {
+    this.clock = clock;
+    return this;
   }
 }

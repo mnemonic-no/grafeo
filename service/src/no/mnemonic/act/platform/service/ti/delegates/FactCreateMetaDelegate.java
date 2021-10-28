@@ -21,6 +21,7 @@ import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
 import javax.inject.Inject;
+import java.time.Clock;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -34,6 +35,8 @@ public class FactCreateMetaDelegate implements Delegate {
   private FactTypeEntity requestedFactType;
   private OriginEntity requestedOrigin;
   private Organization requestedOrganization;
+
+  private Clock clock = Clock.systemUTC();
 
   @Inject
   public FactCreateMetaDelegate(TiSecurityContext securityContext,
@@ -82,6 +85,8 @@ public class FactCreateMetaDelegate implements Delegate {
   }
 
   private FactRecord toFactRecord(CreateMetaFactRequest request, FactRecord referencedFact) throws InvalidArgumentException {
+    // Ensure that 'timestamp' and 'lastSeenTimestamp' are the same for newly created Facts.
+    final long now = clock.millis();
     return new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(requestedFactType.getId())
@@ -93,7 +98,14 @@ public class FactCreateMetaDelegate implements Delegate {
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), requestedFactType.getDefaultConfidence()))
             .setAccessMode(factCreateHandler.resolveAccessMode(referencedFact, request.getAccessMode()))
-            .setTimestamp(System.currentTimeMillis())
-            .setLastSeenTimestamp(System.currentTimeMillis());
+            .setTimestamp(now)
+            .setLastSeenTimestamp(now);
+  }
+
+  /* Setters used for unit testing */
+
+  FactCreateMetaDelegate withClock(Clock clock) {
+    this.clock = clock;
+    return this;
   }
 }

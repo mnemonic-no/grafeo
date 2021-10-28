@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.time.Clock;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -50,6 +51,8 @@ public class FactRetractDelegateTest {
   private TiSecurityContext securityContext;
   @Mock
   private TriggerContext triggerContext;
+  @Mock
+  private Clock clock;
 
   private final OriginEntity origin = new OriginEntity()
           .setId(UUID.randomUUID())
@@ -77,7 +80,9 @@ public class FactRetractDelegateTest {
             factRequestResolver,
             factCreateHandler,
             factResponseConverter
-    );
+    ).withClock(clock);
+
+    when(clock.millis()).thenReturn(1000L, 2000L, 3000L);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -258,6 +263,7 @@ public class FactRetractDelegateTest {
       assertEquals(request.getAccessMode().name(), record.getAccessMode().name());
       assertTrue(record.getTimestamp() > 0);
       assertTrue(record.getLastSeenTimestamp() > 0);
+      assertEquals(record.getTimestamp(), record.getLastSeenTimestamp());
       return true;
     });
   }

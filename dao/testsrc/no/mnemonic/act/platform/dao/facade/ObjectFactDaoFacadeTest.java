@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -336,7 +335,7 @@ public class ObjectFactDaoFacadeTest {
   public void testRefreshFactUpdatesEntity() {
     long timestamp = 123456789;
     FactRecord record = new FactRecord().setId(UUID.randomUUID());
-    when(clock.instant()).thenReturn(Instant.ofEpochMilli(timestamp));
+    when(clock.millis()).thenReturn(timestamp);
     when(factManager.getFact(record.getId())).thenReturn(new FactEntity());
     mockReindexingOfFact(record);
 
@@ -351,7 +350,7 @@ public class ObjectFactDaoFacadeTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .addAclEntry(entry);
-    when(clock.instant()).thenReturn(Instant.ofEpochMilli(123456789));
+    when(clock.millis()).thenReturn(123456789L);
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factAclEntryRecordConverter.toEntity(entry, fact.getId())).thenReturn(new FactAclEntity());
 
@@ -368,7 +367,7 @@ public class ObjectFactDaoFacadeTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .addAclEntry(entry);
-    when(clock.instant()).thenReturn(Instant.ofEpochMilli(123456789));
+    when(clock.millis()).thenReturn(123456789L);
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factManager.fetchFactAcl(fact.getId()))
             .thenReturn(ListUtils.list(new FactAclEntity().setId(entry.getId())));
@@ -384,7 +383,7 @@ public class ObjectFactDaoFacadeTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .addComment(comment);
-    when(clock.instant()).thenReturn(Instant.ofEpochMilli(123456789));
+    when(clock.millis()).thenReturn(123456789L);
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factCommentRecordConverter.toEntity(comment, fact.getId())).thenReturn(new FactCommentEntity());
 
@@ -401,7 +400,7 @@ public class ObjectFactDaoFacadeTest {
     FactRecord fact = new FactRecord()
             .setId(UUID.randomUUID())
             .addComment(comment);
-    when(clock.instant()).thenReturn(Instant.ofEpochMilli(123456789));
+    when(clock.millis()).thenReturn(123456789L);
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factManager.fetchFactComments(fact.getId()))
             .thenReturn(ListUtils.list(new FactCommentEntity().setId(comment.getId())));
