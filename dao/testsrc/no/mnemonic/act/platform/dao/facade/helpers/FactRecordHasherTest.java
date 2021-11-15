@@ -142,6 +142,13 @@ public class FactRecordHasherTest {
   }
 
   @Test
+  public void testToHashWithPercentSignAsValue() {
+    assertEquals("acef3cb8939ddfc764338dec953dc39b8590571233a23ceaee03f9f8e4fd2046", FactRecordHasher.toHash(createFactRecord().setValue("%")));
+    assertEquals("72246836ce7b84aea39db8ed19689d0145f3c378dbe9e4aec3e53cd49c6eae1b", FactRecordHasher.toHash(createFactRecord().setValue("%%")));
+    assertEquals("fb1ed7ed28239f2771a0233ce07566c500108a7c78a2e0bed3983c406033d467", FactRecordHasher.toHash(createFactRecord().setValue("%n")));
+  }
+
+  @Test
   public void testFormatFactRecordEmpty() {
     String emptyFactRecordString = "typeID=NULL;" +
             "originID=NULL;" +

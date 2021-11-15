@@ -59,10 +59,16 @@ public class FactRecordHasher {
     if (record == null) throw new IllegalArgumentException("'record' cannot be null!");
 
     String formatted = formatFactRecord(record);
-    LOGGER.debug("Formatted FactRecord: " + formatted);
+    if (LOGGER.isDebug()) {
+      // Need to escape '%' which can occur in the 'value' field because 'formatted' is passed to String.format()
+      // inside LOGGER.debug() and the string should not be interpreted as a format string.
+      LOGGER.debug("Formatted FactRecord: " + formatted.replace("%", "%%"));
+    }
 
     String hashed = calculateSha256(formatted);
-    LOGGER.debug("Hashed FactRecord: " + hashed);
+    if (LOGGER.isDebug()) {
+      LOGGER.debug("Hashed FactRecord: " + hashed);
+    }
 
     return hashed;
   }
