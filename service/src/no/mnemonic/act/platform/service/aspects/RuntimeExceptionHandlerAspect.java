@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service.aspects;
 
+import com.datastax.oss.driver.api.core.DriverTimeoutException;
 import com.google.inject.matcher.Matchers;
 import no.mnemonic.act.platform.api.exceptions.UnexpectedAuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.UnhandledRuntimeException;
@@ -29,6 +30,12 @@ public class RuntimeExceptionHandlerAspect extends AbstractAspect {
       return invocation.proceed();
     } catch (UnexpectedAuthenticationFailedException | UnhandledRuntimeException | ServiceTimeOutException ex) {
       throw ex; // Allow well-known RuntimeExceptions to pass through.
+    } catch (DriverTimeoutException ex) {
+      LOGGER.warning(ex, "Received timeout from Cassandra client driver in service call %s().", invocation.getMethod().getName());
+
+      // Timeouts from the Cassandra client driver are re-thrown as ServiceTimeOutException
+      // such that REST clients will receive a 503 error code.
+      throw new ServiceTimeOutException("Received timeout from Cassandra client driver.");
     } catch (RuntimeException ex) {
       String msg = String.format("Exception in service call %s(): %s", invocation.getMethod().getName(), ex.getMessage());
       LOGGER.error(ex, msg);

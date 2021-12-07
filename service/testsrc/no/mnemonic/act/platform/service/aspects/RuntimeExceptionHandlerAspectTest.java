@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service.aspects;
 
+import com.datastax.oss.driver.api.core.DriverTimeoutException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
@@ -23,6 +24,13 @@ public class RuntimeExceptionHandlerAspectTest {
 
     assertThrows(UnhandledRuntimeException.class, () -> service.method(RequestHeader.builder().build(), new IllegalArgumentException("test")));
     assertThrows(UnhandledRuntimeException.class, () -> service.method(RequestHeader.builder().build(), new RuntimeException("test")));
+  }
+
+  @Test
+  public void testReplaceCassandraClientTimeout() {
+    TestService service = createService();
+
+    assertThrows(ServiceTimeOutException.class, () -> service.method(RequestHeader.builder().build(), new DriverTimeoutException("test")));
   }
 
   @Test
