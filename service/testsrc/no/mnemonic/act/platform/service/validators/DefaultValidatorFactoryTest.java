@@ -2,8 +2,7 @@ package no.mnemonic.act.platform.service.validators;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class DefaultValidatorFactoryTest {
 
@@ -25,28 +24,19 @@ public class DefaultValidatorFactoryTest {
     assertTrue(factory.get("NullValidator", null) instanceof NullValidator);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testGetRegexValidatorWithInvalidPatternThrowsException() {
     DefaultValidatorFactory factory = new DefaultValidatorFactory();
-    factory.get("RegexValidator", "[a-z");
+    assertThrows(ValidatorConfigurationException.class, () -> factory.get("RegexValidator", "[a-z"));
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetWithNullValidatorThrowsException() {
+  @Test
+  public void testGetWithInvalidValidatorThrowsException() {
     DefaultValidatorFactory factory = new DefaultValidatorFactory();
-    factory.get(null, "ignored");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetWithEmptyValidatorThrowsException() {
-    DefaultValidatorFactory factory = new DefaultValidatorFactory();
-    factory.get("", "ignored");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetWithUnknownValidatorThrowsException() {
-    DefaultValidatorFactory factory = new DefaultValidatorFactory();
-    factory.get("Unknown", "ignored");
+    assertThrows(ValidatorConfigurationException.class, () -> factory.get(null, "ignored"));
+    assertThrows(ValidatorConfigurationException.class, () -> factory.get("", "ignored"));
+    assertThrows(ValidatorConfigurationException.class, () -> factory.get(" ", "ignored"));
+    assertThrows(ValidatorConfigurationException.class, () -> factory.get("Unknown", "ignored"));
   }
 
   @Test

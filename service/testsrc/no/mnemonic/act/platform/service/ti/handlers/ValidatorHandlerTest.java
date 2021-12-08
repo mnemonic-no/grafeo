@@ -2,12 +2,15 @@ package no.mnemonic.act.platform.service.ti.handlers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.service.validators.Validator;
+import no.mnemonic.act.platform.service.validators.ValidatorConfigurationException;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import static no.mnemonic.act.platform.service.validators.ValidatorConfigurationException.Reason.Misconfigured;
+import static no.mnemonic.act.platform.service.validators.ValidatorConfigurationException.Reason.NotFound;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
@@ -36,7 +39,7 @@ public class ValidatorHandlerTest {
 
   @Test
   public void testValidatorDoesNotExist() {
-    when(validatorFactory.get("someValidator", "someParameter")).thenThrow(IllegalArgumentException.class);
+    when(validatorFactory.get("someValidator", "someParameter")).thenThrow(new ValidatorConfigurationException("Test", NotFound));
 
     InvalidArgumentException ex = assertThrows(
             InvalidArgumentException.class,
@@ -44,6 +47,19 @@ public class ValidatorHandlerTest {
     );
     assertEquals(
             SetUtils.set("validator.not.exist"),
+            SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
+  }
+
+  @Test
+  public void testValidatorMisconfigured() {
+    when(validatorFactory.get("someValidator", "someParameter")).thenThrow(new ValidatorConfigurationException("Test", Misconfigured));
+
+    InvalidArgumentException ex = assertThrows(
+            InvalidArgumentException.class,
+            () -> validatorHandler.assertValidator("someValidator", "someParameter", Validator.ApplicableType.FactType)
+    );
+    assertEquals(
+            SetUtils.set("validator.misconfigured"),
             SetUtils.set(ex.getValidationErrors(), InvalidArgumentException.ValidationError::getMessageTemplate));
   }
 

@@ -11,6 +11,7 @@ public interface ValidatorFactory {
    * @param validator Name of Validator.
    * @param parameter Parameter string which is Validator specific.
    * @return A Validator instance.
+   * @throws ValidatorConfigurationException Thrown if Validator cannot be created.
    */
   Validator get(String validator, String parameter);
 

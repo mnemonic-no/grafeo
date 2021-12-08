@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.service.ti.handlers;
 
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.service.validators.Validator;
+import no.mnemonic.act.platform.service.validators.ValidatorConfigurationException;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -29,10 +30,20 @@ public class ValidatorHandler {
 
     try {
       resolved = validatorFactory.get(validator, validatorParameter);
-    } catch (IllegalArgumentException ex) {
-      // An IllegalArgumentException will be thrown if a Validator cannot be found.
-      throw new InvalidArgumentException()
-              .addValidationError(ex.getMessage(), "validator.not.exist", "validator", validator);
+    } catch (ValidatorConfigurationException ex) {
+      // A ValidatorConfigurationException will be thrown if a Validator cannot be found or initialized.
+      // Inspect the exception and re-throw as InvalidArgumentException.
+      switch (ex.getReason()) {
+        case NotFound:
+          throw new InvalidArgumentException()
+                  .addValidationError(ex.getMessage(), "validator.not.exist", "validator", validator);
+        case Misconfigured:
+          throw new InvalidArgumentException()
+                  .addValidationError(ex.getMessage(), "validator.misconfigured", "validatorParameter", validatorParameter);
+        default:
+          throw new InvalidArgumentException()
+                  .addValidationError(ex.getMessage(), "validator.initialization.error", "validator", validator);
+      }
     }
 
     if (!SetUtils.in(requestedType, resolved.appliesTo())) {

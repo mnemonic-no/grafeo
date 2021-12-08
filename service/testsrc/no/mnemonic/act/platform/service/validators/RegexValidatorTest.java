@@ -2,8 +2,7 @@ package no.mnemonic.act.platform.service.validators;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class RegexValidatorTest {
 
@@ -21,14 +20,16 @@ public class RegexValidatorTest {
     assertFalse(validator.validate(null));
   }
 
-  @Test(expected = ValidatorConfigurationException.class)
-  public void testRegexValidatorInitializedWithNullThrowsException() throws ValidatorConfigurationException {
-    new RegexValidator(null);
+  @Test
+  public void testRegexValidatorInitializedWithoutParameterThrowsException() throws ValidatorConfigurationException {
+    assertThrows(ValidatorConfigurationException.class, () -> new RegexValidator(null));
+    assertThrows(ValidatorConfigurationException.class, () -> new RegexValidator(""));
+    assertThrows(ValidatorConfigurationException.class, () -> new RegexValidator(" "));
   }
 
-  @Test(expected = ValidatorConfigurationException.class)
+  @Test
   public void testRegexValidatorInitializedWithInvalidRegexThrowsException() throws ValidatorConfigurationException {
-    new RegexValidator("[a-z");
+    assertThrows(ValidatorConfigurationException.class, () -> new RegexValidator("[a-z"));
   }
 
 }
