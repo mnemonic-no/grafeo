@@ -11,8 +11,10 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectRequestResolver;
@@ -28,6 +30,7 @@ import java.util.UUID;
 public class FactCreateDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
+  private final TriggerContext triggerContext;
   private final FactTypeRequestResolver factTypeRequestResolver;
   private final ObjectRequestResolver objectRequestResolver;
   private final FactCreateHandler factCreateHandler;
@@ -40,10 +43,12 @@ public class FactCreateDelegate implements Delegate {
 
   @Inject
   public FactCreateDelegate(TiSecurityContext securityContext,
+                            TriggerContext triggerContext,
                             FactTypeRequestResolver factTypeRequestResolver,
                             ObjectRequestResolver objectRequestResolver,
                             FactCreateHandler factCreateHandler) {
     this.securityContext = securityContext;
+    this.triggerContext = triggerContext;
     this.factTypeRequestResolver = factTypeRequestResolver;
     this.objectRequestResolver = objectRequestResolver;
     this.factCreateHandler = factCreateHandler;
@@ -63,8 +68,14 @@ public class FactCreateDelegate implements Delegate {
     factCreateHandler.assertValidFactValue(requestedFactType, request.getValue());
     assertValidFactObjectBindings(request);
 
-    FactRecord newFact = toFactRecord(request);
-    return factCreateHandler.saveFact(newFact, request.getComment(), ListUtils.list(factCreateHandler.resolveSubjects(request.getAcl()), Subject::getId));
+    // Save everything in database.
+    Fact addedFact = factCreateHandler.saveFact(toFactRecord(request), request.getComment(),
+            ListUtils.list(factCreateHandler.resolveSubjects(request.getAcl()), Subject::getId));
+
+    // Register TriggerEvent before returning added Fact.
+    registerTriggerEvent(addedFact);
+
+    return addedFact;
   }
 
   private void assertValidFactObjectBindings(CreateFactRequest request) throws InvalidArgumentException {
@@ -120,6 +131,15 @@ public class FactCreateDelegate implements Delegate {
             .setSourceObject(source)
             .setDestinationObject(destination)
             .setBidirectionalBinding(request.isBidirectionalBinding());
+  }
+
+  private void registerTriggerEvent(Fact addedFact) {
+    TiServiceEvent event = TiServiceEvent.forEvent(TiServiceEvent.EventName.FactAdded)
+            .setOrganization(ObjectUtils.ifNotNull(addedFact.getOrganization(), Organization.Info::getId))
+            .setAccessMode(addedFact.getAccessMode())
+            .addContextParameter(TiServiceEvent.ContextParameter.AddedFact.name(), addedFact)
+            .build();
+    triggerContext.registerTriggerEvent(event);
   }
 
   /* Setters used for unit testing */

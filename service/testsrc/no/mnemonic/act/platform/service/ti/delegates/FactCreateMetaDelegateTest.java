@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.service.ti.delegates;
 
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
+import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
@@ -9,8 +10,10 @@ import no.mnemonic.act.platform.api.request.v1.CreateMetaFactRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
+import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
+import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.handlers.FactCreateHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactRequestResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
@@ -38,6 +41,8 @@ public class FactCreateMetaDelegateTest {
   private FactCreateHandler factCreateHandler;
   @Mock
   private TiSecurityContext securityContext;
+  @Mock
+  private TriggerContext triggerContext;
   @Mock
   private Clock clock;
 
@@ -76,6 +81,7 @@ public class FactCreateMetaDelegateTest {
     initMocks(this);
     delegate = new FactCreateMetaDelegate(
             securityContext,
+            triggerContext,
             factTypeRequestResolver,
             factRequestResolver,
             factCreateHandler
@@ -214,6 +220,23 @@ public class FactCreateMetaDelegateTest {
     verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(list(subject.getId())));
   }
 
+  @Test
+  public void testCreateFactRegisterTriggerEvent() throws Exception {
+    CreateMetaFactRequest request = createRequest();
+    mockCreateNewFact();
+
+    Fact addedFact = delegate.handle(request);
+
+    verify(triggerContext).registerTriggerEvent(argThat(event -> {
+      assertNotNull(event);
+      assertEquals(TiServiceEvent.EventName.FactAdded.name(), event.getEvent());
+      assertEquals(addedFact.getOrganization().getId(), event.getOrganization());
+      assertEquals("Private", event.getAccessMode().name());
+      assertSame(addedFact, event.getContextParameters().get(TiServiceEvent.ContextParameter.AddedFact.name()));
+      return true;
+    }));
+  }
+
   private CreateMetaFactRequest createRequest() {
     return new CreateMetaFactRequest()
             .setFact(seenIn.getId())
@@ -237,6 +260,15 @@ public class FactCreateMetaDelegateTest {
     // Mock fetching of referenced Fact.
     when(factRequestResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
     when(factCreateHandler.resolveAccessMode(eq(seenIn), any())).thenReturn(FactRecord.AccessMode.Explicit);
+    // Mocking needed for registering TriggerEvent.
+    when(factCreateHandler.saveFact(any(), any(), any())).then(i -> {
+      FactRecord record = i.getArgument(0);
+      return Fact.builder()
+              .setId(record.getId())
+              .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(record.getAccessMode().name()))
+              .setOrganization(Organization.builder().setId(record.getOrganizationID()).build().toInfo())
+              .build();
+    });
   }
 
   private void mockFetchingOrganization() throws Exception {

@@ -246,6 +246,25 @@ public class FactIT extends AbstractIT {
   }
 
   @Test
+  public void testRetractFactTwice() throws Exception {
+    // Create a Fact in the database ...
+    FactRecord factToRetract = createFact();
+
+    // ... retract it via the REST API twice ...
+    Response response1 = request("/v1/fact/uuid/" + factToRetract.getId() + "/retract").post(Entity.json(new RetractFactRequest()));
+    assertEquals(201, response1.getStatus());
+    Response response2 = request("/v1/fact/uuid/" + factToRetract.getId() + "/retract").post(Entity.json(new RetractFactRequest()));
+    assertEquals(201, response2.getStatus());
+
+    // ... and check that the retraction was refreshed.
+    JsonNode payload1 = getPayload(response1);
+    JsonNode payload2 = getPayload(response2);
+    assertEquals(getIdFromModel(payload1), getIdFromModel(payload2));
+    assertEquals(payload1.get("timestamp").textValue(), payload2.get("timestamp").textValue());
+    assertTrue(Instant.parse(payload1.get("lastSeenTimestamp").textValue()).isBefore(Instant.parse(payload2.get("lastSeenTimestamp").textValue())));
+  }
+
+  @Test
   public void testRetractFactTriggersAction() throws Exception {
     // Create a Fact in the database ...
     FactRecord factToRetract = createFact();

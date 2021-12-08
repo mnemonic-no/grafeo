@@ -27,9 +27,6 @@ import javax.inject.Inject;
 import java.time.Clock;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withAcl;
-import static no.mnemonic.act.platform.service.ti.helpers.FactHelper.withComment;
-
 public class FactRetractDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
@@ -79,21 +76,20 @@ public class FactRetractDelegate implements Delegate {
     securityContext.checkPermission(TiFunctionConstants.addThreatIntelFact, requestedOrganization.getId());
 
     // Save everything in database.
-    FactRecord retractionFact = saveRetractionFact(request, factToRetract);
+    Fact retractionFact = factCreateHandler.saveFact(toFactRecord(request, factToRetract), request.getComment(),
+            ListUtils.list(factCreateHandler.resolveSubjects(request.getAcl()), Subject::getId));
     factToRetract = objectFactDao.retractFact(factToRetract);
 
     // Register TriggerEvent before returning Retraction Fact.
-    Fact retractionFactParameter = factResponseConverter.apply(retractionFact);
-    Fact retractedFactParameter = factResponseConverter.apply(factToRetract);
-    registerTriggerEvent(retractionFactParameter, retractedFactParameter);
+    registerTriggerEvent(retractionFact, factResponseConverter.apply(factToRetract));
 
-    return retractionFactParameter;
+    return retractionFact;
   }
 
-  private FactRecord saveRetractionFact(RetractFactRequest request, FactRecord factToRetract) throws AuthenticationFailedException, InvalidArgumentException {
+  private FactRecord toFactRecord(RetractFactRequest request, FactRecord factToRetract) throws InvalidArgumentException {
     // Ensure that 'timestamp' and 'lastSeenTimestamp' are the same for newly created Facts.
     final long now = clock.millis();
-    FactRecord retractionFact = new FactRecord()
+    return new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(retractionFactType.getId())
             .setInReferenceToID(factToRetract.getId())
@@ -105,10 +101,6 @@ public class FactRetractDelegate implements Delegate {
             .setAccessMode(factCreateHandler.resolveAccessMode(factToRetract, request.getAccessMode()))
             .setTimestamp(now)
             .setLastSeenTimestamp(now);
-    retractionFact = withAcl(retractionFact, securityContext.getCurrentUserID(), ListUtils.list(factCreateHandler.resolveSubjects(request.getAcl()), Subject::getId));
-    retractionFact = withComment(retractionFact, request.getComment());
-
-    return objectFactDao.storeFact(retractionFact);
   }
 
   private void registerTriggerEvent(Fact retractionFact, Fact retractedFact) {

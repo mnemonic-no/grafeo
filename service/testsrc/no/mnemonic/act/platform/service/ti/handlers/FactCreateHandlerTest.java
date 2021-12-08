@@ -17,10 +17,8 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.dao.facade.helpers.FactRecordHasher;
-import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.providers.LockProvider;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -61,8 +59,6 @@ public class FactCreateHandlerTest {
   @Mock
   private FactResponseConverter factResponseConverter;
   @Mock
-  private TriggerContext triggerContext;
-  @Mock
   private LockProvider lockProvider;
   @Mock
   private Credentials credentials;
@@ -73,7 +69,16 @@ public class FactCreateHandlerTest {
   public void setUp() {
     initMocks(this);
     when(securityContext.getCredentials()).thenReturn(credentials);
-    handler = new FactCreateHandler(securityContext, subjectResolver, organizationResolver, originManager, validatorFactory, objectFactDao, factResponseConverter, triggerContext, lockProvider);
+    handler = new FactCreateHandler(
+            securityContext,
+            subjectResolver,
+            organizationResolver,
+            originManager,
+            validatorFactory,
+            objectFactDao,
+            factResponseConverter,
+            lockProvider
+    );
   }
 
   @Test
@@ -442,26 +447,6 @@ public class FactCreateHandlerTest {
     verify(objectFactDao, never()).storeFact(any());
     verify(objectFactDao).retrieveExistingFact(factToSave);
     verify(factResponseConverter).apply(same(existingFact));
-  }
-
-  @Test
-  public void testSaveFactRegisterTriggerEvent() {
-    FactRecord fact = new FactRecord()
-            .setId(UUID.randomUUID())
-            .setAccessMode(FactRecord.AccessMode.Public)
-            .setOrganizationID(UUID.randomUUID());
-    mockSaveFact();
-
-    Fact addedFact = handler.saveFact(fact, null, null);
-
-    verify(triggerContext).registerTriggerEvent(argThat(event -> {
-      assertNotNull(event);
-      assertEquals(TiServiceEvent.EventName.FactAdded.name(), event.getEvent());
-      assertEquals(fact.getOrganizationID(), event.getOrganization());
-      assertEquals(fact.getAccessMode().name(), event.getAccessMode().name());
-      assertSame(addedFact, event.getContextParameters().get(TiServiceEvent.ContextParameter.AddedFact.name()));
-      return true;
-    }));
   }
 
   private void mockSaveFact() {

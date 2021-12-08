@@ -7,8 +7,6 @@ import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.RetractFactRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
-import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
-import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
@@ -29,7 +27,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
-import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -107,9 +104,8 @@ public class FactRetractDelegateTest {
 
     delegate.handle(request);
 
-    verify(objectFactDao).storeFact(matchFactRecord(request));
+    verify(factCreateHandler).saveFact(matchFactRecord(request), any(), any());
     verify(objectFactDao).retractFact(argThat(e -> Objects.equals(e.getId(), request.getFact())));
-    verify(factResponseConverter, times(2)).apply(matchFactRecord(request));
   }
 
   @Test
@@ -120,10 +116,8 @@ public class FactRetractDelegateTest {
 
     Fact fact = delegate.handle(request);
 
-    verify(objectFactDao).storeFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && Objects.equals(organization.getId(), e.getOrganizationID())));
-    verify(factResponseConverter).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && Objects.equals(organization.getId(), e.getOrganizationID())));
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && Objects.equals(organization.getId(), e.getOrganizationID())), any(), any());
   }
 
   @Test
@@ -135,10 +129,8 @@ public class FactRetractDelegateTest {
 
     Fact fact = delegate.handle(request);
 
-    verify(objectFactDao).storeFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && Objects.equals(origin.getId(), e.getOriginID())));
-    verify(factResponseConverter).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && Objects.equals(origin.getId(), e.getOriginID())));
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && Objects.equals(origin.getId(), e.getOriginID())), any(), any());
   }
 
   @Test
@@ -147,10 +139,8 @@ public class FactRetractDelegateTest {
 
     Fact fact = delegate.handle(request);
 
-    verify(objectFactDao).storeFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && e.getConfidence() > 0.0));
-    verify(factResponseConverter).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && e.getConfidence() > 0.0));
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && e.getConfidence() > 0.0), any(), any());
   }
 
   @Test
@@ -161,10 +151,8 @@ public class FactRetractDelegateTest {
 
     Fact fact = delegate.handle(request);
 
-    verify(objectFactDao).storeFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && e.getAccessMode() == FactRecord.AccessMode.RoleBased));
-    verify(factResponseConverter).apply(argThat(e -> Objects.equals(e.getId(), fact.getId())
-            && e.getAccessMode() == FactRecord.AccessMode.RoleBased));
+    verify(factCreateHandler).saveFact(argThat(e -> Objects.equals(e.getId(), fact.getId())
+            && e.getAccessMode() == FactRecord.AccessMode.RoleBased), any(), any());
   }
 
   @Test
@@ -173,11 +161,7 @@ public class FactRetractDelegateTest {
 
     delegate.handle(request);
 
-    verify(objectFactDao).storeFact(argThat(record -> {
-      assertEquals(set(record.getComments(), FactCommentRecord::getComment), set(request.getComment()));
-      assertTrue(list(record.getAcl(), FactAclEntryRecord::getSubjectID).contains(subject.getId()));
-      return true;
-    }));
+    verify(factCreateHandler).saveFact(matchFactRecord(request), eq(request.getComment()), eq(list(subject.getId())));
   }
 
   @Test
@@ -218,11 +202,18 @@ public class FactRetractDelegateTest {
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(factToRetract);
     when(factCreateHandler.resolveAccessMode(eq(factToRetract), any())).thenReturn(FactRecord.AccessMode.Explicit);
     // Mock stuff needed for saving Facts.
-    when(objectFactDao.storeFact(any())).thenAnswer(i -> i.getArgument(0));
     when(objectFactDao.retractFact(any())).thenAnswer(i -> i.getArgument(0));
 
-    // Mock FactConverter needed for registering TriggerEvent.
+    // Mocking needed for registering TriggerEvent.
     when(factResponseConverter.apply(any())).then(i -> {
+      FactRecord entity = i.getArgument(0);
+      return Fact.builder()
+              .setId(entity.getId())
+              .setAccessMode(no.mnemonic.act.platform.api.model.v1.AccessMode.valueOf(entity.getAccessMode().name()))
+              .setOrganization(Organization.builder().setId(entity.getOrganizationID()).build().toInfo())
+              .build();
+    });
+    when(factCreateHandler.saveFact(any(), any(), any())).then(i -> {
       FactRecord entity = i.getArgument(0);
       return Fact.builder()
               .setId(entity.getId())
@@ -247,11 +238,6 @@ public class FactRetractDelegateTest {
 
   private FactRecord matchFactRecord(RetractFactRequest request) {
     return argThat(record -> {
-      // Needed for FactConverter as this will be called both for the retraction Fact and the retracted Fact.
-      if (Objects.equals(request.getFact(), record.getId())) {
-        return true;
-      }
-
       assertNotNull(record.getId());
       assertNotNull(record.getTypeID());
       assertEquals(request.getFact(), record.getInReferenceToID());

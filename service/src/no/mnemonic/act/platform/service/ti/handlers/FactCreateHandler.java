@@ -16,10 +16,8 @@ import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.dao.facade.helpers.FactRecordHasher;
-import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.providers.LockProvider;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
-import no.mnemonic.act.platform.service.ti.TiServiceEvent;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.validators.Validator;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -55,7 +53,6 @@ public class FactCreateHandler {
   private final ValidatorFactory validatorFactory;
   private final ObjectFactDao objectFactDao;
   private final FactResponseConverter factResponseConverter;
-  private final TriggerContext triggerContext;
   private final LockProvider lockProvider;
 
   // By default, use Elasticsearch for backwards compatibility.
@@ -69,7 +66,6 @@ public class FactCreateHandler {
                            ValidatorFactory validatorFactory,
                            ObjectFactDao objectFactDao,
                            FactResponseConverter factResponseConverter,
-                           TriggerContext triggerContext,
                            LockProvider lockProvider) {
     this.securityContext = securityContext;
     this.subjectResolver = subjectResolver;
@@ -78,7 +74,6 @@ public class FactCreateHandler {
     this.validatorFactory = validatorFactory;
     this.objectFactDao = objectFactDao;
     this.factResponseConverter = factResponseConverter;
-    this.triggerContext = triggerContext;
     this.lockProvider = lockProvider;
   }
 
@@ -258,10 +253,7 @@ public class FactCreateHandler {
       }
     }
 
-    // Register TriggerEvent before returning added Fact.
-    Fact addedFact = factResponseConverter.apply(effectiveFact);
-    registerTriggerEvent(addedFact);
-    return addedFact;
+    return factResponseConverter.apply(effectiveFact);
   }
 
   /**
@@ -296,15 +288,6 @@ public class FactCreateHandler {
             .filter(securityContext::hasReadPermission)
             .findFirst()
             .orElse(null);
-  }
-
-  private void registerTriggerEvent(Fact addedFact) {
-    TiServiceEvent event = TiServiceEvent.forEvent(TiServiceEvent.EventName.FactAdded)
-            .setOrganization(ObjectUtils.ifNotNull(addedFact.getOrganization(), Organization.Info::getId))
-            .setAccessMode(addedFact.getAccessMode())
-            .addContextParameter(TiServiceEvent.ContextParameter.AddedFact.name(), addedFact)
-            .build();
-    triggerContext.registerTriggerEvent(event);
   }
 
   private Organization fetchOrganization(String idOrName) throws AuthenticationFailedException, InvalidArgumentException {
