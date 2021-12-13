@@ -72,7 +72,7 @@ public class CorsFilterFeatureTest extends AbstractEndpointTest {
     assertEquals(403, response.getStatus());
     assertFalse(response.getHeaders().containsKey("Access-Control-Allow-Origin"));
 
-    verifyZeroInteractions(getTiService());
+    verifyNoInteractions(getTiService());
   }
 
 }

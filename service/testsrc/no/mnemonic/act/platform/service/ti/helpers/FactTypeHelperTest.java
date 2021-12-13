@@ -52,7 +52,7 @@ public class FactTypeHelperTest {
   public void testAssertObjectTypesToBindExistWithoutBindings() throws Exception {
     helper.assertObjectTypesToBindExist(null, "property");
     helper.assertObjectTypesToBindExist(ListUtils.list(), "property");
-    verifyZeroInteractions(objectManager);
+    verifyNoInteractions(objectManager);
   }
 
   @Test
@@ -80,7 +80,7 @@ public class FactTypeHelperTest {
     } catch (InvalidArgumentException ignored) {
     }
 
-    verifyZeroInteractions(objectManager);
+    verifyNoInteractions(objectManager);
   }
 
   @Test
@@ -119,7 +119,7 @@ public class FactTypeHelperTest {
   public void testAssertFactTypesToBindExistWithoutBindings() throws Exception {
     helper.assertFactTypesToBindExist(null, "property");
     helper.assertFactTypesToBindExist(ListUtils.list(), "property");
-    verifyZeroInteractions(factManager);
+    verifyNoInteractions(factManager);
   }
 
   @Test

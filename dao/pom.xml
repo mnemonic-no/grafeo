@@ -143,6 +143,13 @@
       <version>${jnr.posix.version}</version>
       <scope>runtime</scope>
     </dependency>
+    <!-- Force a newer version of netty-handler (used by Cassandra client) in order to fix SNYK-JAVA-IONETTY-1584063 and SNYK-JAVA-IONETTY-1584064. -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
+      <version>${netty.version}</version>
+      <scope>runtime</scope>
+    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>

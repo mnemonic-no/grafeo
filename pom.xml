@@ -41,9 +41,9 @@
     <jdk.version>1.8</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.4.7</mnemonic.commons.version>
-    <mnemonic.messaging.version>1.3.9</mnemonic.messaging.version>
-    <mnemonic.services.common.version>0.3.30</mnemonic.services.common.version>
+    <mnemonic.commons.version>0.4.9</mnemonic.commons.version>
+    <mnemonic.messaging.version>1.3.13</mnemonic.messaging.version>
+    <mnemonic.services.common.version>0.3.33</mnemonic.services.common.version>
     <mnemonic.services.triggers.version>0.0.13</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
@@ -51,29 +51,30 @@
     <cassandra.version>4.13.0</cassandra.version>
     <disruptor.version>3.4.4</disruptor.version>
     <elastic.search.version>7.12.1</elastic.search.version>
-    <guava.version>30.1.1-jre</guava.version>
+    <guava.version>31.0.1-jre</guava.version>
     <guice.version>5.0.1</guice.version>
     <hazelcast.version>3.12.12</hazelcast.version>
     <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
-    <jackson.version>2.12.5</jackson.version>
+    <jackson.version>2.13.0</jackson.version>
     <javax.el.version>3.0.1-b12</javax.el.version>
     <javax.inject.version>1</javax.inject.version>
     <javax.validation.version>2.0.1.Final</javax.validation.version>
     <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
-    <jetty.version>9.4.43.v20210629</jetty.version>
+    <jetty.version>9.4.44.v20210927</jetty.version>
     <junit.version>4.13.2</junit.version>
-    <junit.jupiter.version>5.7.2</junit.jupiter.version>
-    <log4j.version>2.14.1</log4j.version>
-    <mockito.version>3.12.4</mockito.version>
-    <picocli.version>4.6.1</picocli.version>
-    <resteasy.version>4.7.1.Final</resteasy.version>
-    <swagger.version>1.6.2</swagger.version>
+    <junit.jupiter.version>5.8.2</junit.jupiter.version>
+    <log4j.version>2.16.0</log4j.version>
+    <mockito.version>4.1.0</mockito.version>
+    <picocli.version>4.6.2</picocli.version>
+    <resteasy.version>4.7.4.Final</resteasy.version>
+    <swagger.version>1.6.3</swagger.version>
     <tinkerpop.version>3.5.1</tinkerpop.version>
 
     <!-- force upgrade for transitive dependencies -->
     <commons.codec.version>1.15</commons.codec.version>
     <httpclient.version>4.5.13</httpclient.version>
-    <jnr.posix.version>3.1.9</jnr.posix.version>
+    <jnr.posix.version>3.1.14</jnr.posix.version>
+    <netty.version>4.1.71.Final</netty.version>
 
     <!-- build dependencies -->
     <maven.assembly.version>3.3.0</maven.assembly.version>
@@ -283,6 +284,8 @@
           <!-- Create THIRD-PARTY file listing all dependencies. -->
           <outputDirectory>${project.build.directory}</outputDirectory>
           <thirdPartyFilename>THIRD-PARTY</thirdPartyFilename>
+          <!-- File used to specify licenses for dependencies which don't state their license in the pom.xml. -->
+          <missingFile>../buildConfig/missing-licenses.properties</missingFile>
           <!-- Check transitive dependencies in order to include them in THIRD-PARTY file. -->
           <includeTransitiveDependencies>true</includeTransitiveDependencies>
           <!-- Fail the build if a detected license is not in the white list. -->

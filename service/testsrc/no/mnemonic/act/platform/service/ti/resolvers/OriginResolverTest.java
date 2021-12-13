@@ -59,7 +59,7 @@ public class OriginResolverTest {
     assertSame(groupOrigin, resolver.apply(groupOrigin.getId()));
     verify(originManager).getOrigin(groupOrigin.getId());
     verifyNoMoreInteractions(originManager);
-    verifyZeroInteractions(subjectResolver);
+    verifyNoInteractions(subjectResolver);
   }
 
   @Test

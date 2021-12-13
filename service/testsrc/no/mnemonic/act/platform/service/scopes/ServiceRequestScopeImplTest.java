@@ -49,7 +49,7 @@ public class ServiceRequestScopeImplTest {
     executeInsideScope(() -> {
       scope.seed(key, seed);
       assertSame(seed, scope.scope(key, unscopedProvider).get());
-      verifyZeroInteractions(unscopedProvider);
+      verifyNoInteractions(unscopedProvider);
     });
   }
 

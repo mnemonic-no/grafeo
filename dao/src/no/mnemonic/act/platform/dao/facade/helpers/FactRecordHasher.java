@@ -60,9 +60,7 @@ public class FactRecordHasher {
 
     String formatted = formatFactRecord(record);
     if (LOGGER.isDebug()) {
-      // Need to escape '%' which can occur in the 'value' field because 'formatted' is passed to String.format()
-      // inside LOGGER.debug() and the string should not be interpreted as a format string.
-      LOGGER.debug("Formatted FactRecord: " + formatted.replace("%", "%%"));
+      LOGGER.debug("Formatted FactRecord: " + formatted);
     }
 
     String hashed = calculateSha256(formatted);
