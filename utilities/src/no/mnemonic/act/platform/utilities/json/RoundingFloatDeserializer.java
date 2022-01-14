@@ -18,6 +18,12 @@ public class RoundingFloatDeserializer extends JsonDeserializer<Float> {
 
   @Override
   public Float deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    // If input contains an integer just receive the float value without rounding.
+    if (p.hasToken(JsonToken.VALUE_NUMBER_INT)) {
+      return p.getFloatValue();
+    }
+
+    // For float values round the input to two decimal points.
     if (p.hasToken(JsonToken.VALUE_NUMBER_FLOAT)) {
       return BigDecimal.valueOf(p.getFloatValue())
               .setScale(DECIMAL_POINTS, RoundingMode.HALF_UP)

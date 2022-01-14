@@ -30,6 +30,13 @@ public class RoundingFloatDeserializerTest {
   }
 
   @Test
+  public void testDeserializeInteger() throws IOException {
+    when(parser.hasToken(eq(JsonToken.VALUE_NUMBER_INT))).thenReturn(true);
+    when(parser.getFloatValue()).thenReturn(1.0f);
+    assertEquals(1.0f, deserializer.deserialize(parser, context), 0.0f);
+  }
+
+  @Test
   public void testDeserializeFloatRoundDown() throws IOException {
     when(parser.hasToken(eq(JsonToken.VALUE_NUMBER_FLOAT))).thenReturn(true);
     when(parser.getFloatValue()).thenReturn(0.444f);
