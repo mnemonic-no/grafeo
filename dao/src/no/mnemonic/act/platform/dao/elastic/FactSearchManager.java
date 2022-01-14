@@ -81,7 +81,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private static final String MAPPINGS_JSON = "mappings.json";
   private static final int MAX_RESULT_WINDOW = 10_000; // Must be the same value as specified in mappings.json.
 
-  private static final String FILTER_FACTS_AGGREGATION_NAME = "FilterFactsAggregation";
   private static final String NESTED_OBJECTS_AGGREGATION_NAME = "NestedObjectsAggregation";
   private static final String FILTER_OBJECTS_AGGREGATION_NAME = "FilterObjectsAggregation";
   private static final String OBJECTS_COUNT_AGGREGATION_NAME = "ObjectsCountAggregation";
@@ -500,6 +499,8 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private SearchRequest buildObjectsSearchRequest(FactSearchCriteria criteria) {
     SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
             .size(0) // Not interested in the search hits as the search result is part of the returned aggregations.
+            .trackTotalHits(false) // Not interested in total hits as the count is calculated as part of the returned aggregations.
+            .query(buildFactsQuery(criteria)) // Reduce documents to Facts matching the search criteria.
             .aggregation(buildObjectsAggregation(criteria));
     return new SearchRequest()
             .indices(INDEX_NAME)
@@ -509,6 +510,8 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private SearchRequest buildObjectStatisticsSearchRequest(ObjectStatisticsCriteria criteria) {
     SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
             .size(0) // Not interested in the search hits as the search result is part of the returned aggregations.
+            .trackTotalHits(false) // Not interested in total hits as the statistics search doesn't include a count.
+            .query(buildObjectStatisticsFactsQuery(criteria)) // Reduce documents to Facts matching the search criteria.
             .aggregation(buildObjectStatisticsAggregation(criteria));
     return new SearchRequest()
             .indices(INDEX_NAME)
@@ -687,29 +690,26 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   }
 
   private AggregationBuilder buildObjectsAggregation(FactSearchCriteria criteria) {
-    // 1. Reduce to Facts matching the search criteria.
-    return filter(FILTER_FACTS_AGGREGATION_NAME, buildFactsQuery(criteria))
-            // 2. Map to nested Object documents.
-            .subAggregation(nested(NESTED_OBJECTS_AGGREGATION_NAME, "objects")
-                    // 3. Reduce to Objects matching the search criteria.
-                    .subAggregation(filter(FILTER_OBJECTS_AGGREGATION_NAME, buildObjectsQuery(criteria))
-                            // 4. Calculate the number of unique Objects by id. This will give the 'count' value.
-                            // If 'count' is smaller than MAX_RESULT_WINDOW a correct value is expected, thus,
-                            // the precision threshold is set to MAX_RESULT_WINDOW.
-                            .subAggregation(cardinality(OBJECTS_COUNT_AGGREGATION_NAME)
-                                    .field("objects.id")
-                                    .precisionThreshold(MAX_RESULT_WINDOW)
-                            )
-                            // 5. Reduce to buckets of unique Objects by id, restricted to the search criteria's limit.
-                            // This will give the actual search results.
-                            .subAggregation(terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
-                                    .field("objects.id")
-                                    .size(calculateMaximumSize(criteria))
-                                    // 6. Map to the unique Object's source. Set size to 1, because all Objects in one
-                                    // bucket are the same (ignoring 'direction' which isn't relevant for Object search).
-                                    .subAggregation(topHits(UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME)
-                                            .size(1)
-                                    )
+    // 1. Map to nested Object documents.
+    return nested(NESTED_OBJECTS_AGGREGATION_NAME, "objects")
+            // 2. Reduce to Objects matching the search criteria.
+            .subAggregation(filter(FILTER_OBJECTS_AGGREGATION_NAME, buildObjectsQuery(criteria))
+                    // 3. Calculate the number of unique Objects by id. This will give the 'count' value.
+                    // If 'count' is smaller than MAX_RESULT_WINDOW a correct value is expected, thus,
+                    // the precision threshold is set to MAX_RESULT_WINDOW.
+                    .subAggregation(cardinality(OBJECTS_COUNT_AGGREGATION_NAME)
+                            .field("objects.id")
+                            .precisionThreshold(MAX_RESULT_WINDOW)
+                    )
+                    // 4. Reduce to buckets of unique Objects by id, restricted to the search criteria's limit.
+                    // This will give the actual search results.
+                    .subAggregation(terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
+                            .field("objects.id")
+                            .size(calculateMaximumSize(criteria))
+                            // 5. Map to the unique Object's source. Set size to 1, because all Objects in one
+                            // bucket are the same (ignoring 'direction' which isn't relevant for Object search).
+                            .subAggregation(topHits(UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME)
+                                    .size(1)
                             )
                     )
             );
@@ -767,7 +767,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     return criteria.getLimit() > 0 && criteria.getLimit() < MAX_RESULT_WINDOW ? criteria.getLimit() : MAX_RESULT_WINDOW;
   }
 
-  private AggregationBuilder buildObjectStatisticsAggregation(ObjectStatisticsCriteria criteria) {
+  private BoolQueryBuilder buildObjectStatisticsFactsQuery(ObjectStatisticsCriteria criteria) {
     BoolQueryBuilder factsQuery = boolQuery();
     // Always apply access control query.
     factsQuery.filter(createAccessControlQuery(criteria.getAccessControlCriteria()));
@@ -776,35 +776,36 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
       factsQuery.filter(createFieldQuery("lastSeenTimestamp", criteria.getStartTimestamp(), criteria.getEndTimestamp()));
     }
 
+    return factsQuery;
+  }
+
+  private AggregationBuilder buildObjectStatisticsAggregation(ObjectStatisticsCriteria criteria) {
     QueryBuilder objectsQuery = termsQuery("objects.id", toString(criteria.getObjectID()));
 
-    // 1. Reduce to only the Facts the user has access to. Non-accessible Facts won't be available in sub aggregations!
-    return filter(FILTER_FACTS_AGGREGATION_NAME, factsQuery)
-            // 2. Map to nested Object documents.
-            .subAggregation(nested(NESTED_OBJECTS_AGGREGATION_NAME, "objects")
-                    // 3. Reduce to only the Objects for which statistics should be calculated.
-                    .subAggregation(filter(FILTER_OBJECTS_AGGREGATION_NAME, objectsQuery)
-                            // 4. Reduce to buckets of unique Objects by id. There shouldn't be more buckets than the
-                            // number of Objects for which statistics will be calculated ('size' parameter).
-                            .subAggregation(terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
-                                    .field("objects.id")
-                                    .size(criteria.getObjectID().size())
-                                    // 5. Reverse nested aggregation to have access to parent Facts.
-                                    .subAggregation(reverseNested(REVERSED_FACTS_AGGREGATION_NAME)
-                                            // 6. Create one bucket for each FactType. Set 'size' to MAX_RESULT_WINDOW
-                                            // in order to get the statistics for all FactTypes. The returned 'doc_count'
-                                            // will give the number of Facts per FactType.
-                                            .subAggregation(terms(UNIQUE_FACT_TYPES_AGGREGATION_NAME)
-                                                    .field("typeID")
-                                                    .size(MAX_RESULT_WINDOW)
-                                                    // 7. Calculate the maximum lastAddedTimestamp per FactType.
-                                                    .subAggregation(max(MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME)
-                                                            .field("timestamp")
-                                                    )
-                                                    // 8. Calculate the maximum lastSeenTimestamp per FactType.
-                                                    .subAggregation(max(MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME)
-                                                            .field("lastSeenTimestamp")
-                                                    )
+    // 1. Map to nested Object documents.
+    return nested(NESTED_OBJECTS_AGGREGATION_NAME, "objects")
+            // 2. Reduce to only the Objects for which statistics should be calculated.
+            .subAggregation(filter(FILTER_OBJECTS_AGGREGATION_NAME, objectsQuery)
+                    // 3. Reduce to buckets of unique Objects by id. There shouldn't be more buckets than the
+                    // number of Objects for which statistics will be calculated ('size' parameter).
+                    .subAggregation(terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
+                            .field("objects.id")
+                            .size(criteria.getObjectID().size())
+                            // 4. Reverse nested aggregation to have access to parent Facts.
+                            .subAggregation(reverseNested(REVERSED_FACTS_AGGREGATION_NAME)
+                                    // 5. Create one bucket for each FactType. Set 'size' to MAX_RESULT_WINDOW
+                                    // in order to get the statistics for all FactTypes. The returned 'doc_count'
+                                    // will give the number of Facts per FactType.
+                                    .subAggregation(terms(UNIQUE_FACT_TYPES_AGGREGATION_NAME)
+                                            .field("typeID")
+                                            .size(MAX_RESULT_WINDOW)
+                                            // 6. Calculate the maximum lastAddedTimestamp per FactType.
+                                            .subAggregation(max(MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME)
+                                                    .field("timestamp")
+                                            )
+                                            // 7. Calculate the maximum lastSeenTimestamp per FactType.
+                                            .subAggregation(max(MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME)
+                                                    .field("lastSeenTimestamp")
                                             )
                                     )
                             )
