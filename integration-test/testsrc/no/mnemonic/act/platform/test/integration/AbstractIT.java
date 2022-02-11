@@ -367,7 +367,6 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("act.smb.server.url")).toInstance(smbServerUrl);
       bind(String.class).annotatedWith(Names.named("act.smb.server.username")).toInstance("admin");
       bind(String.class).annotatedWith(Names.named("act.smb.server.password")).toInstance("admin");
-      bind(String.class).annotatedWith(Names.named("act.fact.existence.check.use.cassandra")).toInstance("true");
     }
   }
 

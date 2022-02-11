@@ -14,7 +14,6 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
@@ -489,41 +488,6 @@ public class ObjectFactDaoFacadeTest {
   }
 
   @Test
-  public void testRetrieveExistingFactsWithoutSearchResult() {
-    FactRecord record = new FactRecord();
-    FactExistenceSearchCriteria criteria = createFactExistenceSearchCriteria();
-    when(factRecordConverter.toCriteria(record)).thenReturn(criteria);
-    when(factSearchManager.retrieveExistingFacts(criteria)).thenReturn(SearchResult.<FactDocument>builder().build());
-
-    ResultContainer<FactRecord> container = dao.retrieveExistingFacts(record);
-    assertEquals(0, container.getCount());
-    assertFalse(container.hasNext());
-    verify(factRecordConverter).toCriteria(record);
-    verify(factSearchManager).retrieveExistingFacts(criteria);
-    verifyNoInteractions(factManager);
-  }
-
-  @Test
-  public void testRetrieveExistingFactsWithSearchResult() {
-    UUID id = UUID.randomUUID();
-    FactDocument document = new FactDocument().setId(id);
-    FactRecord record = new FactRecord().setId(id);
-    FactExistenceSearchCriteria criteria = createFactExistenceSearchCriteria();
-
-    when(factRecordConverter.toCriteria(record)).thenReturn(criteria);
-    when(factSearchManager.retrieveExistingFacts(criteria))
-            .thenReturn(SearchResult.<FactDocument>builder().setCount(1).addValue(document).build());
-    when(factResolver.getFact(id)).thenReturn(record);
-
-    ResultContainer<FactRecord> container = dao.retrieveExistingFacts(record);
-    assertEquals(1, container.getCount());
-    assertEquals(ListUtils.list(record), ListUtils.list(container));
-    verify(factRecordConverter).toCriteria(record);
-    verify(factSearchManager).retrieveExistingFacts(criteria);
-    verify(factResolver).getFact(id);
-  }
-
-  @Test
   public void testRetrieveExistingFactWithNull() {
     assertFalse(dao.retrieveExistingFact(null).isPresent());
     verifyNoInteractions(factResolver);
@@ -673,17 +637,6 @@ public class ObjectFactDaoFacadeTest {
   private FactSearchCriteria createFactSearchCriteria() {
     return FactSearchCriteria.builder()
             .setAccessControlCriteria(accessControlCriteria)
-            .build();
-  }
-
-  private FactExistenceSearchCriteria createFactExistenceSearchCriteria() {
-    return FactExistenceSearchCriteria.builder()
-            .setFactTypeID(UUID.randomUUID())
-            .setOriginID(UUID.randomUUID())
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode("Public")
-            .setConfidence(0.1f)
-            .setInReferenceTo(UUID.randomUUID())
             .build();
   }
 }

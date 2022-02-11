@@ -82,7 +82,7 @@ public interface ObjectFactDao {
 
   /**
    * Store a new Fact. The caller must ensure that the same Fact (by UUID and logically) is not stored twice. Use
-   * {@link #retrieveExistingFacts(FactRecord)} to check if a Fact already exists and {@link #refreshFact(FactRecord)}
+   * {@link #retrieveExistingFact(FactRecord)} to check if a Fact already exists and {@link #refreshFact(FactRecord)}
    * to refresh an existing Fact.
    * <p>
    * If the supplied {@link FactRecord} contains an ACL or comments the method will store these records as well.
@@ -117,16 +117,6 @@ public interface ObjectFactDao {
    * @return Retracted Fact
    */
   default FactRecord retractFact(FactRecord fact) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Retrieve any existing Facts which are logically the same as the supplied {@link FactRecord}.
-   *
-   * @param fact Fact to check for existence
-   * @return Container holding existing Facts, or an empty container if non exist
-   */
-  default ResultContainer<FactRecord> retrieveExistingFacts(FactRecord fact) {
     throw new UnsupportedOperationException();
   }
 

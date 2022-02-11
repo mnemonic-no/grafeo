@@ -63,3 +63,9 @@ searching for Facts. Otherwise the maximum number of returned results is capped 
 For this use case one-legged Facts with bi-directional binding should be created instead.
 - (2019-09-25) In Search APIs resolve entities by name for `factType`, `objectType`, `origin` and `organization` before querying
 ElasticSearch in order to avoid outdated names in the index. If an entity cannot be resolved a 412 response will be returned.
+
+### Removed
+- (2022-02-11) Removed the old mechanism to check for already existing Facts, including the configuration property
+`act.fact.existence.check.use.cassandra` which is the new default (**breaking**). Facts added to installations before
+October 2021 might be duplicated as a result. *It is recommended to set up installations older than October 2021 from
+scratch and reimport existing data.*

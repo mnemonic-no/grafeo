@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
-import com.google.inject.Inject;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
@@ -28,7 +27,7 @@ import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
-import javax.inject.Named;
+import javax.inject.Inject;
 import java.util.*;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
@@ -55,9 +54,6 @@ public class FactCreateHandler {
   private final FactResponseConverter factResponseConverter;
   private final LockProvider lockProvider;
 
-  // By default, use Elasticsearch for backwards compatibility.
-  private boolean useCassandraForFactExistenceCheck = false;
-
   @Inject
   public FactCreateHandler(TiSecurityContext securityContext,
                            SubjectSPI subjectResolver,
@@ -75,13 +71,6 @@ public class FactCreateHandler {
     this.objectFactDao = objectFactDao;
     this.factResponseConverter = factResponseConverter;
     this.lockProvider = lockProvider;
-  }
-
-  @Inject(optional = true)
-  public FactCreateHandler setUseCassandraForFactExistenceCheck(
-          @Named("act.fact.existence.check.use.cassandra") boolean useCassandraForFactExistenceCheck) {
-    this.useCassandraForFactExistenceCheck = useCassandraForFactExistenceCheck;
-    return this;
   }
 
   /**
@@ -235,9 +224,7 @@ public class FactCreateHandler {
 
     // Synchronize storing new Facts and refreshing existing Facts using the Fact's unique hash value. If two
     // simultaneous requests try to add the same Fact one request will be delayed and will just refresh the Fact
-    // added by the other request. Note that this will only work properly when Cassandra is used for the Fact
-    // existence check. It won't work with Elasticsearch because there is a small delay until the indexed document
-    // is available for search.
+    // added by the other request.
     try (LockProvider.Lock ignored = lockProvider.acquireLock(LOCK_REGION, FactRecordHasher.toHash(fact))) {
       FactRecord existingFact = resolveExistingFact(fact);
 
@@ -246,6 +233,7 @@ public class FactCreateHandler {
       effectiveFact = withComment(effectiveFact, comment);
 
       if (existingFact != null) {
+        // Refresh existing Fact.
         effectiveFact = objectFactDao.refreshFact(effectiveFact);
       } else {
         // Or create a new Fact.
@@ -273,20 +261,10 @@ public class FactCreateHandler {
   }
 
   private FactRecord resolveExistingFact(FactRecord newFact) {
-    // For both methods, fetch any Facts which are logically the same as the Fact to create,
+    // Fetch any Fact which is logically the same as the Fact to create,
     // apply permission check and return existing Fact if accessible.
-    if (useCassandraForFactExistenceCheck) {
-      // If configured use the new Cassandra lookup table.
-      return objectFactDao.retrieveExistingFact(newFact)
-              .filter(securityContext::hasReadPermission)
-              .orElse(null);
-    }
-
-    // Otherwise, use the old method with Elasticsearch.
-    return objectFactDao.retrieveExistingFacts(newFact)
-            .stream()
+    return objectFactDao.retrieveExistingFact(newFact)
             .filter(securityContext::hasReadPermission)
-            .findFirst()
             .orElse(null);
   }
 

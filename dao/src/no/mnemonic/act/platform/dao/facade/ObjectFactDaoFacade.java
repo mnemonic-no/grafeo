@@ -188,18 +188,6 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   }
 
   @Override
-  public ResultContainer<FactRecord> retrieveExistingFacts(FactRecord record) {
-    // Search for existing Facts in ElasticSearch.
-    SearchResult<FactDocument> searchResult = factSearchManager.retrieveExistingFacts(factRecordConverter.toCriteria(record));
-    if (searchResult.getCount() <= 0) {
-      // Return immediately if the search didn't yield any results.
-      return ResultContainer.<FactRecord>builder().build();
-    }
-
-    return createResultContainer(searchResult.getValues().iterator(), searchResult.getCount());
-  }
-
-  @Override
   public Optional<FactRecord> retrieveExistingFact(FactRecord record) {
     if (record == null) return Optional.empty();
 

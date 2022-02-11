@@ -5,7 +5,6 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
-import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
@@ -179,39 +178,6 @@ public class FactRecordConverter {
     }
 
     return document;
-  }
-
-  /**
-   * Convert {@link FactRecord} to {@link FactExistenceSearchCriteria}.
-   *
-   * @param record Fact to convert
-   * @return Converted criteria
-   */
-  public FactExistenceSearchCriteria toCriteria(FactRecord record) {
-    if (record == null) return null;
-
-    FactExistenceSearchCriteria.Builder criteriaBuilder = FactExistenceSearchCriteria.builder()
-            .setFactValue(record.getValue())
-            .setFactTypeID(record.getTypeID())
-            .setOriginID(record.getOriginID())
-            .setOrganizationID(record.getOrganizationID())
-            .setAccessMode(record.getAccessMode().name())
-            .setConfidence(record.getConfidence())
-            .setInReferenceTo(record.getInReferenceToID());
-
-    if (record.getSourceObject() != null) {
-      FactExistenceSearchCriteria.Direction direction = record.isBidirectionalBinding() ?
-              FactExistenceSearchCriteria.Direction.BiDirectional : FactExistenceSearchCriteria.Direction.FactIsDestination;
-      criteriaBuilder.addObject(record.getSourceObject().getId(), direction.name());
-    }
-
-    if (record.getDestinationObject() != null) {
-      FactExistenceSearchCriteria.Direction direction = record.isBidirectionalBinding() ?
-              FactExistenceSearchCriteria.Direction.BiDirectional : FactExistenceSearchCriteria.Direction.FactIsSource;
-      criteriaBuilder.addObject(record.getDestinationObject().getId(), direction.name());
-    }
-
-    return criteriaBuilder.build();
   }
 
   private void populateObjects(FactRecord record, FactEntity entity) {

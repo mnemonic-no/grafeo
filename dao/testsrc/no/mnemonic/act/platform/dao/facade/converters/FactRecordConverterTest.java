@@ -6,7 +6,6 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
-import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
@@ -475,81 +474,6 @@ public class FactRecordConverterTest {
     assertTrue(document.getObjects().stream().allMatch(o -> ObjectDocument.Direction.BiDirectional == o.getDirection()));
   }
 
-  @Test
-  public void testToCriteriaWithNullRecord() {
-    assertNull(converter.toCriteria(null));
-  }
-
-  @Test
-  public void testToCriteriaWithFullRecord() {
-    FactRecord record = new FactRecord()
-            .setValue("value")
-            .setTypeID(UUID.randomUUID())
-            .setOriginID(UUID.randomUUID())
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode(FactRecord.AccessMode.Explicit)
-            .setConfidence(0.1f)
-            .setInReferenceToID(UUID.randomUUID());
-
-    FactExistenceSearchCriteria criteria = converter.toCriteria(record);
-    assertEquals(record.getValue(), criteria.getFactValue());
-    assertEquals(record.getTypeID(), criteria.getFactTypeID());
-    assertEquals(record.getOriginID(), criteria.getOriginID());
-    assertEquals(record.getOrganizationID(), criteria.getOrganizationID());
-    assertEquals(record.getAccessMode().name(), criteria.getAccessMode().name());
-    assertEquals(record.getConfidence(), criteria.getConfidence(), 0.0f);
-    assertEquals(record.getInReferenceToID(), criteria.getInReferenceTo());
-  }
-
-  @Test
-  public void testToCriteriaWithSourceObject() {
-    FactRecord record = new FactRecord()
-            .setTypeID(UUID.randomUUID())
-            .setOriginID(UUID.randomUUID())
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode(FactRecord.AccessMode.Explicit)
-            .setConfidence(0.1f)
-            .setSourceObject(createObjectRecord());
-
-    FactExistenceSearchCriteria criteria = converter.toCriteria(record);
-    assertEquals(1, criteria.getObjects().size());
-    assertObjectExistence(record.getSourceObject(), criteria.getObjects().iterator().next(),
-            FactExistenceSearchCriteria.Direction.FactIsDestination);
-  }
-
-  @Test
-  public void testToCriteriaWithDestinationObject() {
-    FactRecord record = new FactRecord()
-            .setTypeID(UUID.randomUUID())
-            .setOriginID(UUID.randomUUID())
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode(FactRecord.AccessMode.Explicit)
-            .setConfidence(0.1f)
-            .setDestinationObject(createObjectRecord());
-
-    FactExistenceSearchCriteria criteria = converter.toCriteria(record);
-    assertEquals(1, criteria.getObjects().size());
-    assertObjectExistence(record.getDestinationObject(), criteria.getObjects().iterator().next(),
-            FactExistenceSearchCriteria.Direction.FactIsSource);
-  }
-
-  @Test
-  public void testToCriteriaWithBidirectionalBinding() {
-    FactRecord record = new FactRecord()
-            .setTypeID(UUID.randomUUID())
-            .setOriginID(UUID.randomUUID())
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode(FactRecord.AccessMode.Explicit)
-            .setConfidence(0.1f)
-            .setSourceObject(createObjectRecord())
-            .setDestinationObject(createObjectRecord())
-            .setBidirectionalBinding(true);
-
-    FactExistenceSearchCriteria criteria = converter.toCriteria(record);
-    assertEquals(2, criteria.getObjects().size());
-    assertTrue(criteria.getObjects().stream().allMatch(o -> FactExistenceSearchCriteria.Direction.BiDirectional == o.getDirection()));
-  }
-
   private ObjectRecord createObjectRecord() {
     return new ObjectRecord()
             .setId(UUID.randomUUID())
@@ -561,12 +485,6 @@ public class FactRecordConverterTest {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getTypeID(), actual.getTypeID());
     assertEquals(expected.getValue(), actual.getValue());
-    assertEquals(direction, actual.getDirection());
-  }
-
-  private void assertObjectExistence(ObjectRecord expected, FactExistenceSearchCriteria.ObjectExistence actual,
-                                     FactExistenceSearchCriteria.Direction direction) {
-    assertEquals(expected.getId(), actual.getObjectID());
     assertEquals(direction, actual.getDirection());
   }
 }

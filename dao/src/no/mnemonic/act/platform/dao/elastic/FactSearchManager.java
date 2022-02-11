@@ -9,7 +9,6 @@ import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
-import no.mnemonic.act.platform.dao.elastic.criteria.FactExistenceSearchCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
@@ -91,8 +90,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private static final String MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME = "MaxLastAddedTimestampAggregation";
   private static final String MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME = "MaxLastSeenTimestampAggregation";
 
-  private static final float CONFIDENCE_EQUALITY_INTERVAL = 0.01f;
-
   private static final Logger LOGGER = Logging.getLogger(FactSearchManager.class);
 
   private static final ObjectMapper MAPPER = JsonMapper.builder().build();
@@ -101,7 +98,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private static final ObjectWriter FACT_DOCUMENT_WRITER = MAPPER.writerFor(FactDocument.class);
 
   private final PerformanceMonitor indexMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
-  private final PerformanceMonitor existenceMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
   private final PerformanceMonitor factSearchInitialMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
   private final PerformanceMonitor factSearchNextMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
   private final PerformanceMonitor objectSearchMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
@@ -137,8 +133,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     return new MetricsData()
             .addData("indexInvocations", indexMonitor.getTotalInvocations())
             .addData("indexTimeSpent", indexMonitor.getTotalTimeSpent())
-            .addData("existenceInvocations", existenceMonitor.getTotalInvocations())
-            .addData("existenceTimeSpent", existenceMonitor.getTotalTimeSpent())
             .addData("factSearchInitialInvocations", factSearchInitialMonitor.getTotalInvocations())
             .addData("factSearchInitialTimeSpent", factSearchInitialMonitor.getTotalTimeSpent())
             .addData("factSearchNextInvocations", factSearchNextMonitor.getTotalInvocations())
@@ -205,43 +199,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     }
 
     return fact;
-  }
-
-  /**
-   * Retrieve all Facts which are considered logically the same when matched against a given search criteria, i.e. the
-   * following condition holds: an indexed Fact matches the search criteria and will be included in the returned result
-   * if and only if the value, FactType, organization, origin, confidence, access mode and all bound Objects (including
-   * direction) match exactly. In the case of a meta Fact the inReferenceTo must match instead of bound Objects (Objects
-   * should be omitted). If no Fact satisfies this condition an empty result container is returned.
-   * <p>
-   * This method can be used to determine if a Fact already logically exists in the system, e.g. before a new Fact is
-   * created. No access control will be performed. This must be done by the caller.
-   *
-   * @param criteria Criteria to retrieve existing Facts
-   * @return All Facts satisfying search criteria wrapped inside a result container
-   */
-  public SearchResult<FactDocument> retrieveExistingFacts(FactExistenceSearchCriteria criteria) {
-    if (criteria == null) return SearchResult.<FactDocument>builder().build();
-
-    SearchResponse response;
-    try (TimerContext ignored = TimerContext.timerMillis(existenceMonitor::invoked)) {
-      response = clientFactory.getClient().search(buildFactExistenceSearchRequest(criteria), RequestOptions.DEFAULT);
-    } catch (ElasticsearchException | IOException ex) {
-      throw logAndExit(ex, "Could not perform request to search for existing Facts.");
-    }
-
-    if (response.status() != RestStatus.OK) {
-      LOGGER.warning("Could not search for existing Facts (response code %s).", response.status());
-      return SearchResult.<FactDocument>builder().build();
-    }
-
-    List<FactDocument> result = retrieveFactDocuments(response);
-
-    LOGGER.debug("Successfully retrieved %d existing Facts.", result.size());
-    return SearchResult.<FactDocument>builder()
-            .setCount((int) response.getHits().getTotalHits().value)
-            .setValues(result)
-            .build();
   }
 
   /**
@@ -477,15 +434,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     });
   }
 
-  private SearchRequest buildFactExistenceSearchRequest(FactExistenceSearchCriteria criteria) {
-    SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
-            .size(MAX_RESULT_WINDOW) // Always return all matching documents, but usually this should be zero or one.
-            .query(buildFactExistenceQuery(criteria));
-    return new SearchRequest()
-            .indices(INDEX_NAME)
-            .source(sourceBuilder);
-  }
-
   private SearchRequest buildFactsSearchRequest(FactSearchCriteria criteria) {
     SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
             .size(searchScrollSize)
@@ -516,48 +464,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     return new SearchRequest()
             .indices(INDEX_NAME)
             .source(sourceBuilder);
-  }
-
-  private QueryBuilder buildFactExistenceQuery(FactExistenceSearchCriteria criteria) {
-    // Define all filters on direct Fact fields. Every field from the criteria must match.
-    BoolQueryBuilder rootQuery = boolQuery()
-            .filter(termQuery("typeID", toString(criteria.getFactTypeID())))
-            .filter(termQuery("sourceID", toString(criteria.getOriginID())))
-            .filter(termQuery("organizationID", toString(criteria.getOrganizationID())))
-            .filter(termQuery("accessMode", toString(criteria.getAccessMode())))
-            // Consider 'confidence' to be equal inside a given interval.
-            .filter(rangeQuery("confidence")
-                    .gt(criteria.getConfidence() - CONFIDENCE_EQUALITY_INTERVAL / 2)
-                    .lt(criteria.getConfidence() + CONFIDENCE_EQUALITY_INTERVAL / 2));
-
-    if (criteria.getFactValue() != null) {
-      // Fact values must match exactly if given.
-      rootQuery.filter(termQuery("value", criteria.getFactValue()));
-    } else {
-      // If 'value' isn't given make sure that it's also not set on any existing Fact.
-      rootQuery.mustNot(existsQuery("value"));
-    }
-
-    // This clause is required when searching for existing meta Facts.
-    if (criteria.getInReferenceTo() != null) {
-      rootQuery.filter(termQuery("inReferenceTo", toString(criteria.getInReferenceTo())));
-    }
-
-    // These clauses are required when searching for regular Facts.
-    if (!CollectionUtils.isEmpty(criteria.getObjects())) {
-      // The number of bound Objects must match (stored as a de-normalized field).
-      rootQuery.filter(termQuery("objectCount", criteria.getObjects().size()));
-
-      // Define filters on nested Objects. Also all Objects must match.
-      for (FactExistenceSearchCriteria.ObjectExistence object : criteria.getObjects()) {
-        BoolQueryBuilder objectsQuery = boolQuery()
-                .filter(termQuery("objects.id", toString(object.getObjectID())))
-                .filter(termQuery("objects.direction", toString(object.getDirection())));
-        rootQuery.filter(nestedQuery("objects", objectsQuery, ScoreMode.None));
-      }
-    }
-
-    return rootQuery;
   }
 
   private QueryBuilder buildFactsQuery(FactSearchCriteria criteria) {

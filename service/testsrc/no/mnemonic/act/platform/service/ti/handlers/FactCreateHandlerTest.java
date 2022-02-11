@@ -12,7 +12,6 @@ import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
-import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
@@ -379,44 +378,7 @@ public class FactCreateHandlerTest {
   }
 
   @Test
-  public void testRefreshExistingFactWithElasticsearch() {
-    FactRecord factToSave = new FactRecord()
-            .setId(UUID.randomUUID())
-            .setAccessMode(FactRecord.AccessMode.Public)
-            .setOrganizationID(UUID.randomUUID());
-    mockSaveFact();
-
-    // Mock fetching of existing Fact.
-    FactRecord existingFact = new FactRecord()
-            .setId(UUID.randomUUID())
-            .setAccessMode(FactRecord.AccessMode.RoleBased)
-            .setOrganizationID(UUID.randomUUID());
-    when(objectFactDao.retrieveExistingFacts(factToSave))
-            .thenReturn(ResultContainer.<FactRecord>builder().setValues(list(existingFact).iterator()).build());
-    when(securityContext.hasReadPermission(existingFact)).thenReturn(true);
-
-    // Mock stuff needed for refreshing Fact.
-    when(objectFactDao.refreshFact(existingFact)).thenReturn(existingFact);
-
-    List<UUID> subjectIds = list(UUID.randomUUID());
-    handler.saveFact(factToSave, "some comment", subjectIds);
-
-    verify(objectFactDao).refreshFact(argThat(fact -> {
-      assertEquals(existingFact, fact);
-      assertEquals(set("some comment"), set(fact.getComments(), FactCommentRecord::getComment));
-      assertEquals(set(subjectIds), set(fact.getAcl(), FactAclEntryRecord::getSubjectID));
-      return true;
-    }));
-
-    verify(objectFactDao, never()).storeFact(any());
-    verify(objectFactDao).retrieveExistingFacts(factToSave);
-    verify(factResponseConverter).apply(same(existingFact));
-  }
-
-  @Test
-  public void testRefreshExistingFactWithCassandra() {
-    handler.setUseCassandraForFactExistenceCheck(true);
-
+  public void testRefreshExistingFact() {
     FactRecord factToSave = new FactRecord()
             .setId(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.Public)
@@ -450,15 +412,6 @@ public class FactCreateHandlerTest {
   }
 
   private void mockSaveFact() {
-    // Mocking
-    mockFactConverter();
-    // Mock fetching of existing Fact.
-    when(objectFactDao.retrieveExistingFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
-    // Mock stuff needed for saving Fact.
-    when(objectFactDao.storeFact(any())).thenAnswer(i -> i.getArgument(0));
-  }
-
-  private void mockFactConverter() {
     // Mock FactConverter needed for registering TriggerEvent.
     when(factResponseConverter.apply(any())).then(i -> {
       FactRecord record = i.getArgument(0);
@@ -468,5 +421,9 @@ public class FactCreateHandlerTest {
               .setOrganization(Organization.builder().setId(record.getOrganizationID()).build().toInfo())
               .build();
     });
+    // Mock fetching of existing Fact.
+    when(objectFactDao.retrieveExistingFact(any())).thenReturn(Optional.empty());
+    // Mock stuff needed for saving Fact.
+    when(objectFactDao.storeFact(any())).thenAnswer(i -> i.getArgument(0));
   }
 }
