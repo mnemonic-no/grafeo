@@ -161,4 +161,14 @@ public interface ObjectFactDao {
   default FactCommentRecord storeFactComment(FactRecord fact, FactCommentRecord comment) {
     throw new UnsupportedOperationException();
   }
+
+  /**
+   * Retrieve meta Facts bound to another Fact (identified by its UUID).
+   *
+   * @param id UUID of Fact
+   * @return Container holding the resolved meta Facts
+   */
+  default ResultContainer<FactRecord> retrieveMetaFacts(UUID id) {
+    throw new UnsupportedOperationException();
+  }
 }

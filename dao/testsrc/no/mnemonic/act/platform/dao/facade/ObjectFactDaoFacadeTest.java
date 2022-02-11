@@ -619,6 +619,38 @@ public class ObjectFactDaoFacadeTest {
     verify(factCommentRecordConverter).toEntity(argThat(r -> r.getId() != null), eq(fact.getId()));
   }
 
+  @Test
+  public void testRetrieveMetaFactsNoResults() {
+    UUID factID = UUID.randomUUID();
+    when(factManager.fetchMetaFactBindings(factID)).thenReturn(ListUtils.list());
+
+    ResultContainer<FactRecord> results = dao.retrieveMetaFacts(factID);
+    assertEquals(0, results.getCount());
+    assertFalse(results.hasNext());
+
+    verify(factManager).fetchMetaFactBindings(factID);
+  }
+
+  @Test
+  public void testRetrieveMetaFactsWithResults() {
+    UUID factID = UUID.randomUUID();
+    UUID metaFactID = UUID.randomUUID();
+    MetaFactBindingEntity binding = new MetaFactBindingEntity()
+            .setFactID(factID)
+            .setMetaFactID(metaFactID);
+    FactRecord metaFact = new FactRecord().setId(metaFactID);
+    when(factManager.fetchMetaFactBindings(factID)).thenReturn(ListUtils.list(binding));
+    when(factResolver.getFact(metaFactID)).thenReturn(metaFact);
+
+    ResultContainer<FactRecord> results = dao.retrieveMetaFacts(factID);
+    assertEquals(1, results.getCount());
+    assertSame(metaFact, results.next());
+
+    verify(factManager).fetchMetaFactBindings(factID);
+    verify(factResolver).getFact(metaFactID);
+  }
+
+
   private void mockReindexingOfFact(FactRecord fact) {
     // Mock methods required for reindexing.
     when(factResolver.getFact(fact.getId())).thenReturn(new FactRecord());

@@ -1,21 +1,20 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
-import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
-import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Handler class computing whether a Fact has been retracted. See {@link #isRetracted(FactRecord)} for the details.
@@ -26,16 +25,16 @@ public class FactRetractionHandler {
   private final Map<UUID, Boolean> retractionCache = new ConcurrentHashMap<>();
 
   private final FactTypeRequestResolver factTypeRequestResolver;
-  private final FactSearchManager factSearchManager;
-  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
+  private final TiSecurityContext securityContext;
+  private final ObjectFactDao objectFactDao;
 
   @Inject
   public FactRetractionHandler(FactTypeRequestResolver factTypeRequestResolver,
-                               FactSearchManager factSearchManager,
-                               AccessControlCriteriaResolver accessControlCriteriaResolver) {
+                               TiSecurityContext securityContext,
+                               ObjectFactDao objectFactDao) {
     this.factTypeRequestResolver = factTypeRequestResolver;
-    this.factSearchManager = factSearchManager;
-    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
+    this.securityContext = securityContext;
+    this.objectFactDao = objectFactDao;
   }
 
   /**
@@ -58,7 +57,7 @@ public class FactRetractionHandler {
     boolean retractedHint = SetUtils.set(fact.getFlags()).contains(FactRecord.Flag.RetractedHint);
 
     // If it's known that the Fact has never been retracted store this information immediately.
-    // This will save a lot of calls to ElasticSearch!
+    // This will save a lot of calls to Cassandra!
     if (!retractedHint) {
       retractionCache.put(fact.getId(), false);
     }
@@ -69,7 +68,7 @@ public class FactRetractionHandler {
   }
 
   private boolean computeRetraction(UUID factID) {
-    List<FactDocument> retractions = fetchRetractions(factID);
+    List<FactRecord> retractions = fetchRetractions(factID);
     if (CollectionUtils.isEmpty(retractions)) {
       // No accessible retractions, thus, the Fact isn't retracted.
       return false;
@@ -79,16 +78,15 @@ public class FactRetractionHandler {
     return !retractions.stream().allMatch(fact -> computeRetraction(fact.getId()));
   }
 
-  private List<FactDocument> fetchRetractions(UUID factID) {
-    // Create criteria to fetch all Retraction Facts for a given Fact. Only return retractions which a user has access
-    // to. No access to retractions means that from the user's perspective the referenced Fact isn't retracted.
-    FactSearchCriteria retractionsCriteria = FactSearchCriteria.builder()
-            .addInReferenceTo(factID)
-            .addFactTypeID(factTypeRequestResolver.resolveRetractionFactType().getId())
-            .setAccessControlCriteria(accessControlCriteriaResolver.get())
-            .build();
-
-    // The number of retractions will be very small (typically one), thus, it's no problem to consume all results at once.
-    return ListUtils.list(factSearchManager.searchFacts(retractionsCriteria));
+  private List<FactRecord> fetchRetractions(UUID factID) {
+    // Fetch all meta Facts for a given Fact and filter out retraction Facts. The number of meta Facts will typically be
+    // very small, thus, it's no problem to consume all results at once. Additionally, only return retractions which a user
+    // has access to. No access to retractions means that from the user's perspective the referenced Fact isn't retracted.
+    UUID retractionFactType = factTypeRequestResolver.resolveRetractionFactType().getId();
+    return objectFactDao.retrieveMetaFacts(factID)
+            .stream()
+            .filter(meta -> Objects.equals(meta.getTypeID(), retractionFactType))
+            .filter(securityContext::hasReadPermission)
+            .collect(Collectors.toList());
   }
 }

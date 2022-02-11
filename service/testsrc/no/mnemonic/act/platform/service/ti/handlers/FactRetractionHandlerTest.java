@@ -1,13 +1,10 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
-import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
-import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
-import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
-import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +14,8 @@ import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -26,24 +24,24 @@ public class FactRetractionHandlerTest {
   @Mock
   private FactTypeRequestResolver factTypeRequestResolver;
   @Mock
-  private FactSearchManager factSearchManager;
+  private TiSecurityContext securityContext;
   @Mock
-  private AccessControlCriteriaResolver accessControlCriteriaResolver;
+  private ObjectFactDao objectFactDao;
 
   private FactRetractionHandler handler;
+
+  private final UUID retractionFactTypeID = UUID.randomUUID();
 
   @Before
   public void setUp() {
     initMocks(this);
 
     // Common mocks used by most tests.
-    when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(UUID.randomUUID()));
-    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .addCurrentUserIdentity(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID())
-            .build());
+    when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(retractionFactTypeID));
+    when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
+    when(objectFactDao.retrieveMetaFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
 
-    handler = new FactRetractionHandler(factTypeRequestResolver, factSearchManager, accessControlCriteriaResolver);
+    handler = new FactRetractionHandler(factTypeRequestResolver, securityContext, objectFactDao);
   }
 
   @Test
@@ -57,46 +55,32 @@ public class FactRetractionHandlerTest {
 
     assertFalse(handler.isRetracted(fact));
 
-    verifyNoMoreInteractions(factSearchManager);
-  }
-
-  @Test
-  public void testIsRetractedPopulatesSearchCriteria() {
-    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
-
-    assertFalse(handler.isRetracted(fact));
-
-    verify(factSearchManager).searchFacts(argThat(criteria -> {
-      assertEquals(set(fact.getId()), criteria.getInReferenceTo());
-      assertFalse(criteria.getFactTypeID().isEmpty());
-      assertNotNull(criteria.getAccessControlCriteria());
-      return true;
-    }));
+    verifyNoMoreInteractions(objectFactDao);
   }
 
   @Test
   public void testIsRetractedWithRetractedHintTrue() {
     FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
-    FactDocument retraction = new FactDocument().setId(UUID.randomUUID());
-    when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction));
+    FactRecord retraction = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction));
 
     assertTrue(handler.isRetracted(fact));
 
-    verify(factSearchManager).searchFacts(inReferenceTo(fact.getId()));
-    verify(factSearchManager).searchFacts(inReferenceTo(retraction.getId()));
-    verifyNoMoreInteractions(factSearchManager);
+    verify(objectFactDao).retrieveMetaFacts(fact.getId());
+    verify(objectFactDao).retrieveMetaFacts(retraction.getId());
+    verifyNoMoreInteractions(objectFactDao);
   }
 
   @Test
   public void testIsRetractedWithRetractedRetraction() {
     FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
-    FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
+    FactRecord retraction1 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+    FactRecord retraction2 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
 
     // fact ---> retraction1 ---> retraction2
     // retraction2 cancels out retraction1, thus, fact in not retracted.
-    when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction1));
-    when(factSearchManager.searchFacts(inReferenceTo(retraction1.getId()))).thenReturn(createSearchResult(retraction2));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction1));
+    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(createResultContainer(retraction2));
 
     assertFalse(handler.isRetracted(fact));
   }
@@ -104,15 +88,15 @@ public class FactRetractionHandlerTest {
   @Test
   public void testIsRetractedWithRetractedRetractionTwoLevels() {
     FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
-    FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction3 = new FactDocument().setId(UUID.randomUUID());
+    FactRecord retraction1 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+    FactRecord retraction2 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+    FactRecord retraction3 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
 
     // fact ---> retraction1 ---> retraction2 ---> retraction3
     // retraction3 cancels out retraction2, thus, fact is retracted because retraction1 holds.
-    when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction1));
-    when(factSearchManager.searchFacts(inReferenceTo(retraction1.getId()))).thenReturn(createSearchResult(retraction2));
-    when(factSearchManager.searchFacts(inReferenceTo(retraction2.getId()))).thenReturn(createSearchResult(retraction3));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction1));
+    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(createResultContainer(retraction2));
+    when(objectFactDao.retrieveMetaFacts(retraction2.getId())).thenReturn(createResultContainer(retraction3));
 
     assertTrue(handler.isRetracted(fact));
   }
@@ -120,17 +104,17 @@ public class FactRetractionHandlerTest {
   @Test
   public void testIsRetractedWithRetractedRetractionComplexTree() {
     FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
-    FactDocument retraction1 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction2 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction3 = new FactDocument().setId(UUID.randomUUID());
-    FactDocument retraction4 = new FactDocument().setId(UUID.randomUUID());
+    FactRecord retraction1 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+    FactRecord retraction2 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+    FactRecord retraction3 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+    FactRecord retraction4 = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
 
     // fact -----------> retraction1 ---> retraction2
     //     |-----------> retraction3
     //     |-----------> retraction4
-    // retraction2 cancels out retraction1, thus, factDocument is retracted because of retraction3/retraction4.
-    when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction1, retraction3, retraction4));
-    when(factSearchManager.searchFacts(inReferenceTo(retraction1.getId()))).thenReturn(createSearchResult(retraction2));
+    // retraction2 cancels out retraction1, thus, fact is retracted because of retraction3/retraction4.
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction1, retraction3, retraction4));
+    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(createResultContainer(retraction2));
 
     assertTrue(handler.isRetracted(fact));
   }
@@ -138,27 +122,50 @@ public class FactRetractionHandlerTest {
   @Test
   public void testIsRetractedCachesResult() {
     FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
-    FactDocument retraction = new FactDocument().setId(UUID.randomUUID());
-    when(factSearchManager.searchFacts(inReferenceTo(fact.getId()))).thenReturn(createSearchResult(retraction));
+    FactRecord retraction = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction));
 
     assertTrue(handler.isRetracted(fact));
 
-    verify(factSearchManager).searchFacts(inReferenceTo(fact.getId()));
-    verify(factSearchManager).searchFacts(inReferenceTo(retraction.getId()));
-    verifyNoMoreInteractions(factSearchManager);
+    verify(objectFactDao).retrieveMetaFacts(fact.getId());
+    verify(objectFactDao).retrieveMetaFacts(retraction.getId());
+    verifyNoMoreInteractions(objectFactDao);
 
     assertTrue(handler.isRetracted(fact));
-    verifyNoMoreInteractions(factSearchManager);
+    verifyNoMoreInteractions(objectFactDao);
   }
 
-  private ScrollingSearchResult<FactDocument> createSearchResult(FactDocument... fact) {
-    return ScrollingSearchResult.<FactDocument>builder()
-            .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_SCROLL_ID", list(fact).iterator(), true))
-            .setCount(list(fact).size())
+  @Test
+  public void testIsRetractedFiltersNonRetractionFacts() {
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
+    FactRecord meta = new FactRecord().setId(UUID.randomUUID()).setTypeID(UUID.randomUUID());
+    FactRecord retraction = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(meta, retraction));
+
+    assertTrue(handler.isRetracted(fact));
+
+    verify(objectFactDao).retrieveMetaFacts(fact.getId());
+    verify(objectFactDao).retrieveMetaFacts(retraction.getId());
+    verifyNoMoreInteractions(objectFactDao);
+  }
+
+  @Test
+  public void testIsRetractedFiltersNonAccessibleFacts() {
+    FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
+    FactRecord retraction = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
+
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction));
+    when(securityContext.hasReadPermission(retraction)).thenReturn(false);
+
+    assertFalse(handler.isRetracted(fact));
+
+    verify(securityContext).hasReadPermission(retraction);
+  }
+
+  private ResultContainer<FactRecord> createResultContainer(FactRecord... fact) {
+    return ResultContainer.<FactRecord>builder()
+            .setValues(list(fact).iterator())
             .build();
-  }
-
-  private FactSearchCriteria inReferenceTo(UUID id) {
-    return argThat(criteria -> criteria != null && criteria.getInReferenceTo() != null && criteria.getInReferenceTo().contains(id));
   }
 }
