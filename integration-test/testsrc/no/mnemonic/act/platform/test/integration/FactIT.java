@@ -6,8 +6,10 @@ import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.triggers.action.TriggerAction;
 import no.mnemonic.services.triggers.action.exceptions.ParameterException;
@@ -102,6 +104,41 @@ public class FactIT extends AbstractIT {
     assertEquals(getIdFromModel(payload1), getIdFromModel(payload2));
     assertEquals(payload1.get("timestamp").textValue(), payload2.get("timestamp").textValue());
     assertTrue(Instant.parse(payload1.get("lastSeenTimestamp").textValue()).isBefore(Instant.parse(payload2.get("lastSeenTimestamp").textValue())));
+  }
+
+  @Test
+  public void testCreateFactTwiceWithExplicitAccess() throws Exception {
+    ObjectTypeEntity objectType = createObjectType();
+    FactTypeEntity factType = createFactType(objectType.getId());
+    OriginEntity origin = createOrigin();
+    CreateFactRequest request = new CreateFactRequest()
+            .setType(factType.getName())
+            .setValue("factValue")
+            .setOrganization(UUID.fromString("00000000-0000-0000-0000-000000000001").toString())
+            .setOrigin(origin.getName())
+            .setConfidence(0.75f)
+            .setAccessMode(AccessMode.Explicit)
+            .setSourceObject(String.format("%s/%s", objectType.getName(), "objectValue"))
+            .setBidirectionalBinding(true);
+
+    // Create the same Fact twice with different users ...
+    Response response1 = request("/v1/fact", 1).post(Entity.json(request));
+    assertEquals(201, response1.getStatus());
+    Response response2 = request("/v1/fact", 3).post(Entity.json(request));
+    assertEquals(201, response2.getStatus());
+
+    // ... and check that the Fact was only refreshed.
+    JsonNode payload1 = getPayload(response1);
+    JsonNode payload2 = getPayload(response2);
+    assertEquals(getIdFromModel(payload1), getIdFromModel(payload2));
+    assertEquals(payload1.get("timestamp").textValue(), payload2.get("timestamp").textValue());
+    assertTrue(Instant.parse(payload1.get("lastSeenTimestamp").textValue()).isBefore(Instant.parse(payload2.get("lastSeenTimestamp").textValue())));
+
+    // Also verify that both users are in the Fact's ACL.
+    assertEquals(
+            SetUtils.set(UUID.fromString("00000000-0000-0000-0000-000000000001"), UUID.fromString("00000000-0000-0000-0000-000000000003")),
+            SetUtils.set(getFactManager().fetchFactAcl(getIdFromModel(payload1)), FactAclEntity::getSubjectID)
+    );
   }
 
   @Test

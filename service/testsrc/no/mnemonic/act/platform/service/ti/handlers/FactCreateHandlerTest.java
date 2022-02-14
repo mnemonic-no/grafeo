@@ -391,7 +391,6 @@ public class FactCreateHandlerTest {
             .setAccessMode(FactRecord.AccessMode.RoleBased)
             .setOrganizationID(UUID.randomUUID());
     when(objectFactDao.retrieveExistingFact(factToSave)).thenReturn(Optional.of(existingFact));
-    when(securityContext.hasReadPermission(existingFact)).thenReturn(true);
 
     // Mock stuff needed for refreshing Fact.
     when(objectFactDao.refreshFact(existingFact)).thenReturn(existingFact);

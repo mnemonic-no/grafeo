@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -68,13 +67,6 @@ public class OriginIT extends AbstractIT {
 
     // ... and check that it's marked as deleted in the database.
     assertTrue(getOriginManager().getOrigin(entity.getId()).getFlags().contains(OriginEntity.Flag.Deleted));
-  }
-
-  private OriginEntity createOrigin() {
-    OriginEntity entity = new OriginEntity()
-            .setId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
-            .setName("origin");
-    return getOriginManager().saveOrigin(entity);
   }
 
 }

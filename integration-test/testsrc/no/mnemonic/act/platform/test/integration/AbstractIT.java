@@ -15,12 +15,12 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.OriginManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.rest.modules.TiClientModule;
 import no.mnemonic.act.platform.rest.modules.TiRestModule;
 import no.mnemonic.act.platform.service.modules.TiServerModule;
 import no.mnemonic.act.platform.service.modules.TiServiceModule;
-import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.commons.container.ComponentContainer;
 import no.mnemonic.commons.container.providers.GuiceBeanProvider;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
@@ -196,13 +196,6 @@ public abstract class AbstractIT {
     assertEquals(expectedIds, set(data.iterator(), this::getIdFromModel));
   }
 
-  void fetchAndAssertNone(String url, ValidatingRequest request) throws Exception {
-    Response response = request(url).post(Entity.json(request));
-    assertEquals(200, response.getStatus());
-    ArrayNode data = (ArrayNode) getPayload(response);
-    assertEquals(0, data.size());
-  }
-
   /* Helpers for Cassandra */
 
   ObjectTypeEntity createObjectType() {
@@ -246,6 +239,13 @@ public abstract class AbstractIT {
     return getFactManager().saveFactType(entity);
   }
 
+  OriginEntity createOrigin() {
+    OriginEntity entity = new OriginEntity()
+            .setId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+            .setName("origin");
+    return getOriginManager().saveOrigin(entity);
+  }
+
   FactRecord createFact() {
     ObjectTypeEntity objectType = createObjectType();
     return createFact(createObject(objectType.getId()), createObject(objectType.getId()));
@@ -262,8 +262,6 @@ public abstract class AbstractIT {
   FactRecord createFact(ObjectRecord source, FactTypeEntity factType, ObjectPreparation<FactRecord> preparation) {
     return createFact(source, createObject(source.getTypeID()), factType, preparation);
   }
-
-
 
   FactRecord createFact(ObjectRecord source, ObjectRecord destination, FactTypeEntity factType, ObjectPreparation<FactRecord> preparation) {
     FactRecord fact = new FactRecord()
@@ -296,21 +294,6 @@ public abstract class AbstractIT {
             .setInReferenceToID(referencedFact.getId());
 
     return getObjectFactDao().storeFact(preparation.prepare(meta));
-  }
-
-  FactRecord retractFact(FactRecord factToRetract) {
-    FactTypeRequestResolver factTypeRequestResolver = new FactTypeRequestResolver(factManager);
-    FactTypeEntity retractFactType = factTypeRequestResolver.resolveRetractionFactType();
-    FactRecord retractionFact = new FactRecord()
-            .setId(UUID.randomUUID())
-            .setTypeID(retractFactType.getId())
-            .setInReferenceToID(factToRetract.getId())
-            .setAccessMode(FactRecord.AccessMode.Public)
-            .setTimestamp(System.currentTimeMillis())
-            .setLastSeenTimestamp(System.currentTimeMillis());
-
-    getObjectFactDao().storeFact(retractionFact);
-    return getObjectFactDao().retractFact(factToRetract);
   }
 
   ObjectRecord createObject() {

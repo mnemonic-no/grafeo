@@ -226,13 +226,13 @@ public class FactCreateHandler {
     // simultaneous requests try to add the same Fact one request will be delayed and will just refresh the Fact
     // added by the other request.
     try (LockProvider.Lock ignored = lockProvider.acquireLock(LOCK_REGION, FactRecordHasher.toHash(fact))) {
-      FactRecord existingFact = resolveExistingFact(fact);
+      Optional<FactRecord> existingFact = objectFactDao.retrieveExistingFact(fact);
 
-      effectiveFact = existingFact != null ? existingFact : fact;
+      effectiveFact = existingFact.orElse(fact);
       effectiveFact = withAcl(effectiveFact, securityContext.getCurrentUserID(), subjectIds);
       effectiveFact = withComment(effectiveFact, comment);
 
-      if (existingFact != null) {
+      if (existingFact.isPresent()) {
         // Refresh existing Fact.
         effectiveFact = objectFactDao.refreshFact(effectiveFact);
       } else {
@@ -258,14 +258,6 @@ public class FactCreateHandler {
       throw new InvalidArgumentException()
               .addValidationError("Fact did not pass validation against FactType.", "fact.not.valid", "value", value);
     }
-  }
-
-  private FactRecord resolveExistingFact(FactRecord newFact) {
-    // Fetch any Fact which is logically the same as the Fact to create,
-    // apply permission check and return existing Fact if accessible.
-    return objectFactDao.retrieveExistingFact(newFact)
-            .filter(securityContext::hasReadPermission)
-            .orElse(null);
   }
 
   private Organization fetchOrganization(String idOrName) throws AuthenticationFailedException, InvalidArgumentException {
