@@ -2,6 +2,43 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [New field in ElasticSearch mapping] - 2022-02-17
+A new field has been added to the ElasticSearch mapping. Execute the following curl command against you ElasticSearch cluster
+(or use Kibana) to update the existing mapping.
+```
+curl -X PUT "localhost:9200/act/_mapping?include_type_name=false" -H 'Content-Type: application/json' -d'
+{
+  "properties": {
+    "id": {
+      "type": "keyword"
+    }
+  }
+}
+'
+```
+
+The previous command only changes the mapping in ElasticSearch. In order to populate the new field for existing data also run the next curl command.
+This will update *all* existing data. Depending on the size of your cluster this may take a while.
+```
+curl -X POST "localhost:9200/act/_update_by_query?conflicts=proceed" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "must_not": {
+        "exists": {
+          "field": "id"
+        }
+      }
+    }
+  },
+  "script": {
+    "source": "ctx._source.id = ctx._id",
+    "lang": "painless"
+  }
+}
+'
+```
+
 ## [New source_object_id and destination_object_id fields on fact table] - 2021-10-11
 Two new fields have been introduced on the `fact` table in Cassandra. The application code is backwards-compatible with
 existing data, however, the `bindings` field on that table is deprecated and will be removed in the future.

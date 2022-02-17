@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.dao.elastic.document;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import no.mnemonic.commons.utilities.ObjectUtils;
@@ -22,7 +21,6 @@ public class FactDocument implements ElasticDocument {
   public static final float DEFAULT_CONFIDENCE = 1.0f;
   public static final float DEFAULT_TRUST = 0.8f;
 
-  @JsonIgnore // 'id' won't be indexed separately, '_id' is used instead.
   private UUID id;
   private UUID typeID;
   private String value;
