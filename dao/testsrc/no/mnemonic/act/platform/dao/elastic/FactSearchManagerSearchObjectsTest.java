@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.assertObjectDocument;
 import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.createObjectDocument;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.assertEquals;
@@ -178,17 +177,17 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
     indexFact(d -> d);
     indexFact(d -> d);
 
-    SearchResult<ObjectDocument> result = getFactSearchManager().searchObjects(createFactSearchCriteria(b -> b.setLimit(2)));
+    SearchResult<UUID> result = getFactSearchManager().searchObjects(createFactSearchCriteria(b -> b.setLimit(2)));
     assertEquals(2, result.getLimit());
     assertEquals(3, result.getCount());
     assertEquals(2, result.getValues().size());
   }
 
   private void testSearchObjects(FactSearchCriteria criteria, ObjectDocument accessibleObject) {
-    SearchResult<ObjectDocument> result = getFactSearchManager().searchObjects(criteria);
+    SearchResult<UUID> result = getFactSearchManager().searchObjects(criteria);
     assertEquals(1, result.getCount());
     assertEquals(1, result.getValues().size());
-    assertObjectDocument(accessibleObject, result.getValues().get(0));
+    assertEquals(accessibleObject.getId(), result.getValues().get(0));
   }
 
 }

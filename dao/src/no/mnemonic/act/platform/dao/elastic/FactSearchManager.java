@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.google.common.collect.Streams;
 import com.google.common.io.CharStreams;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
 import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import no.mnemonic.commons.component.Dependency;
@@ -41,8 +41,6 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.SimpleQueryStringBuilder;
 import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -50,7 +48,6 @@ import org.elasticsearch.search.aggregations.HasAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.Cardinality;
 import org.elasticsearch.search.aggregations.metrics.Max;
-import org.elasticsearch.search.aggregations.metrics.TopHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.xcontent.XContentType;
 
@@ -66,7 +63,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.elasticsearch.common.bytes.BytesReference.toBytes;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 
@@ -80,13 +76,14 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private static final String MAPPINGS_JSON = "mappings.json";
   private static final int MAX_RESULT_WINDOW = 10_000; // Must be the same value as specified in mappings.json.
 
+  private static final String FACTS_COUNT_AGGREGATION_NAME = "FactsCountAggregation";
   private static final String NESTED_OBJECTS_AGGREGATION_NAME = "NestedObjectsAggregation";
   private static final String FILTER_OBJECTS_AGGREGATION_NAME = "FilterObjectsAggregation";
   private static final String OBJECTS_COUNT_AGGREGATION_NAME = "ObjectsCountAggregation";
   private static final String UNIQUE_OBJECTS_AGGREGATION_NAME = "UniqueObjectsAggregation";
-  private static final String UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME = "UniqueObjectsSourceAggregation";
   private static final String REVERSED_FACTS_AGGREGATION_NAME = "ReversedFactsAggregation";
   private static final String UNIQUE_FACT_TYPES_AGGREGATION_NAME = "UniqueFactTypesAggregation";
+  private static final String FACTS_COUNT_PER_TYPE_AGGREGATION_NAME = "FactsCountPerTypeAggregation";
   private static final String MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME = "MaxLastAddedTimestampAggregation";
   private static final String MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME = "MaxLastSeenTimestampAggregation";
 
@@ -94,7 +91,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
   private static final ObjectMapper MAPPER = JsonMapper.builder().build();
   private static final ObjectReader FACT_DOCUMENT_READER = MAPPER.readerFor(FactDocument.class);
-  private static final ObjectReader OBJECT_DOCUMENT_READER = MAPPER.readerFor(ObjectDocument.class);
   private static final ObjectWriter FACT_DOCUMENT_WRITER = MAPPER.writerFor(FactDocument.class);
 
   private final PerformanceMonitor indexMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
@@ -214,8 +210,8 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
    * @param criteria Search criteria to match against Facts
    * @return Facts satisfying search criteria wrapped inside a result container
    */
-  public ScrollingSearchResult<FactDocument> searchFacts(FactSearchCriteria criteria) {
-    if (criteria == null) return ScrollingSearchResult.<FactDocument>builder().build();
+  public ScrollingSearchResult<UUID> searchFacts(FactSearchCriteria criteria) {
+    if (criteria == null) return ScrollingSearchResult.<UUID>builder().build();
 
     SearchResponse response;
     try (TimerContext ignored = TimerContext.timerMillis(factSearchInitialMonitor::invoked)) {
@@ -226,14 +222,16 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
     if (response.status() != RestStatus.OK) {
       LOGGER.warning("Could not search for Facts (response code %s).", response.status());
-      return ScrollingSearchResult.<FactDocument>builder().build();
+      return ScrollingSearchResult.<UUID>builder().build();
     }
 
+    int count = retrieveCountFromAggregations(response.getAggregations(), FACTS_COUNT_AGGREGATION_NAME);
+
     LOGGER.debug("Successfully initiated streaming of search results. Start fetching data.");
-    return ScrollingSearchResult.<FactDocument>builder()
+    return ScrollingSearchResult.<UUID>builder()
             .setInitialBatch(createFactsBatch(response))
             .setFetchNextBatch(this::fetchNextFactsBatch)
-            .setCount((int) response.getHits().getTotalHits().value)
+            .setCount(count)
             .build();
   }
 
@@ -251,8 +249,8 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
    * @param criteria Search criteria to match against Facts and their bound Objects
    * @return Objects satisfying search criteria wrapped inside a result container
    */
-  public SearchResult<ObjectDocument> searchObjects(FactSearchCriteria criteria) {
-    if (criteria == null) return SearchResult.<ObjectDocument>builder().build();
+  public SearchResult<UUID> searchObjects(FactSearchCriteria criteria) {
+    if (criteria == null) return SearchResult.<UUID>builder().build();
 
     SearchResponse response;
     try (TimerContext ignored = TimerContext.timerMillis(objectSearchMonitor::invoked)) {
@@ -263,14 +261,14 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
     if (response.status() != RestStatus.OK) {
       LOGGER.warning("Could not search for Objects (response code %s).", response.status());
-      return SearchResult.<ObjectDocument>builder().setLimit(criteria.getLimit()).build();
+      return SearchResult.<UUID>builder().setLimit(criteria.getLimit()).build();
     }
 
-    int count = retrieveSearchObjectsResultCount(response);
-    List<ObjectDocument> result = retrieveSearchObjectsResultValues(response);
+    int count = retrieveCountFromAggregations(response.getAggregations(), OBJECTS_COUNT_AGGREGATION_NAME);
+    List<UUID> result = retrieveSearchObjectsResultValues(response);
 
     LOGGER.debug("Successfully retrieved %d Objects from a total of %d matching Objects.", result.size(), count);
-    return SearchResult.<ObjectDocument>builder()
+    return SearchResult.<UUID>builder()
             .setLimit(criteria.getLimit())
             .setCount(count)
             .setValues(result)
@@ -377,7 +375,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     LOGGER.info("Successfully created index '%s'.", INDEX_NAME);
   }
 
-  private ScrollingSearchResult.ScrollingBatch<FactDocument> fetchNextFactsBatch(String scrollId) {
+  private ScrollingSearchResult.ScrollingBatch<UUID> fetchNextFactsBatch(String scrollId) {
     SearchResponse response;
     try (TimerContext ignored = TimerContext.timerMillis(factSearchNextMonitor::invoked)) {
       SearchScrollRequest request = new SearchScrollRequest()
@@ -397,8 +395,10 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     return createFactsBatch(response);
   }
 
-  private ScrollingSearchResult.ScrollingBatch<FactDocument> createFactsBatch(SearchResponse response) {
-    List<FactDocument> values = retrieveFactDocuments(response);
+  private ScrollingSearchResult.ScrollingBatch<UUID> createFactsBatch(SearchResponse response) {
+    List<UUID> values = Streams.stream(response.getHits())
+            .map(hit -> UUID.fromString(hit.getId()))
+            .collect(Collectors.toList());
     LOGGER.debug("Successfully retrieved next batch of search results (batch: %d, total: %d).", values.size(), response.getHits().getTotalHits().value);
 
     boolean finished = values.size() < searchScrollSize;
@@ -437,7 +437,10 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private SearchRequest buildFactsSearchRequest(FactSearchCriteria criteria) {
     SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
             .size(searchScrollSize)
-            .query(buildFactsQuery(criteria));
+            .fetchSource(false) // Not interested in the source as only the UUID of the matching document is needed.
+            .query(buildFactsQuery(criteria))
+            // Use an aggregation to calculate the count because with daily indices the search result will contain duplicates.
+            .aggregation(buildFactsCountAggregation());
     return new SearchRequest()
             .indices(INDEX_NAME)
             .scroll(searchScrollExpiration)
@@ -595,6 +598,15 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             );
   }
 
+  private AggregationBuilder buildFactsCountAggregation() {
+    // Calculate the number of unique Facts by id. This will give the 'count' value.
+    // If 'count' is smaller than MAX_RESULT_WINDOW a correct value is expected, thus,
+    // the precision threshold is set to MAX_RESULT_WINDOW. Everything above will be approximate!
+    return cardinality(FACTS_COUNT_AGGREGATION_NAME)
+            .field("id")
+            .precisionThreshold(MAX_RESULT_WINDOW);
+  }
+
   private AggregationBuilder buildObjectsAggregation(FactSearchCriteria criteria) {
     // 1. Map to nested Object documents.
     return nested(NESTED_OBJECTS_AGGREGATION_NAME, "objects")
@@ -612,11 +624,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
                     .subAggregation(terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
                             .field("objects.id")
                             .size(calculateMaximumSize(criteria))
-                            // 5. Map to the unique Object's source. Set size to 1, because all Objects in one
-                            // bucket are the same (ignoring 'direction' which isn't relevant for Object search).
-                            .subAggregation(topHits(UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME)
-                                    .size(1)
-                            )
                     )
             );
   }
@@ -700,16 +707,23 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
                             // 4. Reverse nested aggregation to have access to parent Facts.
                             .subAggregation(reverseNested(REVERSED_FACTS_AGGREGATION_NAME)
                                     // 5. Create one bucket for each FactType. Set 'size' to MAX_RESULT_WINDOW
-                                    // in order to get the statistics for all FactTypes. The returned 'doc_count'
-                                    // will give the number of Facts per FactType.
+                                    // in order to get the statistics for all FactTypes.
                                     .subAggregation(terms(UNIQUE_FACT_TYPES_AGGREGATION_NAME)
                                             .field("typeID")
                                             .size(MAX_RESULT_WINDOW)
-                                            // 6. Calculate the maximum lastAddedTimestamp per FactType.
+                                            // 6. Calculate the number of unique Facts. This will give the number of
+                                            // Facts per FactType. Note that values above MAX_RESULT_WINDOW will be
+                                            // approximate. That is acceptable because this aggregation returns statistics,
+                                            // i.e. the exact numbers are not important.
+                                            .subAggregation(cardinality(FACTS_COUNT_PER_TYPE_AGGREGATION_NAME)
+                                                    .field("id")
+                                                    .precisionThreshold(MAX_RESULT_WINDOW)
+                                            )
+                                            // 7. Calculate the maximum lastAddedTimestamp per FactType.
                                             .subAggregation(max(MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME)
                                                     .field("timestamp")
                                             )
-                                            // 7. Calculate the maximum lastSeenTimestamp per FactType.
+                                            // 8. Calculate the maximum lastSeenTimestamp per FactType.
                                             .subAggregation(max(MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME)
                                                     .field("lastSeenTimestamp")
                                             )
@@ -719,60 +733,35 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             );
   }
 
-  private List<FactDocument> retrieveFactDocuments(SearchResponse response) {
-    List<FactDocument> result = ListUtils.list();
-    for (SearchHit hit : response.getHits()) {
-      FactDocument document = decodeFactDocument(UUID.fromString(hit.getId()), toBytes(hit.getSourceRef()));
-      if (document != null) {
-        result.add(document);
-      }
-    }
-    return result;
-  }
-
-  private int retrieveSearchObjectsResultCount(SearchResponse response) {
-    Aggregation objectsCountAggregation = resolveChildAggregation(response.getAggregations(), OBJECTS_COUNT_AGGREGATION_NAME);
-    if (!(objectsCountAggregation instanceof Cardinality)) {
-      LOGGER.warning("Could not retrieve result count when searching for Objects.");
+  private int retrieveCountFromAggregations(Aggregations aggregations, String aggregationName) {
+    Aggregation countAggregation = resolveChildAggregation(aggregations, aggregationName);
+    if (!(countAggregation instanceof Cardinality)) {
+      LOGGER.warning("Could not retrieve count for aggregation %s.", aggregationName);
       return -1;
     }
 
-    // Retrieve Object count from the cardinality aggregation.
-    return (int) Cardinality.class.cast(objectsCountAggregation).getValue();
+    // Retrieve count from the cardinality aggregation.
+    return (int) Cardinality.class.cast(countAggregation).getValue();
   }
 
-  private List<ObjectDocument> retrieveSearchObjectsResultValues(SearchResponse response) {
-    List<ObjectDocument> result = ListUtils.list();
-
+  private List<UUID> retrieveSearchObjectsResultValues(SearchResponse response) {
     Aggregation uniqueObjectsAggregation = resolveChildAggregation(response.getAggregations(), UNIQUE_OBJECTS_AGGREGATION_NAME);
     if (!(uniqueObjectsAggregation instanceof Terms)) {
       LOGGER.warning("Could not retrieve result values when searching for Objects.");
-      return result;
+      return ListUtils.list();
     }
 
     List<? extends Terms.Bucket> buckets = Terms.class.cast(uniqueObjectsAggregation).getBuckets();
     if (CollectionUtils.isEmpty(buckets)) {
-      // No buckets means no results.
-      return result;
+      // No buckets mean no results.
+      return ListUtils.list();
     }
 
-    // Each bucket contains one unique Object, where the TopHits aggregation provides the document source.
-    for (Terms.Bucket bucket : buckets) {
-      Aggregation uniqueObjectsSourceAggregation = bucket.getAggregations().get(UNIQUE_OBJECTS_SOURCE_AGGREGATION_NAME);
-      if (!(uniqueObjectsSourceAggregation instanceof TopHits)) continue;
-
-      // Each bucket should contain only one hit with one unique Object.
-      SearchHits hits = TopHits.class.cast(uniqueObjectsSourceAggregation).getHits();
-      if (hits.getHits().length < 1) continue;
-
-      // Retrieve Object document from provided search hit.
-      ObjectDocument document = decodeObjectDocument(toBytes(hits.getAt(0).getSourceRef()));
-      if (document != null) {
-        result.add(document);
-      }
-    }
-
-    return result;
+    // Each bucket contains one unique Object where the key is the Object's ID.
+    return buckets.stream()
+            .map(Terms.Bucket::getKey)
+            .map(key -> UUID.fromString(key.toString()))
+            .collect(Collectors.toList());
   }
 
   private ObjectStatisticsContainer retrieveObjectStatisticsResult(SearchResponse response) {
@@ -804,7 +793,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
       // ... and add the statistics for each FactType to the result.
       for (Terms.Bucket factTypeBucket : uniqueFactTypeBuckets) {
         UUID factTypeID = UUID.fromString(factTypeBucket.getKeyAsString());
-        int factCount = (int) factTypeBucket.getDocCount();
+        int factCount = retrieveCountFromAggregations(factTypeBucket.getAggregations(), FACTS_COUNT_PER_TYPE_AGGREGATION_NAME);
         long lastAddedTimestamp = retrieveMaxTimestamp(factTypeBucket, MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME);
         long lastSeenTimestamp = retrieveMaxTimestamp(factTypeBucket, MAX_LAST_SEEN_TIMESTAMP_AGGREGATION_NAME);
         resultBuilder.addStatistic(objectID, new ObjectStatisticsContainer.FactStatistic(factTypeID, factCount, lastAddedTimestamp, lastSeenTimestamp));
@@ -852,15 +841,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
       return fact.setId(factID);
     } catch (IOException ex) {
       LOGGER.warning(ex, "Could not deserialize Fact with id = %s. Source document not stored?", factID);
-      return null;
-    }
-  }
-
-  private ObjectDocument decodeObjectDocument(byte[] source) {
-    try {
-      return OBJECT_DOCUMENT_READER.readValue(source);
-    } catch (IOException ex) {
-      LOGGER.warning(ex, "Could not deserialize Object. Source of nested document not returned?");
       return null;
     }
   }

@@ -12,7 +12,6 @@ import org.junit.Test;
 import java.util.List;
 import java.util.UUID;
 
-import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.assertFactDocument;
 import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.createObjectDocument;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.assertEquals;
@@ -496,19 +495,19 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     indexFact(d -> d);
     indexFact(d -> d);
 
-    ScrollingSearchResult<FactDocument> result = getFactSearchManager().searchFacts(createFactSearchCriteria(b -> b));
+    ScrollingSearchResult<UUID> result = getFactSearchManager().searchFacts(createFactSearchCriteria(b -> b));
     assertEquals(3, result.getCount());
     assertEquals(3, ListUtils.list(result).size());
   }
 
   private void testSearchFacts(FactSearchCriteria criteria, FactDocument accessibleFact) {
-    List<FactDocument> result = ListUtils.list(getFactSearchManager().searchFacts(criteria));
+    List<UUID> result = ListUtils.list(getFactSearchManager().searchFacts(criteria));
     assertEquals(1, result.size());
-    assertFactDocument(accessibleFact, result.get(0));
+    assertEquals(accessibleFact.getId(), result.get(0));
   }
 
   private void testSearchFacts(FactSearchCriteria criteria, int numberOfMatches) {
-    List<FactDocument> result = ListUtils.list(getFactSearchManager().searchFacts(criteria));
+    List<UUID> result = ListUtils.list(getFactSearchManager().searchFacts(criteria));
     assertEquals(numberOfMatches, result.size());
   }
 

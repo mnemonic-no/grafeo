@@ -1,10 +1,8 @@
 package no.mnemonic.act.platform.dao.elastic.result;
 
-import no.mnemonic.act.platform.dao.elastic.document.ElasticDocument;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -13,12 +11,14 @@ import java.util.function.Function;
  *
  * @param <T> Type of result values
  */
-public class ScrollingSearchResult<T extends ElasticDocument> implements Iterator<T> {
+public class ScrollingSearchResult<T> implements Iterator<T> {
 
+  private final Set<T> seenElements = new HashSet<>();
   private final Function<String, ScrollingBatch<T>> fetchNextBatch;
   private final int count;
 
   private ScrollingBatch<T> currentBatch;
+  private T nextElement;
 
   private ScrollingSearchResult(ScrollingBatch<T> initialBatch, Function<String, ScrollingBatch<T>> fetchNextBatch, int count) {
     this.currentBatch = ObjectUtils.notNull(initialBatch, "'initialBatch' cannot be null!");
@@ -28,17 +28,41 @@ public class ScrollingSearchResult<T extends ElasticDocument> implements Iterato
 
   @Override
   public boolean hasNext() {
-    if (!currentBatch.hasNext() && !currentBatch.isFinished()) {
-      // If the current batch has been consumed completely and there's more data available, fetch the next batch.
+    // Fetch next element while there's more data available (either in the current batch or the next one).
+    while (true) {
+      nextElement = getNextElement();
+      // Found the next element in the current batch.
+      if (nextElement != null) return true;
+
+      // No more data and no more batches available, i.e. reached the end of the last batch.
+      if (currentBatch.isFinished()) return false;
+
+      // The current batch has no more data but there are more batches available, thus, proceed to the next batch.
       currentBatch = ObjectUtils.notNull(fetchNextBatch.apply(currentBatch.getScrollId()), "'currentBatch' cannot be null!");
     }
-
-    return currentBatch.hasNext();
   }
 
   @Override
   public T next() {
-    return currentBatch.next();
+    if (nextElement == null) throw new NoSuchElementException("No more search results are available.");
+
+    T next = nextElement;
+    nextElement = null;
+    return next;
+  }
+
+  private T getNextElement() {
+    while (currentBatch.hasNext()) {
+      T next = currentBatch.next();
+      if (!seenElements.contains(next)) {
+        // Only return elements which have not been seen before, i.e. duplicates will be skipped.
+        seenElements.add(next);
+        return next;
+      }
+    }
+
+    // No more elements available in the current batch.
+    return null;
   }
 
   /**
@@ -56,7 +80,7 @@ public class ScrollingSearchResult<T extends ElasticDocument> implements Iterato
    * @param <T> Type of result values
    * @return Empty result batch
    */
-  public static <T extends ElasticDocument> ScrollingBatch<T> emptyBatch() {
+  public static <T> ScrollingBatch<T> emptyBatch() {
     return new ScrollingBatch<>("EMPTY_SCROLLING_BATCH", Collections.emptyIterator(), true);
   }
 
@@ -66,7 +90,7 @@ public class ScrollingSearchResult<T extends ElasticDocument> implements Iterato
    * @param <T> Type of result values
    * @return New builder
    */
-  public static <T extends ElasticDocument> Builder<T> builder() {
+  public static <T> Builder<T> builder() {
     return new Builder<>();
   }
 
@@ -75,7 +99,7 @@ public class ScrollingSearchResult<T extends ElasticDocument> implements Iterato
    *
    * @param <T> Type of result values
    */
-  public static class Builder<T extends ElasticDocument> {
+  public static class Builder<T> {
     private ScrollingBatch<T> initialBatch = emptyBatch();
     private Function<String, ScrollingBatch<T>> fetchNextBatch = scrollId -> emptyBatch();
     private int count;
@@ -133,7 +157,7 @@ public class ScrollingSearchResult<T extends ElasticDocument> implements Iterato
    *
    * @param <T> Type of result values
    */
-  public static class ScrollingBatch<T extends ElasticDocument> implements Iterator<T> {
+  public static class ScrollingBatch<T> implements Iterator<T> {
     private final String scrollId;
     private final Iterator<T> values;
     private final boolean finished;

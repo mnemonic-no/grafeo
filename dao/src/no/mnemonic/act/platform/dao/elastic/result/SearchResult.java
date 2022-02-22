@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.dao.elastic.result;
 
-import no.mnemonic.act.platform.dao.elastic.document.ElasticDocument;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
@@ -12,7 +11,7 @@ import java.util.List;
  *
  * @param <T> Type of result values
  */
-public class SearchResult<T extends ElasticDocument> {
+public class SearchResult<T> {
 
   private final int limit;
   private final int count;
@@ -51,11 +50,11 @@ public class SearchResult<T extends ElasticDocument> {
     return values;
   }
 
-  public static <T extends ElasticDocument> Builder<T> builder() {
+  public static <T> Builder<T> builder() {
     return new Builder<>();
   }
 
-  public static class Builder<T extends ElasticDocument> {
+  public static class Builder<T> {
     private int limit;
     private int count;
     private List<T> values;

@@ -14,8 +14,6 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
-import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
 import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverter;
@@ -105,7 +103,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   @Override
   public ResultContainer<ObjectRecord> searchObjects(FactSearchCriteria criteria) {
     // Search for Objects in ElasticSearch.
-    SearchResult<ObjectDocument> searchResult = factSearchManager.searchObjects(criteria);
+    SearchResult<UUID> searchResult = factSearchManager.searchObjects(criteria);
     if (searchResult.getCount() <= 0) {
       // Return immediately if the search didn't yield any results.
       return ResultContainer.<ObjectRecord>builder().build();
@@ -114,7 +112,6 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     // Fetch Objects from Cassandra (or cache).
     Iterator<ObjectRecord> resultsIterator = searchResult.getValues()
             .stream()
-            .map(ObjectDocument::getId)
             .map(objectResolver::getObject)
             .filter(Objects::nonNull)
             .iterator();
@@ -199,13 +196,22 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   @Override
   public ResultContainer<FactRecord> searchFacts(FactSearchCriteria criteria) {
     // Search for Facts in ElasticSearch.
-    ScrollingSearchResult<FactDocument> searchResult = factSearchManager.searchFacts(criteria);
+    ScrollingSearchResult<UUID> searchResult = factSearchManager.searchFacts(criteria);
     if (searchResult.getCount() <= 0) {
       // Return immediately if the search didn't yield any results.
       return ResultContainer.<FactRecord>builder().build();
     }
 
-    return createResultContainer(searchResult, searchResult.getCount());
+    // Fetch Facts from Cassandra (or cache).
+    Iterator<FactRecord> resultsIterator = Streams.stream(searchResult)
+            .map(factResolver::getFact)
+            .filter(Objects::nonNull)
+            .iterator();
+
+    return ResultContainer.<FactRecord>builder()
+            .setCount(searchResult.getCount())
+            .setValues(resultsIterator)
+            .build();
   }
 
   @Override
@@ -379,20 +385,6 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     dcReplicationConsumer.accept(record);
     // Return up-to-date record.
     return record;
-  }
-
-  private ResultContainer<FactRecord> createResultContainer(Iterator<FactDocument> results, int count) {
-    // Fetch Facts from Cassandra (or cache).
-    Iterator<FactRecord> resultsIterator = Streams.stream(results)
-            .map(FactDocument::getId)
-            .map(factResolver::getFact)
-            .filter(Objects::nonNull)
-            .iterator();
-
-    return ResultContainer.<FactRecord>builder()
-            .setCount(count)
-            .setValues(resultsIterator)
-            .build();
   }
 
   private interface FactEntityUpdater {

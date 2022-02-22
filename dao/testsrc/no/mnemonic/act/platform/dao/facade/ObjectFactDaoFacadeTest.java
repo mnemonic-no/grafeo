@@ -15,7 +15,6 @@ import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
-import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
 import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverter;
@@ -153,7 +152,7 @@ public class ObjectFactDaoFacadeTest {
   @Test
   public void testSearchObjectsWithoutSearchResult() {
     FactSearchCriteria criteria = createFactSearchCriteria();
-    when(factSearchManager.searchObjects(criteria)).thenReturn(SearchResult.<ObjectDocument>builder().build());
+    when(factSearchManager.searchObjects(criteria)).thenReturn(SearchResult.<UUID>builder().build());
 
     ResultContainer<ObjectRecord> container = dao.searchObjects(criteria);
     assertEquals(0, container.getCount());
@@ -165,12 +164,11 @@ public class ObjectFactDaoFacadeTest {
   @Test
   public void testSearchObjectsWithSearchResult() {
     UUID id = UUID.randomUUID();
-    ObjectDocument document = new ObjectDocument().setId(id);
     ObjectRecord record = new ObjectRecord().setId(id);
 
     FactSearchCriteria criteria = createFactSearchCriteria();
     when(factSearchManager.searchObjects(criteria))
-            .thenReturn(SearchResult.<ObjectDocument>builder().setCount(1).addValue(document).build());
+            .thenReturn(SearchResult.<UUID>builder().setCount(1).addValue(id).build());
     when(objectResolver.getObject(id)).thenReturn(record);
 
     ResultContainer<ObjectRecord> container = dao.searchObjects(criteria);
@@ -517,7 +515,7 @@ public class ObjectFactDaoFacadeTest {
   @Test
   public void testSearchFactsWithoutSearchResult() {
     FactSearchCriteria criteria = createFactSearchCriteria();
-    when(factSearchManager.searchFacts(criteria)).thenReturn(ScrollingSearchResult.<FactDocument>builder().build());
+    when(factSearchManager.searchFacts(criteria)).thenReturn(ScrollingSearchResult.<UUID>builder().build());
 
     ResultContainer<FactRecord> container = dao.searchFacts(criteria);
     assertEquals(0, container.getCount());
@@ -529,13 +527,12 @@ public class ObjectFactDaoFacadeTest {
   @Test
   public void testSearchFactsWithSearchResult() {
     UUID id = UUID.randomUUID();
-    FactDocument document = new FactDocument().setId(id);
     FactRecord record = new FactRecord().setId(id);
     FactSearchCriteria criteria = createFactSearchCriteria();
 
-    when(factSearchManager.searchFacts(criteria)).thenReturn(ScrollingSearchResult.<FactDocument>builder()
+    when(factSearchManager.searchFacts(criteria)).thenReturn(ScrollingSearchResult.<UUID>builder()
             .setInitialBatch(new ScrollingSearchResult.ScrollingBatch<>("TEST_SCROLL_ID",
-                    ListUtils.list(document).iterator(), true))
+                    ListUtils.list(id).iterator(), true))
             .setCount(1)
             .build());
     when(factResolver.getFact(id)).thenReturn(record);
