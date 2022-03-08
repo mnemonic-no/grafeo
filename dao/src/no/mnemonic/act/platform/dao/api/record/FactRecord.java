@@ -31,6 +31,7 @@ public class FactRecord {
   private UUID organizationID;
   private UUID originID;
   private UUID addedByID;
+  private UUID lastSeenByID;
   private AccessMode accessMode;
   private float confidence;
   private float trust;
@@ -103,6 +104,15 @@ public class FactRecord {
 
   public FactRecord setAddedByID(UUID addedByID) {
     this.addedByID = addedByID;
+    return this;
+  }
+
+  public UUID getLastSeenByID() {
+    return lastSeenByID;
+  }
+
+  public FactRecord setLastSeenByID(UUID lastSeenByID) {
+    this.lastSeenByID = lastSeenByID;
     return this;
   }
 

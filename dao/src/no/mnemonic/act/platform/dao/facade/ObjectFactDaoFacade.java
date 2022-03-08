@@ -26,7 +26,6 @@ import no.mnemonic.act.platform.dao.facade.resolvers.CachedObjectResolver;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 
 import javax.inject.Inject;
-import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -45,8 +44,6 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   private final CachedObjectResolver objectResolver;
   private final CachedFactResolver factResolver;
   private final Consumer<FactRecord> dcReplicationConsumer;
-
-  private Clock clock = Clock.systemUTC();
 
   @Inject
   public ObjectFactDaoFacade(ObjectManager objectManager,
@@ -143,6 +140,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     saveFactObjectBindings(entity);
     saveMetaFactBindings(entity);
     saveFactByTimestamp(entity);
+    saveFactRefreshLog(record);
 
     // Save all ACL entries and comments in Cassandra.
     saveAclEntries(record);
@@ -160,7 +158,13 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   public FactRecord refreshFact(FactRecord record) {
     if (record == null) return null;
 
-    updateAndSaveFact(record, entity -> entity.setLastSeenTimestamp(clock.millis()));
+    updateAndSaveFact(record, entity -> entity
+            .setLastSeenTimestamp(record.getLastSeenTimestamp())
+            .setLastSeenByID(record.getLastSeenByID())
+    );
+
+    // Save a new refresh log entry everytime a Fact is refreshed.
+    saveFactRefreshLog(record);
 
     // Save new ACL entries and comments in Cassandra.
     saveAclEntries(record);
@@ -302,6 +306,14 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     );
   }
 
+  private void saveFactRefreshLog(FactRecord fact) {
+    factManager.saveFactRefreshLogEntry(new FactRefreshLogEntity()
+            .setFactID(fact.getId())
+            .setRefreshTimestamp(fact.getLastSeenTimestamp())
+            .setRefreshedByID(fact.getLastSeenByID())
+    );
+  }
+
   private void saveAclEntries(FactRecord fact) {
     if (CollectionUtils.isEmpty(fact.getAcl())) return;
 
@@ -389,12 +401,5 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
 
   private interface FactEntityUpdater {
     void update(FactEntity entity);
-  }
-
-  /* Setters used for unit testing */
-
-  ObjectFactDaoFacade withClock(Clock clock) {
-    this.clock = clock;
-    return this;
   }
 }

@@ -50,6 +50,7 @@ public class FactEntityToDocumentConverterTest {
             .setOrganizationID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
+            .setLastSeenByID(UUID.randomUUID())
             .setAccessMode(AccessMode.Explicit)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -65,6 +66,7 @@ public class FactEntityToDocumentConverterTest {
     assertEquals(entity.getOrganizationID(), document.getOrganizationID());
     assertEquals(entity.getOriginID(), document.getOriginID());
     assertEquals(entity.getAddedByID(), document.getAddedByID());
+    assertEquals(entity.getLastSeenByID(), document.getLastSeenByID());
     assertEquals(entity.getAccessMode().name(), document.getAccessMode().name());
     assertEquals(entity.getConfidence(), document.getConfidence(), 0.0f);
     assertEquals(entity.getTrust(), document.getTrust(), 0.0f);

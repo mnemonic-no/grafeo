@@ -463,6 +463,45 @@ public class FactManagerTest extends AbstractManagerTest {
     getFactManager().saveFactExistence(entity);
   }
 
+  @Test
+  public void testSaveAndFetchFactRefreshLog() {
+    FactEntity fact = createAndSaveFact();
+    FactRefreshLogEntity entry = createAndSaveFactRefreshLogEntry(fact.getId());
+    List<FactRefreshLogEntity> log = getFactManager().fetchFactRefreshLog(fact.getId());
+
+    assertEquals(1, log.size());
+    assertFactRefreshLogEntry(entry, log.get(0));
+  }
+
+  @Test
+  public void testFetchFactRefreshLogWithNonExistingFact() {
+    assertEquals(0, getFactManager().fetchFactRefreshLog(null).size());
+    assertEquals(0, getFactManager().fetchFactRefreshLog(UUID.randomUUID()).size());
+  }
+
+  @Test
+  public void testSaveFactRefreshLogEntryReturnsSameEntity() {
+    FactRefreshLogEntity entity = createFactRefreshLogEntry(createAndSaveFact().getId());
+    assertSame(entity, getFactManager().saveFactRefreshLogEntry(entity));
+  }
+
+  @Test
+  public void testSaveFactRefreshLogEntryReturnsNullOnNullInput() {
+    assertNull(getFactManager().saveFactRefreshLogEntry(null));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testSaveFactRefreshLogEntryWithNonExistingFactThrowsException() {
+    getFactManager().saveFactRefreshLogEntry(createAndSaveFactRefreshLogEntry(UUID.randomUUID()));
+  }
+
+  @Test(expected = ImmutableViolationException.class)
+  public void testSaveFactRefreshLogEntryTwiceThrowsException() {
+    FactRefreshLogEntity entity = createFactRefreshLogEntry(createAndSaveFact().getId());
+    getFactManager().saveFactRefreshLogEntry(entity);
+    getFactManager().saveFactRefreshLogEntry(entity);
+  }
+
   private FactTypeEntity createFactType() {
     return createFactType("factType");
   }
@@ -501,6 +540,7 @@ public class FactManagerTest extends AbstractManagerTest {
             .setOrganizationID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
+            .setLastSeenByID(UUID.randomUUID())
             .setAccessMode(AccessMode.Public)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -551,6 +591,13 @@ public class FactManagerTest extends AbstractManagerTest {
             .setFactID(factID);
   }
 
+  private FactRefreshLogEntity createFactRefreshLogEntry(UUID factID) {
+    return new FactRefreshLogEntity()
+            .setFactID(factID)
+            .setRefreshTimestamp(1609504200000L)
+            .setRefreshedByID(UUID.randomUUID());
+  }
+
   private FactTypeEntity createAndSaveFactType() {
     return createAndSaveFactTypes(1).get(0);
   }
@@ -598,6 +645,10 @@ public class FactManagerTest extends AbstractManagerTest {
     return getFactManager().saveMetaFactBinding(createMetaFactBinding(factID));
   }
 
+  private FactRefreshLogEntity createAndSaveFactRefreshLogEntry(UUID factID) {
+    return getFactManager().saveFactRefreshLogEntry(createFactRefreshLogEntry(factID));
+  }
+
   private void assertFactType(FactTypeEntity expected, FactTypeEntity actual) {
     assertEquals(expected.getId(), actual.getId());
     assertEquals(expected.getNamespaceID(), actual.getNamespaceID());
@@ -623,6 +674,7 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getOrganizationID(), actual.getOrganizationID());
     assertEquals(expected.getOriginID(), actual.getOriginID());
     assertEquals(expected.getAddedByID(), actual.getAddedByID());
+    assertEquals(expected.getLastSeenByID(), actual.getLastSeenByID());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());
     assertEquals(expected.getConfidence(), actual.getConfidence(), 0);
     assertEquals(expected.getTrust(), actual.getTrust(), 0);
@@ -653,6 +705,12 @@ public class FactManagerTest extends AbstractManagerTest {
   private void assertMetaFactBinding(MetaFactBindingEntity expected, MetaFactBindingEntity actual) {
     assertEquals(expected.getFactID(), actual.getFactID());
     assertEquals(expected.getMetaFactID(), actual.getMetaFactID());
+  }
+
+  private void assertFactRefreshLogEntry(FactRefreshLogEntity expected, FactRefreshLogEntity actual) {
+    assertEquals(expected.getFactID(), actual.getFactID());
+    assertEquals(expected.getRefreshTimestamp(), actual.getRefreshTimestamp());
+    assertEquals(expected.getRefreshedByID(), actual.getRefreshedByID());
   }
 
 }

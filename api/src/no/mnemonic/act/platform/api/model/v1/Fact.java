@@ -34,6 +34,8 @@ public class Fact {
   private final Organization.Info organization;
   @ApiModelProperty(value = "Who added the Fact", required = true)
   private final Subject.Info addedBy;
+  @ApiModelProperty(value = "Who saw the Fact last", required = true)
+  private final Subject.Info lastSeenBy;
   @ApiModelProperty(value = "Where the information came from", required = true)
   private final Origin.Info origin;
   @ApiModelProperty(value = "How much the Origin was trusted when the Fact was created", example = "0.8", required = true)
@@ -65,6 +67,7 @@ public class Fact {
                Info inReferenceTo,
                Organization.Info organization,
                Subject.Info addedBy,
+               Subject.Info lastSeenBy,
                Origin.Info origin,
                float trust,
                float confidence,
@@ -81,6 +84,7 @@ public class Fact {
     this.inReferenceTo = inReferenceTo;
     this.organization = organization;
     this.addedBy = addedBy;
+    this.lastSeenBy = lastSeenBy;
     this.origin = origin;
     this.trust = trust;
     this.confidence = confidence;
@@ -115,6 +119,10 @@ public class Fact {
 
   public Subject.Info getAddedBy() {
     return addedBy;
+  }
+
+  public Subject.Info getLastSeenBy() {
+    return lastSeenBy;
   }
 
   public Origin.Info getOrigin() {
@@ -179,6 +187,7 @@ public class Fact {
     private Fact.Info inReferenceTo;
     private Organization.Info organization;
     private Subject.Info addedBy;
+    private Subject.Info lastSeenBy;
     private Origin.Info origin;
     private float trust;
     private float confidence;
@@ -194,8 +203,8 @@ public class Fact {
     }
 
     public Fact build() {
-      return new Fact(id, type, value, inReferenceTo, organization, addedBy, origin, trust, confidence, accessMode,
-              timestamp, lastSeenTimestamp, sourceObject, destinationObject, bidirectionalBinding, flags);
+      return new Fact(id, type, value, inReferenceTo, organization, addedBy, lastSeenBy, origin, trust, confidence,
+              accessMode, timestamp, lastSeenTimestamp, sourceObject, destinationObject, bidirectionalBinding, flags);
     }
 
     public Builder setId(UUID id) {
@@ -225,6 +234,11 @@ public class Fact {
 
     public Builder setAddedBy(Subject.Info addedBy) {
       this.addedBy = addedBy;
+      return this;
+    }
+
+    public Builder setLastSeenBy(Subject.Info lastSeenBy) {
+      this.lastSeenBy = lastSeenBy;
       return this;
     }
 

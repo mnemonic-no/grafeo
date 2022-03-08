@@ -105,6 +105,7 @@ public class FactCreateMetaDelegate implements Delegate {
             .setInReferenceToID(referencedFact.getId())
             .setOrganizationID(requestedOrganization.getId())
             .setAddedByID(securityContext.getCurrentUserID())
+            .setLastSeenByID(securityContext.getCurrentUserID())
             .setOriginID(requestedOrigin.getId())
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), requestedFactType.getDefaultConfidence()))

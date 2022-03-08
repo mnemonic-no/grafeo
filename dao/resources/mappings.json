@@ -65,6 +65,9 @@
       "addedByID": {
         "type": "keyword"
       },
+      "lastSeenByID": {
+        "type": "keyword"
+      },
       "accessMode": {
         "type": "keyword"
       },

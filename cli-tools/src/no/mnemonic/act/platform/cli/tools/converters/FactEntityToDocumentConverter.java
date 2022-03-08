@@ -42,6 +42,7 @@ public class FactEntityToDocumentConverter implements Function<FactEntity, FactD
             .setOrganizationID(entity.getOrganizationID())
             .setOriginID(entity.getOriginID())
             .setAddedByID(entity.getAddedByID())
+            .setLastSeenByID(entity.getLastSeenByID())
             .setAccessMode(ObjectUtils.ifNotNull(entity.getAccessMode(), m -> FactDocument.AccessMode.valueOf(m.name())))
             .setConfidence(entity.getConfidence())
             .setTrust(entity.getTrust())

@@ -21,6 +21,7 @@ public class FactSEBTest extends AbstractSEBTest {
             "organization : {}," +
             "origin : {}," +
             "addedBy : {}," +
+            "lastSeenBy : {}," +
             "accessMode : 'RoleBased'," +
             "confidence : 0.1," +
             "trust : 0.2," +
@@ -41,6 +42,7 @@ public class FactSEBTest extends AbstractSEBTest {
     assertNotNull(model.getOrganization());
     assertNotNull(model.getOrigin());
     assertNotNull(model.getAddedBy());
+    assertNotNull(model.getLastSeenBy());
     assertEquals(FactSEB.AccessMode.RoleBased, model.getAccessMode());
     assertEquals(0.1f, model.getConfidence(), 0.0);
     assertEquals(0.2f, model.getTrust(), 0.0);
@@ -75,6 +77,7 @@ public class FactSEBTest extends AbstractSEBTest {
             .setOrganization(OrganizationInfoSEB.builder().build())
             .setOrigin(OriginInfoSEB.builder().build())
             .setAddedBy(SubjectInfoSEB.builder().build())
+            .setLastSeenBy(SubjectInfoSEB.builder().build())
             .setAccessMode(FactSEB.AccessMode.RoleBased)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -95,6 +98,7 @@ public class FactSEBTest extends AbstractSEBTest {
     assertTrue(root.get("organization").isObject());
     assertTrue(root.get("origin").isObject());
     assertTrue(root.get("addedBy").isObject());
+    assertTrue(root.get("lastSeenBy").isObject());
     assertEquals(model.getAccessMode().name(), root.get("accessMode").textValue());
     assertEquals(model.getConfidence(), root.get("confidence").floatValue(), 0.0);
     assertEquals(model.getTrust(), root.get("trust").floatValue(), 0.0);

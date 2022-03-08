@@ -90,6 +90,8 @@ public class FactEntity implements CassandraEntity {
   private UUID originID;
   @CqlName("added_by_id")
   private UUID addedByID;
+  @CqlName("last_seen_by_id")
+  private UUID lastSeenByID;
   @CqlName("access_mode")
   private AccessMode accessMode;
   private Float confidence;
@@ -169,6 +171,15 @@ public class FactEntity implements CassandraEntity {
 
   public FactEntity setAddedByID(UUID addedByID) {
     this.addedByID = addedByID;
+    return this;
+  }
+
+  public UUID getLastSeenByID() {
+    return lastSeenByID;
+  }
+
+  public FactEntity setLastSeenByID(UUID lastSeenByID) {
+    this.lastSeenByID = lastSeenByID;
     return this;
   }
 

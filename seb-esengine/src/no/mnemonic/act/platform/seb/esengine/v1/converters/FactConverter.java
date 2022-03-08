@@ -27,6 +27,7 @@ public class FactConverter implements Function<FactSEB, FactDocument> {
             .setOrganizationID(ObjectUtils.ifNotNull(seb.getOrganization(), OrganizationInfoSEB::getId))
             .setOriginID(ObjectUtils.ifNotNull(seb.getOrigin(), OriginInfoSEB::getId))
             .setAddedByID(ObjectUtils.ifNotNull(seb.getAddedBy(), SubjectInfoSEB::getId))
+            .setLastSeenByID(ObjectUtils.ifNotNull(seb.getLastSeenBy(), SubjectInfoSEB::getId))
             .setAccessMode(ObjectUtils.ifNotNull(seb.getAccessMode(), m -> FactDocument.AccessMode.valueOf(m.name())))
             .setConfidence(seb.getConfidence())
             .setTrust(seb.getTrust())

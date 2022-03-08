@@ -243,6 +243,7 @@ public class FactRetractDelegateTest {
       assertEquals(request.getFact(), record.getInReferenceToID());
       assertEquals(organization.getId(), record.getOrganizationID());
       assertNotNull(record.getAddedByID());
+      assertNotNull(record.getLastSeenByID());
       assertEquals(origin.getId(), record.getOriginID());
       assertTrue(record.getTrust() > 0.0);
       assertEquals(request.getConfidence(), record.getConfidence(), 0.0);

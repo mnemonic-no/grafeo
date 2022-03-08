@@ -33,6 +33,7 @@ public class FactSEB {
   private final OrganizationInfoSEB organization;
   private final OriginInfoSEB origin;
   private final SubjectInfoSEB addedBy;
+  private final SubjectInfoSEB lastSeenBy;
   private final AccessMode accessMode;
   @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float trust;
@@ -55,6 +56,7 @@ public class FactSEB {
                   OrganizationInfoSEB organization,
                   OriginInfoSEB origin,
                   SubjectInfoSEB addedBy,
+                  SubjectInfoSEB lastSeenBy,
                   AccessMode accessMode,
                   float trust,
                   float confidence,
@@ -72,6 +74,7 @@ public class FactSEB {
     this.organization = organization;
     this.origin = origin;
     this.addedBy = addedBy;
+    this.lastSeenBy = lastSeenBy;
     this.accessMode = accessMode;
     this.trust = trust;
     this.confidence = confidence;
@@ -110,6 +113,10 @@ public class FactSEB {
 
   public SubjectInfoSEB getAddedBy() {
     return addedBy;
+  }
+
+  public SubjectInfoSEB getLastSeenBy() {
+    return lastSeenBy;
   }
 
   public AccessMode getAccessMode() {
@@ -166,6 +173,7 @@ public class FactSEB {
     private OrganizationInfoSEB organization;
     private OriginInfoSEB origin;
     private SubjectInfoSEB addedBy;
+    private SubjectInfoSEB lastSeenBy;
     private AccessMode accessMode;
     @JsonDeserialize(using = RoundingFloatDeserializer.class)
     private float trust;
@@ -185,8 +193,8 @@ public class FactSEB {
     }
 
     public FactSEB build() {
-      return new FactSEB(id, type, value, inReferenceTo, organization, origin, addedBy, accessMode, trust, confidence,
-              timestamp, lastSeenTimestamp, sourceObject, destinationObject, bidirectionalBinding, flags, acl);
+      return new FactSEB(id, type, value, inReferenceTo, organization, origin, addedBy, lastSeenBy, accessMode, trust,
+              confidence, timestamp, lastSeenTimestamp, sourceObject, destinationObject, bidirectionalBinding, flags, acl);
     }
 
     public Builder setId(UUID id) {
@@ -221,6 +229,11 @@ public class FactSEB {
 
     public Builder setAddedBy(SubjectInfoSEB addedBy) {
       this.addedBy = addedBy;
+      return this;
+    }
+
+    public Builder setLastSeenBy(SubjectInfoSEB lastSeenBy) {
+      this.lastSeenBy = lastSeenBy;
       return this;
     }
 

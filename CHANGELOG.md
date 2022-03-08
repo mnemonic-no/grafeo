@@ -34,6 +34,7 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Added
+- (2022-03-08) Added `lastSeenBy` field to Fact responses. This field denotes the user who saw the Fact last.
 - (2021-10-18) Added `type` query parameter to `GET /v1/origin` endpoint to filter Origins by their type.
 - (2021-10-15) Added a `NullValidator` which enforces that a value is unset (null). This validator can only be used with FactTypes.
 - (2021-09-28) A new mechanism to check for already existing Facts has been implemented. To activate the new mechanism

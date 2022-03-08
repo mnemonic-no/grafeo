@@ -25,6 +25,7 @@ public class FactTest {
     assertTrue(root.get("inReferenceTo").isObject());
     assertTrue(root.get("organization").isObject());
     assertTrue(root.get("addedBy").isObject());
+    assertTrue(root.get("lastSeenBy").isObject());
     assertTrue(root.get("origin").isObject());
     assertEquals(fact.getTrust(), root.get("trust").floatValue(), 0.0f);
     assertEquals(fact.getConfidence(), root.get("confidence").floatValue(), 0.0f);
@@ -55,6 +56,7 @@ public class FactTest {
             .setInReferenceTo(createFactInfo())
             .setOrganization(Organization.builder().setId(UUID.randomUUID()).setName("organization").build().toInfo())
             .setAddedBy(Subject.builder().setId(UUID.randomUUID()).setName("subject").build().toInfo())
+            .setLastSeenBy(Subject.builder().setId(UUID.randomUUID()).setName("subject").build().toInfo())
             .setOrigin(Origin.builder().setId(UUID.randomUUID()).setName("origin").build().toInfo())
             .setTrust(0.1f)
             .setConfidence(0.2f)

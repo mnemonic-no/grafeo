@@ -70,6 +70,7 @@ public class FactRecordConverterTest {
             .setOrganizationID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
+            .setLastSeenByID(UUID.randomUUID())
             .setAccessMode(AccessMode.Explicit)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -85,6 +86,7 @@ public class FactRecordConverterTest {
     assertEquals(entity.getOrganizationID(), record.getOrganizationID());
     assertEquals(entity.getOriginID(), record.getOriginID());
     assertEquals(entity.getAddedByID(), record.getAddedByID());
+    assertEquals(entity.getLastSeenByID(), record.getLastSeenByID());
     assertEquals(entity.getAccessMode().name(), record.getAccessMode().name());
     assertEquals(entity.getConfidence(), record.getConfidence(), 0.0f);
     assertEquals(entity.getTrust(), record.getTrust(), 0.0f);
@@ -313,6 +315,7 @@ public class FactRecordConverterTest {
             .setOrganizationID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
+            .setLastSeenByID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.Explicit)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -328,6 +331,7 @@ public class FactRecordConverterTest {
     assertEquals(record.getOrganizationID(), entity.getOrganizationID());
     assertEquals(record.getOriginID(), entity.getOriginID());
     assertEquals(record.getAddedByID(), entity.getAddedByID());
+    assertEquals(record.getLastSeenByID(), entity.getLastSeenByID());
     assertEquals(record.getAccessMode().name(), entity.getAccessMode().name());
     assertEquals(record.getConfidence(), entity.getConfidence(), 0.0f);
     assertEquals(record.getTrust(), entity.getTrust(), 0.0f);
@@ -414,6 +418,7 @@ public class FactRecordConverterTest {
             .setOrganizationID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
+            .setLastSeenByID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.Explicit)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -428,6 +433,7 @@ public class FactRecordConverterTest {
     assertEquals(record.getOrganizationID(), document.getOrganizationID());
     assertEquals(record.getOriginID(), document.getOriginID());
     assertEquals(record.getAddedByID(), document.getAddedByID());
+    assertEquals(record.getLastSeenByID(), document.getLastSeenByID());
     assertEquals(record.getAccessMode().name(), document.getAccessMode().name());
     assertEquals(record.getConfidence(), document.getConfidence(), 0.0f);
     assertEquals(record.getTrust(), document.getTrust(), 0.0f);

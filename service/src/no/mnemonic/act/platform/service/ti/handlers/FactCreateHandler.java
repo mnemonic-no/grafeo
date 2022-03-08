@@ -28,6 +28,7 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
+import java.time.Clock;
 import java.util.*;
 
 import static no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl.GLOBAL_NAMESPACE;
@@ -53,6 +54,8 @@ public class FactCreateHandler {
   private final ObjectFactDao objectFactDao;
   private final FactResponseConverter factResponseConverter;
   private final LockProvider lockProvider;
+
+  private Clock clock = Clock.systemUTC();
 
   @Inject
   public FactCreateHandler(TiSecurityContext securityContext,
@@ -233,8 +236,11 @@ public class FactCreateHandler {
       effectiveFact = withComment(effectiveFact, comment);
 
       if (existingFact.isPresent()) {
-        // Refresh existing Fact.
-        effectiveFact = objectFactDao.refreshFact(effectiveFact);
+        // Ensure that lastSeenTimestamp and lastSeenByID are correctly updated and refresh existing Fact.
+        effectiveFact = objectFactDao.refreshFact(effectiveFact
+                .setLastSeenTimestamp(clock.millis())
+                .setLastSeenByID(securityContext.getCurrentUserID())
+        );
       } else {
         // Or create a new Fact.
         effectiveFact = objectFactDao.storeFact(effectiveFact);
@@ -318,5 +324,12 @@ public class FactCreateHandler {
 
   private interface WithInvalidCredentialsException<T> {
     T call() throws InvalidCredentialsException;
+  }
+
+  /* Setters used for unit testing */
+
+  FactCreateHandler withClock(Clock clock) {
+    this.clock = clock;
+    return this;
   }
 }

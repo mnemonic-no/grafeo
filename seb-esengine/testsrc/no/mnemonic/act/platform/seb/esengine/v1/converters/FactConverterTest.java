@@ -35,6 +35,7 @@ public class FactConverterTest {
             .setOrganization(OrganizationInfoSEB.builder().setId(UUID.randomUUID()).build())
             .setOrigin(OriginInfoSEB.builder().setId(UUID.randomUUID()).build())
             .setAddedBy(SubjectInfoSEB.builder().setId(UUID.randomUUID()).build())
+            .setLastSeenBy(SubjectInfoSEB.builder().setId(UUID.randomUUID()).build())
             .setAccessMode(FactSEB.AccessMode.Explicit)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -52,6 +53,7 @@ public class FactConverterTest {
     assertEquals(seb.getOrganization().getId(), document.getOrganizationID());
     assertEquals(seb.getOrigin().getId(), document.getOriginID());
     assertEquals(seb.getAddedBy().getId(), document.getAddedByID());
+    assertEquals(seb.getLastSeenBy().getId(), document.getLastSeenByID());
     assertEquals(seb.getAccessMode().name(), document.getAccessMode().name());
     assertEquals(seb.getConfidence(), document.getConfidence(), 0.0);
     assertEquals(seb.getTrust(), document.getTrust(), 0.0);

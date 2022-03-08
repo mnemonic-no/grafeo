@@ -292,6 +292,7 @@ public class FactCreateMetaDelegateTest {
       assertEquals(request.getFact(), record.getInReferenceToID());
       assertEquals(organization.getId(), record.getOrganizationID());
       assertNotNull(record.getAddedByID());
+      assertNotNull(record.getLastSeenByID());
       assertEquals(origin.getId(), record.getOriginID());
       assertEquals(origin.getTrust(), record.getTrust(), 0.0);
       assertEquals(request.getConfidence(), record.getConfidence(), 0.0);

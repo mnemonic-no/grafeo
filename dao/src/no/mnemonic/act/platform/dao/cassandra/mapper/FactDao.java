@@ -51,6 +51,17 @@ public interface FactDao {
   @Select
   FactExistenceEntity getFactExistence(String factHash);
 
+  /* FactRefreshLogEntity-related methods */
+
+  @Insert
+  void save(FactRefreshLogEntity entity);
+
+  @Select
+  FactRefreshLogEntity getFactRefreshLogEntry(UUID factID, long refreshTimestamp);
+
+  @Query("SELECT * FROM " + KEY_SPACE + "." + FactRefreshLogEntity.TABLE + " WHERE fact_id = :id")
+  PagingIterable<FactRefreshLogEntity> fetchFactRefreshLog(UUID id);
+
   /* FactAclEntity-related methods */
 
   @Insert

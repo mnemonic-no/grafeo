@@ -123,6 +123,7 @@ public class FactCreateDelegate implements Delegate {
             .setAccessMode(FactRecord.AccessMode.valueOf(request.getAccessMode().name()))
             .setOrganizationID(requestedOrganization.getId())
             .setAddedByID(securityContext.getCurrentUserID())
+            .setLastSeenByID(securityContext.getCurrentUserID())
             .setOriginID(requestedOrigin.getId())
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), requestedFactType.getDefaultConfidence()))

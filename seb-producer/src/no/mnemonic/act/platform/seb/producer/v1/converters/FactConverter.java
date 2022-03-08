@@ -15,7 +15,7 @@ public class FactConverter implements Function<FactRecord, FactSEB> {
   private final FactInfoDaoResolver inReferenceToResolver;
   private final OrganizationInfoServiceAccountResolver organizationResolver;
   private final OriginInfoDaoResolver originResolver;
-  private final SubjectInfoServiceAccountResolver addedByResolver;
+  private final SubjectInfoServiceAccountResolver subjectResolver;
   private final ObjectInfoConverter objectConverter;
   private final AclEntryConverter aclEntryConverter;
 
@@ -25,7 +25,7 @@ public class FactConverter implements Function<FactRecord, FactSEB> {
           FactInfoDaoResolver inReferenceToResolver,
           OrganizationInfoServiceAccountResolver organizationResolver,
           OriginInfoDaoResolver originResolver,
-          SubjectInfoServiceAccountResolver addedByResolver,
+          SubjectInfoServiceAccountResolver subjectResolver,
           ObjectInfoConverter objectConverter,
           AclEntryConverter aclEntryConverter
   ) {
@@ -33,7 +33,7 @@ public class FactConverter implements Function<FactRecord, FactSEB> {
     this.inReferenceToResolver = inReferenceToResolver;
     this.organizationResolver = organizationResolver;
     this.originResolver = originResolver;
-    this.addedByResolver = addedByResolver;
+    this.subjectResolver = subjectResolver;
     this.objectConverter = objectConverter;
     this.aclEntryConverter = aclEntryConverter;
   }
@@ -49,7 +49,8 @@ public class FactConverter implements Function<FactRecord, FactSEB> {
             .setInReferenceTo(inReferenceToResolver.apply(record.getInReferenceToID()))
             .setOrganization(organizationResolver.apply(record.getOrganizationID()))
             .setOrigin(originResolver.apply(record.getOriginID()))
-            .setAddedBy(addedByResolver.apply(record.getAddedByID()))
+            .setAddedBy(subjectResolver.apply(record.getAddedByID()))
+            .setLastSeenBy(subjectResolver.apply(record.getLastSeenByID()))
             .setAccessMode(ObjectUtils.ifNotNull(record.getAccessMode(), mode -> FactSEB.AccessMode.valueOf(mode.name())))
             .setTrust(record.getTrust())
             .setConfidence(record.getConfidence())

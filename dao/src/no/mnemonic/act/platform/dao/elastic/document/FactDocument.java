@@ -29,6 +29,7 @@ public class FactDocument implements ElasticDocument {
   @JsonProperty("sourceID")
   private UUID originID;
   private UUID addedByID;
+  private UUID lastSeenByID;
   private AccessMode accessMode;
   private Float confidence;
   private Float trust;
@@ -97,6 +98,15 @@ public class FactDocument implements ElasticDocument {
 
   public FactDocument setAddedByID(UUID addedByID) {
     this.addedByID = addedByID;
+    return this;
+  }
+
+  public UUID getLastSeenByID() {
+    return lastSeenByID;
+  }
+
+  public FactDocument setLastSeenByID(UUID lastSeenByID) {
+    this.lastSeenByID = lastSeenByID;
     return this;
   }
 

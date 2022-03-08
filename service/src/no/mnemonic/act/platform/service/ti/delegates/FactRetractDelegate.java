@@ -95,6 +95,7 @@ public class FactRetractDelegate implements Delegate {
             .setInReferenceToID(factToRetract.getId())
             .setOrganizationID(requestedOrganization.getId())
             .setAddedByID(securityContext.getCurrentUserID())
+            .setLastSeenByID(securityContext.getCurrentUserID())
             .setOriginID(requestedOrigin.getId())
             .setTrust(requestedOrigin.getTrust())
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), retractionFactType.getDefaultConfidence()))

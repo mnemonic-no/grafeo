@@ -29,6 +29,7 @@ class DocumentTestUtils {
             .setOrganizationID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
+            .setLastSeenByID(UUID.randomUUID())
             .setAccessMode(FactDocument.AccessMode.Public)
             .setConfidence(0.1f)
             .setTrust(0.2f)
@@ -53,6 +54,7 @@ class DocumentTestUtils {
     assertEquals(expected.getOrganizationID(), actual.getOrganizationID());
     assertEquals(expected.getOriginID(), actual.getOriginID());
     assertEquals(expected.getAddedByID(), actual.getAddedByID());
+    assertEquals(expected.getLastSeenByID(), actual.getLastSeenByID());
     assertEquals(expected.getAccessMode(), actual.getAccessMode());
     assertEquals(expected.getConfidence(), actual.getConfidence(), 0);
     assertEquals(expected.getTrust(), actual.getTrust(), 0);

@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS act.fact_acl;
 DROP TABLE IF EXISTS act.meta_fact_binding;
 DROP TABLE IF EXISTS act.fact_by_timestamp;
 DROP TABLE IF EXISTS act.fact_existence;
+DROP TABLE IF EXISTS act.fact_refresh_log;
 DROP TABLE IF EXISTS act.evidence_submission;
 DROP TABLE IF EXISTS act.evidence_submission_acl;
 DROP TABLE IF EXISTS act.evidence;
@@ -95,6 +96,7 @@ CREATE TABLE IF NOT EXISTS act.fact (
   organization_id UUID,
   source_id UUID,
   added_by_id UUID,
+  last_seen_by_id UUID,
   access_mode INT,
   confidence FLOAT,
   trust FLOAT,
@@ -144,6 +146,13 @@ CREATE TABLE IF NOT EXISTS act.fact_existence (
   fact_id UUID,
   PRIMARY KEY (fact_hash)
 );
+
+CREATE TABLE IF NOT EXISTS act.fact_refresh_log (
+  fact_id UUID,
+  refreshed_timestamp BIGINT,
+  refreshed_by_id UUID,
+  PRIMARY KEY (fact_id, refreshed_timestamp)
+) WITH CLUSTERING ORDER BY (refreshed_timestamp ASC);
 
 CREATE TABLE IF NOT EXISTS act.evidence_submission (
   id UUID,

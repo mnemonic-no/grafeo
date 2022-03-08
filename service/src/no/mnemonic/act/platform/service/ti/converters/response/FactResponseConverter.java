@@ -62,6 +62,7 @@ public class FactResponseConverter implements Function<FactRecord, Fact> {
             .setInReferenceTo(ObjectUtils.ifNotNull(convertInReferenceTo(record.getInReferenceToID()), Fact::toInfo))
             .setOrganization(ObjectUtils.ifNotNull(organizationConverter.apply(record.getOrganizationID()), Organization::toInfo))
             .setAddedBy(ObjectUtils.ifNotNull(subjectConverter.apply(record.getAddedByID()), Subject::toInfo))
+            .setLastSeenBy(ObjectUtils.ifNotNull(subjectConverter.apply(record.getLastSeenByID()), Subject::toInfo))
             .setOrigin(ObjectUtils.ifNotNull(originConverter.apply(record.getOriginID()), Origin::toInfo))
             .setTrust(record.getTrust())
             .setConfidence(record.getConfidence())

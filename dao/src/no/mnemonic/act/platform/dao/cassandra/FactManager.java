@@ -220,6 +220,25 @@ public class FactManager implements LifecycleAspect {
     return entity;
   }
 
+  /* FactRefreshLogEntity-related methods */
+
+  public List<FactRefreshLogEntity> fetchFactRefreshLog(UUID id) {
+    if (id == null) return ListUtils.list();
+    return factDao.fetchFactRefreshLog(id).all();
+  }
+
+  public FactRefreshLogEntity saveFactRefreshLogEntry(FactRefreshLogEntity entry) {
+    if (entry == null) return null;
+    if (getFact(entry.getFactID()) == null)
+      throw new IllegalArgumentException(String.format("Fact with id = %s does not exist.", entry.getFactID()));
+    if (factDao.getFactRefreshLogEntry(entry.getFactID(), entry.getRefreshTimestamp()) != null)
+      throw new ImmutableViolationException("It is not allowed to update a refresh log entry.");
+
+    factDao.save(entry);
+
+    return entry;
+  }
+
   /* Private helper methods and classes */
 
   /**

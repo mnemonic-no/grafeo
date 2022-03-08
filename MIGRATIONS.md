@@ -2,6 +2,58 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Introduce fact_refresh_log table] - 2022-03-08
+A new Cassandra table and a new field on the `fact` table have been introduced. Execute the following CQL commands against your Cassandra cluster (e.g. using cqlsh).
+
+```
+ALTER TABLE act.fact ADD last_seen_by_id UUID;
+
+CREATE TABLE IF NOT EXISTS act.fact_refresh_log (
+  fact_id UUID,
+  refreshed_timestamp BIGINT,
+  refreshed_by_id UUID,
+  PRIMARY KEY (fact_id, refreshed_timestamp)
+) WITH CLUSTERING ORDER BY (refreshed_timestamp ASC);
+```
+
+Adapt and execute the `migrations/003-fact-refresh-log.py` script to populate the new table from the existing data.
+Depending on the size of your cluster this may take a while.
+
+Additionally, execute the following curl command against you ElasticSearch cluster (or use Kibana) to update the existing mapping with the new field as well.
+```
+curl -X PUT "localhost:9200/act/_mapping?include_type_name=false" -H 'Content-Type: application/json' -d'
+{
+  "properties": {
+    "lastSeenByID": {
+      "type": "keyword"
+    }
+  }
+}
+'
+```
+
+The previous command only changes the mapping in ElasticSearch. In order to populate the new field for existing data also run the next curl command.
+This will update *all* existing data. Depending on the size of your cluster this may take a while.
+```
+curl -X POST "localhost:9200/act/_update_by_query?conflicts=proceed" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "must_not": {
+        "exists": {
+          "field": "lastSeenByID"
+        }
+      }
+    }
+  },
+  "script": {
+    "source": "ctx._source.lastSeenByID = ctx._source.addedByID",
+    "lang": "painless"
+  }
+}
+'
+```
+
 ## [New field in ElasticSearch mapping] - 2022-02-17
 A new field has been added to the ElasticSearch mapping. Execute the following curl command against you ElasticSearch cluster
 (or use Kibana) to update the existing mapping.

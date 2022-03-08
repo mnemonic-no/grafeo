@@ -201,6 +201,7 @@ public class FactResponseConverterTest {
             .setValue("value")
             .setOrganizationID(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
+            .setLastSeenByID(UUID.randomUUID())
             .setOriginID(UUID.randomUUID())
             .setTrust(0.1f)
             .setConfidence(0.2f)
@@ -215,6 +216,7 @@ public class FactResponseConverterTest {
     assertEquals(record.getValue(), model.getValue());
     assertEquals(record.getOrganizationID(), model.getOrganization().getId());
     assertEquals(record.getAddedByID(), model.getAddedBy().getId());
+    assertEquals(record.getLastSeenByID(), model.getLastSeenBy().getId());
     assertEquals(record.getOriginID(), model.getOrigin().getId());
     assertEquals(record.getTrust(), model.getTrust(), 0.0);
     assertEquals(record.getConfidence(), model.getConfidence(), 0.0);
