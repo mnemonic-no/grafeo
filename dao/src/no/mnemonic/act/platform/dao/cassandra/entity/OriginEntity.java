@@ -150,4 +150,8 @@ public class OriginEntity implements CassandraEntity {
     return this;
   }
 
+  public boolean isSet(Flag flag) {
+    return SetUtils.set(flags).contains(flag);
+  }
+
 }

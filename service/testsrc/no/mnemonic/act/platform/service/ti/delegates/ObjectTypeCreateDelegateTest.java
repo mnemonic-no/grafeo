@@ -15,8 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -80,6 +79,7 @@ public class ObjectTypeCreateDelegateTest {
       assertEquals(request.getName(), entity.getName());
       assertEquals(request.getValidator(), entity.getValidator());
       assertEquals(request.getValidatorParameter(), entity.getValidatorParameter());
+      assertTrue(entity.isSet(ObjectTypeEntity.Flag.TimeGlobalIndex));
       return true;
     }));
   }
@@ -88,6 +88,7 @@ public class ObjectTypeCreateDelegateTest {
     return new CreateObjectTypeRequest()
             .setName("ObjectType")
             .setValidator("Validator")
-            .setValidatorParameter("ValidatorParameter");
+            .setValidatorParameter("ValidatorParameter")
+            .setIndexOption(CreateObjectTypeRequest.IndexOption.TimeGlobal);
   }
 }

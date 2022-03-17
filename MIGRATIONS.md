@@ -2,8 +2,18 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [New flags field on fact_type and object_type tables] - 2022-03-11
+A new field has been introduced on the `fact_type` and `object_type` tables in Cassandra.
+Execute the following CQL commands against your Cassandra cluster (e.g. using cqlsh).
+
+```
+ALTER TABLE act.fact_type ADD flags SET<INT>;
+ALTER TABLE act.object_type ADD flags SET<INT>;
+```
+
 ## [Introduce fact_refresh_log table] - 2022-03-08
-A new Cassandra table and a new field on the `fact` table have been introduced. Execute the following CQL commands against your Cassandra cluster (e.g. using cqlsh).
+A new Cassandra table and a new field on the `fact` table have been introduced.
+Execute the following CQL commands against your Cassandra cluster (e.g. using cqlsh).
 
 ```
 ALTER TABLE act.fact ADD last_seen_by_id UUID;

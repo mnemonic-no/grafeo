@@ -23,6 +23,7 @@ public class ObjectTypeTest {
     assertEquals(type.getName(), root.get("name").textValue());
     assertEquals(type.getValidator(), root.get("validator").textValue());
     assertEquals(type.getValidatorParameter(), root.get("validatorParameter").textValue());
+    assertEquals(type.getIndexOption().name(), root.get("indexOption").textValue());
   }
 
   @Test
@@ -40,6 +41,7 @@ public class ObjectTypeTest {
             .setName("objectType")
             .setValidator("validator")
             .setValidatorParameter("validatorParameter")
+            .setIndexOption(ObjectType.IndexOption.TimeGlobal)
             .build();
   }
 

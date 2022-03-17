@@ -218,7 +218,8 @@ public class ObjectManagerTest extends AbstractManagerTest {
             .setNamespaceID(UUID.randomUUID())
             .setName(name)
             .setValidator("validator")
-            .setValidatorParameter("validatorParameter");
+            .setValidatorParameter("validatorParameter")
+            .addFlag(ObjectTypeEntity.Flag.TimeGlobalIndex);
   }
 
   private ObjectEntity createObject() {
@@ -286,6 +287,7 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertEquals(expected.getName(), actual.getName());
     assertEquals(expected.getValidator(), actual.getValidator());
     assertEquals(expected.getValidatorParameter(), actual.getValidatorParameter());
+    assertEquals(expected.getFlags(), actual.getFlags());
   }
 
   private void assertObjectTypes(List<ObjectTypeEntity> expected, List<ObjectTypeEntity> actual) {

@@ -8,6 +8,10 @@ import java.util.UUID;
 @ApiModel(description = "An ObjectType defines how an Object will be handled inside the system.")
 public class ObjectType {
 
+  public enum IndexOption {
+    Daily, TimeGlobal
+  }
+
   @ApiModelProperty(value = "Uniquely identifies the ObjectType", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
   private final UUID id;
   @ApiModelProperty(value = "Namespace the ObjectType belongs to", required = true)
@@ -18,13 +22,16 @@ public class ObjectType {
   private final String validator;
   @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private final String validatorParameter;
+  @ApiModelProperty(value = "Specifies how Facts bound to Objects of this type will be indexed (default 'Daily')", example = "TimeGlobal", required = true)
+  private final IndexOption indexOption;
 
-  private ObjectType(UUID id, Namespace namespace, String name, String validator, String validatorParameter) {
+  private ObjectType(UUID id, Namespace namespace, String name, String validator, String validatorParameter, IndexOption indexOption) {
     this.id = id;
     this.namespace = namespace;
     this.name = name;
     this.validator = validator;
     this.validatorParameter = validatorParameter;
+    this.indexOption = indexOption;
   }
 
   public UUID getId() {
@@ -47,6 +54,10 @@ public class ObjectType {
     return validatorParameter;
   }
 
+  public IndexOption getIndexOption() {
+    return indexOption;
+  }
+
   public Info toInfo() {
     return new Info(id, name);
   }
@@ -61,12 +72,13 @@ public class ObjectType {
     private String name;
     private String validator;
     private String validatorParameter;
+    private IndexOption indexOption;
 
     private Builder() {
     }
 
     public ObjectType build() {
-      return new ObjectType(id, namespace, name, validator, validatorParameter);
+      return new ObjectType(id, namespace, name, validator, validatorParameter, indexOption);
     }
 
     public Builder setId(UUID id) {
@@ -91,6 +103,11 @@ public class ObjectType {
 
     public Builder setValidatorParameter(String validatorParameter) {
       this.validatorParameter = validatorParameter;
+      return this;
+    }
+
+    public Builder setIndexOption(IndexOption indexOption) {
+      this.indexOption = indexOption;
       return this;
     }
   }

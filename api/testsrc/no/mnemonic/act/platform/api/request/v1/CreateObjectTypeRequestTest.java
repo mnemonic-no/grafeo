@@ -15,13 +15,15 @@ public class CreateObjectTypeRequestTest extends AbstractRequestTest {
     String json = "{" +
             "name : 'name'," +
             "validator : 'validator'," +
-            "validatorParameter : 'validatorParameter'" +
+            "validatorParameter : 'validatorParameter'," +
+            "indexOption : 'TimeGlobal'" +
             "}";
 
     CreateObjectTypeRequest request = getMapper().readValue(json, CreateObjectTypeRequest.class);
     assertEquals("name", request.getName());
     assertEquals("validator", request.getValidator());
     assertEquals("validatorParameter", request.getValidatorParameter());
+    assertEquals(CreateObjectTypeRequest.IndexOption.TimeGlobal, request.getIndexOption());
   }
 
   @Test

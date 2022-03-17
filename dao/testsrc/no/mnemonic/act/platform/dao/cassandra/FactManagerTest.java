@@ -513,7 +513,8 @@ public class FactManagerTest extends AbstractManagerTest {
             .setName(name)
             .setValidator("validator")
             .setValidatorParameter("validatorParameter")
-            .setDefaultConfidence(0.5f);
+            .setDefaultConfidence(0.5f)
+            .addFlag(FactTypeEntity.Flag.Deleted);
   }
 
   private FactTypeEntity.FactObjectBindingDefinition createBindingDefinition(UUID sourceObjectTypeID, UUID destinationObjectTypeID) {
@@ -657,6 +658,7 @@ public class FactManagerTest extends AbstractManagerTest {
     assertEquals(expected.getValidatorParameter(), actual.getValidatorParameter());
     assertEquals(expected.getRelevantObjectBindingsStored(), actual.getRelevantObjectBindingsStored());
     assertEquals(expected.getDefaultConfidence(), actual.getDefaultConfidence(), 0);
+    assertEquals(expected.getFlags(), actual.getFlags());
   }
 
   private void assertFactTypes(List<FactTypeEntity> expected, List<FactTypeEntity> actual) {

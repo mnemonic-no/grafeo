@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS act.object_type (
   name VARCHAR,
   validator VARCHAR,
   validator_parameter VARCHAR,
+  flags SET<INT>,
   PRIMARY KEY (id)
 );
 
@@ -83,6 +84,7 @@ CREATE TABLE IF NOT EXISTS act.fact_type (
   relevant_object_bindings VARCHAR,
   relevant_fact_bindings VARCHAR,
   default_confidence FLOAT,
+  flags SET<INT>,
   PRIMARY KEY (id)
 );
 

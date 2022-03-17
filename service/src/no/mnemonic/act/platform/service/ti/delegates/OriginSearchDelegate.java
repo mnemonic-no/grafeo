@@ -17,9 +17,7 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.api.ResultSet;
 
 import javax.inject.Inject;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -75,9 +73,8 @@ public class OriginSearchDelegate implements Delegate {
 
   private Predicate<OriginEntity> filterIncludedDeleted(SearchOriginRequest request) {
     return origin -> {
-      Set<OriginEntity.Flag> flags = ObjectUtils.ifNull(origin.getFlags(), Collections.emptySet());
       boolean includeDeleted = ObjectUtils.ifNull(request.getIncludeDeleted(), false);
-      return includeDeleted || !flags.contains(OriginEntity.Flag.Deleted);
+      return includeDeleted || !origin.isSet(OriginEntity.Flag.Deleted);
     };
   }
 }

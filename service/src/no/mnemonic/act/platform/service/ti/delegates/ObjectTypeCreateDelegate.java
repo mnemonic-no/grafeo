@@ -54,6 +54,10 @@ public class ObjectTypeCreateDelegate implements Delegate {
             .setValidator(request.getValidator())
             .setValidatorParameter(request.getValidatorParameter());
 
+    if (request.getIndexOption() == CreateObjectTypeRequest.IndexOption.TimeGlobal) {
+      entity.addFlag(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    }
+
     entity = objectManager.saveObjectType(entity);
     return objectTypeResponseConverter.apply(entity);
   }

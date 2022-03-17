@@ -17,12 +17,16 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import static java.util.Collections.unmodifiableMap;
 import static no.mnemonic.act.platform.dao.cassandra.entity.CassandraEntity.KEY_SPACE;
 import static no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity.TABLE;
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+import static no.mnemonic.commons.utilities.collections.MapUtils.map;
 
 @Entity(defaultKeyspace = KEY_SPACE)
 @CqlName(TABLE)
@@ -37,6 +41,26 @@ public class FactTypeEntity implements CassandraEntity {
   private static final ObjectReader metaFactBindingDefinitionReader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(Set.class, MetaFactBindingDefinition.class));
   private static final ObjectWriter metaFactBindingDefinitionWriter = mapper.writerFor(mapper.getTypeFactory().constructCollectionType(Set.class, MetaFactBindingDefinition.class));
   private static final Logger logger = Logging.getLogger(FactTypeEntity.class);
+
+  public enum Flag implements CassandraEnum<Flag> {
+    Deleted(0);
+
+    private static final Map<Integer, Flag> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
+    private final int value;
+
+    Flag(int value) {
+      this.value = value;
+    }
+
+    @Override
+    public int value() {
+      return value;
+    }
+
+    public static Map<Integer, Flag> getValueMap() {
+      return enumValues;
+    }
+  }
 
   @PartitionKey
   private UUID id;
@@ -60,6 +84,7 @@ public class FactTypeEntity implements CassandraEntity {
   private Set<MetaFactBindingDefinition> relevantFactBindings;
   @CqlName("default_confidence")
   private Float defaultConfidence;
+  private Set<Flag> flags;
 
   public UUID getId() {
     return id;
@@ -188,6 +213,24 @@ public class FactTypeEntity implements CassandraEntity {
   public FactTypeEntity setDefaultConfidence(Float defaultConfidence) {
     this.defaultConfidence = defaultConfidence;
     return this;
+  }
+
+  public Set<Flag> getFlags() {
+    return flags;
+  }
+
+  public FactTypeEntity setFlags(Set<Flag> flags) {
+    this.flags = flags;
+    return this;
+  }
+
+  public FactTypeEntity addFlag(Flag flag) {
+    this.flags = SetUtils.addToSet(this.flags, flag);
+    return this;
+  }
+
+  public boolean isSet(Flag flag) {
+    return SetUtils.set(flags).contains(flag);
   }
 
   private void logAndRethrow(IOException ex, String msg) {

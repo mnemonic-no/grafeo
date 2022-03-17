@@ -25,6 +25,11 @@ public class ObjectTypeResponseConverter implements Function<ObjectTypeEntity, O
             .setName(entity.getName())
             .setValidator(entity.getValidator())
             .setValidatorParameter(entity.getValidatorParameter())
+            .setIndexOption(isTimeGlobalIndex(entity) ? ObjectType.IndexOption.TimeGlobal : ObjectType.IndexOption.Daily)
             .build();
+  }
+
+  private boolean isTimeGlobalIndex(ObjectTypeEntity entity) {
+    return entity.isSet(ObjectTypeEntity.Flag.TimeGlobalIndex);
   }
 }

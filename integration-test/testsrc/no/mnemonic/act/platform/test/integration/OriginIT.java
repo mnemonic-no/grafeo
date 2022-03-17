@@ -66,7 +66,7 @@ public class OriginIT extends AbstractIT {
     assertEquals(200, response.getStatus());
 
     // ... and check that it's marked as deleted in the database.
-    assertTrue(getOriginManager().getOrigin(entity.getId()).getFlags().contains(OriginEntity.Flag.Deleted));
+    assertTrue(getOriginManager().getOrigin(entity.getId()).isSet(OriginEntity.Flag.Deleted));
   }
 
 }

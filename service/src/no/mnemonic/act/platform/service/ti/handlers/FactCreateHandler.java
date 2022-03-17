@@ -24,7 +24,6 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.common.auth.InvalidCredentialsException;
 
 import javax.inject.Inject;
@@ -290,7 +289,7 @@ public class FactCreateHandler {
     }
 
     // It's not allowed to use a deleted Origin for a new Fact.
-    if (origin != null && SetUtils.set(origin.getFlags()).contains(OriginEntity.Flag.Deleted)) {
+    if (origin != null && origin.isSet(OriginEntity.Flag.Deleted)) {
       throw new InvalidArgumentException()
               .addValidationError("Not allowed to create a Fact using a deleted Origin.", "invalid.origin.deleted", "origin", idOrName);
     }

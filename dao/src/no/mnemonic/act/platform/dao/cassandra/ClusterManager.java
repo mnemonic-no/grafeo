@@ -100,6 +100,8 @@ public class ClusterManager implements LifecycleAspect, MetricAspect {
               .addTypeCodecs(new CassandraEnumCodec<>(AccessMode.class, AccessMode.getValueMap()))
               .addTypeCodecs(new CassandraEnumCodec<>(Direction.class, Direction.getValueMap()))
               .addTypeCodecs(new CassandraEnumCodec<>(FactEntity.Flag.class, FactEntity.Flag.getValueMap()))
+              .addTypeCodecs(new CassandraEnumCodec<>(FactTypeEntity.Flag.class, FactTypeEntity.Flag.getValueMap()))
+              .addTypeCodecs(new CassandraEnumCodec<>(ObjectTypeEntity.Flag.class, ObjectTypeEntity.Flag.getValueMap()))
               .addTypeCodecs(new CassandraEnumCodec<>(OriginEntity.Type.class, OriginEntity.Type.getValueMap()))
               .addTypeCodecs(new CassandraEnumCodec<>(OriginEntity.Flag.class, OriginEntity.Flag.getValueMap()))
               .buildAsync()

@@ -12,7 +12,6 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.OriginResponseConverter;
 import no.mnemonic.act.platform.service.ti.resolvers.OriginResolver;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
 
@@ -72,7 +71,7 @@ public class OriginDeleteDelegate implements Delegate {
   }
 
   private void assertNotDeleted(OriginEntity entity) throws InvalidArgumentException {
-    if (SetUtils.set(entity.getFlags()).contains(OriginEntity.Flag.Deleted)) {
+    if (entity.isSet(OriginEntity.Flag.Deleted)) {
       throw new InvalidArgumentException()
               .addValidationError(String.format("Not allowed to delete an already deleted Origin (id = %s).", entity.getId()),
                       "origin.already.deleted", "id", entity.getId().toString());

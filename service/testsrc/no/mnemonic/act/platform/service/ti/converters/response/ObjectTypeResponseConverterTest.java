@@ -32,6 +32,12 @@ public class ObjectTypeResponseConverterTest {
   }
 
   @Test
+  public void testConvertEmptyReturnsDefaultValues() {
+    ObjectType model = converter.apply(new ObjectTypeEntity());
+    assertEquals(ObjectType.IndexOption.Daily, model.getIndexOption());
+  }
+
+  @Test
   public void testConvertNullReturnsNull() {
     assertNull(converter.apply(null));
   }
@@ -42,7 +48,8 @@ public class ObjectTypeResponseConverterTest {
             .setNamespaceID(UUID.randomUUID())
             .setName("ObjectType")
             .setValidator("Validator")
-            .setValidatorParameter("ValidatorParameter");
+            .setValidatorParameter("ValidatorParameter")
+            .addFlag(ObjectTypeEntity.Flag.TimeGlobalIndex);
   }
 
   private void assertModel(ObjectTypeEntity entity, ObjectType model) {
@@ -53,5 +60,6 @@ public class ObjectTypeResponseConverterTest {
     assertNotNull(model.getNamespace());
     assertEquals(entity.getNamespaceID(), model.getNamespace().getId());
     assertEquals("Namespace", model.getNamespace().getName());
+    assertEquals(ObjectType.IndexOption.TimeGlobal, model.getIndexOption());
   }
 }

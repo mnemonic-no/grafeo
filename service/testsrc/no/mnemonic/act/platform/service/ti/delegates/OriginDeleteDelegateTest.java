@@ -86,7 +86,7 @@ public class OriginDeleteDelegateTest {
     when(originManager.saveOrigin(entity)).thenReturn(entity);
 
     delegate.handle(new DeleteOriginRequest().setId(entity.getId()));
-    verify(originManager).saveOrigin(argThat(origin -> origin.getFlags().contains(OriginEntity.Flag.Deleted)));
+    verify(originManager).saveOrigin(argThat(origin -> origin.isSet(OriginEntity.Flag.Deleted)));
     verify(originResponseConverter).apply(entity);
   }
 }
