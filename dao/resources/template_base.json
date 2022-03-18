@@ -1,0 +1,130 @@
+{
+  "template": {
+    "settings": {
+      "index": {
+        "number_of_shards": 1,
+        "number_of_replicas": 1,
+        "max_result_window": 10000
+      },
+      "analysis": {
+        "tokenizer": {
+          "domain_tokenizer": {
+            "type": "path_hierarchy",
+            "delimiter": ".",
+            "reverse": true
+          }
+        },
+        "analyzer": {
+          "domain_analyzer": {
+            "type": "custom",
+            "tokenizer": "domain_tokenizer",
+            "filter": [ "trim", "lowercase" ]
+          },
+          "domain_search_analyzer": {
+            "type": "custom",
+            "tokenizer": "keyword",
+            "filter": [ "trim", "lowercase" ]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "dynamic": false,
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "typeID": {
+          "type": "keyword"
+        },
+        "value": {
+          "type": "keyword",
+          "fields": {
+            "text": {
+              "type": "text"
+            },
+            "ip": {
+              "type": "ip",
+              "ignore_malformed": true
+            },
+            "domain": {
+              "type": "text",
+              "analyzer": "domain_analyzer",
+              "search_analyzer": "domain_search_analyzer"
+            }
+          }
+        },
+        "inReferenceTo": {
+          "type": "keyword"
+        },
+        "organizationID": {
+          "type": "keyword"
+        },
+        "sourceID": {
+          "type": "keyword"
+        },
+        "addedByID": {
+          "type": "keyword"
+        },
+        "lastSeenByID": {
+          "type": "keyword"
+        },
+        "accessMode": {
+          "type": "keyword"
+        },
+        "confidence": {
+          "type": "half_float"
+        },
+        "trust": {
+          "type": "half_float"
+        },
+        "certainty": {
+          "type": "half_float"
+        },
+        "timestamp": {
+          "type": "date"
+        },
+        "lastSeenTimestamp": {
+          "type": "date"
+        },
+        "acl": {
+          "type": "keyword"
+        },
+        "objectCount": {
+          "type": "byte"
+        },
+        "objects": {
+          "type": "nested",
+          "properties": {
+            "id": {
+              "type": "keyword"
+            },
+            "typeID": {
+              "type": "keyword"
+            },
+            "value": {
+              "type": "keyword",
+              "fields": {
+                "text": {
+                  "type": "text"
+                },
+                "ip": {
+                  "type": "ip",
+                  "ignore_malformed": true
+                },
+                "domain": {
+                  "type": "text",
+                  "analyzer": "domain_analyzer",
+                  "search_analyzer": "domain_search_analyzer"
+                }
+              }
+            },
+            "direction": {
+              "type": "keyword"
+            }
+          }
+        }
+      }
+    }
+  }
+}

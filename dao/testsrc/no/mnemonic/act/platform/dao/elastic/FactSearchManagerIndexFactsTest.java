@@ -18,6 +18,7 @@ public class FactSearchManagerIndexFactsTest extends AbstractManagerTest {
 
   @Test
   public void testGetFactNonIndexedFact() {
+    getFactSearchManager().indexFact(createFactDocument());
     assertNull(getFactSearchManager().getFact(UUID.randomUUID()));
   }
 

@@ -1,0 +1,13 @@
+{
+  "index_patterns": ["act"],
+  "priority": 500,
+  "composed_of": ["act-base-template"],
+  "template": {
+    "settings": {
+      "index": {
+        "number_of_shards": 3,
+        "number_of_replicas": 1
+      }
+    }
+  }
+}

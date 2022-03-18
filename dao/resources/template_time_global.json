@@ -1,0 +1,5 @@
+{
+  "index_patterns": ["act-time-global"],
+  "priority": 500,
+  "composed_of": ["act-base-template"]
+}

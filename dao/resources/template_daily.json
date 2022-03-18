@@ -1,0 +1,10 @@
+{
+  "index_patterns": ["act-daily-*"],
+  "priority": 500,
+  "composed_of": ["act-base-template"],
+  "template": {
+    "settings": {
+      "index.lifecycle.name": "act-daily-retention-policy"
+    }
+  }
+}

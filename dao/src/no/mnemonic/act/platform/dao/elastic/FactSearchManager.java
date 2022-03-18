@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.dao.elastic;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -33,10 +34,10 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.CreateIndexResponse;
-import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.SimpleQueryStringBuilder;
@@ -73,8 +74,17 @@ import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
   private static final String INDEX_NAME = "act";
-  private static final String MAPPINGS_JSON = "mappings.json";
-  private static final int MAX_RESULT_WINDOW = 10_000; // Must be the same value as specified in mappings.json.
+  private static final String ILM_POLICY_DAILY_NAME = "act-daily-retention-policy";
+  private static final String BASE_TEMPLATE_NAME = "act-base-template";
+  private static final String DAILY_TEMPLATE_NAME = "act-daily-template";
+  private static final String LEGACY_TEMPLATE_NAME = "act-legacy-template";
+  private static final String TIME_GLOBAL_TEMPLATE_NAME = "act-time-global-template";
+  private static final String ILM_POLICY_DAILY_JSON = "ilm_policy_daily.json";
+  private static final String BASE_TEMPLATE_JSON = "template_base.json";
+  private static final String DAILY_TEMPLATE_JSON = "template_daily.json";
+  private static final String LEGACY_TEMPLATE_JSON = "template_legacy.json";
+  private static final String TIME_GLOBAL_TEMPLATE_JSON = "template_time_global.json";
+  private static final int MAX_RESULT_WINDOW = 10_000; // Must be the same value as specified in template_base.json.
 
   private static final String FACTS_COUNT_AGGREGATION_NAME = "FactsCountAggregation";
   private static final String NESTED_OBJECTS_AGGREGATION_NAME = "NestedObjectsAggregation";
@@ -113,10 +123,21 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
   @Override
   public void startComponent() {
-    if (!indexExists()) {
-      LOGGER.info("Index '%s' does not exist, create it.", INDEX_NAME);
-      createIndex();
+    // Changing an ILM policy will trigger some action on the indices associated with the policy. Because of that,
+    // avoid uploading a new version when nothing has changed. The configuration defines an "internalVersion" field
+    // as part of "_meta". Fetch the current configuration from the server and compare the stored "internalVersion"
+    // with the one from the configuration. If the configuration has a newer "internalVersion" upload the new policy.
+    if (shouldUpdateDailyIlmPolicy()) {
+      uploadConfiguration("/_ilm/policy/", ILM_POLICY_DAILY_NAME, ILM_POLICY_DAILY_JSON);
     }
+
+    // Changes to templates won't affect existing indices. Therefore, simply upload the templates every time.
+    // Index mappings are configured as a component template which will form the base for all index templates.
+    // This ensures that all indices will use the same mappings.
+    uploadConfiguration("/_component_template/", BASE_TEMPLATE_NAME, BASE_TEMPLATE_JSON);
+    uploadConfiguration("/_index_template/", DAILY_TEMPLATE_NAME, DAILY_TEMPLATE_JSON);
+    uploadConfiguration("/_index_template/", LEGACY_TEMPLATE_NAME, LEGACY_TEMPLATE_JSON);
+    uploadConfiguration("/_index_template/", TIME_GLOBAL_TEMPLATE_NAME, TIME_GLOBAL_TEMPLATE_JSON);
   }
 
   @Override
@@ -345,34 +366,69 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     return this;
   }
 
-  private boolean indexExists() {
+  private boolean shouldUpdateDailyIlmPolicy() {
     try {
-      GetIndexRequest request = new GetIndexRequest(INDEX_NAME);
-      return clientFactory.getClient().indices().exists(request, RequestOptions.DEFAULT);
-    } catch (ElasticsearchException | IOException ex) {
-      throw logAndExit(ex, "Could not perform request to verify if index exists.");
+      // The high-level REST client does NOT include the "_meta" field in the response.
+      // Instead, use the low-level REST client and parse the response manually.
+      Request request = new Request("GET", "/_ilm/policy/" + ILM_POLICY_DAILY_NAME);
+      Response response = clientFactory.getClient().getLowLevelClient().performRequest(request);
+      return parsePolicyInternalVersionFromResponse(response) < parsePolicyInternalVersionFromConfiguration();
+    } catch (ResponseException ex) {
+      if (ex.getResponse().getStatusLine().getStatusCode() == 404) {
+        LOGGER.info("ILM policy '%s' could not be found on the server.", ILM_POLICY_DAILY_NAME);
+        return true;
+      }
+
+      throw logAndExit(ex, String.format("Could not perform request to fetch ILM policy '%s'.", ILM_POLICY_DAILY_NAME));
+    } catch (IOException ex) {
+      throw logAndExit(ex, String.format("Could not perform request to fetch ILM policy '%s'.", ILM_POLICY_DAILY_NAME));
     }
   }
 
-  private void createIndex() {
-    CreateIndexResponse response;
+  private int parsePolicyInternalVersionFromResponse(Response response) {
+    try {
+      JsonNode content = MAPPER.readTree(response.getEntity().getContent());
+      if (!content.has(ILM_POLICY_DAILY_NAME) || !content.get(ILM_POLICY_DAILY_NAME).isObject()) return -1;
 
-    try (InputStream payload = FactSearchManager.class.getClassLoader().getResourceAsStream(MAPPINGS_JSON);
+      return parsePolicyInternalVersionFromNode(content.get(ILM_POLICY_DAILY_NAME));
+    } catch (IOException ex) {
+      throw logAndExit(ex, String.format("Could not parse response for ILM policy '%s'.", ILM_POLICY_DAILY_NAME));
+    }
+  }
+
+  private int parsePolicyInternalVersionFromConfiguration() {
+    try (InputStream payload = FactSearchManager.class.getClassLoader().getResourceAsStream(ILM_POLICY_DAILY_JSON)) {
+      return parsePolicyInternalVersionFromNode(MAPPER.readTree(payload));
+    } catch (IOException ex) {
+      throw logAndExit(ex, String.format("Could not parse configuration for ILM policy '%s'.", ILM_POLICY_DAILY_NAME));
+    }
+  }
+
+  private int parsePolicyInternalVersionFromNode(JsonNode node) {
+    if (!node.has("policy") || !node.get("policy").isObject()) return -1;
+
+    JsonNode policy = node.get("policy");
+    if (!policy.has("_meta") || !policy.get("_meta").isObject()) return -1;
+
+    JsonNode meta = policy.get("_meta");
+    if (!meta.has("internalVersion") || !meta.get("internalVersion").isInt()) return -1;
+
+    return meta.get("internalVersion").asInt();
+  }
+
+  private void uploadConfiguration(String endpoint, String name, String jsonFile) {
+    // It's much easier to just use the low-level REST client to upload the configuration.
+    // Simply read the JSON content from the resource and push to the server.
+    try (InputStream payload = FactSearchManager.class.getClassLoader().getResourceAsStream(jsonFile);
          InputStreamReader reader = new InputStreamReader(payload)) {
-      CreateIndexRequest request = new CreateIndexRequest(INDEX_NAME)
-              .source(CharStreams.toString(reader), XContentType.JSON);
-      response = clientFactory.getClient().indices().create(request, RequestOptions.DEFAULT);
-    } catch (ElasticsearchException | IOException ex) {
-      throw logAndExit(ex, "Could not perform request to create index.");
+      Request request = new Request("PUT", endpoint + name);
+      request.setJsonEntity(CharStreams.toString(reader));
+      clientFactory.getClient().getLowLevelClient().performRequest(request);
+    } catch (IOException ex) {
+      throw logAndExit(ex, String.format("Could not perform request to upload configuration '%s'.", name));
     }
 
-    if (!response.isAcknowledged()) {
-      String msg = String.format("Could not create index '%s'.", INDEX_NAME);
-      LOGGER.error(msg);
-      throw new IllegalStateException(msg);
-    }
-
-    LOGGER.info("Successfully created index '%s'.", INDEX_NAME);
+    LOGGER.info("Successfully uploaded configuration '%s'.", name);
   }
 
   private ScrollingSearchResult.ScrollingBatch<UUID> fetchNextFactsBatch(String scrollId) {

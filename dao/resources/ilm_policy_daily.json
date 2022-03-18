@@ -1,0 +1,15 @@
+{
+  "policy": {
+    "_meta": {
+      "internalVersion": 1
+    },
+    "phases": {
+      "delete": {
+        "min_age": "1095d",
+        "actions": {
+          "delete": {}
+        }
+      }
+    }
+  }
+}
