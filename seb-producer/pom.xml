@@ -9,7 +9,7 @@
   <parent>
     <groupId>no.mnemonic.act.platform</groupId>
     <artifactId>parent</artifactId>
-    <version>0.0.97</version>
+    <version>0.0.98-SNAPSHOT</version>
   </parent>
 
   <build>
