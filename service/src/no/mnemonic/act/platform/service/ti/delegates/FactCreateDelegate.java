@@ -9,7 +9,9 @@ import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
+import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.act.platform.service.contexts.TriggerContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
@@ -21,6 +23,7 @@ import no.mnemonic.act.platform.service.ti.resolvers.request.ObjectRequestResolv
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
 import java.time.Clock;
@@ -34,6 +37,7 @@ public class FactCreateDelegate implements Delegate {
   private final FactTypeRequestResolver factTypeRequestResolver;
   private final ObjectRequestResolver objectRequestResolver;
   private final FactCreateHandler factCreateHandler;
+  private final ObjectManager objectManager;
 
   private FactTypeEntity requestedFactType;
   private OriginEntity requestedOrigin;
@@ -46,12 +50,14 @@ public class FactCreateDelegate implements Delegate {
                             TriggerContext triggerContext,
                             FactTypeRequestResolver factTypeRequestResolver,
                             ObjectRequestResolver objectRequestResolver,
-                            FactCreateHandler factCreateHandler) {
+                            FactCreateHandler factCreateHandler,
+                            ObjectManager objectManager) {
     this.securityContext = securityContext;
     this.triggerContext = triggerContext;
     this.factTypeRequestResolver = factTypeRequestResolver;
     this.objectRequestResolver = objectRequestResolver;
     this.factCreateHandler = factCreateHandler;
+    this.objectManager = objectManager;
   }
 
   public Fact handle(CreateFactRequest request)
@@ -131,7 +137,21 @@ public class FactCreateDelegate implements Delegate {
             .setLastSeenTimestamp(now)
             .setSourceObject(source)
             .setDestinationObject(destination)
-            .setBidirectionalBinding(request.isBidirectionalBinding());
+            .setBidirectionalBinding(request.isBidirectionalBinding())
+            .setFlags(isTimeGlobal(source, destination) ? SetUtils.set(FactRecord.Flag.TimeGlobalIndex) : SetUtils.set());
+  }
+
+  private boolean isTimeGlobal(ObjectRecord source, ObjectRecord destination) {
+    if (source != null && destination != null) {
+      return objectManager.getObjectType(source.getTypeID()).isSet(ObjectTypeEntity.Flag.TimeGlobalIndex) &&
+              objectManager.getObjectType(destination.getTypeID()).isSet(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    } else if (source != null) {
+      return objectManager.getObjectType(source.getTypeID()).isSet(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    } else if (destination != null) {
+      return objectManager.getObjectType(destination.getTypeID()).isSet(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    }
+
+    return false;
   }
 
   private void registerTriggerEvent(Fact addedFact) {

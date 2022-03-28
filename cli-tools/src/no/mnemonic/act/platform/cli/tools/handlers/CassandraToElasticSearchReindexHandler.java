@@ -13,6 +13,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.LongAdder;
 
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.Legacy;
+
 @Singleton
 public class CassandraToElasticSearchReindexHandler {
 
@@ -113,7 +115,7 @@ public class CassandraToElasticSearchReindexHandler {
     // Fetch all Facts inside one bucket from Cassandra, convert them to documents and index them into ElasticSearch.
     factManager.getFactsWithin(currentBucketStart.toEpochMilli(), currentBucketEnd.toEpochMilli())
             .forEachRemaining(fact -> {
-              factSearchManager.indexFact(factConverter.apply(fact));
+              factSearchManager.indexFact(factConverter.apply(fact), Legacy);
               processedFacts.increment();
             });
   }

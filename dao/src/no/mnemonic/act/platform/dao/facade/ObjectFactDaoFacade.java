@@ -14,6 +14,7 @@ import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.*;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
+import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.act.platform.dao.elastic.result.ScrollingSearchResult;
 import no.mnemonic.act.platform.dao.elastic.result.SearchResult;
 import no.mnemonic.act.platform.dao.facade.converters.FactAclEntryRecordConverter;
@@ -31,6 +32,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.*;
 
 public class ObjectFactDaoFacade implements ObjectFactDao {
 
@@ -147,7 +150,7 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     saveComments(record);
 
     // Index new Fact in ElasticSearch.
-    factSearchManager.indexFact(factRecordConverter.toDocument(record));
+    indexFact(record);
     // Initiate data center replication.
     dcReplicationConsumer.accept(record);
 
@@ -392,11 +395,24 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     factResolver.evict(fact);
     FactRecord record = factResolver.getFact(fact.getId());
     // Simply reindex everything based on the fetched record.
-    factSearchManager.indexFact(factRecordConverter.toDocument(record));
+    indexFact(record);
     // Initiate data center replication to propagate changes.
     dcReplicationConsumer.accept(record);
     // Return up-to-date record.
     return record;
+  }
+
+  private void indexFact(FactRecord fact) {
+    FactDocument document = factRecordConverter.toDocument(fact);
+
+    if (fact.isSet(FactRecord.Flag.TimeGlobalIndex)) {
+      factSearchManager.indexFact(document, TimeGlobal);
+    } else {
+      factSearchManager.indexFact(document, Daily);
+    }
+
+    // Compatibility: For now always index into the legacy 'act' index in addition to time global or daily indices.
+    factSearchManager.indexFact(document, Legacy);
   }
 
   private interface FactEntityUpdater {

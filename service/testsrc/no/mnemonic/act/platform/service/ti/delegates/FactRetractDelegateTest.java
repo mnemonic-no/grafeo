@@ -251,6 +251,7 @@ public class FactRetractDelegateTest {
       assertTrue(record.getTimestamp() > 0);
       assertTrue(record.getLastSeenTimestamp() > 0);
       assertEquals(record.getTimestamp(), record.getLastSeenTimestamp());
+      assertTrue(record.isSet(FactRecord.Flag.TimeGlobalIndex));
       return true;
     });
   }

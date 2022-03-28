@@ -101,7 +101,7 @@ public class FactRecordConverterTest {
     Arrays.stream(FactEntity.Flag.values()).forEach(entity::addFlag);
 
     FactRecord record = converter.fromEntity(entity);
-    assertEquals(SetUtils.set(FactRecord.Flag.RetractedHint), record.getFlags());
+    assertEquals(SetUtils.set(FactRecord.Flag.values()), record.getFlags());
   }
 
   @Test

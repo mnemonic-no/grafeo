@@ -52,7 +52,8 @@ public class FactEntity implements CassandraEntity {
     BidirectionalBinding(3, true),
     // Flag which indicates that the 'source_object_id' and 'destination_object_id' fields are used instead of 'bindings'.
     // 'bindings' is deprecated but kept for backwards-compatibility. It will be removed in the future.
-    UsesSeparatedObjectFields(4, true);
+    UsesSeparatedObjectFields(4, true),
+    TimeGlobalIndex(5, false);
 
     private static final Map<Integer, Flag> enumValues = unmodifiableMap(map(v -> T(v.value(), v), values()));
     private final int value;

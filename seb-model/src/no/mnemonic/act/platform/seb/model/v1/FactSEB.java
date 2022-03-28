@@ -23,7 +23,7 @@ public class FactSEB {
   }
 
   public enum Flag {
-    RetractedHint
+    RetractedHint, TimeGlobalIndex
   }
 
   private final UUID id;
@@ -153,6 +153,10 @@ public class FactSEB {
 
   public Set<Flag> getFlags() {
     return flags;
+  }
+
+  public boolean isSet(Flag flag) {
+    return SetUtils.set(flags).contains(flag);
   }
 
   public Set<AclEntrySEB> getAcl() {

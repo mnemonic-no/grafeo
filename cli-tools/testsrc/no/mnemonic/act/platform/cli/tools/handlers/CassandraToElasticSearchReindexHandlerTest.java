@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.Legacy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
@@ -55,7 +56,7 @@ public class CassandraToElasticSearchReindexHandlerTest {
     assertDoesNotThrow(() -> handler.reindex(DAY1_1, DAY2, reverse));
     verify(factManager).getFactsWithin(DAY1_1.toEpochMilli(), DAY2.toEpochMilli());
     verify(factConverter).apply(entity);
-    verify(factSearchManager).indexFact(document);
+    verify(factSearchManager).indexFact(document, Legacy);
     verifyNoMoreInteractions(factManager, factSearchManager, factConverter);
   }
 
@@ -70,7 +71,7 @@ public class CassandraToElasticSearchReindexHandlerTest {
     assertDoesNotThrow(() -> handler.reindex(DAY1_1, DAY1_2, reverse));
     verify(factManager).getFactsWithin(DAY1_1.toEpochMilli(), DAY1_2.toEpochMilli());
     verify(factConverter).apply(entity);
-    verify(factSearchManager).indexFact(document);
+    verify(factSearchManager).indexFact(document, Legacy);
     verifyNoMoreInteractions(factManager, factSearchManager, factConverter);
   }
 
@@ -86,7 +87,7 @@ public class CassandraToElasticSearchReindexHandlerTest {
     bucketsOrder.verify(factManager).getFactsWithin(DAY1_1.toEpochMilli(), DAY2.toEpochMilli());
     bucketsOrder.verify(factManager).getFactsWithin(DAY2.toEpochMilli(), DAY3_1.toEpochMilli());
     verify(factConverter, times(2)).apply(entity);
-    verify(factSearchManager, times(2)).indexFact(document);
+    verify(factSearchManager, times(2)).indexFact(document, Legacy);
     verifyNoMoreInteractions(factManager, factSearchManager, factConverter);
   }
 
@@ -102,7 +103,7 @@ public class CassandraToElasticSearchReindexHandlerTest {
     bucketsOrder.verify(factManager).getFactsWithin(DAY2.toEpochMilli(), DAY3_1.toEpochMilli());
     bucketsOrder.verify(factManager).getFactsWithin(DAY1_1.toEpochMilli(), DAY2.toEpochMilli());
     verify(factConverter, times(2)).apply(entity);
-    verify(factSearchManager, times(2)).indexFact(document);
+    verify(factSearchManager, times(2)).indexFact(document, Legacy);
     verifyNoMoreInteractions(factManager, factSearchManager, factConverter);
   }
 
@@ -119,7 +120,7 @@ public class CassandraToElasticSearchReindexHandlerTest {
     bucketsOrder.verify(factManager).getFactsWithin(DAY2.toEpochMilli(), DAY3_1.toEpochMilli());
     bucketsOrder.verify(factManager).getFactsWithin(DAY3_1.toEpochMilli(), DAY3_2.toEpochMilli());
     verify(factConverter, times(3)).apply(entity);
-    verify(factSearchManager, times(3)).indexFact(document);
+    verify(factSearchManager, times(3)).indexFact(document, Legacy);
     verifyNoMoreInteractions(factManager, factSearchManager, factConverter);
   }
 
@@ -135,7 +136,7 @@ public class CassandraToElasticSearchReindexHandlerTest {
     bucketsOrder.verify(factManager).getFactsWithin(DAY2.toEpochMilli(), DAY3_1.toEpochMilli());
     bucketsOrder.verify(factManager).getFactsWithin(DAY1_2.toEpochMilli(), DAY2.toEpochMilli());
     verify(factConverter, times(2)).apply(entity);
-    verify(factSearchManager, times(2)).indexFact(document);
+    verify(factSearchManager, times(2)).indexFact(document, Legacy);
     verifyNoMoreInteractions(factManager, factSearchManager, factConverter);
   }
 }

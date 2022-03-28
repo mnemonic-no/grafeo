@@ -21,6 +21,7 @@ import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestReso
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
 import java.time.Clock;
@@ -111,7 +112,8 @@ public class FactCreateMetaDelegate implements Delegate {
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), requestedFactType.getDefaultConfidence()))
             .setAccessMode(factCreateHandler.resolveAccessMode(referencedFact, request.getAccessMode()))
             .setTimestamp(now)
-            .setLastSeenTimestamp(now);
+            .setLastSeenTimestamp(now)
+            .setFlags(referencedFact.isSet(FactRecord.Flag.TimeGlobalIndex) ? SetUtils.set(FactRecord.Flag.TimeGlobalIndex) : SetUtils.set());
   }
 
   private void registerTriggerEvent(Fact addedFact) {

@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.api.request.v1.AccessMode;
 import no.mnemonic.act.platform.api.request.v1.CreateFactRequest;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
@@ -41,6 +42,8 @@ public class FactCreateDelegateTest {
   private ObjectRequestResolver objectRequestResolver;
   @Mock
   private FactCreateHandler factCreateHandler;
+  @Mock
+  private ObjectManager objectManager;
   @Mock
   private TiSecurityContext securityContext;
   @Mock
@@ -101,7 +104,8 @@ public class FactCreateDelegateTest {
             triggerContext,
             factTypeRequestResolver,
             objectRequestResolver,
-            factCreateHandler
+            factCreateHandler,
+            objectManager
     ).withClock(clock);
 
     when(clock.millis()).thenReturn(1000L, 2000L, 3000L);
@@ -202,6 +206,18 @@ public class FactCreateDelegateTest {
   }
 
   @Test
+  public void testCreateFactWithOnlySourceObjectAndTimeGlobal() throws Exception {
+    ipObjectType.addFlag(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    CreateFactRequest request = createRequest()
+            .setDestinationObject(null);
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(factCreateHandler).saveFact(argThat(record -> record.isSet(FactRecord.Flag.TimeGlobalIndex)), notNull(), notNull());
+  }
+
+  @Test
   public void testCreateFactWithOnlyDestinationObject() throws Exception {
     CreateFactRequest request = createRequest()
             .setSourceObject(null);
@@ -213,6 +229,18 @@ public class FactCreateDelegateTest {
   }
 
   @Test
+  public void testCreateFactWithOnlyDestinationObjectAndTimeGlobal() throws Exception {
+    domainObjectType.addFlag(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    CreateFactRequest request = createRequest()
+            .setSourceObject(null);
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(factCreateHandler).saveFact(argThat(record -> record.isSet(FactRecord.Flag.TimeGlobalIndex)), notNull(), notNull());
+  }
+
+  @Test
   public void testCreateFactWithBothSourceAndDestinationObjects() throws Exception {
     CreateFactRequest request = createRequest();
     mockCreateNewFact();
@@ -220,6 +248,29 @@ public class FactCreateDelegateTest {
     delegate.handle(request);
 
     verify(factCreateHandler).saveFact(matchFactRecord(request), notNull(), notNull());
+  }
+
+  @Test
+  public void testCreateFactWithBothSourceAndDestinationObjectsAndTimeGlobal() throws Exception {
+    ipObjectType.addFlag(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    domainObjectType.addFlag(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    CreateFactRequest request = createRequest();
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(factCreateHandler).saveFact(argThat(record -> record.isSet(FactRecord.Flag.TimeGlobalIndex)), notNull(), notNull());
+  }
+
+  @Test
+  public void testCreateFactWithBothSourceAndDestinationObjectsAndNoTimeGlobal() throws Exception {
+    ipObjectType.addFlag(ObjectTypeEntity.Flag.TimeGlobalIndex);
+    CreateFactRequest request = createRequest();
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(factCreateHandler).saveFact(argThat(record -> !record.isSet(FactRecord.Flag.TimeGlobalIndex)), notNull(), notNull());
   }
 
   @Test
@@ -313,6 +364,9 @@ public class FactCreateDelegateTest {
     mockFetchingFactType();
     mockFetchingObjects();
 
+    // Mock fetching ObjectType (required to determine time global index).
+    when(objectManager.getObjectType(ipObjectType.getId())).thenReturn(ipObjectType);
+    when(objectManager.getObjectType(domainObjectType.getId())).thenReturn(domainObjectType);
     // Mock fetching of current user.
     when(securityContext.getCurrentUserID()).thenReturn(UUID.randomUUID());
     // Mocking needed for registering TriggerEvent.

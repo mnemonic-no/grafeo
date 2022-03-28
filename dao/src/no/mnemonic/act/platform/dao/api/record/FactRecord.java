@@ -21,7 +21,8 @@ public class FactRecord {
      * The 'RetractedHint' flag only indicates that the Fact has been retracted by someone. From the user's point of view
      * the Fact is only retracted if one has access to the retraction Fact. This must be checked in the service implementation.
      */
-    RetractedHint
+    RetractedHint,
+    TimeGlobalIndex
   }
 
   private UUID id;
@@ -200,6 +201,10 @@ public class FactRecord {
   public FactRecord addFlag(Flag flag) {
     this.flags = SetUtils.addToSet(this.flags, flag);
     return this;
+  }
+
+  public boolean isSet(Flag flag) {
+    return SetUtils.set(flags).contains(flag);
   }
 
   public List<FactAclEntryRecord> getAcl() {

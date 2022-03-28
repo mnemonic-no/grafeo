@@ -57,6 +57,10 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -73,7 +77,22 @@ import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 @Singleton
 public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
-  private static final String INDEX_NAME = "act";
+  public enum TargetIndex {
+    Daily("act-daily-"),
+    Legacy("act"),
+    TimeGlobal("act-time-global");
+
+    private final String name;
+
+    TargetIndex(String name) {
+      this.name = name;
+    }
+
+    public String getName() {
+      return name;
+    }
+  }
+
   private static final String ILM_POLICY_DAILY_NAME = "act-daily-retention-policy";
   private static final String BASE_TEMPLATE_NAME = "act-base-template";
   private static final String DAILY_TEMPLATE_NAME = "act-daily-template";
@@ -163,26 +182,27 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   /**
    * Retrieve an indexed Fact by its UUID. Returns NULL if Fact cannot be fetched from ElasticSearch.
    *
-   * @param id UUID of indexed Fact
+   * @param id    UUID of indexed Fact
+   * @param index Index from which the Fact will be retrieved
    * @return Indexed Fact or NULL if not available
    */
-  public FactDocument getFact(UUID id) {
+  public FactDocument getFact(UUID id, String index) {
     if (id == null) return null;
     GetResponse response;
 
     try {
-      GetRequest request = new GetRequest(INDEX_NAME, id.toString());
+      GetRequest request = new GetRequest(index, id.toString());
       response = clientFactory.getClient().get(request, RequestOptions.DEFAULT);
     } catch (ElasticsearchException | IOException ex) {
-      throw logAndExit(ex, String.format("Could not perform request to fetch Fact with id = %s.", id));
+      throw logAndExit(ex, String.format("Could not perform request to fetch Fact with id = %s from index = %s.", id, index));
     }
 
     if (response.isExists()) {
-      LOGGER.debug("Successfully fetched Fact with id = %s.", id);
+      LOGGER.debug("Successfully fetched Fact with id = %s from index = %s.", id, index);
       return decodeFactDocument(id, response.getSourceAsBytes());
     } else {
       // Fact isn't indexed in ElasticSearch, log warning and return null.
-      LOGGER.warning("Could not fetch Fact with id = %s. Fact not indexed?", id);
+      LOGGER.warning("Could not fetch Fact with id = %s from index = %s. Fact not indexed?", id, index);
       return null;
     }
   }
@@ -190,29 +210,31 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   /**
    * Index a Fact into ElasticSearch.
    *
-   * @param fact Fact to index
+   * @param fact  Fact to index
+   * @param index Index into which the Fact will be indexed
    * @return Indexed Fact
    */
-  public FactDocument indexFact(FactDocument fact) {
+  public FactDocument indexFact(FactDocument fact, TargetIndex index) {
     if (fact == null || fact.getId() == null) return null;
     IndexResponse response;
 
+    String indexName = resolveIndexName(fact, index);
     try (TimerContext ignored = TimerContext.timerMillis(indexMonitor::invoked)) {
-      IndexRequest request = new IndexRequest(INDEX_NAME)
+      IndexRequest request = new IndexRequest(indexName)
               .id(fact.getId().toString())
               .setRefreshPolicy(isTestEnvironment ? WriteRequest.RefreshPolicy.IMMEDIATE : WriteRequest.RefreshPolicy.NONE)
               .source(FACT_DOCUMENT_WRITER.writeValueAsBytes(fact), XContentType.JSON);
       response = clientFactory.getClient().index(request, RequestOptions.DEFAULT);
     } catch (ElasticsearchException | IOException ex) {
-      throw logAndExit(ex, String.format("Could not perform request to index Fact with id = %s.", fact.getId()));
+      throw logAndExit(ex, String.format("Could not perform request to index Fact with id = %s into index = %s.", fact.getId(), indexName));
     }
 
     if (response.status() != RestStatus.OK && response.status() != RestStatus.CREATED) {
-      LOGGER.warning("Could not index Fact with id = %s.", fact.getId());
+      LOGGER.warning("Could not index Fact with id = %s into index = %s.", fact.getId(), indexName);
     } else if (response.getResult() == DocWriteResponse.Result.CREATED) {
-      LOGGER.debug("Successfully indexed Fact with id = %s.", fact.getId());
+      LOGGER.debug("Successfully indexed Fact with id = %s into index = %s.", fact.getId(), indexName);
     } else if (response.getResult() == DocWriteResponse.Result.UPDATED) {
-      LOGGER.debug("Successfully re-indexed existing Fact with id = %s.", fact.getId());
+      LOGGER.debug("Successfully re-indexed existing Fact with id = %s into index = %s.", fact.getId(), indexName);
     }
 
     return fact;
@@ -498,7 +520,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             // Use an aggregation to calculate the count because with daily indices the search result will contain duplicates.
             .aggregation(buildFactsCountAggregation());
     return new SearchRequest()
-            .indices(INDEX_NAME)
+            .indices(TargetIndex.Legacy.getName())
             .scroll(searchScrollExpiration)
             .source(sourceBuilder);
   }
@@ -510,7 +532,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             .query(buildFactsQuery(criteria)) // Reduce documents to Facts matching the search criteria.
             .aggregation(buildObjectsAggregation(criteria));
     return new SearchRequest()
-            .indices(INDEX_NAME)
+            .indices(TargetIndex.Legacy.getName())
             .source(sourceBuilder);
   }
 
@@ -521,7 +543,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             .query(buildObjectStatisticsFactsQuery(criteria)) // Reduce documents to Facts matching the search criteria.
             .aggregation(buildObjectStatisticsAggregation(criteria));
     return new SearchRequest()
-            .indices(INDEX_NAME)
+            .indices(TargetIndex.Legacy.getName())
             .source(sourceBuilder);
   }
 
@@ -888,6 +910,18 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
     // Couldn't find target aggregation.
     return null;
+  }
+
+  private String resolveIndexName(FactDocument fact, TargetIndex index) {
+    if (index == TargetIndex.Daily) {
+      return index.getName() + DateTimeFormatter.ISO_LOCAL_DATE
+              // Need to explicitly specify time zone when formatting an Instant.
+              .withZone(ZoneId.from(ZoneOffset.UTC))
+              // Always index a Fact into daily indices based on its 'lastSeenTimestamp' field.
+              .format(Instant.ofEpochMilli(fact.getLastSeenTimestamp()));
+    }
+
+    return index.getName();
   }
 
   private FactDocument decodeFactDocument(UUID factID, byte[] source) {

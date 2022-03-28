@@ -77,7 +77,7 @@ public abstract class AbstractManagerTest {
 
   FactDocument indexFact(ObjectPreparation<FactDocument> preparation) {
     FactDocument document = preparation != null ? preparation.prepare(createFactDocument()) : createFactDocument();
-    return getFactSearchManager().indexFact(document);
+    return getFactSearchManager().indexFact(document, FactSearchManager.TargetIndex.Legacy);
   }
 
   <T> T first(Iterable<T> iterable) {

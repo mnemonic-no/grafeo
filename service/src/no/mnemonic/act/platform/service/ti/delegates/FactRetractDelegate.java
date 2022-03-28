@@ -101,7 +101,8 @@ public class FactRetractDelegate implements Delegate {
             .setConfidence(ObjectUtils.ifNull(request.getConfidence(), retractionFactType.getDefaultConfidence()))
             .setAccessMode(factCreateHandler.resolveAccessMode(factToRetract, request.getAccessMode()))
             .setTimestamp(now)
-            .setLastSeenTimestamp(now);
+            .setLastSeenTimestamp(now)
+            .addFlag(FactRecord.Flag.TimeGlobalIndex);
   }
 
   private void registerTriggerEvent(Fact retractionFact, Fact retractedFact) {

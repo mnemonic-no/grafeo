@@ -157,6 +157,17 @@ public class FactCreateMetaDelegateTest {
   }
 
   @Test
+  public void testCreateMetaFactWithTimeGlobal() throws Exception {
+    seenIn.addFlag(FactRecord.Flag.TimeGlobalIndex);
+    CreateMetaFactRequest request = createRequest();
+    mockCreateNewFact();
+
+    delegate.handle(request);
+
+    verify(factCreateHandler).saveFact(argThat(record -> record.isSet(FactRecord.Flag.TimeGlobalIndex)), notNull(), notNull());
+  }
+
+  @Test
   public void testCreateMetaFactSetMissingOrganization() throws Exception {
     UUID organizationID = UUID.randomUUID();
     CreateMetaFactRequest request = createRequest()

@@ -12,6 +12,8 @@ import no.mnemonic.services.common.hazelcast.consumer.TransactionalConsumer;
 import javax.inject.Inject;
 import java.util.Collection;
 
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.*;
+
 /**
  * Component which consumes {@link FactSEB} models, converts them to {@link FactDocument}, and indexes them into ElasticSearch.
  */
@@ -36,7 +38,14 @@ public class FactConsumer implements TransactionalConsumer<FactSEB> {
       FactDocument document = factConverter.apply(seb);
       if (document != null) {
         LOGGER.debug("Indexing Fact with id = %s into ElasticSearch.", document.getId());
-        factSearchManager.indexFact(document);
+        if (seb.isSet(FactSEB.Flag.TimeGlobalIndex)) {
+          factSearchManager.indexFact(document, TimeGlobal);
+        } else {
+          factSearchManager.indexFact(document, Daily);
+        }
+
+        // Compatibility: For now always index into the legacy 'act' index in addition to time global or daily indices.
+        factSearchManager.indexFact(document, Legacy);
       }
     }
   }

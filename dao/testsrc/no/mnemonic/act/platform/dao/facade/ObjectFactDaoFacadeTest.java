@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.*;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -201,9 +202,23 @@ public class ObjectFactDaoFacadeTest {
 
     assertSame(record, dao.storeFact(record));
     verify(factManager).saveFact(entity);
-    verify(factSearchManager).indexFact(document);
+    verify(factSearchManager).indexFact(document, Daily);
+    verify(factSearchManager).indexFact(document, Legacy);
     verify(factRecordConverter).toEntity(argThat(r -> r.getId() == record.getId()));
     verify(factRecordConverter).toDocument(argThat(r -> r.getId() == record.getId()));
+  }
+
+  @Test
+  public void testStoreFactSavesEntityWithTimeGlobalIndex() {
+    FactRecord record = new FactRecord().setId(UUID.randomUUID()).addFlag(FactRecord.Flag.TimeGlobalIndex);
+    FactEntity entity = new FactEntity().setId(record.getId());
+    FactDocument document = new FactDocument().setId(record.getId());
+    when(factRecordConverter.toEntity(record)).thenReturn(entity);
+    when(factRecordConverter.toDocument(record)).thenReturn(document);
+
+    assertSame(record, dao.storeFact(record));
+    verify(factSearchManager).indexFact(document, TimeGlobal);
+    verify(factSearchManager).indexFact(document, Legacy);
   }
 
   @Test
@@ -216,7 +231,6 @@ public class ObjectFactDaoFacadeTest {
 
     assertSame(record, dao.storeFact(record));
     verify(factManager).saveFact(entity);
-    verify(factSearchManager).indexFact(document);
     verify(factRecordConverter).toEntity(argThat(r -> r.getId() != null));
     verify(factRecordConverter).toDocument(argThat(r -> r.getId() != null));
   }
@@ -362,6 +376,7 @@ public class ObjectFactDaoFacadeTest {
             .setLastSeenTimestamp(123456789L)
             .setLastSeenByID(UUID.randomUUID());
     when(factManager.getFact(record.getId())).thenReturn(new FactEntity());
+    mockReindexingOfFact(record);
 
     dao.refreshFact(record);
     verify(factManager).saveFactRefreshLogEntry(argThat(entity -> Objects.equals(entity.getFactID(), record.getId()) &&
@@ -377,6 +392,7 @@ public class ObjectFactDaoFacadeTest {
             .addAclEntry(entry);
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factAclEntryRecordConverter.toEntity(entry, fact.getId())).thenReturn(new FactAclEntity());
+    mockReindexingOfFact(fact);
 
     dao.refreshFact(fact);
     verify(factManager).saveFact(argThat(entity -> entity.isSet(FactEntity.Flag.HasAcl)));
@@ -394,6 +410,7 @@ public class ObjectFactDaoFacadeTest {
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factManager.fetchFactAcl(fact.getId()))
             .thenReturn(ListUtils.list(new FactAclEntity().setId(entry.getId())));
+    mockReindexingOfFact(fact);
 
     dao.refreshFact(fact);
     verify(factManager, never()).saveFactAclEntry(any());
@@ -408,6 +425,7 @@ public class ObjectFactDaoFacadeTest {
             .addComment(comment);
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factCommentRecordConverter.toEntity(comment, fact.getId())).thenReturn(new FactCommentEntity());
+    mockReindexingOfFact(fact);
 
     dao.refreshFact(fact);
     verify(factManager).saveFact(argThat(entity -> entity.isSet(FactEntity.Flag.HasComments)));
@@ -425,6 +443,7 @@ public class ObjectFactDaoFacadeTest {
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factManager.fetchFactComments(fact.getId()))
             .thenReturn(ListUtils.list(new FactCommentEntity().setId(comment.getId())));
+    mockReindexingOfFact(fact);
 
     dao.refreshFact(fact);
     verify(factManager, never()).saveFactComment(any());
@@ -455,6 +474,7 @@ public class ObjectFactDaoFacadeTest {
             .addAclEntry(entry);
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factAclEntryRecordConverter.toEntity(entry, fact.getId())).thenReturn(new FactAclEntity());
+    mockReindexingOfFact(fact);
 
     dao.retractFact(fact);
     verify(factManager).saveFact(argThat(entity -> entity.isSet(FactEntity.Flag.HasAcl)));
@@ -472,6 +492,7 @@ public class ObjectFactDaoFacadeTest {
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factManager.fetchFactAcl(fact.getId()))
             .thenReturn(ListUtils.list(new FactAclEntity().setId(entry.getId())));
+    mockReindexingOfFact(fact);
 
     dao.retractFact(fact);
     verify(factManager, never()).saveFactAclEntry(any());
@@ -486,6 +507,7 @@ public class ObjectFactDaoFacadeTest {
             .addComment(comment);
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factCommentRecordConverter.toEntity(comment, fact.getId())).thenReturn(new FactCommentEntity());
+    mockReindexingOfFact(fact);
 
     dao.retractFact(fact);
     verify(factManager).saveFact(argThat(entity -> entity.isSet(FactEntity.Flag.HasComments)));
@@ -503,6 +525,7 @@ public class ObjectFactDaoFacadeTest {
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factManager.fetchFactComments(fact.getId()))
             .thenReturn(ListUtils.list(new FactCommentEntity().setId(comment.getId())));
+    mockReindexingOfFact(fact);
 
     dao.retractFact(fact);
     verify(factManager, never()).saveFactComment(any());
@@ -580,6 +603,7 @@ public class ObjectFactDaoFacadeTest {
     FactAclEntryRecord entry = new FactAclEntryRecord().setId(UUID.randomUUID());
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factAclEntryRecordConverter.toEntity(entry, fact.getId())).thenReturn(new FactAclEntity());
+    mockReindexingOfFact(fact);
 
     assertSame(entry, dao.storeFactAclEntry(fact, entry));
     verify(factManager).saveFact(argThat(entity -> entity.isSet(FactEntity.Flag.HasAcl)));
@@ -593,6 +617,7 @@ public class ObjectFactDaoFacadeTest {
     FactAclEntryRecord entry = new FactAclEntryRecord();
     when(factManager.getFact(fact.getId())).thenReturn(new FactEntity());
     when(factAclEntryRecordConverter.toEntity(entry, fact.getId())).thenReturn(new FactAclEntity());
+    mockReindexingOfFact(fact);
 
     assertSame(entry, dao.storeFactAclEntry(fact, entry));
     verify(factManager).saveFactAclEntry(notNull());
@@ -683,7 +708,7 @@ public class ObjectFactDaoFacadeTest {
     verify(factResolver).evict(fact);
     verify(factResolver).getFact(fact.getId());
     verify(factRecordConverter).toDocument(notNull());
-    verify(factSearchManager, atLeastOnce()).indexFact(notNull());
+    verify(factSearchManager, atLeastOnce()).indexFact(notNull(), notNull());
     verify(dcReplicationConsumer).accept(notNull());
   }
 
