@@ -30,19 +30,25 @@ public class RuntimeExceptionHandlerAspect extends AbstractAspect {
       return invocation.proceed();
     } catch (UnexpectedAuthenticationFailedException | UnhandledRuntimeException | ServiceTimeOutException ex) {
       throw ex; // Allow well-known RuntimeExceptions to pass through.
-    } catch (DriverTimeoutException ex) {
-      LOGGER.warning(ex, "Received timeout from Cassandra client driver in service call %s().", invocation.getMethod().getName());
-
-      // Timeouts from the Cassandra client driver are re-thrown as ServiceTimeOutException
-      // such that REST clients will receive a 503 error code.
-      throw new ServiceTimeOutException("Received timeout from Cassandra client driver.");
     } catch (RuntimeException ex) {
+      if (containsException(ex, DriverTimeoutException.class)) {
+        LOGGER.warning(ex, "Received timeout from Cassandra client driver in service call %s().", invocation.getMethod().getName());
+        // Timeouts from the Cassandra client driver are re-thrown as ServiceTimeOutException
+        // such that REST clients will receive a 503 error code.
+        throw new ServiceTimeOutException("Received timeout from Cassandra client driver.");
+      }
+
       String msg = String.format("Exception in service call %s(): %s", invocation.getMethod().getName(), ex.getMessage());
       LOGGER.error(ex, msg);
-
       // All other RuntimeExceptions are replaced with a generic UnhandledRuntimeException.
       throw new UnhandledRuntimeException(msg);
     }
   }
 
+  private boolean containsException(Throwable ex, Class<? extends Throwable> target) {
+    if (target.isInstance(ex)) return true;
+    if (ex.getCause() == null) return false;
+
+    return containsException(ex.getCause(), target);
+  }
 }
