@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,6 +24,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class FactEntityToDocumentConverterTest {
 
+  private static final Instant DAY1_1 = Instant.parse("2021-01-01T12:00:00.000Z");
+  private static final Instant DAY1_2 = Instant.parse("2021-01-01T17:30:00.000Z");
+  private static final Instant DAY2 = Instant.parse("2021-01-02T12:00:00.000Z");
+
   @Mock
   private FactManager factManager;
   @Mock
@@ -32,12 +37,12 @@ public class FactEntityToDocumentConverterTest {
 
   @Test
   public void testConvertNull() {
-    assertNull(converter.apply(null));
+    assertNull(converter.apply(null, null));
   }
 
   @Test
   public void testConvertEmpty() {
-    assertNotNull(converter.apply(new FactEntity()));
+    assertNotNull(converter.apply(new FactEntity(), null));
   }
 
   @Test
@@ -57,7 +62,7 @@ public class FactEntityToDocumentConverterTest {
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321);
 
-    FactDocument document = converter.apply(entity);
+    FactDocument document = converter.apply(entity, null);
     assertNotNull(document);
     assertEquals(entity.getId(), document.getId());
     assertEquals(entity.getTypeID(), document.getTypeID());
@@ -76,14 +81,45 @@ public class FactEntityToDocumentConverterTest {
 
   @Test
   public void testConvertWithAcl() {
-    FactEntity factEntity = new FactEntity().setId(UUID.randomUUID());
+    FactEntity factEntity = new FactEntity()
+            .setId(UUID.randomUUID())
+            .addFlag(FactEntity.Flag.HasAcl);
     FactAclEntity aclEntity = new FactAclEntity().setSubjectID(UUID.randomUUID());
 
     when(factManager.fetchFactAcl(notNull())).thenReturn(ListUtils.list(aclEntity));
 
-    FactDocument factDocument = converter.apply(factEntity);
+    FactDocument factDocument = converter.apply(factEntity, null);
     assertNotNull(factDocument);
     assertEquals(SetUtils.set(aclEntity.getSubjectID()), factDocument.getAcl());
+
+    verify(factManager).fetchFactAcl(factEntity.getId());
+  }
+
+  @Test
+  public void testConvertWithAclFiltersOutNewerEntries() {
+    FactEntity factEntity = new FactEntity()
+            .setId(UUID.randomUUID())
+            .addFlag(FactEntity.Flag.HasAcl);
+    FactAclEntity aclEntry1 = new FactAclEntity()
+            .setSubjectID(UUID.randomUUID())
+            .setTimestamp(DAY1_1.toEpochMilli());
+    FactAclEntity aclEntry2 = new FactAclEntity()
+            .setSubjectID(UUID.randomUUID())
+            .setTimestamp(DAY1_2.toEpochMilli());
+    FactAclEntity aclEntry3 = new FactAclEntity()
+            .setSubjectID(UUID.randomUUID())
+            .setTimestamp(DAY2.toEpochMilli());
+    FactRefreshLogEntity refreshLogEntry = new FactRefreshLogEntity()
+            .setRefreshTimestamp(DAY1_1.toEpochMilli())
+            .setRefreshedByID(UUID.randomUUID());
+
+    when(factManager.fetchFactAcl(notNull())).thenReturn(ListUtils.list(aclEntry1, aclEntry2, aclEntry3));
+
+    FactDocument factDocument = converter.apply(factEntity, refreshLogEntry);
+    assertNotNull(factDocument);
+    assertEquals(factDocument.getLastSeenByID(), refreshLogEntry.getRefreshedByID());
+    assertEquals(factDocument.getLastSeenTimestamp(), refreshLogEntry.getRefreshTimestamp());
+    assertEquals(SetUtils.set(aclEntry1.getSubjectID(), aclEntry2.getSubjectID()), factDocument.getAcl());
 
     verify(factManager).fetchFactAcl(factEntity.getId());
   }
@@ -101,7 +137,7 @@ public class FactEntityToDocumentConverterTest {
 
     when(objectManager.getObject(notNull())).thenReturn(objectEntity);
 
-    FactDocument factDocument = converter.apply(factEntity);
+    FactDocument factDocument = converter.apply(factEntity, null);
     assertNotNull(factDocument);
     assertEquals(1, factDocument.getObjectCount());
 
@@ -119,7 +155,7 @@ public class FactEntityToDocumentConverterTest {
     FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding().setObjectID(UUID.randomUUID());
     FactEntity factEntity = new FactEntity().addBinding(binding);
 
-    FactDocument factDocument = converter.apply(factEntity);
+    FactDocument factDocument = converter.apply(factEntity, null);
     assertNotNull(factDocument);
     assertEquals(0, factDocument.getObjectCount());
 

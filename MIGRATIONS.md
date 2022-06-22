@@ -2,6 +2,26 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Reindex data into daily indices] - 2022-06-22
+In order to reindex data into daily indices execute the following commands. Build the code with Maven to create the `act-platform-cli-tools` application.
+
+(1) Execute the following migration to correctly set the `TimeGlobalIndex` flag in Cassandra.
+```
+act-platform-cli-tools migrate timeGlobalFlag --conf=<path to application.properties file> --start=<start timestamp> --end=<end timestamp>
+```
+
+(2) Execute the following command against your ElasticSearch cluster to delete *all* existing daily indices and the time global index.
+```
+curl -X DELETE "localhost:9200/act-time-global,act-daily-*"
+```
+
+(3) Reindex data into daily indices and the time global index. This will recreate the previously deleted indices from scratch.
+```
+act-platform-cli-tools reindex --conf=<path to application.properties file> --start=<start timestamp> --end=<end timestamp>
+```
+
+Specify `--start` and `--end` based on the time frame you want to reindex. Depending on the amount of data steps (1) and (3) may take a while.
+
 ## [New flags field on fact_type and object_type tables] - 2022-03-11
 A new field has been introduced on the `fact_type` and `object_type` tables in Cassandra.
 Execute the following CQL commands against your Cassandra cluster (e.g. using cqlsh).

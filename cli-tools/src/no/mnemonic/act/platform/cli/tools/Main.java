@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.cli.tools;
 
+import no.mnemonic.act.platform.cli.tools.commands.MigrateCommand;
 import no.mnemonic.act.platform.cli.tools.commands.ReindexCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -10,7 +11,7 @@ import picocli.CommandLine.IVersionProvider;
         name = "act-platform-cli-tools",
         mixinStandardHelpOptions = true,
         scope = CommandLine.ScopeType.INHERIT,
-        subcommands = {ReindexCommand.class},
+        subcommands = {MigrateCommand.class, ReindexCommand.class},
         showDefaultValues = true,
         usageHelpAutoWidth = true,
         versionProvider = Main.class
