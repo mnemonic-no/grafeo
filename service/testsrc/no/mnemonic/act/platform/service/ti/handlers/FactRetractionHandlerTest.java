@@ -2,7 +2,6 @@ package no.mnemonic.act.platform.service.ti.handlers;
 
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
-import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
@@ -10,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.Collections;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
@@ -39,7 +39,7 @@ public class FactRetractionHandlerTest {
     // Common mocks used by most tests.
     when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(retractionFactTypeID));
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-    when(objectFactDao.retrieveMetaFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
+    when(objectFactDao.retrieveMetaFacts(any())).thenReturn(Collections.emptyIterator());
 
     handler = new FactRetractionHandler(factTypeRequestResolver, securityContext, objectFactDao);
   }
@@ -62,7 +62,7 @@ public class FactRetractionHandlerTest {
   public void testIsRetractedWithRetractedHintTrue() {
     FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
     FactRecord retraction = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
-    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(list(retraction).iterator());
 
     assertTrue(handler.isRetracted(fact));
 
@@ -79,8 +79,8 @@ public class FactRetractionHandlerTest {
 
     // fact ---> retraction1 ---> retraction2
     // retraction2 cancels out retraction1, thus, fact in not retracted.
-    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction1));
-    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(createResultContainer(retraction2));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(list(retraction1).iterator());
+    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(list(retraction2).iterator());
 
     assertFalse(handler.isRetracted(fact));
   }
@@ -94,9 +94,9 @@ public class FactRetractionHandlerTest {
 
     // fact ---> retraction1 ---> retraction2 ---> retraction3
     // retraction3 cancels out retraction2, thus, fact is retracted because retraction1 holds.
-    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction1));
-    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(createResultContainer(retraction2));
-    when(objectFactDao.retrieveMetaFacts(retraction2.getId())).thenReturn(createResultContainer(retraction3));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(list(retraction1).iterator());
+    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(list(retraction2).iterator());
+    when(objectFactDao.retrieveMetaFacts(retraction2.getId())).thenReturn(list(retraction3).iterator());
 
     assertTrue(handler.isRetracted(fact));
   }
@@ -113,8 +113,8 @@ public class FactRetractionHandlerTest {
     //     |-----------> retraction3
     //     |-----------> retraction4
     // retraction2 cancels out retraction1, thus, fact is retracted because of retraction3/retraction4.
-    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction1, retraction3, retraction4));
-    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(createResultContainer(retraction2));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(list(retraction1, retraction3, retraction4).iterator());
+    when(objectFactDao.retrieveMetaFacts(retraction1.getId())).thenReturn(list(retraction2).iterator());
 
     assertTrue(handler.isRetracted(fact));
   }
@@ -123,7 +123,7 @@ public class FactRetractionHandlerTest {
   public void testIsRetractedCachesResult() {
     FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
     FactRecord retraction = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
-    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(list(retraction).iterator());
 
     assertTrue(handler.isRetracted(fact));
 
@@ -141,7 +141,7 @@ public class FactRetractionHandlerTest {
     FactRecord meta = new FactRecord().setId(UUID.randomUUID()).setTypeID(UUID.randomUUID());
     FactRecord retraction = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
 
-    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(meta, retraction));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(list(meta, retraction).iterator());
 
     assertTrue(handler.isRetracted(fact));
 
@@ -155,17 +155,11 @@ public class FactRetractionHandlerTest {
     FactRecord fact = new FactRecord().setId(UUID.randomUUID()).setFlags(set(FactRecord.Flag.RetractedHint));
     FactRecord retraction = new FactRecord().setId(UUID.randomUUID()).setTypeID(retractionFactTypeID);
 
-    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(createResultContainer(retraction));
+    when(objectFactDao.retrieveMetaFacts(fact.getId())).thenReturn(list(retraction).iterator());
     when(securityContext.hasReadPermission(retraction)).thenReturn(false);
 
     assertFalse(handler.isRetracted(fact));
 
     verify(securityContext).hasReadPermission(retraction);
-  }
-
-  private ResultContainer<FactRecord> createResultContainer(FactRecord... fact) {
-    return ResultContainer.<FactRecord>builder()
-            .setValues(list(fact).iterator())
-            .build();
   }
 }

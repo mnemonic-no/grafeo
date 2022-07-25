@@ -9,6 +9,7 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -163,12 +164,22 @@ public interface ObjectFactDao {
   }
 
   /**
+   * Retrieve Facts bound to an Object (identified by the Object's UUID).
+   *
+   * @param id UUID of Object
+   * @return Iterator providing the resolved Facts
+   */
+  default Iterator<FactRecord> retrieveObjectFacts(UUID id) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * Retrieve meta Facts bound to another Fact (identified by its UUID).
    *
    * @param id UUID of Fact
-   * @return Container holding the resolved meta Facts
+   * @return Iterator providing the resolved meta Facts
    */
-  default ResultContainer<FactRecord> retrieveMetaFacts(UUID id) {
+  default Iterator<FactRecord> retrieveMetaFacts(UUID id) {
     throw new UnsupportedOperationException();
   }
 }

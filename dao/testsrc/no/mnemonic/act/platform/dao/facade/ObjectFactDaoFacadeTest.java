@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -666,14 +667,36 @@ public class ObjectFactDaoFacadeTest {
   }
 
   @Test
+  public void testRetrieveObjectFactsNoResults() {
+    UUID objectID = UUID.randomUUID();
+    when(objectManager.fetchObjectFactBindings(objectID)).thenReturn(Collections.emptyIterator());
+
+    assertFalse(dao.retrieveObjectFacts(objectID).hasNext());
+    verify(objectManager).fetchObjectFactBindings(objectID);
+  }
+
+  @Test
+  public void testRetrieveObjectFactsWithResults() {
+    UUID objectID = UUID.randomUUID();
+    UUID factID = UUID.randomUUID();
+    ObjectFactBindingEntity binding = new ObjectFactBindingEntity()
+            .setObjectID(objectID)
+            .setFactID(factID);
+    FactRecord fact = new FactRecord().setId(factID);
+    when(objectManager.fetchObjectFactBindings(objectID)).thenReturn(ListUtils.list(binding).iterator());
+    when(factResolver.getFact(factID)).thenReturn(fact);
+
+    assertSame(fact, dao.retrieveObjectFacts(objectID).next());
+    verify(objectManager).fetchObjectFactBindings(objectID);
+    verify(factResolver).getFact(factID);
+  }
+
+  @Test
   public void testRetrieveMetaFactsNoResults() {
     UUID factID = UUID.randomUUID();
-    when(factManager.fetchMetaFactBindings(factID)).thenReturn(ListUtils.list());
+    when(factManager.fetchMetaFactBindings(factID)).thenReturn(Collections.emptyIterator());
 
-    ResultContainer<FactRecord> results = dao.retrieveMetaFacts(factID);
-    assertEquals(0, results.getCount());
-    assertFalse(results.hasNext());
-
+    assertFalse(dao.retrieveMetaFacts(factID).hasNext());
     verify(factManager).fetchMetaFactBindings(factID);
   }
 
@@ -685,13 +708,10 @@ public class ObjectFactDaoFacadeTest {
             .setFactID(factID)
             .setMetaFactID(metaFactID);
     FactRecord metaFact = new FactRecord().setId(metaFactID);
-    when(factManager.fetchMetaFactBindings(factID)).thenReturn(ListUtils.list(binding));
+    when(factManager.fetchMetaFactBindings(factID)).thenReturn(ListUtils.list(binding).iterator());
     when(factResolver.getFact(metaFactID)).thenReturn(metaFact);
 
-    ResultContainer<FactRecord> results = dao.retrieveMetaFacts(factID);
-    assertEquals(1, results.getCount());
-    assertSame(metaFact, results.next());
-
+    assertSame(metaFact, dao.retrieveMetaFacts(factID).next());
     verify(factManager).fetchMetaFactBindings(factID);
     verify(factResolver).getFact(metaFactID);
   }

@@ -383,15 +383,15 @@ public class FactManagerTest extends AbstractManagerTest {
     FactEntity fact = createAndSaveFact();
     MetaFactBindingEntity binding = createAndSaveMetaFactBinding(fact.getId());
 
-    List<MetaFactBindingEntity> actual = getFactManager().fetchMetaFactBindings(fact.getId());
+    List<MetaFactBindingEntity> actual = ListUtils.list(getFactManager().fetchMetaFactBindings(fact.getId()));
     assertEquals(1, actual.size());
     assertMetaFactBinding(binding, actual.get(0));
   }
 
   @Test
   public void testFetchMetaFactBindingsWithNonExistingFact() {
-    assertEquals(0, getFactManager().fetchMetaFactBindings(null).size());
-    assertEquals(0, getFactManager().fetchMetaFactBindings(UUID.randomUUID()).size());
+    assertEquals(0, ListUtils.list(getFactManager().fetchMetaFactBindings(null)).size());
+    assertEquals(0, ListUtils.list(getFactManager().fetchMetaFactBindings(UUID.randomUUID())).size());
   }
 
   @Test

@@ -19,10 +19,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
@@ -175,9 +172,9 @@ public class FactManager implements LifecycleAspect {
 
   /* MetaFactBindingEntity-related methods */
 
-  public List<MetaFactBindingEntity> fetchMetaFactBindings(UUID id) {
-    if (id == null) return ListUtils.list();
-    return factDao.fetchMetaFactBindings(id).all();
+  public Iterator<MetaFactBindingEntity> fetchMetaFactBindings(UUID id) {
+    if (id == null) return Collections.emptyIterator();
+    return factDao.fetchMetaFactBindings(id).iterator();
   }
 
   public MetaFactBindingEntity saveMetaFactBinding(MetaFactBindingEntity binding) {

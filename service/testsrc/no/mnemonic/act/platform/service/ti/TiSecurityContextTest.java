@@ -4,16 +4,13 @@ import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.model.v1.Organization;
 import no.mnemonic.act.platform.auth.IdentitySPI;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
-import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
-import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.dao.cassandra.entity.AccessMode;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactAclEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.OriginEntity;
-import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.common.auth.model.Credentials;
@@ -38,11 +35,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 @SuppressWarnings("unchecked")
 public class TiSecurityContextTest {
 
-  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
-          .addCurrentUserIdentity(UUID.randomUUID())
-          .addAvailableOrganizationID(UUID.randomUUID())
-          .build();
-
   @Mock
   private AccessController accessController;
   @Mock
@@ -57,8 +49,6 @@ public class TiSecurityContextTest {
   private ObjectFactDao objectFactDao;
   @Mock
   private Function<UUID, List<FactAclEntity>> aclResolver;
-  @Mock
-  private AccessControlCriteriaResolver accessControlCriteriaResolver;
 
   private TiSecurityContext context;
 
@@ -74,7 +64,6 @@ public class TiSecurityContextTest {
             .setObjectFactDao(objectFactDao)
             .setAclResolver(aclResolver)
             .build();
-    context.setAccessControlCriteriaResolver(accessControlCriteriaResolver);
   }
 
   @Test(expected = RuntimeException.class)
@@ -298,9 +287,7 @@ public class TiSecurityContextTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionForObjectRecordWithoutBoundFact() throws Exception {
-    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
-    when(objectFactDao.searchFacts(notNull())).thenReturn(ResultContainer.<FactRecord>builder().build());
-
+    when(objectFactDao.retrieveObjectFacts(notNull())).thenReturn(Collections.emptyIterator());
     context.checkReadPermission(new ObjectRecord().setId(UUID.randomUUID()));
   }
 
@@ -321,9 +308,7 @@ public class TiSecurityContextTest {
   public void testCheckReadPermissionForObjectRecordWithAccessToSecondFact() throws Exception {
     FactRecord fact = new FactRecord().setAccessMode(FactRecord.AccessMode.Public);
 
-    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
-    when(objectFactDao.searchFacts(notNull()))
-            .thenReturn(ResultContainer.<FactRecord>builder().setValues(ListUtils.list(fact, fact, fact).iterator()).build());
+    when(objectFactDao.retrieveObjectFacts(notNull())).thenReturn(ListUtils.list(fact, fact, fact).iterator());
     when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false, true, false);
 
     context.checkReadPermission(new ObjectRecord().setId(UUID.randomUUID()));
@@ -419,10 +404,8 @@ public class TiSecurityContextTest {
     ObjectRecord object = new ObjectRecord().setId(UUID.randomUUID());
     FactRecord fact = new FactRecord().setAccessMode(FactRecord.AccessMode.Public);
 
-    // Mock search for bound Facts.
-    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
-    when(objectFactDao.searchFacts(notNull()))
-            .thenReturn(ResultContainer.<FactRecord>builder().setValues(ListUtils.list(fact).iterator()).build());
+    // Mock retrieval of bound Facts.
+    when(objectFactDao.retrieveObjectFacts(notNull())).thenReturn(ListUtils.list(fact).iterator());
     // Mock access to bound Facts.
     when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(result);
 

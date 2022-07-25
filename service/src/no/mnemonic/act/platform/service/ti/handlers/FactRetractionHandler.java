@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.service.ti.handlers;
 
+import com.google.common.collect.Streams;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
@@ -83,8 +84,7 @@ public class FactRetractionHandler {
     // very small, thus, it's no problem to consume all results at once. Additionally, only return retractions which a user
     // has access to. No access to retractions means that from the user's perspective the referenced Fact isn't retracted.
     UUID retractionFactType = factTypeRequestResolver.resolveRetractionFactType().getId();
-    return objectFactDao.retrieveMetaFacts(factID)
-            .stream()
+    return Streams.stream(objectFactDao.retrieveMetaFacts(factID))
             .filter(meta -> Objects.equals(meta.getTypeID(), retractionFactType))
             .filter(securityContext::hasReadPermission)
             .collect(Collectors.toList());

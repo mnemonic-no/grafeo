@@ -246,19 +246,23 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
   }
 
   @Override
-  public ResultContainer<FactRecord> retrieveMetaFacts(UUID id) {
+  public Iterator<FactRecord> retrieveObjectFacts(UUID id) {
+    // Use Cassandra lookup table to resolve all Facts bound to the given Object ID.
+    return Streams.stream(objectManager.fetchObjectFactBindings(id))
+            .map(ObjectFactBindingEntity::getFactID)
+            .map(factResolver::getFact)
+            .filter(Objects::nonNull)
+            .iterator();
+  }
+
+  @Override
+  public Iterator<FactRecord> retrieveMetaFacts(UUID id) {
     // Use Cassandra lookup table to resolve all meta Facts bound to the given Fact ID.
-    List<MetaFactBindingEntity> bindings = factManager.fetchMetaFactBindings(id);
-    Iterator<FactRecord> metaFacts = bindings.stream()
+    return Streams.stream(factManager.fetchMetaFactBindings(id))
             .map(MetaFactBindingEntity::getMetaFactID)
             .map(factResolver::getFact)
             .filter(Objects::nonNull)
             .iterator();
-
-    return ResultContainer.<FactRecord>builder()
-            .setCount(bindings.size())
-            .setValues(metaFacts)
-            .build();
   }
 
   private void saveFactExistence(FactRecord fact) {
