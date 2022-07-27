@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.request.v1.SearchFactRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.request.SearchFactRequestConverter;
@@ -31,6 +32,7 @@ public class FactSearchDelegateTest {
           .addCurrentUserIdentity(UUID.randomUUID())
           .addAvailableOrganizationID(UUID.randomUUID())
           .build();
+  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
 
   @Mock
   private FactSearchHandler factSearchHandler;
@@ -49,6 +51,7 @@ public class FactSearchDelegateTest {
             .setKeywords("Hello World!")
             .setLimit(25)
             .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
             .build());
     when(factSearchHandler.search(any(), any())).thenReturn(StreamingResultSet.<Fact>builder()
             .setLimit(25)
@@ -71,6 +74,7 @@ public class FactSearchDelegateTest {
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setLimit(25)
             .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
             .build());
     assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchFactRequest()));
   }

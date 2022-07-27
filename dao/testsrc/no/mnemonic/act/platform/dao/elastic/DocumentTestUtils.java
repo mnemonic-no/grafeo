@@ -20,7 +20,7 @@ class DocumentTestUtils {
             .setDirection(ObjectDocument.Direction.BiDirectional);
   }
 
-  static FactDocument createFactDocument() {
+  static FactDocument createFactDocument(long indexTimestamp) {
     return new FactDocument()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
@@ -33,8 +33,8 @@ class DocumentTestUtils {
             .setAccessMode(FactDocument.AccessMode.Public)
             .setConfidence(0.1f)
             .setTrust(0.2f)
-            .setTimestamp(123456789)
-            .setLastSeenTimestamp(987654321)
+            .setTimestamp(indexTimestamp)
+            .setLastSeenTimestamp(indexTimestamp)
             .addAclEntry(UUID.randomUUID())
             .addObject(createObjectDocument());
   }

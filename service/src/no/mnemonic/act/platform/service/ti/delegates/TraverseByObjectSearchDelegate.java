@@ -14,6 +14,8 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.TraverseGraphHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.services.common.api.ResultSet;
 
@@ -29,16 +31,22 @@ public class TraverseByObjectSearchDelegate implements Delegate {
   private final TraverseGraphHandler traverseGraphHandler;
   private final SearchObjectRequestConverter requestConverter;
   private final ObjectFactDao objectFactDao;
+  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
+  private final IndexSelectCriteriaResolver indexSelectCriteriaResolver;
 
   @Inject
   public TraverseByObjectSearchDelegate(TiSecurityContext securityContext,
                                         TraverseGraphHandler traverseGraphHandler,
                                         SearchObjectRequestConverter requestConverter,
-                                        ObjectFactDao objectFactDao) {
+                                        ObjectFactDao objectFactDao,
+                                        AccessControlCriteriaResolver accessControlCriteriaResolver,
+                                        IndexSelectCriteriaResolver indexSelectCriteriaResolver) {
     this.securityContext = securityContext;
     this.traverseGraphHandler = traverseGraphHandler;
     this.requestConverter = requestConverter;
     this.objectFactDao = objectFactDao;
+    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
+    this.indexSelectCriteriaResolver = indexSelectCriteriaResolver;
   }
 
   public ResultSet<?> handle(TraverseGraphByObjectSearchRequest request)
@@ -61,6 +69,10 @@ public class TraverseByObjectSearchDelegate implements Delegate {
             objectIds,
             request.getTraverse().getQuery(),
             TraverseParams.builder()
+                    .setAccessControlCriteria(accessControlCriteriaResolver.get())
+                    .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(
+                            request.getTraverse().getAfter(),
+                            request.getTraverse().getBefore()))
                     .setIncludeRetracted(request.getTraverse().getIncludeRetracted())
                     .setAfterTimestamp(request.getTraverse().getAfter())
                     .setBeforeTimestamp(request.getTraverse().getBefore())

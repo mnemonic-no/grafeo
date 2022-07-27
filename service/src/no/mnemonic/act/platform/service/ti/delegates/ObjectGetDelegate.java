@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
@@ -14,6 +15,7 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 
@@ -23,6 +25,7 @@ public class ObjectGetDelegate implements Delegate {
 
   private final TiSecurityContext securityContext;
   private final AccessControlCriteriaResolver accessControlCriteriaResolver;
+  private final IndexSelectCriteriaResolver indexSelectCriteriaResolver;
   private final ObjectFactDao objectFactDao;
   private final FactTypeByIdResponseResolver factTypeConverter;
   private final ObjectTypeByIdResponseResolver objectTypeConverter;
@@ -31,12 +34,14 @@ public class ObjectGetDelegate implements Delegate {
   @Inject
   public ObjectGetDelegate(TiSecurityContext securityContext,
                            AccessControlCriteriaResolver accessControlCriteriaResolver,
+                           IndexSelectCriteriaResolver indexSelectCriteriaResolver,
                            ObjectFactDao objectFactDao,
                            FactTypeByIdResponseResolver factTypeConverter,
                            ObjectTypeByIdResponseResolver objectTypeConverter,
                            ObjectTypeHandler objectTypeHandler) {
     this.securityContext = securityContext;
     this.accessControlCriteriaResolver = accessControlCriteriaResolver;
+    this.indexSelectCriteriaResolver = indexSelectCriteriaResolver;
     this.objectFactDao = objectFactDao;
     this.factTypeConverter = factTypeConverter;
     this.objectTypeConverter = objectTypeConverter;
@@ -60,13 +65,16 @@ public class ObjectGetDelegate implements Delegate {
     return createObjectConverter(request.getAfter(), request.getBefore()).apply(object);
   }
 
-  private ObjectResponseConverter createObjectConverter(Long after, Long before) {
+  private ObjectResponseConverter createObjectConverter(Long after, Long before) throws InvalidArgumentException {
+    IndexSelectCriteria indexSelectCriteria = indexSelectCriteriaResolver.validateAndCreateCriteria(after, before);
+
     return new ObjectResponseConverter(objectTypeConverter, factTypeConverter, id -> {
       ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
               .addObjectID(id)
               .setStartTimestamp(after)
               .setEndTimestamp(before)
               .setAccessControlCriteria(accessControlCriteriaResolver.get())
+              .setIndexSelectCriteria(indexSelectCriteria)
               .build();
       return objectFactDao.calculateObjectStatistics(criteria).getStatistics(id);
     });

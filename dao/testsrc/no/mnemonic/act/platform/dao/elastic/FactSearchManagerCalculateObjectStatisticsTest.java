@@ -22,18 +22,20 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
   }
 
   @Test
+  public void testCalculateObjectStatisticsWithoutIndices() {
+    assertEquals(0, executeCalculateObjectStatistics(UUID.randomUUID()).getStatisticsCount());
+  }
+
+  @Test
   public void testCalculateObjectStatisticsAccessToOnlyPublicFact() {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Public));
     FactDocument nonAccessibleFact1 = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     FactDocument nonAccessibleFact2 = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
-            .setAccessControlCriteria(createAccessControlCriteria())
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b
             .addObjectID(getFirstObjectID(accessibleFact))
             .addObjectID(getFirstObjectID(nonAccessibleFact1))
-            .addObjectID(getFirstObjectID(nonAccessibleFact2))
-            .build();
-
+            .addObjectID(getFirstObjectID(nonAccessibleFact2)));
     assertSingleStatisticExists(criteria, getFirstObjectID(accessibleFact));
   }
 
@@ -42,15 +44,13 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     FactDocument nonAccessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(accessibleFact.getOrganizationID())
                     .build())
             .addObjectID(getFirstObjectID(accessibleFact))
-            .addObjectID(getFirstObjectID(nonAccessibleFact))
-            .build();
-
+            .addObjectID(getFirstObjectID(nonAccessibleFact)));
     assertSingleStatisticExists(criteria, getFirstObjectID(accessibleFact));
   }
 
@@ -59,15 +59,13 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     FactDocument nonAccessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
             .addObjectID(getFirstObjectID(accessibleFact))
-            .addObjectID(getFirstObjectID(nonAccessibleFact))
-            .build();
-
+            .addObjectID(getFirstObjectID(nonAccessibleFact)));
     assertSingleStatisticExists(criteria, getFirstObjectID(accessibleFact));
   }
 
@@ -76,15 +74,13 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
     FactDocument nonAccessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
 
-    ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
             .addObjectID(getFirstObjectID(accessibleFact))
-            .addObjectID(getFirstObjectID(nonAccessibleFact))
-            .build();
-
+            .addObjectID(getFirstObjectID(nonAccessibleFact)));
     assertSingleStatisticExists(criteria, getFirstObjectID(accessibleFact));
   }
 
@@ -148,13 +144,13 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     UUID typeID = UUID.randomUUID();
     ObjectDocument object = createObjectDocument();
     indexFact(d -> d.setTypeID(typeID)
-            .setTimestamp(22222)
-            .setLastSeenTimestamp(33333)
+            .setTimestamp(DAY2)
+            .setLastSeenTimestamp(DAY2)
             .setObjects(set(object))
     );
     indexFact(d -> d.setTypeID(typeID)
-            .setTimestamp(11111)
-            .setLastSeenTimestamp(44444)
+            .setTimestamp(DAY1)
+            .setLastSeenTimestamp(DAY3)
             .setObjects(set(object))
     );
 
@@ -162,8 +158,8 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     ObjectStatisticsContainer.FactStatistic statistic = getFirstStatistic(result, object.getId());
     assertEquals(typeID, statistic.getFactTypeID());
     assertEquals(2, statistic.getFactCount());
-    assertEquals(22222, statistic.getLastAddedTimestamp());
-    assertEquals(44444, statistic.getLastSeenTimestamp());
+    assertEquals(DAY2, statistic.getLastAddedTimestamp());
+    assertEquals(DAY3, statistic.getLastSeenTimestamp());
   }
 
   @Test
@@ -182,22 +178,22 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     UUID typeID = UUID.randomUUID();
     ObjectDocument object = createObjectDocument();
     indexFact(d -> d.setTypeID(typeID)
-            .setTimestamp(22222)
-            .setLastSeenTimestamp(33333)
+            .setTimestamp(DAY2)
+            .setLastSeenTimestamp(DAY2)
             .addObject(object)
     );
     indexFact(d -> d.setTypeID(typeID)
-            .setTimestamp(11111)
-            .setLastSeenTimestamp(44444)
+            .setTimestamp(DAY1)
+            .setLastSeenTimestamp(DAY3)
             .addObject(object)
     );
 
-    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.addObjectID(object.getId()).setStartTimestamp(40000L));
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.addObjectID(object.getId()).setStartTimestamp(DAY3 - 1000));
     ObjectStatisticsContainer.FactStatistic statistic = getFirstStatistic(getFactSearchManager().calculateObjectStatistics(criteria), object.getId());
     assertEquals(typeID, statistic.getFactTypeID());
     assertEquals(1, statistic.getFactCount());
-    assertEquals(11111, statistic.getLastAddedTimestamp());
-    assertEquals(44444, statistic.getLastSeenTimestamp());
+    assertEquals(DAY1, statistic.getLastAddedTimestamp());
+    assertEquals(DAY3, statistic.getLastSeenTimestamp());
   }
 
   @Test
@@ -205,22 +201,59 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
     UUID typeID = UUID.randomUUID();
     ObjectDocument object = createObjectDocument();
     indexFact(d -> d.setTypeID(typeID)
-            .setTimestamp(22222)
-            .setLastSeenTimestamp(33333)
+            .setTimestamp(DAY2)
+            .setLastSeenTimestamp(DAY2)
             .addObject(object)
     );
     indexFact(d -> d.setTypeID(typeID)
-            .setTimestamp(11111)
-            .setLastSeenTimestamp(44444)
+            .setTimestamp(DAY1)
+            .setLastSeenTimestamp(DAY3)
             .addObject(object)
     );
 
-    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.addObjectID(object.getId()).setEndTimestamp(40000L));
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.addObjectID(object.getId()).setEndTimestamp(DAY3 - 1000));
     ObjectStatisticsContainer.FactStatistic statistic = getFirstStatistic(getFactSearchManager().calculateObjectStatistics(criteria), object.getId());
     assertEquals(typeID, statistic.getFactTypeID());
     assertEquals(1, statistic.getFactCount());
-    assertEquals(22222, statistic.getLastAddedTimestamp());
-    assertEquals(33333, statistic.getLastSeenTimestamp());
+    assertEquals(DAY2, statistic.getLastAddedTimestamp());
+    assertEquals(DAY2, statistic.getLastSeenTimestamp());
+  }
+
+  @Test
+  public void testCalculateObjectStatisticsWithDailyIndices() {
+    ObjectDocument object = createObjectDocument();
+    indexFact(d -> d.setObjects(set(object)).setLastSeenTimestamp(DAY1));
+    indexFact(d -> d.setObjects(set(object)).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setObjects(set(object)).setLastSeenTimestamp(DAY3));
+
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.addObjectID(object.getId())
+            .setIndexSelectCriteria(createIndexSelectCriteria(DAY2, DAY3)));
+    assertEquals(2, getFactSearchManager().calculateObjectStatistics(criteria).getStatistics(object.getId()).size());
+  }
+
+  @Test
+  public void testCalculateObjectStatisticsWithDailyIndicesIncludingTimeGlobal() {
+    ObjectDocument object = createObjectDocument();
+    indexFact(d -> d.setObjects(set(object)).setLastSeenTimestamp(DAY1), FactSearchManager.TargetIndex.TimeGlobal);
+    indexFact(d -> d.setObjects(set(object)).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setObjects(set(object)).setLastSeenTimestamp(DAY3));
+
+    ObjectStatisticsCriteria criteria = createObjectStatisticsCriteria(b -> b.addObjectID(object.getId())
+            .setIndexSelectCriteria(createIndexSelectCriteria(DAY2, DAY3)));
+    assertEquals(3, getFactSearchManager().calculateObjectStatistics(criteria).getStatistics(object.getId()).size());
+  }
+
+  @Test
+  public void testCalculateObjectStatisticsWithDailyIndicesDeDuplicatesResult() {
+    UUID factID = UUID.randomUUID();
+    UUID factTypeID = UUID.randomUUID();
+    ObjectDocument object = createObjectDocument();
+    indexFact(d -> d.setId(factID).setTypeID(factTypeID).setObjects(set(object)).setLastSeenTimestamp(DAY1));
+    indexFact(d -> d.setId(factID).setTypeID(factTypeID).setObjects(set(object)).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setId(factID).setTypeID(factTypeID).setObjects(set(object)).setLastSeenTimestamp(DAY3));
+
+    ObjectStatisticsContainer result = executeCalculateObjectStatistics(object.getId());
+    assertEquals(1, getFirstStatistic(result, object.getId()).getFactCount());
   }
 
   private void assertSingleStatisticExists(ObjectStatisticsCriteria criteria, UUID objectID) {
@@ -236,7 +269,8 @@ public class FactSearchManagerCalculateObjectStatisticsTest extends AbstractMana
 
   private ObjectStatisticsCriteria createObjectStatisticsCriteria(ObjectPreparation<ObjectStatisticsCriteria.Builder> preparation) {
     ObjectStatisticsCriteria.Builder builder = ObjectStatisticsCriteria.builder()
-            .setAccessControlCriteria(createAccessControlCriteria());
+            .setAccessControlCriteria(createAccessControlCriteria())
+            .setIndexSelectCriteria(createIndexSelectCriteria(DAY1, DAY3));
     if (preparation != null) {
       builder = preparation.prepare(builder);
     }

@@ -129,6 +129,9 @@ public class FactSearchCriteria {
   // Fields required for access control.
   private final AccessControlCriteria accessControlCriteria;
 
+  // Fields required for selecting the indices to query.
+  private final IndexSelectCriteria indexSelectCriteria;
+
   private FactSearchCriteria(Set<UUID> factID,
                              Set<UUID> factTypeID,
                              Set<String> factValue,
@@ -149,10 +152,12 @@ public class FactSearchCriteria {
                              Number maxNumber,
                              Set<NumberFieldStrategy> numberFieldStrategy,
                              MatchStrategy numberMatchStrategy,
+                             FactBinding factBinding,
                              int limit,
                              AccessControlCriteria accessControlCriteria,
-                             FactBinding factBinding) {
+                             IndexSelectCriteria indexSelectCriteria) {
     if (accessControlCriteria == null) throw new IllegalArgumentException("Missing required field 'accessControlCriteria'.");
+    if (indexSelectCriteria == null) throw new IllegalArgumentException("Missing required field 'indexSelectCriteria'.");
 
     this.factID = factID;
     this.factTypeID = factTypeID;
@@ -168,9 +173,10 @@ public class FactSearchCriteria {
     this.endTimestamp = endTimestamp;
     this.minNumber = minNumber;
     this.maxNumber = maxNumber;
+    this.factBinding = factBinding;
     this.limit = limit;
     this.accessControlCriteria = accessControlCriteria;
-    this.factBinding = factBinding;
+    this.indexSelectCriteria = indexSelectCriteria;
 
     // Set default values for strategies if not provided by user.
     this.keywordFieldStrategy = !CollectionUtils.isEmpty(keywordFieldStrategy) ? keywordFieldStrategy :
@@ -401,6 +407,15 @@ public class FactSearchCriteria {
   }
 
   /**
+   * Specify criteria to decide which indices in ElasticSearch will be queried. This field is required.
+   *
+   * @return Index select criteria
+   */
+  public IndexSelectCriteria getIndexSelectCriteria() {
+    return indexSelectCriteria;
+  }
+
+  /**
    * Returns true if the criteria is effectively unbounded, i.e. no criteria is specified which would reduce the search result.
    * Note that 'limit' isn't included here which means that true will be returned if only 'limit' is given.
    *
@@ -464,13 +479,17 @@ public class FactSearchCriteria {
     // Fields required for access control.
     private AccessControlCriteria accessControlCriteria;
 
+    // Fields required for selecting the indices to query.
+    private IndexSelectCriteria indexSelectCriteria;
+
     private Builder() {
     }
 
     public FactSearchCriteria build() {
       return new FactSearchCriteria(factID, factTypeID, factValue, inReferenceTo, organizationID, originID, objectID, objectTypeID,
               objectValue, keywords, keywordFieldStrategy, keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy,
-              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, limit, accessControlCriteria, factBinding);
+              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, factBinding, limit,
+              accessControlCriteria, indexSelectCriteria);
     }
 
     public Builder setFactID(Set<UUID> factID) {
@@ -645,6 +664,11 @@ public class FactSearchCriteria {
 
     public Builder setAccessControlCriteria(AccessControlCriteria accessControlCriteria) {
       this.accessControlCriteria = accessControlCriteria;
+      return this;
+    }
+
+    public Builder setIndexSelectCriteria(IndexSelectCriteria indexSelectCriteria) {
+      this.indexSelectCriteria = indexSelectCriteria;
       return this;
     }
   }

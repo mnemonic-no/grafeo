@@ -25,15 +25,17 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
   }
 
   @Test
+  public void testSearchFactsWithoutIndices() {
+    testSearchFacts(createFactSearchCriteria(b -> b), 0);
+  }
+
+  @Test
   public void testSearchFactsAccessToOnlyPublicFact() {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Public));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    FactSearchCriteria criteria = FactSearchCriteria.builder()
-            .setAccessControlCriteria(createAccessControlCriteria())
-            .build();
-
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -42,13 +44,11 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    FactSearchCriteria criteria = FactSearchCriteria.builder()
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(accessibleFact.getOrganizationID())
-                    .build())
-            .build();
-
+                    .build()));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -57,13 +57,11 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    FactSearchCriteria criteria = FactSearchCriteria.builder()
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .addCurrentUserIdentity(accessibleFact.getAcl().iterator().next())
+                    .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
-                    .build())
-            .build();
-
+                    .build()));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -72,13 +70,11 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
 
-    FactSearchCriteria criteria = FactSearchCriteria.builder()
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .addCurrentUserIdentity(accessibleFact.getAcl().iterator().next())
+                    .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
-                    .build())
-            .build();
-
+                    .build()));
     testSearchFacts(criteria, accessibleFact);
   }
 
@@ -346,70 +342,64 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
 
   @Test
   public void testSearchFactsFilterByStartTimestampDefaultSettings() {
-    long now = System.currentTimeMillis();
-    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(now).setLastSeenTimestamp(now));
-    indexFact(d -> d.setTimestamp(now - 2000).setLastSeenTimestamp(now - 2000));
+    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(DAY2).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setTimestamp(DAY2 - 2000).setLastSeenTimestamp(DAY2 - 2000));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(now - 1000));
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(DAY2 - 1000));
     testSearchFacts(criteria, accessibleFact);
   }
 
   @Test
   public void testSearchFactsFilterByEndTimestampDefaultSettings() {
-    long now = System.currentTimeMillis();
-    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(now).setLastSeenTimestamp(now));
-    indexFact(d -> d.setTimestamp(now + 2000).setLastSeenTimestamp(now + 2000));
+    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(DAY2).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setTimestamp(DAY2 + 2000).setLastSeenTimestamp(DAY2 + 2000));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setEndTimestamp(now + 1000));
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setEndTimestamp(DAY2 + 1000));
     testSearchFacts(criteria, accessibleFact);
   }
 
   @Test
   public void testSearchFactsFilterByTimestamp() {
-    long now = System.currentTimeMillis();
-    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(now).setLastSeenTimestamp(0));
-    indexFact(d -> d.setTimestamp(now - 2000).setLastSeenTimestamp(0));
-    indexFact(d -> d.setTimestamp(now + 2000).setLastSeenTimestamp(0));
+    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(DAY1).setLastSeenTimestamp(DAY3));
+    indexFact(d -> d.setTimestamp(DAY1 - 2000).setLastSeenTimestamp(DAY3));
+    indexFact(d -> d.setTimestamp(DAY1 + 2000).setLastSeenTimestamp(DAY3));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(now - 1000)
-            .setEndTimestamp(now + 1000)
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(DAY1 - 1000)
+            .setEndTimestamp(DAY1 + 1000)
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.timestamp));
     testSearchFacts(criteria, accessibleFact);
   }
 
   @Test
   public void testSearchFactsFilterByLastSeenTimestamp() {
-    long now = System.currentTimeMillis();
-    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(0).setLastSeenTimestamp(now));
-    indexFact(d -> d.setTimestamp(0).setLastSeenTimestamp(now - 2000));
-    indexFact(d -> d.setTimestamp(0).setLastSeenTimestamp(now + 2000));
+    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(DAY1).setLastSeenTimestamp(DAY3));
+    indexFact(d -> d.setTimestamp(DAY1).setLastSeenTimestamp(DAY3 - 2000));
+    indexFact(d -> d.setTimestamp(DAY1).setLastSeenTimestamp(DAY3 + 2000));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(now - 1000)
-            .setEndTimestamp(now + 1000)
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(DAY3 - 1000)
+            .setEndTimestamp(DAY3 + 1000)
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp));
     testSearchFacts(criteria, accessibleFact);
   }
 
   @Test
   public void testSearchFactsFilterByAllTimestamps() {
-    long now = System.currentTimeMillis();
-    indexFact(d -> d.setTimestamp(0).setLastSeenTimestamp(now));
-    indexFact(d -> d.setTimestamp(now).setLastSeenTimestamp(0));
+    indexFact(d -> d.setTimestamp(DAY1).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setTimestamp(DAY2).setLastSeenTimestamp(DAY3));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(now - 1000)
-            .setEndTimestamp(now + 1000)
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(DAY2 - 1000)
+            .setEndTimestamp(DAY2 + 1000)
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.all));
     testSearchFacts(criteria, 2);
   }
 
   @Test
   public void testSearchFactsFilterByTimestampsMatchStrategyAll() {
-    long now = System.currentTimeMillis();
-    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(now).setLastSeenTimestamp(now));
-    indexFact(d -> d.setTimestamp(0).setLastSeenTimestamp(now));
+    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(DAY2).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setTimestamp(DAY1).setLastSeenTimestamp(DAY2));
 
-    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(now - 1000)
-            .setEndTimestamp(now + 1000)
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(DAY2 - 1000)
+            .setEndTimestamp(DAY2 + 1000)
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.all)
             .setTimeMatchStrategy(FactSearchCriteria.MatchStrategy.all));
     testSearchFacts(criteria, accessibleFact);
@@ -498,6 +488,37 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
     ScrollingSearchResult<UUID> result = getFactSearchManager().searchFacts(createFactSearchCriteria(b -> b));
     assertEquals(3, result.getCount());
     assertEquals(3, ListUtils.list(result).size());
+  }
+
+  @Test
+  public void testSearchFactsWithDailyIndices() {
+    indexFact(d -> d.setLastSeenTimestamp(DAY1));
+    indexFact(d -> d.setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setLastSeenTimestamp(DAY3));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setIndexSelectCriteria(createIndexSelectCriteria(DAY2, DAY3)));
+    testSearchFacts(criteria, 2);
+  }
+
+  @Test
+  public void testSearchFactsWithDailyIndicesIncludingTimeGlobal() {
+    indexFact(d -> d.setLastSeenTimestamp(DAY1), FactSearchManager.TargetIndex.TimeGlobal);
+    indexFact(d -> d.setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setLastSeenTimestamp(DAY3));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setIndexSelectCriteria(createIndexSelectCriteria(DAY2, DAY3)));
+    testSearchFacts(criteria, 3);
+  }
+
+  @Test
+  public void testSearchFactsWithDailyIndicesDeDuplicatesResult() {
+    UUID id = UUID.randomUUID();
+    indexFact(d -> d.setId(id).setLastSeenTimestamp(DAY1));
+    indexFact(d -> d.setId(id).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setId(id).setLastSeenTimestamp(DAY3));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
+    testSearchFacts(criteria, 1);
   }
 
   private void testSearchFacts(FactSearchCriteria criteria, FactDocument accessibleFact) {

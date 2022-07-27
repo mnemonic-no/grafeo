@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
@@ -165,6 +166,7 @@ public class ObjectSearchFactsDelegateTest {
                     .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(UUID.randomUUID())
                     .build())
+            .setIndexSelectCriteria(IndexSelectCriteria.builder().build())
             .build());
     when(factSearchHandler.search(any(), any())).thenReturn(StreamingResultSet.<Fact>builder()
             .setLimit(25)

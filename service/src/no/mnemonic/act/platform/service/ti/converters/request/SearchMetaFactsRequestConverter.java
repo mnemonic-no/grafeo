@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.SearchByNameRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -16,12 +17,15 @@ public class SearchMetaFactsRequestConverter {
 
   private final SearchByNameRequestResolver byNameResolver;
   private final AccessControlCriteriaResolver accessControlCriteriaResolver;
+  private final IndexSelectCriteriaResolver indexSelectCriteriaResolver;
 
   @Inject
   public SearchMetaFactsRequestConverter(SearchByNameRequestResolver byNameResolver,
-                                         AccessControlCriteriaResolver accessControlCriteriaResolver) {
+                                         AccessControlCriteriaResolver accessControlCriteriaResolver,
+                                         IndexSelectCriteriaResolver indexSelectCriteriaResolver) {
     this.byNameResolver = byNameResolver;
     this.accessControlCriteriaResolver = accessControlCriteriaResolver;
+    this.indexSelectCriteriaResolver = indexSelectCriteriaResolver;
   }
 
   public FactSearchCriteria apply(SearchMetaFactsRequest request) throws InvalidArgumentException {
@@ -47,6 +51,7 @@ public class SearchMetaFactsRequestConverter {
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
             .setAccessControlCriteria(accessControlCriteriaResolver.get())
+            .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(request.getAfter(), request.getBefore()))
             .build();
   }
 }

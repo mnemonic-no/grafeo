@@ -6,12 +6,14 @@ import no.mnemonic.act.platform.api.request.v1.GetObjectByIdRequest;
 import no.mnemonic.act.platform.api.request.v1.GetObjectByTypeValueRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.ObjectTypeByIdResponseResolver;
 import org.junit.Before;
@@ -39,22 +41,27 @@ public class ObjectGetDelegateTest {
   private TiSecurityContext securityContext;
   @Mock
   private AccessControlCriteriaResolver accessControlCriteriaResolver;
+  @Mock
+  private IndexSelectCriteriaResolver indexSelectCriteriaResolver;
 
   private ObjectGetDelegate delegate;
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     initMocks(this);
     // Mocks required for ObjectConverter.
     when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
             .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build());
+    when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any()))
+            .thenReturn(IndexSelectCriteria.builder().build());
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
 
     delegate = new ObjectGetDelegate(
             securityContext,
             accessControlCriteriaResolver,
+            indexSelectCriteriaResolver,
             objectFactDao,
             factTypeConverter,
             objectTypeConverter,
@@ -91,6 +98,7 @@ public class ObjectGetDelegateTest {
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
       assertNotNull(criteria.getAccessControlCriteria());
+      assertNotNull(criteria.getIndexSelectCriteria());
       return true;
     }));
   }
@@ -105,6 +113,7 @@ public class ObjectGetDelegateTest {
     when(objectFactDao.getObject(object.getId())).thenReturn(object);
 
     assertNotNull(delegate.handle(request));
+    verify(indexSelectCriteriaResolver).validateAndCreateCriteria(request.getAfter(), request.getBefore());
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(request.getAfter(), criteria.getStartTimestamp());
       assertEquals(request.getBefore(), criteria.getEndTimestamp());
@@ -158,6 +167,7 @@ public class ObjectGetDelegateTest {
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(Collections.singleton(object.getId()), criteria.getObjectID());
       assertNotNull(criteria.getAccessControlCriteria());
+      assertNotNull(criteria.getIndexSelectCriteria());
       return true;
     }));
   }
@@ -172,6 +182,7 @@ public class ObjectGetDelegateTest {
     when(objectFactDao.getObject(request.getType(), request.getValue())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
 
     assertNotNull(delegate.handle(request));
+    verify(indexSelectCriteriaResolver).validateAndCreateCriteria(request.getAfter(), request.getBefore());
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
       assertEquals(request.getAfter(), criteria.getStartTimestamp());
       assertEquals(request.getBefore(), criteria.getEndTimestamp());

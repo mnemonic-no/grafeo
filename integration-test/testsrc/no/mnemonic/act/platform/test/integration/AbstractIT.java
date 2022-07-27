@@ -272,8 +272,8 @@ public abstract class AbstractIT {
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOriginID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.RoleBased)
-            .setTimestamp(123456789)
-            .setLastSeenTimestamp(987654321)
+            .setTimestamp(System.currentTimeMillis())
+            .setLastSeenTimestamp(System.currentTimeMillis())
             .setSourceObject(source)
             .setDestinationObject(destination)
             .setBidirectionalBinding(true);
@@ -289,8 +289,8 @@ public abstract class AbstractIT {
             .setOrganizationID(UUID.fromString("00000000-0000-0000-0000-000000000001"))
             .setOriginID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.RoleBased)
-            .setTimestamp(123456789)
-            .setLastSeenTimestamp(987654321)
+            .setTimestamp(System.currentTimeMillis())
+            .setLastSeenTimestamp(System.currentTimeMillis())
             .setInReferenceToID(referencedFact.getId());
 
     return getObjectFactDao().storeFact(preparation.prepare(meta));

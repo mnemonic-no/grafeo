@@ -532,6 +532,8 @@ public class ObjectVertexTest extends AbstractGraphTest {
     Long afterTimestamp = 980000000L;
 
     ActGraph timeFilterGraph = createActGraph(TraverseParams.builder()
+            .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
             .setAfterTimestamp(afterTimestamp)
             .setBeforeTimestamp(beforeTimestamp)
             .build());
@@ -553,13 +555,19 @@ public class ObjectVertexTest extends AbstractGraphTest {
       assertEquals(afterTimestamp, criteria.getStartTimestamp());
       assertEquals(beforeTimestamp, criteria.getEndTimestamp());
       assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
+      assertSame(accessControlCriteria, criteria.getAccessControlCriteria());
+      assertSame(indexSelectCriteria, criteria.getIndexSelectCriteria());
       return true;
     }));
   }
 
   @Test
   public void testEdgesAndRetractions() {
-    ActGraph actGraphNoRetractions = createActGraph(TraverseParams.builder().setIncludeRetracted(false).build());
+    ActGraph actGraphNoRetractions = createActGraph(TraverseParams.builder()
+            .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
+            .setIncludeRetracted(false)
+            .build());
 
     ObjectTypeStruct objectType = mockObjectType();
     ObjectRecord source = mockObjectRecord(objectType, "someValue");

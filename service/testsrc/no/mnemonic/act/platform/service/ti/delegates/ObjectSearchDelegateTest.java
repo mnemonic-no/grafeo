@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
@@ -37,6 +38,7 @@ public class ObjectSearchDelegateTest {
           .addCurrentUserIdentity(UUID.randomUUID())
           .addAvailableOrganizationID(UUID.randomUUID())
           .build();
+  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
 
   @Mock
   private ObjectFactDao objectFactDao;
@@ -64,6 +66,7 @@ public class ObjectSearchDelegateTest {
             .setKeywords("Hello World!")
             .setLimit(25)
             .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
             .build());
 
     delegate = new ObjectSearchDelegate(
@@ -87,6 +90,7 @@ public class ObjectSearchDelegateTest {
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setLimit(25)
             .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
             .build());
     assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchObjectRequest()));
   }
@@ -132,7 +136,8 @@ public class ObjectSearchDelegateTest {
 
     verify(objectFactDao).searchObjects(notNull());
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
-      assertNotNull(criteria.getAccessControlCriteria());
+      assertSame(accessControlCriteria, criteria.getAccessControlCriteria());
+      assertSame(indexSelectCriteria, criteria.getIndexSelectCriteria());
       assertEquals(count, criteria.getObjectID().size());
       return true;
     }));

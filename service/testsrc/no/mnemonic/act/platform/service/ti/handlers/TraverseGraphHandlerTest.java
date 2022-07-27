@@ -6,13 +6,13 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
-import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
@@ -38,6 +38,16 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class TraverseGraphHandlerTest {
 
+  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
+          .addCurrentUserIdentity(UUID.randomUUID())
+          .addAvailableOrganizationID(UUID.randomUUID())
+          .build();
+  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
+  private final TraverseParams emptyTraverseParams = TraverseParams.builder()
+          .setAccessControlCriteria(accessControlCriteria)
+          .setIndexSelectCriteria(indexSelectCriteria)
+          .build();
+
   @Mock
   private FactResponseConverter factResponseConverter;
   @Mock
@@ -48,8 +58,6 @@ public class TraverseGraphHandlerTest {
   private ObjectFactTypeResolver objectFactTypeResolver;
   @Mock
   private TiSecurityContext securityContext;
-  @Mock
-  private AccessControlCriteriaResolver accessControlCriteriaResolver;
   @Mock
   private FactRetractionHandler factRetractionHandler;
   @Mock
@@ -62,15 +70,10 @@ public class TraverseGraphHandlerTest {
     initMocks(this);
 
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .addCurrentUserIdentity(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID())
-            .build());
     when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());
 
     handler = new TraverseGraphHandler(
             securityContext,
-            accessControlCriteriaResolver,
             objectFactDao,
             objectFactTypeResolver,
             objectResponseConverter,
@@ -85,7 +88,7 @@ public class TraverseGraphHandlerTest {
     ObjectRecord destination = mockObjectRecord(mockObjectType(), "someOther");
     FactRecord factRecord = mockFact(source, destination);
 
-    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.outE()", TraverseParams.builder().build());
+    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.outE()", emptyTraverseParams);
 
     List<?> result = ListUtils.list(resultSet.iterator());
     assertEquals(1, result.size());
@@ -99,7 +102,7 @@ public class TraverseGraphHandlerTest {
     ObjectRecord destination = mockObjectRecord(mockObjectType(), "someOther");
     mockFact(source, destination);
 
-    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.out()", TraverseParams.builder().build());
+    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.out()", emptyTraverseParams);
 
     List<?> result = ListUtils.list(resultSet.iterator());
     assertEquals(1, result.size());
@@ -116,7 +119,7 @@ public class TraverseGraphHandlerTest {
     when(propertyHelper.getObjectProperties(eq(source), any()))
             .thenReturn(ListUtils.list(new PropertyEntry<>("value", "someValue")));
 
-    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.values('value')", TraverseParams.builder().build());
+    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.values('value')", emptyTraverseParams);
 
     List<?> result = ListUtils.list(resultSet.iterator());
     assertEquals(1, result.size());
@@ -133,7 +136,7 @@ public class TraverseGraphHandlerTest {
                     new PropertyEntry<>("name", "test"),
                     new PropertyEntry<>("value", "someValue")));
 
-    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.properties()", TraverseParams.builder().build());
+    ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.properties()", emptyTraverseParams);
 
     Set<?> result = set(resultSet.iterator());
     assertEquals(2, result.size());
@@ -147,7 +150,7 @@ public class TraverseGraphHandlerTest {
     mockFact(source, destination);
 
     assertThrows(InvalidArgumentException.class, () -> {
-      handler.traverse(set(source.getId()), "g.addE('notAllowed')", TraverseParams.builder().build());
+      handler.traverse(set(source.getId()), "g.addE('notAllowed')", emptyTraverseParams);
     });
   }
 
@@ -158,7 +161,7 @@ public class TraverseGraphHandlerTest {
     mockFact(source, destination);
 
     assertThrows(InvalidArgumentException.class,
-            () -> handler.traverse(set(source.getId()), "System.exit(0)", TraverseParams.builder().build()));
+            () -> handler.traverse(set(source.getId()), "System.exit(0)", emptyTraverseParams));
   }
 
   @Test
@@ -168,12 +171,12 @@ public class TraverseGraphHandlerTest {
     mockFact(source, destination);
 
     assertThrows(OperationTimeoutException.class,
-            () -> handler.traverse(set(source.getId()), "while (true) {}", TraverseParams.builder().build()));
+            () -> handler.traverse(set(source.getId()), "while (true) {}", emptyTraverseParams));
   }
 
   @Test
   public void testTraverseGraphWithoutStartingObjects() throws Exception {
-    ResultSet<?> resultSet = handler.traverse(set(), "g.values('value')", TraverseParams.builder().build());
+    ResultSet<?> resultSet = handler.traverse(set(), "g.values('value')", emptyTraverseParams);
 
     List<?> result = ListUtils.list(resultSet.iterator());
     assertEquals(0, result.size());
@@ -218,7 +221,11 @@ public class TraverseGraphHandlerTest {
     ResultSet<?> resultSet = handler.traverse(
             set(source.getId()),
             "g.outE()",
-            TraverseParams.builder().setLimit(1).build());
+            TraverseParams.builder()
+                    .setAccessControlCriteria(accessControlCriteria)
+                    .setIndexSelectCriteria(indexSelectCriteria)
+                    .setLimit(1)
+                    .build());
 
     // Expect 1 edge due to the limit
     List<?> result = ListUtils.list(resultSet.iterator());

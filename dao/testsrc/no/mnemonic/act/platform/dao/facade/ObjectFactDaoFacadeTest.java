@@ -3,6 +3,7 @@ package no.mnemonic.act.platform.dao.facade;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.act.platform.dao.api.record.FactCommentRecord;
@@ -47,6 +48,7 @@ public class ObjectFactDaoFacadeTest {
           .addCurrentUserIdentity(UUID.randomUUID())
           .addAvailableOrganizationID(UUID.randomUUID())
           .build();
+  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
 
   @Mock
   private ObjectManager objectManager;
@@ -141,6 +143,7 @@ public class ObjectFactDaoFacadeTest {
     ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
             .addObjectID(UUID.randomUUID())
             .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
             .build();
     ObjectStatisticsContainer container = ObjectStatisticsContainer.builder().build();
     when(factSearchManager.calculateObjectStatistics(criteria)).thenReturn(container);
@@ -735,6 +738,7 @@ public class ObjectFactDaoFacadeTest {
   private FactSearchCriteria createFactSearchCriteria() {
     return FactSearchCriteria.builder()
             .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
             .build();
   }
 }

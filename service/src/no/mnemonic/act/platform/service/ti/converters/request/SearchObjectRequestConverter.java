@@ -4,6 +4,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.SearchByNameRequestResolver;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
@@ -15,12 +16,15 @@ public class SearchObjectRequestConverter {
 
   private final SearchByNameRequestResolver byNameResolver;
   private final AccessControlCriteriaResolver accessControlCriteriaResolver;
+  private final IndexSelectCriteriaResolver indexSelectCriteriaResolver;
 
   @Inject
   public SearchObjectRequestConverter(SearchByNameRequestResolver byNameResolver,
-                                      AccessControlCriteriaResolver accessControlCriteriaResolver) {
+                                      AccessControlCriteriaResolver accessControlCriteriaResolver,
+                                      IndexSelectCriteriaResolver indexSelectCriteriaResolver) {
     this.byNameResolver = byNameResolver;
     this.accessControlCriteriaResolver = accessControlCriteriaResolver;
+    this.indexSelectCriteriaResolver = indexSelectCriteriaResolver;
   }
 
   public FactSearchCriteria apply(SearchObjectRequest request) throws InvalidArgumentException {
@@ -45,6 +49,7 @@ public class SearchObjectRequestConverter {
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
             .setAccessControlCriteria(accessControlCriteriaResolver.get())
+            .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(request.getAfter(), request.getBefore()))
             .build();
   }
 }

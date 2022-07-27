@@ -8,6 +8,7 @@ import no.mnemonic.act.platform.api.request.v1.SearchObjectRequest;
 import no.mnemonic.act.platform.api.service.v1.StreamingResultSet;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
@@ -65,7 +66,8 @@ public class ObjectSearchDelegate implements Delegate {
     return StreamingResultSet.<Object>builder()
             .setCount(searchResult.getCount())
             .setLimit(criteria.getLimit())
-            .setValues(new AddStatisticsIterator(searchResult, request))
+            // Use the same IndexSelectCriteria for statistics calculation than what is used for the search itself.
+            .setValues(new AddStatisticsIterator(searchResult, request, criteria.getIndexSelectCriteria()))
             .build();
   }
 
@@ -82,11 +84,15 @@ public class ObjectSearchDelegate implements Delegate {
 
     private final ResultContainer<ObjectRecord> input;
     private final SearchObjectRequest request;
+    private final IndexSelectCriteria indexSelectCriteria;
     private Iterator<Object> output;
 
-    private AddStatisticsIterator(ResultContainer<ObjectRecord> input, SearchObjectRequest request) {
+    private AddStatisticsIterator(ResultContainer<ObjectRecord> input,
+                                  SearchObjectRequest request,
+                                  IndexSelectCriteria indexSelectCriteria) {
       this.input = input;
       this.request = request;
+      this.indexSelectCriteria = indexSelectCriteria;
     }
 
     @Override
@@ -140,6 +146,7 @@ public class ObjectSearchDelegate implements Delegate {
                 .setStartTimestamp(request.getAfter())
                 .setEndTimestamp(request.getBefore())
                 .setAccessControlCriteria(accessControlCriteriaResolver.get())
+                .setIndexSelectCriteria(indexSelectCriteria)
                 .build();
         ObjectStatisticsContainer statistics = objectFactDao.calculateObjectStatistics(criteria);
         resolver = statistics::getStatistics;

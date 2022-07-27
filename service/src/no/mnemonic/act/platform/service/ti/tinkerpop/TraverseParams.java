@@ -1,5 +1,7 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 /**
@@ -8,16 +10,33 @@ import no.mnemonic.commons.utilities.ObjectUtils;
  */
 public class TraverseParams {
 
+  private final AccessControlCriteria accessControlCriteria;
+  private final IndexSelectCriteria indexSelectCriteria;
   private final boolean includeRetracted;
   private final Long beforeTimestamp;
   private final Long afterTimestamp;
   private final int limit;
 
-  private TraverseParams(Boolean includeRetracted, Long beforeTimestamp, Long afterTimestamp, Integer limit) {
+  private TraverseParams(AccessControlCriteria accessControlCriteria,
+                         IndexSelectCriteria indexSelectCriteria,
+                         Boolean includeRetracted,
+                         Long beforeTimestamp,
+                         Long afterTimestamp,
+                         Integer limit) {
+    this.accessControlCriteria = accessControlCriteria;
+    this.indexSelectCriteria = indexSelectCriteria;
     this.includeRetracted = ObjectUtils.ifNull(includeRetracted, false);
     this.beforeTimestamp = beforeTimestamp;
     this.afterTimestamp = afterTimestamp;
     this.limit = ObjectUtils.ifNull(limit, 25);
+  }
+
+  public AccessControlCriteria getAccessControlCriteria() {
+    return accessControlCriteria;
+  }
+
+  public IndexSelectCriteria getIndexSelectCriteria() {
+    return indexSelectCriteria;
   }
 
   public Boolean isIncludeRetracted() {
@@ -36,19 +55,34 @@ public class TraverseParams {
     return limit;
   }
 
-  public static Builder builder() { return new Builder(); }
+  public static Builder builder() {
+    return new Builder();
+  }
 
   public static class Builder {
 
+    private AccessControlCriteria accessControlCriteria;
+    private IndexSelectCriteria indexSelectCriteria;
     private Boolean includeRetracted;
     private Long beforeTimestamp;
     private Long afterTimestamp;
     private Integer limit;
 
-    private Builder() {}
+    private Builder() {
+    }
 
     public TraverseParams build() {
-      return new TraverseParams(includeRetracted, beforeTimestamp, afterTimestamp, limit);
+      return new TraverseParams(accessControlCriteria, indexSelectCriteria, includeRetracted, beforeTimestamp, afterTimestamp, limit);
+    }
+
+    public Builder setAccessControlCriteria(AccessControlCriteria accessControlCriteria) {
+      this.accessControlCriteria = accessControlCriteria;
+      return this;
+    }
+
+    public Builder setIndexSelectCriteria(IndexSelectCriteria indexSelectCriteria) {
+      this.indexSelectCriteria = indexSelectCriteria;
+      return this;
     }
 
     public Builder setIncludeRetracted(Boolean includeRetracted) {

@@ -11,6 +11,8 @@ import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.ObjectTypeHandler;
 import no.mnemonic.act.platform.service.ti.handlers.TraverseGraphHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.TraverseParams;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
@@ -31,16 +33,22 @@ public class TraverseByObjectsDelegate implements Delegate {
   private final TraverseGraphHandler traverseGraphHandler;
   private final ObjectFactDao objectFactDao;
   private final ObjectTypeHandler objectTypeHandler;
+  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
+  private final IndexSelectCriteriaResolver indexSelectCriteriaResolver;
 
   @Inject
   public TraverseByObjectsDelegate(TiSecurityContext securityContext,
                                    TraverseGraphHandler traverseGraphHandler,
                                    ObjectFactDao objectFactDao,
-                                   ObjectTypeHandler objectTypeHandler) {
+                                   ObjectTypeHandler objectTypeHandler,
+                                   AccessControlCriteriaResolver accessControlCriteriaResolver,
+                                   IndexSelectCriteriaResolver indexSelectCriteriaResolver) {
     this.securityContext = securityContext;
     this.traverseGraphHandler = traverseGraphHandler;
     this.objectFactDao = objectFactDao;
     this.objectTypeHandler = objectTypeHandler;
+    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
+    this.indexSelectCriteriaResolver = indexSelectCriteriaResolver;
   }
 
   public ResultSet<?> handle(TraverseGraphByObjectsRequest request)
@@ -58,6 +66,8 @@ public class TraverseByObjectsDelegate implements Delegate {
             SetUtils.set(objects, ObjectRecord::getId),
             request.getQuery(),
             TraverseParams.builder()
+                    .setAccessControlCriteria(accessControlCriteriaResolver.get())
+                    .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(request.getAfter(), request.getBefore()))
                     .setIncludeRetracted(request.getIncludeRetracted())
                     .setAfterTimestamp(request.getAfter())
                     .setBeforeTimestamp(request.getBefore())

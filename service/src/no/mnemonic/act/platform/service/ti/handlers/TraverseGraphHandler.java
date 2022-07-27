@@ -9,7 +9,6 @@ import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.response.FactResponseConverter;
 import no.mnemonic.act.platform.service.ti.converters.response.ObjectResponseConverter;
 import no.mnemonic.act.platform.service.ti.helpers.GremlinSandboxExtension;
-import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ActGraph;
 import no.mnemonic.act.platform.service.ti.tinkerpop.FactEdge;
 import no.mnemonic.act.platform.service.ti.tinkerpop.ObjectVertex;
@@ -42,7 +41,6 @@ public class TraverseGraphHandler {
   private static final long SCRIPT_EXECUTION_TIMEOUT = 120_000;
 
   private final TiSecurityContext securityContext;
-  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
   private final ObjectFactDao objectFactDao;
   private final ObjectFactTypeResolver objectFactTypeResolver;
   private final FactRetractionHandler factRetractionHandler;
@@ -54,7 +52,6 @@ public class TraverseGraphHandler {
 
   @Inject
   public TraverseGraphHandler(TiSecurityContext securityContext,
-                              AccessControlCriteriaResolver accessControlCriteriaResolver,
                               ObjectFactDao objectFactDao,
                               ObjectFactTypeResolver objectFactTypeResolver,
                               ObjectResponseConverter objectResponseConverter,
@@ -62,7 +59,6 @@ public class TraverseGraphHandler {
                               FactRetractionHandler factRetractionHandler,
                               PropertyHelper propertyHelper) {
     this.securityContext = securityContext;
-    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
     this.objectFactDao = objectFactDao;
     this.objectFactTypeResolver = objectFactTypeResolver;
     this.objectResponseConverter = objectResponseConverter;
@@ -202,7 +198,6 @@ public class TraverseGraphHandler {
             .setObjectTypeFactResolver(objectFactTypeResolver)
             .setFactRetractionHandler(factRetractionHandler)
             .setSecurityContext(securityContext)
-            .setAccessControlCriteriaResolver(accessControlCriteriaResolver)
             .setTraverseParams(traverseParams)
             .setPropertyHelper(propertyHelper)
             .build();

@@ -2,15 +2,21 @@ package no.mnemonic.act.platform.dao.elastic;
 
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import org.junit.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.elastic.DocumentTestUtils.createFactDocument;
 
 public abstract class AbstractManagerTest {
+
+  static final long DAY1 = Instant.parse("2022-01-01T12:00:00.000Z").toEpochMilli();
+  static final long DAY2 = Instant.parse("2022-01-02T12:00:00.000Z").toEpochMilli();
+  static final long DAY3 = Instant.parse("2022-01-03T12:00:00.000Z").toEpochMilli();
 
   private static ClientFactory clientFactory;
   private FactSearchManager factSearchManager;
@@ -60,7 +66,8 @@ public abstract class AbstractManagerTest {
 
   FactSearchCriteria createFactSearchCriteria(ObjectPreparation<FactSearchCriteria.Builder> preparation) {
     FactSearchCriteria.Builder builder = FactSearchCriteria.builder()
-            .setAccessControlCriteria(createAccessControlCriteria());
+            .setAccessControlCriteria(createAccessControlCriteria())
+            .setIndexSelectCriteria(createIndexSelectCriteria(DAY1, DAY3));
     if (preparation != null) {
       builder = preparation.prepare(builder);
     }
@@ -74,10 +81,20 @@ public abstract class AbstractManagerTest {
             .build();
   }
 
+  IndexSelectCriteria createIndexSelectCriteria(long start, long end) {
+    return IndexSelectCriteria.builder()
+            .setIndexStartTimestamp(start)
+            .setIndexEndTimestamp(end)
+            .build();
+  }
 
   FactDocument indexFact(ObjectPreparation<FactDocument> preparation) {
-    FactDocument document = preparation != null ? preparation.prepare(createFactDocument()) : createFactDocument();
-    return getFactSearchManager().indexFact(document, FactSearchManager.TargetIndex.Legacy);
+    return indexFact(preparation, FactSearchManager.TargetIndex.Daily);
+  }
+
+  FactDocument indexFact(ObjectPreparation<FactDocument> preparation, FactSearchManager.TargetIndex index) {
+    FactDocument document = preparation != null ? preparation.prepare(createFactDocument(DAY2)) : createFactDocument(DAY2);
+    return getFactSearchManager().indexFact(document, index);
   }
 
   <T> T first(Iterable<T> iterable) {

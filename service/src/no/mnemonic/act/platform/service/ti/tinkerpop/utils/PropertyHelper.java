@@ -7,7 +7,6 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OrganizationByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OriginByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.SubjectByIdResponseResolver;
@@ -29,7 +28,6 @@ public class PropertyHelper {
 
   private final ObjectFactDao objectFactDao;
   private final TiSecurityContext securityContext;
-  private final AccessControlCriteriaResolver accessControlCriteriaResolver;
   private final ObjectFactTypeResolver objectFactTypeResolver;
   private final FactRetractionHandler factRetractionHandler;
   private final SubjectByIdResponseResolver subjectResolver;
@@ -41,13 +39,11 @@ public class PropertyHelper {
                         ObjectFactDao objectFactDao,
                         ObjectFactTypeResolver objectFactTypeResolver,
                         TiSecurityContext securityContext,
-                        AccessControlCriteriaResolver accessControlCriteriaResolver,
                         SubjectByIdResponseResolver subjectResolver,
                         OrganizationByIdResponseResolver organizationResolver,
                         OriginByIdResponseResolver originResolver) {
     this.objectFactDao = objectFactDao;
     this.securityContext = securityContext;
-    this.accessControlCriteriaResolver = accessControlCriteriaResolver;
     this.objectFactTypeResolver = objectFactTypeResolver;
     this.factRetractionHandler = factRetractionHandler;
     this.subjectResolver = subjectResolver;
@@ -101,7 +97,8 @@ public class PropertyHelper {
             .setStartTimestamp(traverseParams.getAfterTimestamp())
             .setEndTimestamp(traverseParams.getBeforeTimestamp())
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
-            .setAccessControlCriteria(accessControlCriteriaResolver.get())
+            .setAccessControlCriteria(traverseParams.getAccessControlCriteria())
+            .setIndexSelectCriteria(traverseParams.getIndexSelectCriteria())
             .build());
 
     return facts.stream()
@@ -151,7 +148,8 @@ public class PropertyHelper {
             .setStartTimestamp(traverseParams.getAfterTimestamp())
             .setEndTimestamp(traverseParams.getBeforeTimestamp())
             .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
-            .setAccessControlCriteria(accessControlCriteriaResolver.get())
+            .setAccessControlCriteria(traverseParams.getAccessControlCriteria())
+            .setIndexSelectCriteria(traverseParams.getIndexSelectCriteria())
             .build());
 
     return facts.stream()

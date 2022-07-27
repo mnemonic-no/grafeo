@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
@@ -212,7 +213,8 @@ public class FactSearchHandlerTest {
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(UUID.randomUUID())
-                    .build());
+                    .build())
+            .setIndexSelectCriteria(IndexSelectCriteria.builder().build());
     if (preparation != null) {
       builder = preparation.prepare(builder);
     }

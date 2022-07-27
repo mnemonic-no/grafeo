@@ -21,17 +21,23 @@ public class ObjectStatisticsCriteria {
   // Fields required for access control on related Facts.
   private final AccessControlCriteria accessControlCriteria;
 
+  // Fields required for selecting the indices to query.
+  private final IndexSelectCriteria indexSelectCriteria;
+
   private ObjectStatisticsCriteria(Set<UUID> objectID,
                                    Long startTimestamp,
                                    Long endTimestamp,
-                                   AccessControlCriteria accessControlCriteria) {
+                                   AccessControlCriteria accessControlCriteria,
+                                   IndexSelectCriteria indexSelectCriteria) {
     if (CollectionUtils.isEmpty(objectID)) throw new IllegalArgumentException("Missing required field 'objectID'.");
     if (accessControlCriteria == null) throw new IllegalArgumentException("Missing required field 'accessControlCriteria'.");
+    if (indexSelectCriteria == null) throw new IllegalArgumentException("Missing required field 'indexSelectCriteria'.");
 
     this.objectID = objectID;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
     this.accessControlCriteria = accessControlCriteria;
+    this.indexSelectCriteria = indexSelectCriteria;
   }
 
   /**
@@ -70,6 +76,15 @@ public class ObjectStatisticsCriteria {
     return accessControlCriteria;
   }
 
+  /**
+   * Specify criteria to decide which indices in ElasticSearch will be queried. This field is required.
+   *
+   * @return Index select criteria
+   */
+  public IndexSelectCriteria getIndexSelectCriteria() {
+    return indexSelectCriteria;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -85,11 +100,14 @@ public class ObjectStatisticsCriteria {
     // Fields required for access control on related Facts.
     private AccessControlCriteria accessControlCriteria;
 
+    // Fields required for selecting the indices to query.
+    private IndexSelectCriteria indexSelectCriteria;
+
     private Builder() {
     }
 
     public ObjectStatisticsCriteria build() {
-      return new ObjectStatisticsCriteria(objectID, startTimestamp, endTimestamp, accessControlCriteria);
+      return new ObjectStatisticsCriteria(objectID, startTimestamp, endTimestamp, accessControlCriteria, indexSelectCriteria);
     }
 
     public Builder setObjectID(Set<UUID> objectID) {
@@ -114,6 +132,11 @@ public class ObjectStatisticsCriteria {
 
     public Builder setAccessControlCriteria(AccessControlCriteria accessControlCriteria) {
       this.accessControlCriteria = accessControlCriteria;
+      return this;
+    }
+
+    public Builder setIndexSelectCriteria(IndexSelectCriteria indexSelectCriteria) {
+      this.indexSelectCriteria = indexSelectCriteria;
       return this;
     }
   }

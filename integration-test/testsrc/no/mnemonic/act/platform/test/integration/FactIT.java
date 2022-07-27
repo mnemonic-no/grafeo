@@ -186,14 +186,16 @@ public class FactIT extends AbstractIT {
 
   @Test
   public void testFetchMetaFactsWithFiltering() throws Exception {
+    long now = System.currentTimeMillis();
+
     // Create a Fact and multiple related meta Facts in the database ...
     FactRecord referencedFact = createFact();
     FactTypeEntity metaFactType = createMetaFactType(referencedFact.getTypeID());
-    createMetaFact(referencedFact, metaFactType, f -> f.setLastSeenTimestamp(111111111));
-    FactRecord metaFact = createMetaFact(referencedFact, metaFactType, f -> f.setLastSeenTimestamp(333333333));
+    createMetaFact(referencedFact, metaFactType, f -> f.setLastSeenTimestamp(now - 2000));
+    FactRecord metaFact = createMetaFact(referencedFact, metaFactType, f -> f.setLastSeenTimestamp(now));
 
     // ... and check that only one meta Fact after filtering is found via the REST API.
-    fetchAndAssertList("/v1/fact/uuid/" + referencedFact.getId() + "/meta?after=" + Instant.ofEpochMilli(222222222), metaFact.getId());
+    fetchAndAssertList("/v1/fact/uuid/" + referencedFact.getId() + "/meta?after=" + Instant.ofEpochMilli(now - 1000), metaFact.getId());
   }
 
   @Test

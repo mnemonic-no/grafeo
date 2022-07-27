@@ -22,15 +22,17 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
   }
 
   @Test
+  public void testSearchObjectsWithoutIndices() {
+    testSearchObjects(createFactSearchCriteria(b -> b), 0);
+  }
+
+  @Test
   public void testSearchObjectsAccessToOnlyPublicFact() {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Public));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    FactSearchCriteria criteria = FactSearchCriteria.builder()
-            .setAccessControlCriteria(createAccessControlCriteria())
-            .build();
-
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
     testSearchObjects(criteria, first(accessibleFact.getObjects()));
   }
 
@@ -39,13 +41,11 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    FactSearchCriteria criteria = FactSearchCriteria.builder()
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(UUID.randomUUID())
                     .addAvailableOrganizationID(accessibleFact.getOrganizationID())
-                    .build())
-            .build();
-
+                    .build()));
     testSearchObjects(criteria, first(accessibleFact.getObjects()));
   }
 
@@ -54,13 +54,11 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
 
-    FactSearchCriteria criteria = FactSearchCriteria.builder()
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
-                    .build())
-            .build();
-
+                    .build()));
     testSearchObjects(criteria, first(accessibleFact.getObjects()));
   }
 
@@ -69,13 +67,11 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
     FactDocument accessibleFact = indexFact(d -> d.setAccessMode(FactDocument.AccessMode.Explicit));
     indexFact(d -> d.setAccessMode(FactDocument.AccessMode.RoleBased));
 
-    FactSearchCriteria criteria = FactSearchCriteria.builder()
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(first(accessibleFact.getAcl()))
                     .addAvailableOrganizationID(UUID.randomUUID())
-                    .build())
-            .build();
-
+                    .build()));
     testSearchObjects(criteria, first(accessibleFact.getObjects()));
   }
 
@@ -183,11 +179,48 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
     assertEquals(2, result.getValues().size());
   }
 
+  @Test
+  public void testSearchObjectsWithDailyIndices() {
+    indexFact(d -> d.setLastSeenTimestamp(DAY1));
+    indexFact(d -> d.setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setLastSeenTimestamp(DAY3));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setIndexSelectCriteria(createIndexSelectCriteria(DAY2, DAY3)));
+    testSearchObjects(criteria, 2);
+  }
+
+  @Test
+  public void testSearchObjectsWithDailyIndicesIncludingTimeGlobal() {
+    indexFact(d -> d.setLastSeenTimestamp(DAY1), FactSearchManager.TargetIndex.TimeGlobal);
+    indexFact(d -> d.setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setLastSeenTimestamp(DAY3));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setIndexSelectCriteria(createIndexSelectCriteria(DAY2, DAY3)));
+    testSearchObjects(criteria, 3);
+  }
+
+  @Test
+  public void testSearchObjectsWithDailyIndicesDeDuplicatesResult() {
+    UUID factID = UUID.randomUUID();
+    ObjectDocument object = createObjectDocument();
+    indexFact(d -> d.setId(factID).setObjects(set(object)).setLastSeenTimestamp(DAY1));
+    indexFact(d -> d.setId(factID).setObjects(set(object)).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.setId(factID).setObjects(set(object)).setLastSeenTimestamp(DAY3));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b);
+    testSearchObjects(criteria, 1);
+  }
+
   private void testSearchObjects(FactSearchCriteria criteria, ObjectDocument accessibleObject) {
     SearchResult<UUID> result = getFactSearchManager().searchObjects(criteria);
     assertEquals(1, result.getCount());
     assertEquals(1, result.getValues().size());
     assertEquals(accessibleObject.getId(), result.getValues().get(0));
+  }
+
+  private void testSearchObjects(FactSearchCriteria criteria, long numberOfMatches) {
+    SearchResult<UUID> result = getFactSearchManager().searchObjects(criteria);
+    assertEquals(numberOfMatches, result.getValues().size());
   }
 
 }

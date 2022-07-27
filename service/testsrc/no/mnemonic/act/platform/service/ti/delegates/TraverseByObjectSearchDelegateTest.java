@@ -7,12 +7,15 @@ import no.mnemonic.act.platform.api.request.v1.TraverseGraphRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.converters.request.SearchObjectRequestConverter;
 import no.mnemonic.act.platform.service.ti.handlers.TraverseGraphHandler;
+import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.services.common.api.ResultSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +33,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class TraverseByObjectSearchDelegateTest {
 
+  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
+          .addCurrentUserIdentity(UUID.randomUUID())
+          .addAvailableOrganizationID(UUID.randomUUID())
+          .build();
+  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
+
   @Mock
   private TiSecurityContext securityContext;
   @Mock
@@ -38,6 +47,10 @@ public class TraverseByObjectSearchDelegateTest {
   private SearchObjectRequestConverter requestConverter;
   @Mock
   private ObjectFactDao objectFactDao;
+  @Mock
+  private AccessControlCriteriaResolver accessControlCriteriaResolver;
+  @Mock
+  private IndexSelectCriteriaResolver indexSelectCriteriaResolver;
 
   private TraverseByObjectSearchDelegate delegate;
 
@@ -45,20 +58,23 @@ public class TraverseByObjectSearchDelegateTest {
   public void setup() throws Exception {
     initMocks(this);
 
+    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
+    when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any())).thenReturn(indexSelectCriteria);
+
     // Mocks required for request converter.
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setLimit(25)
-            .setAccessControlCriteria(AccessControlCriteria.builder()
-                    .addCurrentUserIdentity(UUID.randomUUID())
-                    .addAvailableOrganizationID(UUID.randomUUID())
-                    .build())
+            .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
             .build());
 
     delegate = new TraverseByObjectSearchDelegate(
             securityContext,
             traverseGraphHandler,
             requestConverter,
-            objectFactDao);
+            objectFactDao,
+            accessControlCriteriaResolver,
+            indexSelectCriteriaResolver);
   }
 
   @Test
@@ -77,6 +93,37 @@ public class TraverseByObjectSearchDelegateTest {
     verify(requestConverter).apply(notNull());
     verify(objectFactDao).searchObjects(notNull());
     verifyNoInteractions(traverseGraphHandler);
+  }
+
+  @Test
+  public void testTraverseWithSearch() throws Exception {
+    UUID objectId1 = UUID.randomUUID();
+    UUID objectId2 = UUID.randomUUID();
+    String query = "g.outE()";
+
+
+    TraverseGraphByObjectSearchRequest request = new TraverseGraphByObjectSearchRequest()
+            .setSearch(new SearchObjectRequest())
+            .setTraverse(new TraverseGraphRequest().setQuery(query));
+
+    Iterator<ObjectRecord> searchResult = set(new ObjectRecord().setId(objectId1), new ObjectRecord().setId(objectId2)).iterator();
+    when(objectFactDao.searchObjects(any())).thenReturn(ResultContainer.<ObjectRecord>builder().setValues(searchResult).build());
+
+    delegate.handle(request);
+
+    verify(indexSelectCriteriaResolver).validateAndCreateCriteria(isNull(), isNull());
+    verify(traverseGraphHandler).traverse(
+            eq(set(objectId1, objectId2)),
+            eq(query),
+            argThat(traverseParams -> {
+              assertFalse(traverseParams.isIncludeRetracted());
+              assertNull(traverseParams.getAfterTimestamp());
+              assertNull(traverseParams.getBeforeTimestamp());
+              assertEquals(25, traverseParams.getLimit());
+              assertNotNull(traverseParams.getAccessControlCriteria());
+              assertNotNull(traverseParams.getIndexSelectCriteria());
+              return true;
+            }));
   }
 
   @Test
@@ -102,6 +149,7 @@ public class TraverseByObjectSearchDelegateTest {
 
     delegate.handle(request);
 
+    verify(indexSelectCriteriaResolver).validateAndCreateCriteria(after, before);
     verify(traverseGraphHandler).traverse(
             eq(set(objectId1, objectId2)),
             eq(query),
@@ -110,6 +158,8 @@ public class TraverseByObjectSearchDelegateTest {
               assertEquals(after, traverseParams.getAfterTimestamp());
               assertEquals(before, traverseParams.getBeforeTimestamp());
               assertEquals(10, traverseParams.getLimit());
+              assertNotNull(traverseParams.getAccessControlCriteria());
+              assertNotNull(traverseParams.getIndexSelectCriteria());
               return true;
             }));
   }

@@ -9,6 +9,7 @@ import com.google.common.collect.Streams;
 import com.google.common.io.CharStreams;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.ObjectStatisticsCriteria;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
@@ -33,6 +34,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.*;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
@@ -57,10 +59,7 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -68,6 +67,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static no.mnemonic.act.platform.dao.elastic.helpers.DailyIndexNamesGenerator.formatIndexName;
+import static no.mnemonic.act.platform.dao.elastic.helpers.DailyIndexNamesGenerator.generateIndexNames;
+import static org.elasticsearch.action.support.IndicesOptions.Option.ALLOW_NO_INDICES;
+import static org.elasticsearch.action.support.IndicesOptions.Option.IGNORE_UNAVAILABLE;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 
@@ -121,6 +124,13 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private static final ObjectMapper MAPPER = JsonMapper.builder().build();
   private static final ObjectReader FACT_DOCUMENT_READER = MAPPER.readerFor(FactDocument.class);
   private static final ObjectWriter FACT_DOCUMENT_WRITER = MAPPER.writerFor(FactDocument.class);
+
+  private static final IndicesOptions INDICES_OPTIONS = new IndicesOptions(
+          // Required in case the user specifies a time period where no indices exist.
+          EnumSet.of(ALLOW_NO_INDICES, IGNORE_UNAVAILABLE),
+          // Every index is explicitly selected, thus, now wildcard expansion is required.
+          IndicesOptions.WildcardStates.NONE
+  );
 
   private final PerformanceMonitor indexMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
   private final PerformanceMonitor factSearchInitialMonitor = new PerformanceMonitor(TimeUnit.MINUTES, 60, 1);
@@ -268,6 +278,11 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
       return ScrollingSearchResult.<UUID>builder().build();
     }
 
+    if (response.getTotalShards() == 0) {
+      LOGGER.warning("Search for Facts did not hit any shards.");
+      return ScrollingSearchResult.<UUID>builder().build();
+    }
+
     int count = retrieveCountFromAggregations(response.getAggregations(), FACTS_COUNT_AGGREGATION_NAME);
 
     LOGGER.debug("Successfully initiated streaming of search results. Start fetching data.");
@@ -307,6 +322,11 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
       return SearchResult.<UUID>builder().setLimit(criteria.getLimit()).build();
     }
 
+    if (response.getTotalShards() == 0) {
+      LOGGER.warning("Search for Objects did not hit any shards.");
+      return SearchResult.<UUID>builder().setLimit(criteria.getLimit()).build();
+    }
+
     int count = retrieveCountFromAggregations(response.getAggregations(), OBJECTS_COUNT_AGGREGATION_NAME);
     List<UUID> result = retrieveSearchObjectsResultValues(response);
 
@@ -343,6 +363,11 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
     if (response.status() != RestStatus.OK) {
       LOGGER.warning("Could not calculate Object statistics (response code %s).", response.status());
+      return ObjectStatisticsContainer.builder().build();
+    }
+
+    if (response.getTotalShards() == 0) {
+      LOGGER.warning("Calculation of Object statistics did not hit any shards.");
       return ObjectStatisticsContainer.builder().build();
     }
 
@@ -520,7 +545,8 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             // Use an aggregation to calculate the count because with daily indices the search result will contain duplicates.
             .aggregation(buildFactsCountAggregation());
     return new SearchRequest()
-            .indices(TargetIndex.Legacy.getName())
+            .indices(selectIndices(criteria.getIndexSelectCriteria()))
+            .indicesOptions(INDICES_OPTIONS)
             .scroll(searchScrollExpiration)
             .source(sourceBuilder);
   }
@@ -532,7 +558,8 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             .query(buildFactsQuery(criteria)) // Reduce documents to Facts matching the search criteria.
             .aggregation(buildObjectsAggregation(criteria));
     return new SearchRequest()
-            .indices(TargetIndex.Legacy.getName())
+            .indices(selectIndices(criteria.getIndexSelectCriteria()))
+            .indicesOptions(INDICES_OPTIONS)
             .source(sourceBuilder);
   }
 
@@ -543,8 +570,21 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
             .query(buildObjectStatisticsFactsQuery(criteria)) // Reduce documents to Facts matching the search criteria.
             .aggregation(buildObjectStatisticsAggregation(criteria));
     return new SearchRequest()
-            .indices(TargetIndex.Legacy.getName())
+            .indices(selectIndices(criteria.getIndexSelectCriteria()))
+            .indicesOptions(INDICES_OPTIONS)
             .source(sourceBuilder);
+  }
+
+  private String[] selectIndices(IndexSelectCriteria criteria) {
+    if (criteria.isUseLegacyIndex()) {
+      return new String[]{TargetIndex.Legacy.getName()};
+    }
+
+    List<String> indices = generateIndexNames(criteria.getIndexStartTimestamp(), criteria.getIndexEndTimestamp(), TargetIndex.Daily.getName());
+    // When querying daily indices always query the time global index in addition.
+    indices.add(TargetIndex.TimeGlobal.getName());
+
+    return indices.toArray(new String[0]);
   }
 
   private QueryBuilder buildFactsQuery(FactSearchCriteria criteria) {
@@ -914,11 +954,8 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
   private String resolveIndexName(FactDocument fact, TargetIndex index) {
     if (index == TargetIndex.Daily) {
-      return index.getName() + DateTimeFormatter.ISO_LOCAL_DATE
-              // Need to explicitly specify time zone when formatting an Instant.
-              .withZone(ZoneId.from(ZoneOffset.UTC))
-              // Always index a Fact into daily indices based on its 'lastSeenTimestamp' field.
-              .format(Instant.ofEpochMilli(fact.getLastSeenTimestamp()));
+      // Always index a Fact into daily indices based on its 'lastSeenTimestamp' field.
+      return formatIndexName(fact.getLastSeenTimestamp(), index.getName());
     }
 
     return index.getName();

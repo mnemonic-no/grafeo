@@ -4,7 +4,9 @@ import no.mnemonic.act.platform.api.request.v1.Dimension;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
+import no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.SearchByNameRequestResolver;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Before;
@@ -14,6 +16,7 @@ import org.mockito.Mock;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,19 +28,23 @@ public class SearchMetaFactsRequestConverterTest {
   private SearchByNameRequestResolver byNameResolver;
   @Mock
   private AccessControlCriteriaResolver accessControlCriteriaResolver;
+  @Mock
+  private IndexSelectCriteriaResolver indexSelectCriteriaResolver;
 
   private SearchMetaFactsRequestConverter converter;
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     initMocks(this);
 
     when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
             .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build());
+    when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any()))
+            .thenReturn(IndexSelectCriteria.builder().build());
 
-    converter = new SearchMetaFactsRequestConverter(byNameResolver, accessControlCriteriaResolver);
+    converter = new SearchMetaFactsRequestConverter(byNameResolver, accessControlCriteriaResolver, indexSelectCriteriaResolver);
   }
 
   @Test
@@ -51,6 +58,7 @@ public class SearchMetaFactsRequestConverterTest {
     assertEquals(SetUtils.set(FactSearchCriteria.NumberFieldStrategy.certainty), criteria.getNumberFieldStrategy());
     assertEquals(25, criteria.getLimit());
     assertNotNull(criteria.getAccessControlCriteria());
+    assertNotNull(criteria.getIndexSelectCriteria());
   }
 
   @Test
@@ -149,6 +157,8 @@ public class SearchMetaFactsRequestConverterTest {
     assertEquals(987654321L, (long) criteria.getEndTimestamp());
     assertEquals(SetUtils.set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
     assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getTimeMatchStrategy());
+
+    verify(indexSelectCriteriaResolver).validateAndCreateCriteria(123456789L, 987654321L);
   }
 
   @Test

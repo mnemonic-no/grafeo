@@ -17,7 +17,8 @@ public enum TiFunctionConstants implements NamedFunction {
   viewThreatIntelFactComment,
   grantThreatIntelFactAccess,
   viewThreatIntelFactAccess,
-  unlimitedThreatIntelSearch;
+  unlimitedThreatIntelSearch,
+  threatIntelUseDailyIndices;
 
   @Override
   public String getName() {

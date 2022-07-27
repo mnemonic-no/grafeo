@@ -57,7 +57,8 @@ public class ObjectVertex implements Vertex {
                     .setStartTimestamp(graph.getTraverseParams().getAfterTimestamp())
                     .setEndTimestamp(graph.getTraverseParams().getBeforeTimestamp())
                     .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
-                    .setAccessControlCriteria(graph.getAccessControlCriteriaResolver().get())
+                    .setAccessControlCriteria(graph.getTraverseParams().getAccessControlCriteria())
+                    .setIndexSelectCriteria(graph.getTraverseParams().getIndexSelectCriteria())
                     .build());
 
     return factRecords

@@ -6,12 +6,12 @@ import no.mnemonic.act.platform.api.model.v1.Subject;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OrganizationByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OriginByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.SubjectByIdResponseResolver;
@@ -37,6 +37,16 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class PropertyHelperTest {
 
+  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
+          .addCurrentUserIdentity(UUID.randomUUID())
+          .addAvailableOrganizationID(UUID.randomUUID())
+          .build();
+  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
+  private final TraverseParams emptyTraverseParams = TraverseParams.builder()
+          .setAccessControlCriteria(accessControlCriteria)
+          .setIndexSelectCriteria(indexSelectCriteria)
+          .build();
+
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
@@ -45,8 +55,6 @@ public class PropertyHelperTest {
   private FactRetractionHandler factRetractionHandler;
   @Mock
   private TiSecurityContext securityContext;
-  @Mock
-  private AccessControlCriteriaResolver accessControlCriteriaResolver;
   @Mock
   private SubjectByIdResponseResolver subjectResolver;
   @Mock
@@ -60,18 +68,14 @@ public class PropertyHelperTest {
   public void setUp() {
     initMocks(this);
     helper = new PropertyHelper(factRetractionHandler, objectFactDao, objectFactTypeResolver, securityContext,
-            accessControlCriteriaResolver, subjectResolver, organizationResolver, originResolver);
-    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .addCurrentUserIdentity(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID())
-            .build());
+            subjectResolver, organizationResolver, originResolver);
     when(factRetractionHandler.isRetracted(any())).thenReturn(false);
   }
 
   @Test
   public void testOneLeggedFactsAsPropsNoOneLeggedFacts() {
     when(objectFactDao.searchFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
-    assertEquals(0, helper.getOneLeggedFactsAsProperties(new ObjectRecord(), TraverseParams.builder().build()).size());
+    assertEquals(0, helper.getOneLeggedFactsAsProperties(new ObjectRecord(), emptyTraverseParams).size());
   }
 
   @Test
@@ -92,7 +96,7 @@ public class PropertyHelperTest {
 
     List<PropertyEntry<?>> props = helper.getOneLeggedFactsAsProperties(
             objectRecord,
-            TraverseParams.builder().setIncludeRetracted(true).build());
+            traverseParamsBuilder().setIncludeRetracted(true).build());
 
     assertEquals(2, props.size());
     assertEquals(set("factType1->factValue1", "factType2->factValue2"), asKeyValueStrings(props));
@@ -114,7 +118,7 @@ public class PropertyHelperTest {
             ResultContainer.<FactRecord>builder().setValues(ListUtils.list(fact1, fact2).iterator()).build()
     );
 
-    assertEquals(0, helper.getOneLeggedFactsAsProperties(objectRecord, TraverseParams.builder().build()).size());
+    assertEquals(0, helper.getOneLeggedFactsAsProperties(objectRecord, emptyTraverseParams).size());
     verify(securityContext).hasReadPermission(fact1);
     verify(securityContext).hasReadPermission(fact2);
   }
@@ -135,8 +139,8 @@ public class PropertyHelperTest {
     when(factRetractionHandler.isRetracted(retractedFact)).thenReturn(true);
     when(factRetractionHandler.isRetracted(fact)).thenReturn(false);
 
-    assertEquals(2, helper.getOneLeggedFactsAsProperties(objectRecord, TraverseParams.builder().setIncludeRetracted(true).build()).size());
-    assertEquals(1, helper.getOneLeggedFactsAsProperties(objectRecord, TraverseParams.builder().setIncludeRetracted(false).build()).size());
+    assertEquals(2, helper.getOneLeggedFactsAsProperties(objectRecord, traverseParamsBuilder().setIncludeRetracted(true).build()).size());
+    assertEquals(1, helper.getOneLeggedFactsAsProperties(objectRecord, traverseParamsBuilder().setIncludeRetracted(false).build()).size());
   }
 
   @Test
@@ -148,7 +152,7 @@ public class PropertyHelperTest {
 
     when(objectFactDao.searchFacts(any())).thenAnswer(x -> ResultContainer.<FactRecord>builder().build());
 
-    helper.getOneLeggedFactsAsProperties(objectRecord, TraverseParams.builder()
+    helper.getOneLeggedFactsAsProperties(objectRecord, traverseParamsBuilder()
             .setBeforeTimestamp(end)
             .setAfterTimestamp(start)
             .setIncludeRetracted(true)
@@ -160,6 +164,8 @@ public class PropertyHelperTest {
       assertEquals(start, criteria.getStartTimestamp());
       assertEquals(end, criteria.getEndTimestamp());
       assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
+      assertSame(accessControlCriteria, criteria.getAccessControlCriteria());
+      assertSame(indexSelectCriteria, criteria.getIndexSelectCriteria());
       return true;
     }));
   }
@@ -178,7 +184,7 @@ public class PropertyHelperTest {
     ObjectRecord objectRecord = new ObjectRecord().setId(UUID.randomUUID()).setValue("someValue");
     when(objectFactDao.searchFacts(any())).thenAnswer(x -> ResultContainer.<FactRecord>builder().build());
 
-    List<PropertyEntry<?>> props = helper.getObjectProperties(objectRecord, TraverseParams.builder().build());
+    List<PropertyEntry<?>> props = helper.getObjectProperties(objectRecord, emptyTraverseParams);
 
     assertEquals(1, props.size());
     assertEquals("value", props.get(0).getName());
@@ -205,7 +211,7 @@ public class PropertyHelperTest {
 
     List<PropertyEntry<?>> props = helper.getObjectProperties(
             objectRecord,
-            TraverseParams.builder().setIncludeRetracted(true).build());
+            traverseParamsBuilder().setIncludeRetracted(true).build());
 
     assertEquals(2, props.size());
     assertEquals(set("value->objectValue", "value->someFactValue"), asKeyValueStrings(props));
@@ -216,7 +222,7 @@ public class PropertyHelperTest {
     when(objectFactDao.searchFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
 
     FactRecord fact = new FactRecord().setId(UUID.randomUUID());
-    List<PropertyEntry<?>> props = helper.getMetaFactsAsProperties(fact, TraverseParams.builder().build());
+    List<PropertyEntry<?>> props = helper.getMetaFactsAsProperties(fact, emptyTraverseParams);
 
     assertEquals(0, props.size());
 
@@ -240,7 +246,7 @@ public class PropertyHelperTest {
             ResultContainer.<FactRecord>builder().setValues(ListUtils.list(metaFact).iterator()).build()
     );
 
-    List<PropertyEntry<?>> props = helper.getMetaFactsAsProperties(fact, TraverseParams.builder().build());
+    List<PropertyEntry<?>> props = helper.getMetaFactsAsProperties(fact, emptyTraverseParams);
 
     assertEquals(set("meta/metaFactType->metaFactValue"), asKeyValueStrings(props));
   }
@@ -259,7 +265,7 @@ public class PropertyHelperTest {
             ResultContainer.<FactRecord>builder().setValues(ListUtils.list(metaFact).iterator()).build()
     );
 
-    List<PropertyEntry<?>> props = helper.getMetaFactsAsProperties(fact, TraverseParams.builder().build());
+    List<PropertyEntry<?>> props = helper.getMetaFactsAsProperties(fact, emptyTraverseParams);
     assertEquals(0, props.size());
     verify(securityContext).hasReadPermission(metaFact);
   }
@@ -280,7 +286,7 @@ public class PropertyHelperTest {
 
     when(factRetractionHandler.isRetracted(retractedMetaFact)).thenReturn(true);
 
-    List<PropertyEntry<?>> props = helper.getMetaFactsAsProperties(fact, TraverseParams.builder().build());
+    List<PropertyEntry<?>> props = helper.getMetaFactsAsProperties(fact, emptyTraverseParams);
     assertEquals(0, props.size());
     verify(factRetractionHandler).isRetracted(retractedMetaFact);
   }
@@ -294,7 +300,7 @@ public class PropertyHelperTest {
 
     when(objectFactDao.searchFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
 
-    helper.getMetaFactsAsProperties(new FactRecord().setId(inReferenceToID), TraverseParams.builder()
+    helper.getMetaFactsAsProperties(new FactRecord().setId(inReferenceToID), traverseParamsBuilder()
             .setBeforeTimestamp(end)
             .setAfterTimestamp(start)
             .setIncludeRetracted(true)
@@ -306,6 +312,8 @@ public class PropertyHelperTest {
       assertEquals(start, criteria.getStartTimestamp());
       assertEquals(end, criteria.getEndTimestamp());
       assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
+      assertSame(accessControlCriteria, criteria.getAccessControlCriteria());
+      assertSame(indexSelectCriteria, criteria.getIndexSelectCriteria());
       return true;
     }));
   }
@@ -401,13 +409,19 @@ public class PropertyHelperTest {
             .setOriginID(UUID.randomUUID());
 
     when(objectFactDao.searchFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
-    List<PropertyEntry<?>> props = helper.getFactProperties(factRecord, TraverseParams.builder().build());
+    List<PropertyEntry<?>> props = helper.getFactProperties(factRecord, emptyTraverseParams);
     assertEquals(10, props.size());
 
     verify(objectFactDao).searchFacts(any());
     verify(subjectResolver).apply(factRecord.getAddedByID());
     verify(organizationResolver).apply(factRecord.getOrganizationID());
     verify(originResolver).apply(factRecord.getOriginID());
+  }
+
+  private TraverseParams.Builder traverseParamsBuilder() {
+    return TraverseParams.builder()
+            .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria);
   }
 
   private FactTypeStruct mockFactType(String name) {

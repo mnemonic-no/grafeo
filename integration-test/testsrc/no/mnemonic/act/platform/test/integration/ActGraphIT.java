@@ -4,6 +4,8 @@ import com.google.inject.*;
 import com.google.inject.name.Names;
 import no.mnemonic.act.platform.dao.DaoModule;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
@@ -15,7 +17,6 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
 import no.mnemonic.act.platform.service.ti.handlers.FactRetractionHandler;
-import no.mnemonic.act.platform.service.ti.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OrganizationByIdResponseResolver;
 import no.mnemonic.act.platform.service.ti.resolvers.response.OriginByIdResponseResolver;
@@ -28,11 +29,11 @@ import no.mnemonic.commons.container.ComponentContainer;
 import no.mnemonic.commons.container.providers.GuiceBeanProvider;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
-import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.junit.*;
 
+import java.time.Instant;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -43,6 +44,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ActGraphIT {
+
+  private static final long NOW = Instant.parse("2022-01-01T12:00:00.000Z").toEpochMilli();
+
+  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
+          .addCurrentUserIdentity(UUID.randomUUID())
+          .addAvailableOrganizationID(UUID.randomUUID())
+          .build();
+  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder()
+          .setIndexStartTimestamp(NOW)
+          .setIndexEndTimestamp(NOW)
+          .build();
 
   private static GuiceBeanProvider daoBeanProvider;
   private static ComponentContainer daoContainer;
@@ -114,14 +126,16 @@ public class ActGraphIT {
             .setAccessMode(FactRecord.AccessMode.Public)
             .setValue("to")
             .setSourceObject(ip)
-            .setDestinationObject(domain);
+            .setDestinationObject(domain)
+            .setLastSeenTimestamp(NOW);
 
     FactRecord seen = new FactRecord()
             .setId(UUID.randomUUID())
             .setTypeID(seenType.getId())
             .setAccessMode(FactRecord.AccessMode.Public)
             .setValue("today")
-            .setDestinationObject(domain);
+            .setDestinationObject(domain)
+            .setLastSeenTimestamp(NOW);
 
     FactRecord used = new FactRecord()
             .setId(UUID.randomUUID())
@@ -129,7 +143,8 @@ public class ActGraphIT {
             .setAccessMode(FactRecord.AccessMode.Public)
             .setValue("by")
             .setSourceObject(attack)
-            .setDestinationObject(ip);
+            .setDestinationObject(ip)
+            .setLastSeenTimestamp(NOW);
 
     // Save everything to Cassandra and ElasticSearch.
     objectManager.saveObjectType(ipType);
@@ -154,8 +169,6 @@ public class ActGraphIT {
     // Create a new SecurityContext instance with default mocking for every test.
     mockSecurityContext = mock(TiSecurityContext.class);
     when(mockSecurityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-    when(mockSecurityContext.getCurrentUserIdentities()).thenReturn(SetUtils.set(UUID.randomUUID()));
-    when(mockSecurityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(UUID.randomUUID()));
   }
 
   @AfterClass
@@ -215,7 +228,7 @@ public class ActGraphIT {
     objectFactDao.storeObject(someIp);
     objectFactDao.storeObject(someDomain);
 
-    Long t0 = 98000000L;
+    Long t0 = NOW;
     Long beforeT0 = t0 - 10;
     Long afterT0 = t0 + 10;
 
@@ -232,21 +245,21 @@ public class ActGraphIT {
     objectFactDao.storeFact(someFact);
 
     // No time filter
-    assertEquals(1, IteratorUtils.count(createGraph(TraverseParams.builder()
+    assertEquals(1, IteratorUtils.count(createGraph(traverseParamsBuilder()
             .build()).V(someIp.getId()).outE("resolve")));
 
     // Just before
-    assertEquals(0, IteratorUtils.count(createGraph(TraverseParams.builder()
+    assertEquals(0, IteratorUtils.count(createGraph(traverseParamsBuilder()
             .setBeforeTimestamp(beforeT0)
             .build()).V(someIp.getId()).outE("resolve")));
 
     // Just after
-    assertEquals(0, IteratorUtils.count(createGraph(TraverseParams.builder()
+    assertEquals(0, IteratorUtils.count(createGraph(traverseParamsBuilder()
             .setAfterTimestamp(afterT0)
             .build()).V(someIp.getId()).outE("resolve")));
 
     // In between
-    assertEquals(1, IteratorUtils.count(createGraph(TraverseParams.builder()
+    assertEquals(1, IteratorUtils.count(createGraph(traverseParamsBuilder()
             .setAfterTimestamp(beforeT0)
             .setBeforeTimestamp(afterT0)
             .build()).V(someIp.getId()).outE("resolve")));
@@ -267,23 +280,30 @@ public class ActGraphIT {
             .setAccessMode(FactRecord.AccessMode.Public)
             .setValue("to")
             .setSourceObject(someIp)
-            .setDestinationObject(someDomain);
+            .setDestinationObject(someDomain)
+            .setLastSeenTimestamp(NOW);
     objectFactDao.storeFact(retractedFact);
     retractFact(retractedFact);
 
     // Include retracted
-    assertEquals(1, IteratorUtils.count(createGraph(TraverseParams.builder()
+    assertEquals(1, IteratorUtils.count(createGraph(traverseParamsBuilder()
             .setIncludeRetracted(true)
             .build()).V(someIp.getId()).outE("resolve")));
 
     // Don't include retracted
-    assertEquals(0, IteratorUtils.count(createGraph(TraverseParams.builder()
+    assertEquals(0, IteratorUtils.count(createGraph(traverseParamsBuilder()
             .setIncludeRetracted(false)
             .build()).V(someIp.getId()).outE("resolve")));
   }
 
+  private TraverseParams.Builder traverseParamsBuilder() {
+    return TraverseParams.builder()
+            .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria);
+  }
+
   private GraphTraversalSource createGraph() {
-    return createGraph(TraverseParams.builder().build());
+    return createGraph(traverseParamsBuilder().build());
   }
 
   private GraphTraversalSource createGraph(TraverseParams traverseParams) {
@@ -291,7 +311,6 @@ public class ActGraphIT {
     return ActGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setSecurityContext(mockSecurityContext)
-            .setAccessControlCriteriaResolver(injector.getInstance(AccessControlCriteriaResolver.class))
             .setObjectTypeFactResolver(injector.getInstance(ObjectFactTypeResolver.class))
             .setFactRetractionHandler(injector.getInstance(FactRetractionHandler.class))
             .setPropertyHelper(injector.getInstance(PropertyHelper.class))
@@ -330,8 +349,7 @@ public class ActGraphIT {
             .setTypeID(retractFactType.getId())
             .setInReferenceToID(factToRetract.getId())
             .setAccessMode(FactRecord.AccessMode.Public)
-            .setTimestamp(System.currentTimeMillis())
-            .setLastSeenTimestamp(System.currentTimeMillis());
+            .setLastSeenTimestamp(NOW);
 
     objectFactDao.storeFact(retractionFact);
     objectFactDao.retractFact(factToRetract);
