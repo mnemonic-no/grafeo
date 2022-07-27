@@ -10,7 +10,7 @@
   <parent>
     <groupId>no.mnemonic.act.platform</groupId>
     <artifactId>parent</artifactId>
-    <version>0.0.102-SNAPSHOT</version>
+    <version>0.0.102</version>
   </parent>
 
   <build>
