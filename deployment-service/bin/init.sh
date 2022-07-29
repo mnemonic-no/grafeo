@@ -6,6 +6,16 @@ LOGDIR="${ACT_PLATFORM_LOGDIR:-logs}"
 
 # Set ACT_PLATFORM_JAVA_OPTS environment variable to override default options.
 JAVA_OPTS="${ACT_PLATFORM_JAVA_OPTS:--XX:-OmitStackTraceInFastThrow}"
+# With Java versions newer than JDK8 add the required configuration for the Java module system.
+JAVA_JPMS_OPTS="--add-modules java.se \
+                --add-exports java.base/jdk.internal.ref=ALL-UNNAMED \
+                --add-opens java.base/java.lang=ALL-UNNAMED \
+                --add-opens java.base/java.nio=ALL-UNNAMED \
+                --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
+                --add-opens java.management/sun.management=ALL-UNNAMED \
+                --add-opens jdk.management/com.ibm.lang.management.internal=ALL-UNNAMED \
+                --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED \
+                --add-opens java.base/java.util=ALL-UNNAMED"
 
 # Define base directories which are part of the deployment package.
 EXAMPLESDIR="examples"
@@ -80,8 +90,15 @@ start() {
     CLASSPATH="$CLASSPATH:$jar"
   done
 
+  JAVA_VERSION=`java -version 2>&1 | grep -i version | cut -d '"' -f 2`
+  if [[ $JAVA_VERSION == 1.8* ]]; then
+    # With JDK8 unset this variable because the parameters are not supported by the JVM (and not needed).
+    JAVA_JPMS_OPTS=""
+  fi
+
+  echo "Executing application on Java version $JAVA_VERSION."
   # Start application and pipe output into log files.
-  java $JAVA_OPTS -Dapplication.properties.file=$PROPERTIES -cp $CLASSPATH $MAINCLASS $ARGS 1>> $STDOUT_FILE 2>> $STDERR_FILE &
+  java $JAVA_OPTS $JAVA_JPMS_OPTS -Dapplication.properties.file=$PROPERTIES -cp $CLASSPATH $MAINCLASS $ARGS 1>> $STDOUT_FILE 2>> $STDERR_FILE &
   # Create PID file.
   echo $! > $PIDFILE
 

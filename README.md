@@ -17,7 +17,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 
 ##### Prerequisites
 
-* Java 8 for running the application.
+* Java 8 or newer for running the application.
 * Maven for managing dependencies, building the code, running the unit tests, etc.
 * An installation of [Apache Cassandra](https://cassandra.apache.org/) for storage. Any version of Apache Cassandra 3.x or 4.x is supported.
 * An installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch) for indexing. Version 7.16 of Elasticsearch is required.
