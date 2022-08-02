@@ -25,7 +25,7 @@ import java.util.UUID;
 import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
 
 @Path("v1/traverse")
-@Api(tags = {"experimental"})
+@Api(tags = {"development"})
 public class TraverseEndpoint {
 
   private final CredentialsResolver credentialsResolver;
@@ -79,7 +79,7 @@ public class TraverseEndpoint {
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
   @RolesAllowed("traverseThreatIntelFact")
-  public Response traversebyObjectId(
+  public Response traverseByObjectId(
           @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseGraphRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {

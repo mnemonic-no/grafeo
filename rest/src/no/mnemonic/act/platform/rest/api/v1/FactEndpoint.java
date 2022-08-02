@@ -31,7 +31,7 @@ import java.util.UUID;
 import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
 
 @Path("/v1/fact")
-@Api(tags = {"experimental"})
+@Api(tags = {"development"})
 public class FactEndpoint {
 
   private final CredentialsResolver credentialsResolver;

@@ -25,7 +25,7 @@ import java.util.UUID;
 import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
 
 @Path("/v1/origin")
-@Api(tags = {"experimental"})
+@Api(tags = {"development"})
 public class OriginEndpoint {
 
   private final CredentialsResolver credentialsResolver;

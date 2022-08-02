@@ -26,7 +26,7 @@ import java.util.UUID;
 import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
 
 @Path("/v1/factType")
-@Api(tags = {"experimental"})
+@Api(tags = {"development"})
 public class FactTypeEndpoint {
 
   private final CredentialsResolver credentialsResolver;

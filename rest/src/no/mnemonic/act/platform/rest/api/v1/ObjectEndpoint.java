@@ -28,7 +28,7 @@ import java.util.UUID;
 import static no.mnemonic.act.platform.rest.api.ResultStash.buildResponse;
 
 @Path("/v1/object")
-@Api(tags = {"experimental"})
+@Api(tags = {"development"})
 public class ObjectEndpoint {
 
   private final CredentialsResolver credentialsResolver;
