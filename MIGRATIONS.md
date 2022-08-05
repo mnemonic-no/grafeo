@@ -5,22 +5,34 @@ It is not necessary to perform these steps when installing the application for t
 ## [Reindex data into daily indices] - 2022-06-22
 In order to reindex data into daily indices execute the following commands. Build the code with Maven to create the `act-platform-cli-tools` application.
 
-(1) Execute the following migration to correctly set the `TimeGlobalIndex` flag in Cassandra.
+(1) Update ObjectTypes with the correct `indexOption` of `TimeGlobal`.  Execute the following CQL commands against your Cassandra cluster (e.g. using cqlsh).
+```
+# List all ObjectTypes with id, name and flags.
+SELECT id, name, flags FROM object_type ;
+
+# For each ObjectType which should have the TimeGlobal flag run:
+UPDATE object_type SET flags = flags + {1} WHERE id = <id> ;
+```
+
+If the data model developed by mnemonic is used the following types should be updated:
+campaign, country, organization, person, region, sector, subRegion, tactic, technique, threatActor, tool, toolType.
+
+(2) Execute the following migration to correctly set the `TimeGlobalIndex` flag for Facts in Cassandra.
 ```
 act-platform-cli-tools migrate timeGlobalFlag --conf=<path to application.properties file> --start=<start timestamp> --end=<end timestamp>
 ```
 
-(2) Execute the following command against your ElasticSearch cluster to delete *all* existing daily indices and the time global index.
+(3) Execute the following command against your ElasticSearch cluster to delete *all* existing daily indices and the time global index.
 ```
 curl -X DELETE "localhost:9200/act-time-global,act-daily-*"
 ```
 
-(3) Reindex data into daily indices and the time global index. This will recreate the previously deleted indices from scratch.
+(4) Reindex data into daily indices and the time global index. This will recreate the previously deleted indices from scratch.
 ```
 act-platform-cli-tools reindex --conf=<path to application.properties file> --start=<start timestamp> --end=<end timestamp>
 ```
 
-Specify `--start` and `--end` based on the time frame you want to reindex. Depending on the amount of data steps (1) and (3) may take a while.
+Specify `--start` and `--end` based on the time frame you want to reindex. Depending on the amount of data steps (2) and (4) may take a while.
 
 ## [New flags field on fact_type and object_type tables] - 2022-03-11
 A new field has been introduced on the `fact_type` and `object_type` tables in Cassandra.
