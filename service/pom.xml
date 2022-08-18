@@ -119,9 +119,9 @@
       <version>${hazelcast.version}</version>
     </dependency>
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>${javax.inject.version}</version>
+      <groupId>jakarta.inject</groupId>
+      <artifactId>jakarta.inject-api</artifactId>
+      <version>${jakarta.inject.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.tinkerpop</groupId>
@@ -143,8 +143,8 @@
     </dependency>
     <dependency>
       <groupId>org.glassfish</groupId>
-      <artifactId>javax.el</artifactId>
-      <version>${javax.el.version}</version>
+      <artifactId>jakarta.el</artifactId>
+      <version>${jakarta.el.version}</version>
       <scope>runtime</scope>
     </dependency>
     <!-- test jars -->

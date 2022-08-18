@@ -56,9 +56,9 @@
       <version>${mnemonic.services.common.version}</version>
     </dependency>
     <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <version>${javax.validation.version}</version>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>${jakarta.validation.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -90,8 +90,8 @@
     </dependency>
     <dependency>
       <groupId>org.glassfish</groupId>
-      <artifactId>javax.el</artifactId>
-      <version>${javax.el.version}</version>
+      <artifactId>jakarta.el</artifactId>
+      <version>${jakarta.el.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

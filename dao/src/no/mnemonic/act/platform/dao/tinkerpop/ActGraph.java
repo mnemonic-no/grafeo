@@ -249,6 +249,16 @@ public class ActGraph implements Graph {
     }
 
     @Override
+    public boolean supportsOrderabilitySemantics() {
+      return false;
+    }
+
+    @Override
+    public boolean supportsServiceCall() {
+      return false;
+    }
+
+    @Override
     public Features.VariableFeatures variables() {
       return VARIABLE_FEATURES;
     }

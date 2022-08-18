@@ -77,9 +77,9 @@
       <version>${guice.version}</version>
     </dependency>
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>${javax.inject.version}</version>
+      <groupId>jakarta.inject</groupId>
+      <artifactId>jakarta.inject-api</artifactId>
+      <version>${jakarta.inject.version}</version>
     </dependency>
     <dependency>
       <groupId>com.datastax.oss</groupId>
@@ -136,14 +136,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Force a newer version of jnr-posix (used by Cassandra client) in order to fix SNYK-JAVA-COMGITHUBJNR-1570422. -->
-    <dependency>
-      <groupId>com.github.jnr</groupId>
-      <artifactId>jnr-posix</artifactId>
-      <version>${jnr.posix.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <!-- Force a newer version of netty-handler (used by Cassandra client) in order to fix SNYK-JAVA-IONETTY-1584063 and SNYK-JAVA-IONETTY-1584064. -->
+    <!-- Force a newer version of netty-handler (used by Cassandra client) in order to fix SNYK-JAVA-IONETTY-2812456. -->
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler</artifactId>
