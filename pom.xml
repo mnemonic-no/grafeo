@@ -3,7 +3,7 @@
   <groupId>no.mnemonic.act.platform</groupId>
   <artifactId>parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.0.106</version>
+  <version>0.0.107-SNAPSHOT</version>
 
   <name>ACT platform</name>
   <description>Open platform for collection and exchange of threat intelligence information</description>
@@ -142,7 +142,7 @@
     <connection>scm:git:git://github.com/mnemonic-no/act-platform.git</connection>
     <developerConnection>scm:git:ssh://github.com:mnemonic-no/act-platform.git</developerConnection>
     <url>https://github.com/mnemonic-no/act-platform</url>
-    <tag>parent-0.0.106</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <distributionManagement>
