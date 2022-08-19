@@ -13,6 +13,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import static no.mnemonic.act.platform.service.ti.resolvers.IndexSelectCriteriaResolver.MAXIMUM_INDEX_RETENTION_DAYS;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -97,8 +98,8 @@ public class IndexSelectCriteriaResolverTest {
   }
 
   @Test
-  public void testSelectDailyIndicesFailsOnTooLargeTimePeriod() {
-    long start = NOW.minus(91, ChronoUnit.DAYS).toEpochMilli();
+  public void testSelectDailyIndicesFailsOnStartOlderThanRetention() {
+    long start = NOW.minus(MAXIMUM_INDEX_RETENTION_DAYS + 1, ChronoUnit.DAYS).toEpochMilli();
     long end = NOW.toEpochMilli();
 
     assertThrows(InvalidArgumentException.class, () -> resolver.validateAndCreateCriteria(start, end));

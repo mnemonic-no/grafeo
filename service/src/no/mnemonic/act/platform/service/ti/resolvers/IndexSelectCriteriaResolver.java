@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service.ti.resolvers;
 
-import com.google.inject.Inject;
 import no.mnemonic.act.platform.api.exceptions.AccessDeniedException;
 import no.mnemonic.act.platform.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
@@ -9,7 +8,7 @@ import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
-import javax.inject.Named;
+import javax.inject.Inject;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -23,7 +22,7 @@ public class IndexSelectCriteriaResolver {
 
   private final SecurityContext securityContext;
 
-  private int maximumAllowedTimePeriodDays = 90;
+  static final int MAXIMUM_INDEX_RETENTION_DAYS = 1095; // Must be the same as the ILM policy configured in ElasticSearch.
   private Clock clock = Clock.systemUTC();
 
   @Inject
@@ -39,9 +38,7 @@ public class IndexSelectCriteriaResolver {
    * <p>
    * If the 'before' timestamp is earlier than the 'after' timestamp an {@link InvalidArgumentException} will be thrown.
    * <p>
-   * If the time period between the 'after' and 'before' parameters is larger than the allowed maximum (by default 90
-   * days, configurable with the 'act.index.selection.maximum.allowed.time.period.days' configuration option) an
-   * {@link InvalidArgumentException} will be thrown.
+   * If the 'after' timestamp is earlier than the index retention of 1095 days an {@link InvalidArgumentException} will be thrown.
    * <p>
    * Validation of 'after' and 'before' is only performed if daily indices will be selected.
    *
@@ -69,11 +66,10 @@ public class IndexSelectCriteriaResolver {
                       "index.selection.invalid.timestamps", "after|before", invalidValue);
     }
 
-    if (Duration.between(start, end).toDays() > maximumAllowedTimePeriodDays) {
-      String msg = String.format("The time period between the 'after' and 'before' timestamps is larger than the allowed maximum of %d days.", maximumAllowedTimePeriodDays);
-      String invalidValue = String.format("after=%s|before=%s", start, end);
+    if (Duration.between(start, clock.instant()).toDays() > MAXIMUM_INDEX_RETENTION_DAYS) {
+      String msg = String.format("The 'after' timestamp is earlier than the maximum index retention of %d days. Specify a later 'after' timestamp.", MAXIMUM_INDEX_RETENTION_DAYS);
       throw new InvalidArgumentException()
-              .addValidationError(msg, "index.selection.time.period.too.large", "after|before", invalidValue);
+              .addValidationError(msg, "index.selection.invalid.after.timestamp", "after", start.toString());
     }
 
     return IndexSelectCriteria.builder()
@@ -90,13 +86,6 @@ public class IndexSelectCriteriaResolver {
     } catch (AccessDeniedException | AuthenticationFailedException ignored) {
       return false;
     }
-  }
-
-  @Inject(optional = true)
-  public IndexSelectCriteriaResolver setMaximumAllowedTimePeriodDays(
-          @Named("act.index.selection.maximum.allowed.time.period.days") int maximumAllowedTimePeriodDays) {
-    this.maximumAllowedTimePeriodDays = maximumAllowedTimePeriodDays;
-    return this;
   }
 
   /* Setters used for unit testing */
