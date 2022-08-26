@@ -3,7 +3,6 @@ package no.mnemonic.act.platform.rest.api.auth;
 import no.mnemonic.act.platform.auth.properties.model.SubjectCredentials;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.services.common.auth.model.Credentials;
-import org.jboss.resteasy.plugins.guice.RequestScoped;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
@@ -11,12 +10,10 @@ import javax.ws.rs.core.HttpHeaders;
 /**
  * A {@link CredentialsResolver} implementation which identifies a user based on the "ACT-User-ID" HTTP header.
  */
-@RequestScoped
 public class SubjectCredentialsResolver implements CredentialsResolver {
 
   private static final String ACT_USER_ID_HEADER = "ACT-User-ID";
 
-  // Injectable by RESTEasy in a @RequestScoped context.
   private final HttpHeaders headers;
 
   @Inject

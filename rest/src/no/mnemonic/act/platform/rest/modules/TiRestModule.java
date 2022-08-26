@@ -6,7 +6,12 @@ import no.mnemonic.act.platform.rest.api.auth.CredentialsResolver;
 import no.mnemonic.act.platform.rest.api.auth.SubjectCredentialsResolver;
 import no.mnemonic.act.platform.rest.container.ApiServer;
 import no.mnemonic.act.platform.rest.providers.CorsFilterFeature;
-import org.jboss.resteasy.plugins.guice.ext.RequestScopeModule;
+import no.mnemonic.act.platform.rest.resteasy.GuiceResteasyContextDataProvider;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 
 /**
  * Module which configures the REST API including Swagger documentation of the ThreatIntelligenceService.
@@ -18,9 +23,6 @@ public class TiRestModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // Instruct RESTEasy to handle @RequestScoped objects.
-    install(new RequestScopeModule());
-
     // Install modules for REST endpoints and Swagger.
     install(new EndpointsModule());
     install(new SwaggerModule());
@@ -34,6 +36,12 @@ public class TiRestModule extends AbstractModule {
       // Register default CORS filter.
       bind(CorsFilterFeature.class);
     }
+
+    // Make all injectable JAX-RS interfaces available by utilizing ResteasyContext.
+    bind(HttpHeaders.class).toProvider(new GuiceResteasyContextDataProvider<>(HttpHeaders.class));
+    bind(Request.class).toProvider(new GuiceResteasyContextDataProvider<>(Request.class));
+    bind(UriInfo.class).toProvider(new GuiceResteasyContextDataProvider<>(UriInfo.class));
+    bind(SecurityContext.class).toProvider(new GuiceResteasyContextDataProvider<>(SecurityContext.class));
 
     // Bind class serving the REST API via HTTP.
     bind(ApiServer.class).in(Scopes.SINGLETON);

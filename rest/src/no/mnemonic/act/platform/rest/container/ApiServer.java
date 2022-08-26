@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.rest.container;
 
+import no.mnemonic.act.platform.rest.resteasy.GuiceResteasyBootstrapServletContextListener;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
@@ -9,7 +10,6 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import javax.inject.Inject;
