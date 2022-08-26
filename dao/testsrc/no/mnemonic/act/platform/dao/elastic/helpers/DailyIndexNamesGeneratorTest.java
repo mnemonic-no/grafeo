@@ -51,6 +51,14 @@ public class DailyIndexNamesGeneratorTest {
   }
 
   @Test
+  public void testGenerateIndexNamesMultipleDaysCrossingDayBoundaryAndLessThan24h() {
+    long start = Instant.parse("2022-08-12T22:00:00Z").toEpochMilli();
+    long end = Instant.parse("2022-08-13T21:59:00Z").toEpochMilli();
+
+    assertEquals(list("daily-2022-08-12", "daily-2022-08-13"), generateIndexNames(start, end, "daily-"));
+  }
+
+  @Test
   public void testFormatIndexNameWithNullPrefix() {
     assertThrows(IllegalArgumentException.class, () -> formatIndexName(0, null));
   }

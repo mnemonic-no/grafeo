@@ -35,8 +35,9 @@ public class DailyIndexNamesGenerator {
     if (indexEndTimestamp < indexStartTimestamp)
       throw new IllegalArgumentException("'indexEndTimestamp' cannot be before 'indexStartTimestamp'!");
 
-    Instant start = Instant.ofEpochMilli(indexStartTimestamp);
-    Instant end = Instant.ofEpochMilli(indexEndTimestamp);
+    // Truncate 'start' and 'end' to day resolution to avoid any ambiguities due to hours, minutes, seconds, etc.
+    Instant start = Instant.ofEpochMilli(indexStartTimestamp).truncatedTo(ChronoUnit.DAYS);
+    Instant end = Instant.ofEpochMilli(indexEndTimestamp).truncatedTo(ChronoUnit.DAYS);
     // Add one day to 'end' in order to calculate the correct amount of days between 'start' and 'end'.
     // This is needed because the second parameter of between() is excluded in the calculation.
     long numberOfDays = Duration.between(start, end.plus(1, ChronoUnit.DAYS)).toDays();
