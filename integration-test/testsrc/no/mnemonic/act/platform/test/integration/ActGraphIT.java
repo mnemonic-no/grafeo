@@ -2,17 +2,18 @@ package no.mnemonic.act.platform.test.integration;
 
 import com.google.inject.*;
 import com.google.inject.name.Names;
-import no.mnemonic.act.platform.dao.DaoModule;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
+import no.mnemonic.act.platform.dao.bindings.DaoCache;
 import no.mnemonic.act.platform.dao.cassandra.FactManager;
 import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
 import no.mnemonic.act.platform.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.act.platform.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
+import no.mnemonic.act.platform.dao.modules.DaoModule;
 import no.mnemonic.act.platform.service.contexts.SecurityContext;
 import no.mnemonic.act.platform.service.scopes.ServiceRequestScope;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
@@ -34,6 +35,8 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.junit.*;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -362,6 +365,19 @@ public class ActGraphIT {
 
       // Provide a noop implementation for the DC replication component (not needed here).
       bind(new TypeLiteral<Consumer<FactRecord>>() {}).toInstance(o -> {});
+      // Simply use HashMap for the DAO caches.
+      bind(new TypeLiteral<Map<UUID, ObjectRecord>>() {})
+              .annotatedWith(DaoCache.class)
+              .toInstance(new HashMap<>());
+      bind(new TypeLiteral<Map<String, ObjectRecord>>() {})
+              .annotatedWith(DaoCache.class)
+              .toInstance(new HashMap<>());
+      bind(new TypeLiteral<Map<UUID, FactRecord>>() {})
+              .annotatedWith(DaoCache.class)
+              .toInstance(new HashMap<>());
+      bind(new TypeLiteral<Map<String, UUID>>() {})
+              .annotatedWith(DaoCache.class)
+              .toInstance(new HashMap<>());
 
       // Bind SecurityContext to a mock implementation.
       bind(SecurityContext.class).toProvider(() -> mockSecurityContext);

@@ -6,8 +6,8 @@ import com.google.inject.Scopes;
 import com.hazelcast.core.HazelcastInstance;
 import no.mnemonic.act.platform.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.act.platform.auth.properties.module.PropertiesBasedAccessControllerModule;
-import no.mnemonic.act.platform.dao.DaoModule;
 import no.mnemonic.act.platform.dao.api.result.ObjectStatisticsContainer;
+import no.mnemonic.act.platform.dao.modules.DaoModule;
 import no.mnemonic.act.platform.seb.esengine.modules.SebESEngineModule;
 import no.mnemonic.act.platform.seb.producer.modules.SebProducerModule;
 import no.mnemonic.act.platform.service.aspects.*;
@@ -16,6 +16,7 @@ import no.mnemonic.act.platform.service.providers.HazelcastInstanceProvider;
 import no.mnemonic.act.platform.service.providers.LockProvider;
 import no.mnemonic.act.platform.service.providers.TriggerEventConsumerProvider;
 import no.mnemonic.act.platform.service.ti.ThreatIntelligenceServiceImpl;
+import no.mnemonic.act.platform.service.ti.caches.DaoCachesModule;
 import no.mnemonic.act.platform.service.ti.caches.ResponseCachesModule;
 import no.mnemonic.act.platform.service.validators.DefaultValidatorFactory;
 import no.mnemonic.act.platform.service.validators.ValidatorFactory;
@@ -40,6 +41,7 @@ public class TiServiceModule extends AbstractModule {
   protected void configure() {
     // Install all dependencies for the service.
     install(new DaoModule());
+    install(new DaoCachesModule());
     install(new SebProducerModule());
     install(new SebESEngineModule());
     install(new RuntimeExceptionHandlerAspect());

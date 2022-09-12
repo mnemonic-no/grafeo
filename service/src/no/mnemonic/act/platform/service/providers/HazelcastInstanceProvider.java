@@ -2,21 +2,15 @@ package no.mnemonic.act.platform.service.providers;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.JavaSerializationFilterConfig;
-import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import no.mnemonic.act.platform.seb.model.v1.FactSEB;
 import no.mnemonic.commons.component.LifecycleAspect;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static no.mnemonic.act.platform.seb.esengine.v1.handlers.FactKafkaToHazelcastHandler.FACT_HAZELCAST_QUEUE_NAME;
-import static no.mnemonic.act.platform.service.providers.HazelcastBasedLockProvider.LOCK_MAP_NAME;
 
 @Singleton
 public class HazelcastInstanceProvider implements LifecycleAspect, Provider<HazelcastInstance> {
@@ -28,6 +22,7 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
   private final String multicastAddress;
   private final int multicastPort;
   private final boolean multicastEnabled;
+  private final ActHazelcastConfiguration actConfig;
 
   @Inject
   public HazelcastInstanceProvider(
@@ -35,13 +30,15 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
           @Named("act.hazelcast.group.name") String groupName,
           @Named("act.hazelcast.multicast.address") String multicastAddress,
           @Named("act.hazelcast.multicast.port") int multicastPort,
-          @Named("act.hazelcast.multicast.enabled") boolean multicastEnabled
+          @Named("act.hazelcast.multicast.enabled") boolean multicastEnabled,
+          ActHazelcastConfiguration actConfig
   ) {
     this.instanceName = instanceName;
     this.groupName = groupName;
     this.multicastAddress = multicastAddress;
     this.multicastPort = multicastPort;
     this.multicastEnabled = multicastEnabled;
+    this.actConfig = actConfig;
   }
 
   @Override
@@ -74,45 +71,20 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
     // Disable Hazelcast's own shutdown hook because termination must be handle by the LifecycleAspect.
     cfg.setProperty("hazelcast.shutdownhook.enabled", "false");
 
-    applyMulticastConfig(cfg);
-    applySerializationConfig(cfg);
-    applyQueueConfig(cfg);
-    applyMapConfig(cfg);
-
-    return Hazelcast.getOrCreateHazelcastInstance(cfg);
-  }
-
-  private void applyMulticastConfig(Config cfg) {
+    // Specify network configuration for multicast.
     cfg.getNetworkConfig().getJoin().getMulticastConfig()
             .setEnabled(multicastEnabled)
             .setMulticastGroup(multicastAddress)
             .setMulticastPort(multicastPort);
-  }
+    // Only allow well-known classes to be deserialized, especially it shouldn't be allowed to deserialize arbitrary
+    // classes implementing Serializable to avoid deserialization vulnerabilities. This uses the default whitelist
+    // provided in Hazelcast. It's not necessary to allow ACT specific classes because they are using custom
+    // serializers based on JSON and don't implement Serializable.
+    cfg.getSerializationConfig().setJavaSerializationFilterConfig(new JavaSerializationFilterConfig());
 
-  private void applySerializationConfig(Config cfg) {
-    // Configure serializers for all classes handled by Hazelcast.
-    cfg.getSerializationConfig().addSerializerConfig(new SerializerConfig()
-            .setTypeClass(FactSEB.class)
-            .setImplementation(new HazelcastFactSebSerializer())
-    );
+    // Apply configuration required by the ACT implementation (queues, maps, etc).
+    actConfig.apply(cfg);
 
-    // Only allow well-known classes to be deserialized, especially it shouldn't be allowed to deserialize
-    // arbitrary classes implementing Serializable to avoid deserialization vulnerabilities.
-    JavaSerializationFilterConfig filterCfg = new JavaSerializationFilterConfig().setDefaultsDisabled(true);
-    // FactSEB is required for seb-esengine, HashMap for internal Hazelcast communication.
-    filterCfg.getWhitelist().addClasses(FactSEB.class.getName(), HashMap.class.getName());
-    cfg.getSerializationConfig().setJavaSerializationFilterConfig(filterCfg);
-  }
-
-  private void applyQueueConfig(Config cfg) {
-    // Configure the specifics of each Hazelcast queue.
-    cfg.getQueueConfig(FACT_HAZELCAST_QUEUE_NAME)
-            .setBackupCount(1)
-            .setMaxSize(1_000);
-  }
-
-  private void applyMapConfig(Config cfg) {
-    // Only set backup count as this map is solely used for locking and should never contain any data.
-    cfg.getMapConfig(LOCK_MAP_NAME).setBackupCount(1);
+    return Hazelcast.getOrCreateHazelcastInstance(cfg);
   }
 }

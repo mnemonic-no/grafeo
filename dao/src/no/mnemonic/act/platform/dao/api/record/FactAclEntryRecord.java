@@ -1,10 +1,13 @@
 package no.mnemonic.act.platform.dao.api.record;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.UUID;
 
 /**
  * Record representing an entry in a Fact's ACL.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FactAclEntryRecord {
 
   private UUID id;

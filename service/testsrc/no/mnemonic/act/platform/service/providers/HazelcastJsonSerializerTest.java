@@ -7,9 +7,9 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 
-public class HazelcastFactSebSerializerTest {
+public class HazelcastJsonSerializerTest {
 
-  private final HazelcastFactSebSerializer serializer = new HazelcastFactSebSerializer();
+  private final HazelcastJsonSerializer<FactSEB> serializer = new HazelcastJsonSerializer<>(FactSEB.class, 46616374);
 
   @Test
   public void testSerializeNull() throws Exception {

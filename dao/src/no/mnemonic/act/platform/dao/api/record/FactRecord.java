@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.dao.api.record;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -10,6 +11,7 @@ import java.util.UUID;
 /**
  * Record representing a Fact.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FactRecord {
 
   public enum AccessMode {

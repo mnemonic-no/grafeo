@@ -2,11 +2,10 @@ package no.mnemonic.act.platform.cli.tools.commands;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import no.mnemonic.act.platform.cli.tools.handlers.CassandraToElasticSearchReindexHandler;
-import no.mnemonic.act.platform.dao.DaoModule;
-import no.mnemonic.act.platform.dao.api.record.FactRecord;
+import no.mnemonic.act.platform.dao.modules.CassandraModule;
+import no.mnemonic.act.platform.dao.modules.ElasticSearchModule;
 import no.mnemonic.commons.container.PropertiesResolver;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -17,7 +16,6 @@ import picocli.CommandLine.Spec;
 import java.io.File;
 import java.time.Instant;
 import java.util.Properties;
-import java.util.function.Consumer;
 
 @Command(
         description = "Reindex data from Cassandra (primary storage) into ElasticSearch.",
@@ -82,12 +80,11 @@ public class ReindexCommand implements Runnable {
 
     @Override
     protected void configure() {
-      // DaoModule provides the Cassandra and ElasticSearch managers.
-      install(new DaoModule());
+      install(new CassandraModule());
+      install(new ElasticSearchModule());
+
       // Bind application properties to make them available for injection.
       Names.bindProperties(binder(), applicationProperties);
-      // Provide a noop implementation for the DC replication component (not needed here).
-      bind(new TypeLiteral<Consumer<FactRecord>>() {}).toInstance(o -> {});
       // Handler must be a singleton in order to be handled by the ComponentContainer.
       bind(CassandraToElasticSearchReindexHandler.class).in(Scopes.SINGLETON);
     }

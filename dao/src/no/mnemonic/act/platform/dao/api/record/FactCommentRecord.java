@@ -1,10 +1,13 @@
 package no.mnemonic.act.platform.dao.api.record;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.UUID;
 
 /**
  * Record representing a comment about a Fact.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FactCommentRecord {
 
   private UUID id;

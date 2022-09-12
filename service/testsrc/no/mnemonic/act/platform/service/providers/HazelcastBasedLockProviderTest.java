@@ -23,7 +23,8 @@ public class HazelcastBasedLockProviderTest {
             UUID.randomUUID().toString(),
             "224.2.2.3",
             54327,
-            false);
+            false,
+            new ActHazelcastConfiguration());
     hazelcastInstanceProvider.startComponent();
   }
 

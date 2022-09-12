@@ -4,10 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 import no.mnemonic.act.platform.cli.tools.handlers.CassandraMigrateTimeGlobalFlagHandler;
-import no.mnemonic.act.platform.dao.cassandra.ClusterManager;
-import no.mnemonic.act.platform.dao.cassandra.ClusterManagerProvider;
-import no.mnemonic.act.platform.dao.cassandra.FactManager;
-import no.mnemonic.act.platform.dao.cassandra.ObjectManager;
+import no.mnemonic.act.platform.dao.modules.CassandraModule;
 import no.mnemonic.commons.container.PropertiesResolver;
 import picocli.CommandLine.*;
 import picocli.CommandLine.Model.CommandSpec;
@@ -82,12 +79,10 @@ public class MigrateCommand implements Runnable {
 
     @Override
     protected void configure() {
+      install(new CassandraModule());
+
       // Bind application properties to make them available for injection.
       Names.bindProperties(binder(), applicationProperties);
-      // Bind the required Cassandra managers and providers.
-      bind(ClusterManager.class).toProvider(ClusterManagerProvider.class).in(Scopes.SINGLETON);
-      bind(FactManager.class);
-      bind(ObjectManager.class);
       // Handler must be a singleton in order to be handled by the ComponentContainer.
       bind(CassandraMigrateTimeGlobalFlagHandler.class).in(Scopes.SINGLETON);
     }

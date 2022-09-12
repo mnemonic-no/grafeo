@@ -8,13 +8,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class GuavaBackedObjectResolverTest {
+public class MapBackedObjectResolverTest {
 
   @Mock
   private ObjectManager objectManager;
@@ -26,7 +27,7 @@ public class GuavaBackedObjectResolverTest {
   @Before
   public void setUp() {
     initMocks(this);
-    objectResolver = new GuavaBackedObjectResolver(objectManager, objectRecordConverter, new GuavaBackedObjectResolver.CacheConfiguration());
+    objectResolver = new MapBackedObjectResolver(objectManager, objectRecordConverter, new HashMap<>(), new HashMap<>());
   }
 
   @Test
