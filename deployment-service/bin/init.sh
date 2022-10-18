@@ -90,7 +90,19 @@ start() {
     CLASSPATH="$CLASSPATH:$jar"
   done
 
-  JAVA_VERSION=`java -version 2>&1 | grep -i version | cut -d '"' -f 2`
+  JAVA_BIN=`which java`
+  if [[ -n $JAVA_HOME ]]; then
+    # Respect JAVA_HOME environment variable if present.
+    JAVA_BIN=$JAVA_HOME/bin/java
+  fi
+
+  # Check that Java executable exists.
+  if [[ ! -x $JAVA_BIN ]]; then
+    echo "Java executable not found: $JAVA_BIN"
+    exit 1
+  fi
+
+  JAVA_VERSION=`$JAVA_BIN -version 2>&1 | grep -i version | cut -d '"' -f 2`
   if [[ $JAVA_VERSION == 1.8* ]]; then
     # With JDK8 unset this variable because the parameters are not supported by the JVM (and not needed).
     JAVA_JPMS_OPTS=""
@@ -98,7 +110,7 @@ start() {
 
   echo "Executing application on Java version $JAVA_VERSION."
   # Start application and pipe output into log files.
-  java $JAVA_OPTS $JAVA_JPMS_OPTS -Dapplication.properties.file=$PROPERTIES -cp $CLASSPATH $MAINCLASS $ARGS 1>> $STDOUT_FILE 2>> $STDERR_FILE &
+  $JAVA_BIN $JAVA_OPTS $JAVA_JPMS_OPTS -Dapplication.properties.file=$PROPERTIES -cp $CLASSPATH $MAINCLASS $ARGS 1>> $STDOUT_FILE 2>> $STDERR_FILE &
   # Create PID file.
   echo $! > $PIDFILE
 
