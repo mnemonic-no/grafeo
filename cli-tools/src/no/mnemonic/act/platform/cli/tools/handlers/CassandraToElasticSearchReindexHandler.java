@@ -13,10 +13,13 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
 
 import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.Daily;
 import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.TimeGlobal;
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 
 @Singleton
 public class CassandraToElasticSearchReindexHandler {
@@ -61,6 +64,31 @@ public class CassandraToElasticSearchReindexHandler {
       reindexSingleFact(fact);
       processedFacts.increment();
     }, startTimestamp, endTimestamp, reverse);
+
+    LOGGER.info("Finished reindexing Facts, processed %d Facts in total.", processedFacts.longValue());
+  }
+
+  /**
+   * Reindex Facts from Cassandra into ElasticSearch.
+   * <p>
+   * Fetches all Facts by ID from Cassandra and indexes them into ElasticSearch.
+   *
+   * @param ids IDs of Facts to reindex
+   */
+  public void reindex(Set<UUID> ids) {
+    LOGGER.info("Reindex Facts with IDs = %s.", ids);
+
+    LongAdder processedFacts = new LongAdder();
+    set(ids).forEach(id -> {
+      FactEntity fact = factManager.getFact(id);
+      if (fact == null) {
+        LOGGER.warning("Fact with id = %s could not be retrieved from Cassandra. Skipping it!", id);
+        return;
+      }
+
+      reindexSingleFact(fact);
+      processedFacts.increment();
+    });
 
     LOGGER.info("Finished reindexing Facts, processed %d Facts in total.", processedFacts.longValue());
   }

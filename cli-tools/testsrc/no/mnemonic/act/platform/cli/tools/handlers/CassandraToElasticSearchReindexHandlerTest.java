@@ -7,6 +7,7 @@ import no.mnemonic.act.platform.dao.cassandra.entity.FactRefreshLogEntity;
 import no.mnemonic.act.platform.dao.elastic.FactSearchManager;
 import no.mnemonic.act.platform.dao.elastic.document.FactDocument;
 import no.mnemonic.commons.utilities.collections.ListUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.Daily;
@@ -36,12 +38,47 @@ public class CassandraToElasticSearchReindexHandlerTest {
   private CassandraToElasticSearchReindexHandler handler;
 
   @Test
-  public void testReindexInvokesFactProcessor() {
+  public void testReindexByTimeInvokesFactProcessor() {
     Instant start = Instant.parse("2021-01-01T12:00:00.000Z");
     Instant stop = Instant.parse("2021-01-01T17:30:00.000Z");
 
     assertDoesNotThrow(() -> handler.reindex(start, stop, false));
     verify(factProcessor).process(notNull(), eq(start), eq(stop), eq(false));
+  }
+
+  @Test
+  public void testReindexByIdSingleFact() {
+    FactEntity entity = new FactEntity().setId(UUID.randomUUID()).addFlag(FactEntity.Flag.TimeGlobalIndex);
+    FactDocument document = new FactDocument();
+    when(factManager.getFact(isA(UUID.class))).thenReturn(entity);
+    when(factConverter.apply(any(), any())).thenReturn(document);
+
+    assertDoesNotThrow(() -> handler.reindex(SetUtils.set(entity.getId())));
+    verify(factManager).getFact(entity.getId());
+    verify(factConverter).apply(entity, null);
+    verify(factSearchManager).indexFact(document, TimeGlobal);
+  }
+
+  @Test
+  public void testReindexByIdMultipleFacts() {
+    Set<UUID> ids = SetUtils.set(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+    when(factManager.getFact(isA(UUID.class))).thenReturn(new FactEntity().addFlag(FactEntity.Flag.TimeGlobalIndex));
+    when(factConverter.apply(any(), any())).thenReturn(new FactDocument());
+
+    assertDoesNotThrow(() -> handler.reindex(ids));
+    verify(factManager, times(ids.size())).getFact(isA(UUID.class));
+    verify(factConverter, times(ids.size())).apply(notNull(), isNull());
+    verify(factSearchManager, times(ids.size())).indexFact(notNull(), eq(TimeGlobal));
+  }
+
+  @Test
+  public void testReindexByIdSkippingFacts() {
+    Set<UUID> ids = SetUtils.set(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+
+    assertDoesNotThrow(() -> handler.reindex(ids));
+    verify(factManager, times(ids.size())).getFact(isA(UUID.class));
+    verify(factConverter, never()).apply(any(), any());
+    verify(factSearchManager, never()).indexFact(any(), any());
   }
 
   @Test
