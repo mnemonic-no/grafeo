@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -75,7 +74,7 @@ public class ESEngineIT {
     }
 
     // Verify that Hazelcast to ElasticSearch handler has called the DAO to index the Fact.
-    verify(factSearchManager, times(2)).indexFact(argThat(doc -> Objects.equals(fact.getId(), doc.getId())), notNull());
+    verify(factSearchManager).indexFact(argThat(doc -> Objects.equals(fact.getId(), doc.getId())), notNull());
   }
 
   private boolean factProcessed() {

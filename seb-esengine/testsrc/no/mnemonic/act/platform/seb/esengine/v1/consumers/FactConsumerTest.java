@@ -9,7 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.*;
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.Daily;
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.TimeGlobal;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -53,7 +54,7 @@ public class FactConsumerTest {
     factConsumer.consume(SetUtils.set(FactSEB.builder().build(), FactSEB.builder().build(), FactSEB.builder().build()));
 
     verify(factConverter, times(3)).apply(notNull());
-    verify(factSearchManager, times(6)).indexFact(notNull(), notNull());
+    verify(factSearchManager, times(3)).indexFact(notNull(), notNull());
   }
 
   @Test
@@ -62,7 +63,6 @@ public class FactConsumerTest {
     factConsumer.consume(SetUtils.set(FactSEB.builder().build()));
 
     verify(factSearchManager).indexFact(notNull(), eq(Daily));
-    verify(factSearchManager).indexFact(notNull(), eq(Legacy));
   }
 
   @Test
@@ -71,6 +71,5 @@ public class FactConsumerTest {
     factConsumer.consume(SetUtils.set(FactSEB.builder().addFlag(FactSEB.Flag.TimeGlobalIndex).build()));
 
     verify(factSearchManager).indexFact(notNull(), eq(TimeGlobal));
-    verify(factSearchManager).indexFact(notNull(), eq(Legacy));
   }
 }

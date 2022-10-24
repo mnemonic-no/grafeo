@@ -7,15 +7,13 @@ public class IndexSelectCriteria {
 
   private final long indexStartTimestamp;
   private final long indexEndTimestamp;
-  private final boolean useLegacyIndex;
 
-  private IndexSelectCriteria(long indexStartTimestamp, long indexEndTimestamp, boolean useLegacyIndex) {
+  private IndexSelectCriteria(long indexStartTimestamp, long indexEndTimestamp) {
     if (indexEndTimestamp < indexStartTimestamp)
       throw new IllegalArgumentException("'indexEndTimestamp' cannot be before 'indexStartTimestamp'!");
 
     this.indexStartTimestamp = indexStartTimestamp;
     this.indexEndTimestamp = indexEndTimestamp;
-    this.useLegacyIndex = useLegacyIndex;
   }
 
   /**
@@ -36,16 +34,6 @@ public class IndexSelectCriteria {
     return indexEndTimestamp;
   }
 
-  /**
-   * If true ignore indexStartTimestamp/indexEndTimestamp and query the legacy 'act' index,
-   * otherwise query daily indices based on indexStartTimestamp/indexEndTimestamp.
-   *
-   * @return Whether to query daily indices or the legacy 'act' index.
-   */
-  public boolean isUseLegacyIndex() {
-    return useLegacyIndex;
-  }
-
   public static Builder builder() {
     return new Builder();
   }
@@ -53,13 +41,12 @@ public class IndexSelectCriteria {
   public static class Builder {
     private long indexStartTimestamp;
     private long indexEndTimestamp;
-    private boolean useLegacyIndex;
 
     private Builder() {
     }
 
     public IndexSelectCriteria build() {
-      return new IndexSelectCriteria(indexStartTimestamp, indexEndTimestamp, useLegacyIndex);
+      return new IndexSelectCriteria(indexStartTimestamp, indexEndTimestamp);
     }
 
     public Builder setIndexStartTimestamp(long indexStartTimestamp) {
@@ -69,11 +56,6 @@ public class IndexSelectCriteria {
 
     public Builder setIndexEndTimestamp(long indexEndTimestamp) {
       this.indexEndTimestamp = indexEndTimestamp;
-      return this;
-    }
-
-    public Builder setUseLegacyIndex(boolean useLegacyIndex) {
-      this.useLegacyIndex = useLegacyIndex;
       return this;
     }
   }

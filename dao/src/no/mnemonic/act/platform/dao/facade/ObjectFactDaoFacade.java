@@ -33,7 +33,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.*;
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.Daily;
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.TimeGlobal;
 
 public class ObjectFactDaoFacade implements ObjectFactDao {
 
@@ -414,9 +415,6 @@ public class ObjectFactDaoFacade implements ObjectFactDao {
     } else {
       factSearchManager.indexFact(document, Daily);
     }
-
-    // Compatibility: For now always index into the legacy 'act' index in addition to time global or daily indices.
-    factSearchManager.indexFact(document, Legacy);
   }
 
   private interface FactEntityUpdater {

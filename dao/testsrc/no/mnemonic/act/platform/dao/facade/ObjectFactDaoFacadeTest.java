@@ -36,7 +36,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.*;
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.Daily;
+import static no.mnemonic.act.platform.dao.elastic.FactSearchManager.TargetIndex.TimeGlobal;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -207,7 +208,6 @@ public class ObjectFactDaoFacadeTest {
     assertSame(record, dao.storeFact(record));
     verify(factManager).saveFact(entity);
     verify(factSearchManager).indexFact(document, Daily);
-    verify(factSearchManager).indexFact(document, Legacy);
     verify(factRecordConverter).toEntity(argThat(r -> r.getId() == record.getId()));
     verify(factRecordConverter).toDocument(argThat(r -> r.getId() == record.getId()));
   }
@@ -222,7 +222,6 @@ public class ObjectFactDaoFacadeTest {
 
     assertSame(record, dao.storeFact(record));
     verify(factSearchManager).indexFact(document, TimeGlobal);
-    verify(factSearchManager).indexFact(document, Legacy);
   }
 
   @Test
@@ -731,7 +730,7 @@ public class ObjectFactDaoFacadeTest {
     verify(factResolver).evict(fact);
     verify(factResolver).getFact(fact.getId());
     verify(factRecordConverter).toDocument(notNull());
-    verify(factSearchManager, atLeastOnce()).indexFact(notNull(), notNull());
+    verify(factSearchManager).indexFact(notNull(), notNull());
     verify(dcReplicationConsumer).accept(notNull());
   }
 

@@ -82,7 +82,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
   public enum TargetIndex {
     Daily("act-daily-"),
-    Legacy("act"),
     TimeGlobal("act-time-global");
 
     private final String name;
@@ -99,12 +98,10 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private static final String ILM_POLICY_DAILY_NAME = "act-daily-retention-policy";
   private static final String BASE_TEMPLATE_NAME = "act-base-template";
   private static final String DAILY_TEMPLATE_NAME = "act-daily-template";
-  private static final String LEGACY_TEMPLATE_NAME = "act-legacy-template";
   private static final String TIME_GLOBAL_TEMPLATE_NAME = "act-time-global-template";
   private static final String ILM_POLICY_DAILY_JSON = "ilm_policy_daily.json";
   private static final String BASE_TEMPLATE_JSON = "template_base.json";
   private static final String DAILY_TEMPLATE_JSON = "template_daily.json";
-  private static final String LEGACY_TEMPLATE_JSON = "template_legacy.json";
   private static final String TIME_GLOBAL_TEMPLATE_JSON = "template_time_global.json";
   private static final int MAX_RESULT_WINDOW = 10_000; // Must be the same value as specified in template_base.json.
 
@@ -165,7 +162,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     // This ensures that all indices will use the same mappings.
     uploadConfiguration("/_component_template/", BASE_TEMPLATE_NAME, BASE_TEMPLATE_JSON);
     uploadConfiguration("/_index_template/", DAILY_TEMPLATE_NAME, DAILY_TEMPLATE_JSON);
-    uploadConfiguration("/_index_template/", LEGACY_TEMPLATE_NAME, LEGACY_TEMPLATE_JSON);
     uploadConfiguration("/_index_template/", TIME_GLOBAL_TEMPLATE_NAME, TIME_GLOBAL_TEMPLATE_JSON);
   }
 
@@ -576,10 +572,6 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   }
 
   private String[] selectIndices(IndexSelectCriteria criteria) {
-    if (criteria.isUseLegacyIndex()) {
-      return new String[]{TargetIndex.Legacy.getName()};
-    }
-
     List<String> indices = generateIndexNames(criteria.getIndexStartTimestamp(), criteria.getIndexEndTimestamp(), TargetIndex.Daily.getName());
     // When querying daily indices always query the time global index in addition.
     indices.add(TargetIndex.TimeGlobal.getName());
