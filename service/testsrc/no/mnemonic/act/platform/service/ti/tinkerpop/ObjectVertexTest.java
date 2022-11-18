@@ -527,36 +527,32 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testAppliesTimeFilterToSearch() {
-    Long beforeTimestamp = 970000000L;
-    Long afterTimestamp = 980000000L;
-
+  public void testEdgesPassesSearchCriteria() {
     ActGraph timeFilterGraph = createActGraph(TraverseParams.builder()
-            .setAccessControlCriteria(accessControlCriteria)
-            .setIndexSelectCriteria(indexSelectCriteria)
-            .setAfterTimestamp(afterTimestamp)
-            .setBeforeTimestamp(beforeTimestamp)
+            .setBaseSearchCriteria(factSearchCriteria)
             .build());
 
+    UUID objectID = UUID.randomUUID();
+    UUID factTypeID = UUID.randomUUID();
     Vertex vertex = ObjectVertex.builder()
             .setGraph(timeFilterGraph)
-            .setObjectRecord(new ObjectRecord().setTypeID(UUID.randomUUID()))
+            .setObjectRecord(new ObjectRecord().setId(objectID).setTypeID(UUID.randomUUID()))
             .setObjectType(ObjectTypeStruct.builder().setName("someObjectType").setId(UUID.randomUUID()).build())
             .build();
 
-    // Don't care about the answer
+    when(getObjectFactTypeResolver().factTypeNamesToIds(any())).thenReturn(set(factTypeID));
     when(getActGraph().getObjectFactDao().searchFacts(any()))
             .thenAnswer(invocation -> ResultContainer.<FactRecord>builder().build());
 
     // Fetching edges will trigger a search for facts
-    vertex.edges(BOTH);
+    vertex.edges(BOTH, "type");
 
-    verify(getObjectFactDao(), times(1)).searchFacts(argThat(criteria -> {
-      assertEquals(afterTimestamp, criteria.getStartTimestamp());
-      assertEquals(beforeTimestamp, criteria.getEndTimestamp());
-      assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
-      assertSame(accessControlCriteria, criteria.getAccessControlCriteria());
-      assertSame(indexSelectCriteria, criteria.getIndexSelectCriteria());
+    verify(getObjectFactTypeResolver()).factTypeNamesToIds(eq(set("type")));
+    verify(getObjectFactDao()).searchFacts(argThat(criteria -> {
+      assertEquals(set(objectID), criteria.getObjectID());
+      assertEquals(set(factTypeID), criteria.getFactTypeID());
+      assertSame(factSearchCriteria.getAccessControlCriteria(), criteria.getAccessControlCriteria());
+      assertSame(factSearchCriteria.getIndexSelectCriteria(), criteria.getIndexSelectCriteria());
       return true;
     }));
   }
@@ -564,8 +560,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testEdgesAndRetractions() {
     ActGraph actGraphNoRetractions = createActGraph(TraverseParams.builder()
-            .setAccessControlCriteria(accessControlCriteria)
-            .setIndexSelectCriteria(indexSelectCriteria)
+            .setBaseSearchCriteria(factSearchCriteria)
             .setIncludeRetracted(false)
             .build());
 

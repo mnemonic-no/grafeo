@@ -45,12 +45,28 @@ public class TraverseGraphByObjectsRequestTest extends AbstractRequestTest {
   }
 
   @Test
+  public void testDecodeTimeFieldSearchRequest() throws Exception {
+    String json = "{" +
+            "startTimestamp : '2016-11-30T15:47:00Z'," +
+            "endTimestamp : '2016-11-30T15:47:01Z'," +
+            "timeMatchStrategy : 'all'," +
+            "timeFieldStrategy : ['all']" +
+            "}";
+
+    TraverseGraphByObjectsRequest request = getMapper().readValue(json, TraverseGraphByObjectsRequest.class);
+    assertEquals(1480520820000L, request.getStartTimestamp().longValue());
+    assertEquals(1480520821000L, request.getEndTimestamp().longValue());
+    assertEquals(TimeFieldSearchRequest.TimeMatchStrategy.all, request.getTimeMatchStrategy());
+    assertEquals(set(TimeFieldSearchRequest.TimeFieldStrategy.all), request.getTimeFieldStrategy());
+  }
+
+  @Test
   public void testAddingObjects() {
     TraverseGraphByObjectsRequest request = new TraverseGraphByObjectsRequest()
             .setObjects(set("ThreatActor/Sofacy"))
             .addObject("ThreatActor/Panda");
 
-    assertEquals(set("ThreatActor/Sofacy", "ThreatActor/Panda"),request.getObjects());
+    assertEquals(set("ThreatActor/Sofacy", "ThreatActor/Panda"), request.getObjects());
   }
 
   @Test
@@ -125,5 +141,24 @@ public class TraverseGraphByObjectsRequestTest extends AbstractRequestTest {
     assertTrue(request.getIncludeRetracted());
     assertEquals(Integer.valueOf(10), request.getLimit());
     assertEquals("g.out()", request.getQuery());
+  }
+
+  @Test
+  public void testFromObjectTimeFieldSearchRequest() {
+    long startTimestamp = 1470000000000L;
+    long endTimestamp = 1480000000000L;
+    TraverseGraphByObjectsRequest request = TraverseGraphByObjectsRequest.from(
+            new TraverseGraphRequest()
+                    .setStartTimestamp(startTimestamp)
+                    .setEndTimestamp(endTimestamp)
+                    .setTimeMatchStrategy(TimeFieldSearchRequest.TimeMatchStrategy.all)
+                    .setTimeFieldStrategy(set(TimeFieldSearchRequest.TimeFieldStrategy.all)),
+            "test");
+
+    assertEquals(set("test"), request.getObjects());
+    assertEquals(startTimestamp, request.getStartTimestamp().longValue());
+    assertEquals(endTimestamp, request.getEndTimestamp().longValue());
+    assertEquals(TimeFieldSearchRequest.TimeMatchStrategy.all, request.getTimeMatchStrategy());
+    assertEquals(set(TimeFieldSearchRequest.TimeFieldStrategy.all), request.getTimeFieldStrategy());
   }
 }

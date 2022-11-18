@@ -11,6 +11,8 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import javax.inject.Inject;
 
+import static no.mnemonic.act.platform.service.ti.converters.request.RequestConverterUtils.handleTimeFieldSearchRequest;
+
 public class SearchMetaFactsRequestConverter {
 
   private static final int DEFAULT_LIMIT = 25;
@@ -30,7 +32,7 @@ public class SearchMetaFactsRequestConverter {
 
   public FactSearchCriteria apply(SearchMetaFactsRequest request) throws InvalidArgumentException {
     if (request == null) return null;
-    return FactSearchCriteria.builder()
+    return handleTimeFieldSearchRequest(FactSearchCriteria.builder(), request)
             .addInReferenceTo(request.getFact())
             .setKeywords(request.getKeywords())
             .setKeywordFieldStrategy(SetUtils.set(
@@ -46,12 +48,9 @@ public class SearchMetaFactsRequestConverter {
             .addNumberFieldStrategy(ObjectUtils.ifNotNull(request.getDimension(),
                     dimension -> FactSearchCriteria.NumberFieldStrategy.valueOf(dimension.name()),
                     FactSearchCriteria.NumberFieldStrategy.certainty))
-            .setStartTimestamp(request.getAfter())
-            .setEndTimestamp(request.getBefore())
-            .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
             .setAccessControlCriteria(accessControlCriteriaResolver.get())
-            .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(request.getAfter(), request.getBefore()))
+            .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(request.getStartTimestamp(), request.getEndTimestamp()))
             .build();
   }
 }

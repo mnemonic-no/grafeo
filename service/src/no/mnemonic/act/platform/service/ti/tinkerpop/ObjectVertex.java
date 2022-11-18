@@ -1,6 +1,5 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
@@ -51,14 +50,10 @@ public class ObjectVertex implements Vertex {
     Set<UUID> factTypeIds = graph.getObjectFactTypeResolver().factTypeNamesToIds(set(edgeLabels));
 
     ResultContainer<FactRecord> factRecords = graph.getObjectFactDao().searchFacts(
-            FactSearchCriteria.builder()
+            graph.getTraverseParams().getBaseSearchCriteria()
+                    .toBuilder()
                     .addObjectID(object.getId())
                     .setFactTypeID(factTypeIds)
-                    .setStartTimestamp(graph.getTraverseParams().getAfterTimestamp())
-                    .setEndTimestamp(graph.getTraverseParams().getBeforeTimestamp())
-                    .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
-                    .setAccessControlCriteria(graph.getTraverseParams().getAccessControlCriteria())
-                    .setIndexSelectCriteria(graph.getTraverseParams().getIndexSelectCriteria())
                     .build());
 
     return factRecords

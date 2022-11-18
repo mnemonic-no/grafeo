@@ -4,6 +4,7 @@ import com.google.inject.*;
 import com.google.inject.name.Names;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
@@ -50,13 +51,15 @@ public class ActGraphIT {
 
   private static final long NOW = Instant.parse("2022-01-01T12:00:00.000Z").toEpochMilli();
 
-  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
-          .addCurrentUserIdentity(UUID.randomUUID())
-          .addAvailableOrganizationID(UUID.randomUUID())
-          .build();
-  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder()
-          .setIndexStartTimestamp(NOW)
-          .setIndexEndTimestamp(NOW)
+  private final FactSearchCriteria factSearchCriteria = FactSearchCriteria.builder()
+          .setAccessControlCriteria(AccessControlCriteria.builder()
+                  .addCurrentUserIdentity(UUID.randomUUID())
+                  .addAvailableOrganizationID(UUID.randomUUID())
+                  .build())
+          .setIndexSelectCriteria(IndexSelectCriteria.builder()
+                  .setIndexStartTimestamp(NOW)
+                  .setIndexEndTimestamp(NOW)
+                  .build())
           .build();
 
   private static GuiceBeanProvider daoBeanProvider;
@@ -253,18 +256,24 @@ public class ActGraphIT {
 
     // Just before
     assertEquals(0, IteratorUtils.count(createGraph(traverseParamsBuilder()
-            .setBeforeTimestamp(beforeT0)
+            .setBaseSearchCriteria(factSearchCriteria.toBuilder()
+                    .setEndTimestamp(beforeT0)
+                    .build())
             .build()).V(someIp.getId()).outE("resolve")));
 
     // Just after
     assertEquals(0, IteratorUtils.count(createGraph(traverseParamsBuilder()
-            .setAfterTimestamp(afterT0)
+            .setBaseSearchCriteria(factSearchCriteria.toBuilder()
+                    .setStartTimestamp(afterT0)
+                    .build())
             .build()).V(someIp.getId()).outE("resolve")));
 
     // In between
     assertEquals(1, IteratorUtils.count(createGraph(traverseParamsBuilder()
-            .setAfterTimestamp(beforeT0)
-            .setBeforeTimestamp(afterT0)
+            .setBaseSearchCriteria(factSearchCriteria.toBuilder()
+                    .setStartTimestamp(beforeT0)
+                    .setEndTimestamp(afterT0)
+                    .build())
             .build()).V(someIp.getId()).outE("resolve")));
   }
 
@@ -301,8 +310,7 @@ public class ActGraphIT {
 
   private TraverseParams.Builder traverseParamsBuilder() {
     return TraverseParams.builder()
-            .setAccessControlCriteria(accessControlCriteria)
-            .setIndexSelectCriteria(indexSelectCriteria);
+            .setBaseSearchCriteria(factSearchCriteria);
   }
 
   private GraphTraversalSource createGraph() {

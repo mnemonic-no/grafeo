@@ -1,5 +1,6 @@
 package no.mnemonic.act.platform.api.request.v1;
 
+import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.junit.Test;
 
 import javax.validation.ConstraintViolation;
@@ -26,6 +27,22 @@ public class TraverseGraphRequestTest extends AbstractRequestTest {
     assertTrue(request.getIncludeRetracted());
     assertEquals(Integer.valueOf(10), request.getLimit());
     assertEquals("g.out()", request.getQuery());
+  }
+
+  @Test
+  public void testDecodeTimeFieldSearchRequest() throws Exception {
+    String json = "{" +
+            "startTimestamp : '2016-11-30T15:47:00Z'," +
+            "endTimestamp : '2016-11-30T15:47:01Z'," +
+            "timeMatchStrategy : 'all'," +
+            "timeFieldStrategy : ['all']" +
+            "}";
+
+    TraverseGraphRequest request = getMapper().readValue(json, TraverseGraphRequest.class);
+    assertEquals(1480520820000L, request.getStartTimestamp().longValue());
+    assertEquals(1480520821000L, request.getEndTimestamp().longValue());
+    assertEquals(TimeFieldSearchRequest.TimeMatchStrategy.all, request.getTimeMatchStrategy());
+    assertEquals(SetUtils.set(TimeFieldSearchRequest.TimeFieldStrategy.all), request.getTimeFieldStrategy());
   }
 
   @Test

@@ -42,9 +42,12 @@ public class PropertyHelperTest {
           .addAvailableOrganizationID(UUID.randomUUID())
           .build();
   private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
-  private final TraverseParams emptyTraverseParams = TraverseParams.builder()
+  private final FactSearchCriteria factSearchCriteria = FactSearchCriteria.builder()
           .setAccessControlCriteria(accessControlCriteria)
           .setIndexSelectCriteria(indexSelectCriteria)
+          .build();
+  private final TraverseParams emptyTraverseParams = TraverseParams.builder()
+          .setBaseSearchCriteria(factSearchCriteria)
           .build();
 
   @Mock
@@ -144,26 +147,15 @@ public class PropertyHelperTest {
   }
 
   @Test
-  public void testOneLeggedFactsAsPropsTimeFilter() {
-    Long start = 1L;
-    Long end = 2L;
+  public void testOneLeggedFactsPassesSearchCriteria() {
     UUID objectId = UUID.randomUUID();
-    ObjectRecord objectRecord = new ObjectRecord().setId(objectId);
-
     when(objectFactDao.searchFacts(any())).thenAnswer(x -> ResultContainer.<FactRecord>builder().build());
 
-    helper.getOneLeggedFactsAsProperties(objectRecord, traverseParamsBuilder()
-            .setBeforeTimestamp(end)
-            .setAfterTimestamp(start)
-            .setIncludeRetracted(true)
-            .build());
+    helper.getOneLeggedFactsAsProperties(new ObjectRecord().setId(objectId), emptyTraverseParams);
 
     verify(objectFactDao).searchFacts(argThat(criteria -> {
       assertEquals(set(objectId), criteria.getObjectID());
       assertEquals(FactSearchCriteria.FactBinding.oneLegged, criteria.getFactBinding());
-      assertEquals(start, criteria.getStartTimestamp());
-      assertEquals(end, criteria.getEndTimestamp());
-      assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
       assertSame(accessControlCriteria, criteria.getAccessControlCriteria());
       assertSame(indexSelectCriteria, criteria.getIndexSelectCriteria());
       return true;
@@ -173,7 +165,7 @@ public class PropertyHelperTest {
   @Test
   public void testGetObjectPropsInputValidation() {
     assertThrows(IllegalArgumentException.class,
-            () -> helper.getObjectProperties(null, TraverseParams.builder().build()));
+            () -> helper.getObjectProperties(null, emptyTraverseParams));
 
     assertThrows(IllegalArgumentException.class,
             () -> helper.getObjectProperties(new ObjectRecord(), null));
@@ -292,26 +284,15 @@ public class PropertyHelperTest {
   }
 
   @Test
-  public void testMetaFactsAsPropsTimeFilter() {
-    Long start = 1L;
-    Long end = 2L;
-
+  public void testMetaFactsPassesSearchCriteria() {
     UUID inReferenceToID = UUID.randomUUID();
-
     when(objectFactDao.searchFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
 
-    helper.getMetaFactsAsProperties(new FactRecord().setId(inReferenceToID), traverseParamsBuilder()
-            .setBeforeTimestamp(end)
-            .setAfterTimestamp(start)
-            .setIncludeRetracted(true)
-            .build());
+    helper.getMetaFactsAsProperties(new FactRecord().setId(inReferenceToID), emptyTraverseParams);
 
     verify(objectFactDao).searchFacts(argThat(criteria -> {
       assertEquals(set(inReferenceToID), criteria.getInReferenceTo());
       assertEquals(FactSearchCriteria.FactBinding.meta, criteria.getFactBinding());
-      assertEquals(start, criteria.getStartTimestamp());
-      assertEquals(end, criteria.getEndTimestamp());
-      assertEquals(set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
       assertSame(accessControlCriteria, criteria.getAccessControlCriteria());
       assertSame(indexSelectCriteria, criteria.getIndexSelectCriteria());
       return true;
@@ -394,7 +375,7 @@ public class PropertyHelperTest {
   @Test
   public void testGetFactPropsInputValidation() {
     assertThrows(IllegalArgumentException.class,
-            () -> helper.getFactProperties(null, TraverseParams.builder().build()));
+            () -> helper.getFactProperties(null, emptyTraverseParams));
 
     assertThrows(IllegalArgumentException.class,
             () -> helper.getFactProperties(new FactRecord(), null));
@@ -420,8 +401,7 @@ public class PropertyHelperTest {
 
   private TraverseParams.Builder traverseParamsBuilder() {
     return TraverseParams.builder()
-            .setAccessControlCriteria(accessControlCriteria)
-            .setIndexSelectCriteria(indexSelectCriteria);
+            .setBaseSearchCriteria(factSearchCriteria);
   }
 
   private FactTypeStruct mockFactType(String name) {

@@ -3,9 +3,9 @@ package no.mnemonic.act.platform.api.request.v1;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.act.platform.utilities.json.RoundingFloatDeserializer;
 import no.mnemonic.act.platform.utilities.json.TimestampDeserializer;
-import no.mnemonic.act.platform.api.request.ValidatingRequest;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @ApiModel(description = "Search for Objects.")
-public class SearchObjectRequest implements ValidatingRequest {
+public class SearchObjectRequest implements TimeFieldSearchRequest, ValidatingRequest {
 
   @ApiModelProperty(value = "Only return Objects matching a keyword query")
   private String keywords;
@@ -47,14 +47,15 @@ public class SearchObjectRequest implements ValidatingRequest {
   private Float maximum;
   @ApiModelProperty(value = "Specify the field used for minimum/maximum filters (default 'certainty')")
   private Dimension dimension;
-  @ApiModelProperty(value = "Only return Objects with Facts seen before a specific timestamp",
-          example = "2016-09-28T21:26:22Z", dataType = "string")
+  @ApiModelProperty(value = "Deprecated: Use endTimestamp instead", example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long before;
-  @ApiModelProperty(value = "Only return Objects with Facts seen after a specific timestamp",
-          example = "2016-09-28T21:26:22Z", dataType = "string")
+  @ApiModelProperty(value = "Deprecated: Use startTimestamp instead", example = "2016-09-28T21:26:22Z", dataType = "string")
   @JsonDeserialize(using = TimestampDeserializer.class)
   private Long after;
+  // Annotations are specified on the TimeFieldSearchRequest interface.
+  private TimeMatchStrategy timeMatchStrategy;
+  private Set<TimeFieldStrategy> timeFieldStrategy;
   @ApiModelProperty(value = "Limit the number of returned Objects (default 25, 0 means all)", example = "25")
   @Min(0)
   private Integer limit;
@@ -224,6 +225,49 @@ public class SearchObjectRequest implements ValidatingRequest {
 
   public SearchObjectRequest setAfter(Long after) {
     this.after = after;
+    return this;
+  }
+
+  @Override
+  public Long getStartTimestamp() {
+    return getAfter();
+  }
+
+  public SearchObjectRequest setStartTimestamp(Long timestamp) {
+    return setAfter(timestamp);
+  }
+
+  @Override
+  public Long getEndTimestamp() {
+    return getBefore();
+  }
+
+  public SearchObjectRequest setEndTimestamp(Long timestamp) {
+    return setBefore(timestamp);
+  }
+
+  @Override
+  public TimeMatchStrategy getTimeMatchStrategy() {
+    return timeMatchStrategy;
+  }
+
+  public SearchObjectRequest setTimeMatchStrategy(TimeMatchStrategy strategy) {
+    this.timeMatchStrategy = strategy;
+    return this;
+  }
+
+  @Override
+  public Set<TimeFieldStrategy> getTimeFieldStrategy() {
+    return timeFieldStrategy;
+  }
+
+  public SearchObjectRequest setTimeFieldStrategy(Set<TimeFieldStrategy> strategy) {
+    this.timeFieldStrategy = ObjectUtils.ifNotNull(strategy, SetUtils::set);
+    return this;
+  }
+
+  public SearchObjectRequest addTimeFieldStrategy(TimeFieldStrategy strategy) {
+    this.timeFieldStrategy = SetUtils.addToSet(this.timeFieldStrategy, strategy);
     return this;
   }
 

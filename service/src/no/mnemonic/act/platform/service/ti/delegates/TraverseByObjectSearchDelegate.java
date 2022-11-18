@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import java.util.Collection;
 import java.util.UUID;
 
+import static no.mnemonic.act.platform.service.ti.converters.request.RequestConverterUtils.handleTimeFieldSearchRequest;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 
 public class TraverseByObjectSearchDelegate implements Delegate {
@@ -69,13 +70,13 @@ public class TraverseByObjectSearchDelegate implements Delegate {
             objectIds,
             request.getTraverse().getQuery(),
             TraverseParams.builder()
-                    .setAccessControlCriteria(accessControlCriteriaResolver.get())
-                    .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(
-                            request.getTraverse().getAfter(),
-                            request.getTraverse().getBefore()))
+                    .setBaseSearchCriteria(handleTimeFieldSearchRequest(FactSearchCriteria.builder(), request.getTraverse())
+                            .setAccessControlCriteria(accessControlCriteriaResolver.get())
+                            .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(
+                                    request.getTraverse().getStartTimestamp(),
+                                    request.getTraverse().getEndTimestamp()))
+                            .build())
                     .setIncludeRetracted(request.getTraverse().getIncludeRetracted())
-                    .setAfterTimestamp(request.getTraverse().getAfter())
-                    .setBeforeTimestamp(request.getTraverse().getBefore())
                     .setLimit(request.getTraverse().getLimit())
                     .build());
   }

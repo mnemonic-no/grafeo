@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.exceptions.InvalidArgumentException;
 import no.mnemonic.act.platform.api.exceptions.OperationTimeoutException;
 import no.mnemonic.act.platform.api.request.v1.TraverseGraphByObjectsRequest;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.TiFunctionConstants;
 import no.mnemonic.act.platform.service.ti.TiSecurityContext;
@@ -24,6 +25,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static no.mnemonic.act.platform.service.ti.converters.request.RequestConverterUtils.handleTimeFieldSearchRequest;
 
 public class TraverseByObjectsDelegate implements Delegate {
 
@@ -66,11 +69,11 @@ public class TraverseByObjectsDelegate implements Delegate {
             SetUtils.set(objects, ObjectRecord::getId),
             request.getQuery(),
             TraverseParams.builder()
-                    .setAccessControlCriteria(accessControlCriteriaResolver.get())
-                    .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(request.getAfter(), request.getBefore()))
+                    .setBaseSearchCriteria(handleTimeFieldSearchRequest(FactSearchCriteria.builder(), request)
+                            .setAccessControlCriteria(accessControlCriteriaResolver.get())
+                            .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(request.getStartTimestamp(), request.getEndTimestamp()))
+                            .build())
                     .setIncludeRetracted(request.getIncludeRetracted())
-                    .setAfterTimestamp(request.getAfter())
-                    .setBeforeTimestamp(request.getBefore())
                     .setLimit(request.getLimit())
                     .build());
   }

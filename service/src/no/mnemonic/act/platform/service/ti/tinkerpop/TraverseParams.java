@@ -1,54 +1,32 @@
 package no.mnemonic.act.platform.service.ti.tinkerpop;
 
-import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
-import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.commons.utilities.ObjectUtils;
 
 /**
- * Immutable record that holds parameters that control the
- * traversal of graphs.
+ * Immutable record that holds parameters that control the traversal of graphs.
  */
 public class TraverseParams {
 
-  private final AccessControlCriteria accessControlCriteria;
-  private final IndexSelectCriteria indexSelectCriteria;
+  // This criteria will always be applied to searches during graph traversal (can be extended by additional parameters).
+  private final FactSearchCriteria baseSearchCriteria;
   private final boolean includeRetracted;
-  private final Long beforeTimestamp;
-  private final Long afterTimestamp;
   private final int limit;
 
-  private TraverseParams(AccessControlCriteria accessControlCriteria,
-                         IndexSelectCriteria indexSelectCriteria,
+  private TraverseParams(FactSearchCriteria baseSearchCriteria,
                          Boolean includeRetracted,
-                         Long beforeTimestamp,
-                         Long afterTimestamp,
                          Integer limit) {
-    this.accessControlCriteria = accessControlCriteria;
-    this.indexSelectCriteria = indexSelectCriteria;
+    this.baseSearchCriteria = ObjectUtils.notNull(baseSearchCriteria, "'baseSearchCriteria' is null!");
     this.includeRetracted = ObjectUtils.ifNull(includeRetracted, false);
-    this.beforeTimestamp = beforeTimestamp;
-    this.afterTimestamp = afterTimestamp;
     this.limit = ObjectUtils.ifNull(limit, 25);
   }
 
-  public AccessControlCriteria getAccessControlCriteria() {
-    return accessControlCriteria;
-  }
-
-  public IndexSelectCriteria getIndexSelectCriteria() {
-    return indexSelectCriteria;
+  public FactSearchCriteria getBaseSearchCriteria() {
+    return baseSearchCriteria;
   }
 
   public Boolean isIncludeRetracted() {
     return includeRetracted;
-  }
-
-  public Long getBeforeTimestamp() {
-    return beforeTimestamp;
-  }
-
-  public Long getAfterTimestamp() {
-    return afterTimestamp;
   }
 
   public int getLimit() {
@@ -61,42 +39,24 @@ public class TraverseParams {
 
   public static class Builder {
 
-    private AccessControlCriteria accessControlCriteria;
-    private IndexSelectCriteria indexSelectCriteria;
+    private FactSearchCriteria baseSearchCriteria;
     private Boolean includeRetracted;
-    private Long beforeTimestamp;
-    private Long afterTimestamp;
     private Integer limit;
 
     private Builder() {
     }
 
     public TraverseParams build() {
-      return new TraverseParams(accessControlCriteria, indexSelectCriteria, includeRetracted, beforeTimestamp, afterTimestamp, limit);
+      return new TraverseParams(baseSearchCriteria, includeRetracted, limit);
     }
 
-    public Builder setAccessControlCriteria(AccessControlCriteria accessControlCriteria) {
-      this.accessControlCriteria = accessControlCriteria;
-      return this;
-    }
-
-    public Builder setIndexSelectCriteria(IndexSelectCriteria indexSelectCriteria) {
-      this.indexSelectCriteria = indexSelectCriteria;
+    public Builder setBaseSearchCriteria(FactSearchCriteria baseSearchCriteria) {
+      this.baseSearchCriteria = baseSearchCriteria;
       return this;
     }
 
     public Builder setIncludeRetracted(Boolean includeRetracted) {
       this.includeRetracted = includeRetracted;
-      return this;
-    }
-
-    public Builder setBeforeTimestamp(Long beforeTimestamp) {
-      this.beforeTimestamp = beforeTimestamp;
-      return this;
-    }
-
-    public Builder setAfterTimestamp(Long afterTimestamp) {
-      this.afterTimestamp = afterTimestamp;
       return this;
     }
 

@@ -91,15 +91,12 @@ public class PropertyHelper {
    */
   List<PropertyEntry<?>> getOneLeggedFactsAsProperties(ObjectRecord objectRecord, TraverseParams traverseParams) {
 
-    ResultContainer<FactRecord> facts = objectFactDao.searchFacts(FactSearchCriteria.builder()
-            .addObjectID(objectRecord.getId())
-            .setFactBinding(FactSearchCriteria.FactBinding.oneLegged)
-            .setStartTimestamp(traverseParams.getAfterTimestamp())
-            .setEndTimestamp(traverseParams.getBeforeTimestamp())
-            .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
-            .setAccessControlCriteria(traverseParams.getAccessControlCriteria())
-            .setIndexSelectCriteria(traverseParams.getIndexSelectCriteria())
-            .build());
+    ResultContainer<FactRecord> facts = objectFactDao.searchFacts(
+            traverseParams.getBaseSearchCriteria()
+                    .toBuilder()
+                    .addObjectID(objectRecord.getId())
+                    .setFactBinding(FactSearchCriteria.FactBinding.oneLegged)
+                    .build());
 
     return facts.stream()
             .filter(securityContext::hasReadPermission)
@@ -142,15 +139,12 @@ public class PropertyHelper {
    * @return A list of the fact's meta facts in the form of fact type name to fact value
    */
   List<PropertyEntry<?>> getMetaFactsAsProperties(FactRecord factRecord, TraverseParams traverseParams) {
-    ResultContainer<FactRecord> facts = objectFactDao.searchFacts(FactSearchCriteria.builder()
-            .addInReferenceTo(factRecord.getId())
-            .setFactBinding(FactSearchCriteria.FactBinding.meta)
-            .setStartTimestamp(traverseParams.getAfterTimestamp())
-            .setEndTimestamp(traverseParams.getBeforeTimestamp())
-            .addTimeFieldStrategy(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp)
-            .setAccessControlCriteria(traverseParams.getAccessControlCriteria())
-            .setIndexSelectCriteria(traverseParams.getIndexSelectCriteria())
-            .build());
+    ResultContainer<FactRecord> facts = objectFactDao.searchFacts(
+            traverseParams.getBaseSearchCriteria()
+                    .toBuilder()
+                    .addInReferenceTo(factRecord.getId())
+                    .setFactBinding(FactSearchCriteria.FactBinding.meta)
+                    .build());
 
     return facts.stream()
             .filter(securityContext::hasReadPermission)

@@ -438,6 +438,40 @@ public class FactSearchCriteria {
             maxNumber == null;
   }
 
+  /**
+   * Create a new builder instance from an existing FactSearchCriteria object. All fields set in the criteria will be
+   * copied to the new builder. Useful for creating a new criteria from a given criteria with only small modifications.
+   *
+   * @return New builder instance
+   */
+  public Builder toBuilder() {
+    return new Builder()
+            .setFactID(factID)
+            .setFactTypeID(factTypeID)
+            .setFactValue(factValue)
+            .setInReferenceTo(inReferenceTo)
+            .setOrganizationID(organizationID)
+            .setOriginID(originID)
+            .setObjectID(objectID)
+            .setObjectTypeID(objectTypeID)
+            .setObjectValue(objectValue)
+            .setKeywords(keywords)
+            .setKeywordFieldStrategy(keywordFieldStrategy)
+            .setKeywordMatchStrategy(keywordMatchStrategy)
+            .setStartTimestamp(startTimestamp)
+            .setEndTimestamp(endTimestamp)
+            .setTimeFieldStrategy(timeFieldStrategy)
+            .setTimeMatchStrategy(timeMatchStrategy)
+            .setMinNumber(minNumber)
+            .setMaxNumber(maxNumber)
+            .setNumberFieldStrategy(numberFieldStrategy)
+            .setNumberMatchStrategy(numberMatchStrategy)
+            .setFactBinding(factBinding)
+            .setLimit(limit)
+            .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria);
+  }
+
   public static Builder builder() {
     return new Builder();
   }

@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
@@ -23,11 +24,13 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 abstract class AbstractGraphTest {
 
-  final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
-          .addCurrentUserIdentity(UUID.randomUUID())
-          .addAvailableOrganizationID(UUID.randomUUID())
+  final FactSearchCriteria factSearchCriteria = FactSearchCriteria.builder()
+          .setAccessControlCriteria(AccessControlCriteria.builder()
+                  .addCurrentUserIdentity(UUID.randomUUID())
+                  .addAvailableOrganizationID(UUID.randomUUID())
+                  .build())
+          .setIndexSelectCriteria(IndexSelectCriteria.builder().build())
           .build();
-  final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
 
   @Mock
   private ObjectFactDao objectFactDao;
@@ -52,8 +55,7 @@ abstract class AbstractGraphTest {
     when(propertyHelper.getFactProperties(any(), any())).thenReturn(list());
 
     actGraph = createActGraph(TraverseParams.builder()
-            .setAccessControlCriteria(accessControlCriteria)
-            .setIndexSelectCriteria(indexSelectCriteria)
+            .setBaseSearchCriteria(factSearchCriteria)
             .build());
   }
 

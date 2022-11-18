@@ -116,12 +116,12 @@ public class TraverseByObjectSearchDelegateTest {
             eq(set(objectId1, objectId2)),
             eq(query),
             argThat(traverseParams -> {
+              assertNull(traverseParams.getBaseSearchCriteria().getStartTimestamp());
+              assertNull(traverseParams.getBaseSearchCriteria().getEndTimestamp());
+              assertNotNull(traverseParams.getBaseSearchCriteria().getAccessControlCriteria());
+              assertNotNull(traverseParams.getBaseSearchCriteria().getIndexSelectCriteria());
               assertFalse(traverseParams.isIncludeRetracted());
-              assertNull(traverseParams.getAfterTimestamp());
-              assertNull(traverseParams.getBeforeTimestamp());
               assertEquals(25, traverseParams.getLimit());
-              assertNotNull(traverseParams.getAccessControlCriteria());
-              assertNotNull(traverseParams.getIndexSelectCriteria());
               return true;
             }));
   }
@@ -131,16 +131,16 @@ public class TraverseByObjectSearchDelegateTest {
     UUID objectId1 = UUID.randomUUID();
     UUID objectId2 = UUID.randomUUID();
     String query = "g.outE()";
-    Long after = 2L;
-    Long before = 1L;
+    Long startTimestamp = 1L;
+    Long endTimestamp = 2L;
 
     TraverseGraphByObjectSearchRequest request = new TraverseGraphByObjectSearchRequest()
             .setSearch(new SearchObjectRequest())
             .setTraverse(new TraverseGraphRequest()
                     .setQuery(query)
                     .setIncludeRetracted(true)
-                    .setAfter(after)
-                    .setBefore(before)
+                    .setStartTimestamp(startTimestamp)
+                    .setEndTimestamp(endTimestamp)
                     .setLimit(10)
             );
 
@@ -149,17 +149,17 @@ public class TraverseByObjectSearchDelegateTest {
 
     delegate.handle(request);
 
-    verify(indexSelectCriteriaResolver).validateAndCreateCriteria(after, before);
+    verify(indexSelectCriteriaResolver).validateAndCreateCriteria(startTimestamp, endTimestamp);
     verify(traverseGraphHandler).traverse(
             eq(set(objectId1, objectId2)),
             eq(query),
             argThat(traverseParams -> {
+              assertEquals(startTimestamp, traverseParams.getBaseSearchCriteria().getStartTimestamp());
+              assertEquals(endTimestamp, traverseParams.getBaseSearchCriteria().getEndTimestamp());
+              assertNotNull(traverseParams.getBaseSearchCriteria().getAccessControlCriteria());
+              assertNotNull(traverseParams.getBaseSearchCriteria().getIndexSelectCriteria());
               assertTrue(traverseParams.isIncludeRetracted());
-              assertEquals(after, traverseParams.getAfterTimestamp());
-              assertEquals(before, traverseParams.getBeforeTimestamp());
               assertEquals(10, traverseParams.getLimit());
-              assertNotNull(traverseParams.getAccessControlCriteria());
-              assertNotNull(traverseParams.getIndexSelectCriteria());
               return true;
             }));
   }

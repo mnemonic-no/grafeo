@@ -33,6 +33,8 @@ public class ElementFactoryTest {
   private PropertyHelper propertyHelper;
   @Mock
   private TiSecurityContext securityContext;
+  @Mock
+  private TraverseParams traverseParams;
 
   private ElementFactory elementFactory;
 
@@ -46,7 +48,7 @@ public class ElementFactoryTest {
             .setSecurityContext(securityContext)
             .setFactRetractionHandler(factRetractionHandler)
             .setPropertyHelper(propertyHelper)
-            .setTraverseParams(TraverseParams.builder().build())
+            .setTraverseParams(traverseParams)
             .build();
     elementFactory = ElementFactory.builder().setOwner(actGraph).build();
   }

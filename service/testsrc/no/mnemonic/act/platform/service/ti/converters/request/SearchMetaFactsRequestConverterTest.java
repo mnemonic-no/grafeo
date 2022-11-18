@@ -2,6 +2,7 @@ package no.mnemonic.act.platform.service.ti.converters.request;
 
 import no.mnemonic.act.platform.api.request.v1.Dimension;
 import no.mnemonic.act.platform.api.request.v1.SearchMetaFactsRequest;
+import no.mnemonic.act.platform.api.request.v1.TimeFieldSearchRequest;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
@@ -150,13 +151,15 @@ public class SearchMetaFactsRequestConverterTest {
   @Test
   public void testConvertRequestFilterOnTimestamp() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchMetaFactsRequest()
-            .setAfter(123456789L)
-            .setBefore(987654321L)
+            .setStartTimestamp(123456789L)
+            .setEndTimestamp(987654321L)
+            .addTimeFieldStrategy(TimeFieldSearchRequest.TimeFieldStrategy.all)
+            .setTimeMatchStrategy(TimeFieldSearchRequest.TimeMatchStrategy.all)
     );
     assertEquals(123456789L, (long) criteria.getStartTimestamp());
     assertEquals(987654321L, (long) criteria.getEndTimestamp());
-    assertEquals(SetUtils.set(FactSearchCriteria.TimeFieldStrategy.lastSeenTimestamp), criteria.getTimeFieldStrategy());
-    assertEquals(FactSearchCriteria.MatchStrategy.any, criteria.getTimeMatchStrategy());
+    assertEquals(SetUtils.set(FactSearchCriteria.TimeFieldStrategy.all), criteria.getTimeFieldStrategy());
+    assertEquals(FactSearchCriteria.MatchStrategy.all, criteria.getTimeMatchStrategy());
 
     verify(indexSelectCriteriaResolver).validateAndCreateCriteria(123456789L, 987654321L);
   }

@@ -6,6 +6,7 @@ import no.mnemonic.act.platform.api.model.v1.Fact;
 import no.mnemonic.act.platform.api.model.v1.Object;
 import no.mnemonic.act.platform.dao.api.ObjectFactDao;
 import no.mnemonic.act.platform.dao.api.criteria.AccessControlCriteria;
+import no.mnemonic.act.platform.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.act.platform.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
@@ -38,14 +39,15 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class TraverseGraphHandlerTest {
 
-  private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
-          .addCurrentUserIdentity(UUID.randomUUID())
-          .addAvailableOrganizationID(UUID.randomUUID())
+  private final FactSearchCriteria factSearchCriteria = FactSearchCriteria.builder()
+          .setAccessControlCriteria(AccessControlCriteria.builder()
+                  .addCurrentUserIdentity(UUID.randomUUID())
+                  .addAvailableOrganizationID(UUID.randomUUID())
+                  .build())
+          .setIndexSelectCriteria(IndexSelectCriteria.builder().build())
           .build();
-  private final IndexSelectCriteria indexSelectCriteria = IndexSelectCriteria.builder().build();
   private final TraverseParams emptyTraverseParams = TraverseParams.builder()
-          .setAccessControlCriteria(accessControlCriteria)
-          .setIndexSelectCriteria(indexSelectCriteria)
+          .setBaseSearchCriteria(factSearchCriteria)
           .build();
 
   @Mock
@@ -222,8 +224,7 @@ public class TraverseGraphHandlerTest {
             set(source.getId()),
             "g.outE()",
             TraverseParams.builder()
-                    .setAccessControlCriteria(accessControlCriteria)
-                    .setIndexSelectCriteria(indexSelectCriteria)
+                    .setBaseSearchCriteria(factSearchCriteria)
                     .setLimit(1)
                     .build());
 
