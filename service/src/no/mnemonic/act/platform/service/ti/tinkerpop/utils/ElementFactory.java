@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ElementFactory {
 
-  private static final int CACHE_MAXIMUM_SIZE = 10000;
+  private static final int CACHE_MAXIMUM_SIZE = 100_000;
   private static final Logger LOGGER = Logging.getLogger(ElementFactory.class);
 
   private final ActGraph owner;
@@ -35,11 +35,11 @@ public class ElementFactory {
   // Needed in order to identify entry in 'edgeCache'.
   private final Map<EdgeID, UUID> edgeIdMap;
   // Cache for created edges. This cache is manually populated by createEdges().
-
   private final Cache<UUID, Edge> edgeCache;
-
   // Cache for created vertices. This cache is automatically populated.
   private final LoadingCache<UUID, Vertex> vertexCache;
+
+  private boolean evictionLogged = false;
 
   private ElementFactory(ActGraph owner) {
     this.owner = ObjectUtils.notNull(owner, "'owner is null!'");
@@ -164,6 +164,7 @@ public class ElementFactory {
   private LoadingCache<UUID, Vertex> createVertexCache() {
     return CacheBuilder.newBuilder()
             .maximumSize(CACHE_MAXIMUM_SIZE)
+            .removalListener(this::logEviction)
             .build(new CacheLoader<UUID, Vertex>() {
               @Override
               public Vertex load(UUID key) {
@@ -183,13 +184,22 @@ public class ElementFactory {
             });
   }
 
-  private void cleanUpEdgeCache(RemovalNotification notification) {
+  private void cleanUpEdgeCache(RemovalNotification<?, ?> notification) {
+    logEviction(notification);
+
     // Need to clean up 'edgeIdMap' when an entry gets evicted.
     if (notification.wasEvicted()) {
       SetUtils.set(edgeIdMap.entrySet())
               .stream()
               .filter(entry -> Objects.equals(entry.getValue(), notification.getKey()))
               .forEach(entry -> edgeIdMap.remove(entry.getKey()));
+    }
+  }
+
+  private void logEviction(RemovalNotification<?, ?> notification) {
+    if (notification.wasEvicted() && !evictionLogged) {
+      LOGGER.warning("ElementFactory started to evict entries from its caches. This causes a performance decrease.");
+      evictionLogged = true;
     }
   }
 
