@@ -2,16 +2,15 @@ package no.mnemonic.act.platform.service.ti.tinkerpop;
 
 import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
@@ -31,7 +30,12 @@ public class FactEdge implements Edge {
   private final FactTypeStruct type;
   private final Vertex inVertex;
   private final Vertex outVertex;
-  private Set<Property<?>> allProperties = null;
+  // Key is the property name and value the actual property. Note that an edge can only have one property for the same
+  // name (see https://tinkerpop.apache.org/docs/current/reference/#vertex-properties). The data model on the other hand
+  // allows multiple properties (i.e. meta Facts) with the same name. Because of that, the implementation will pick the
+  // newest meta Fact for a given name to represent the property.
+  private Map<String, Property<?>> properties = new HashMap<>();
+  private boolean hasFetchedAllProperties = false;
 
   private FactEdge(ActGraph graph,
                    FactRecord fact,
@@ -77,15 +81,28 @@ public class FactEdge implements Edge {
 
   @Override
   public <V> Iterator<Property<V>> properties(String... propertyKeys) {
-    if (allProperties == null) {
-      // Resolve properties the first time they are accessed. They are cached afterwards.
-      allProperties = getAllProperties();
+    // If no keys are specified all properties need to be returned.
+    boolean shouldReturnAllProperties = set(propertyKeys).isEmpty();
+
+    // 1. Step: Fetch all requested properties and cache them for later.
+    if (shouldReturnAllProperties) {
+      if (!hasFetchedAllProperties) {
+        properties = getAllProperties();
+        hasFetchedAllProperties = true;
+      }
+    } else {
+      // Only fetch the requested properties to avoid unnecessary calls towards ElasticSearch for instance.
+      for (String key : propertyKeys) {
+        properties.computeIfAbsent(key, this::getPropertiesForKey);
+      }
     }
 
+    // 2. Step: Filter and return requested properties.
     //noinspection unchecked
-    return allProperties.stream()
-            .filter(property -> set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
-            .map(property -> (Property<V>) property)
+    return properties.entrySet()
+            .stream()
+            .filter(entry -> shouldReturnAllProperties || SetUtils.in(entry.getKey(), propertyKeys))
+            .map(entry -> (Property<V>) entry.getValue())
             .iterator();
   }
 
@@ -121,12 +138,30 @@ public class FactEdge implements Edge {
     return Objects.hash(id());
   }
 
-  private Set<Property<?>> getAllProperties() {
+  private Map<String, Property<?>> getAllProperties() {
     return graph.getPropertyHelper()
             .getFactProperties(fact, graph.getTraverseParams())
             .stream()
+            .collect(Collectors.toMap(PropertyEntry::getName,
+                    Function.identity(),
+                    // Pick out the newest property in order to remove duplicates.
+                    (p1, p2) -> p1.getTimestamp() >= p2.getTimestamp() ? p1 : p2
+            ))
+            .values()
+            .stream()
+            // Need to create a new Map to convert from PropertyEntry to FactProperty. This cannot be done before
+            // the first collect() because FactProperty doesn't contain the timestamp field.
+            .collect(Collectors.toMap(PropertyEntry::getName, p -> new FactProperty<>(this, p.getName(), p.getValue())));
+  }
+
+  private Property<?> getPropertiesForKey(String key) {
+    return graph.getPropertyHelper()
+            .getFactProperties(fact, graph.getTraverseParams(), key)
+            .stream()
+            // Pick out the newest property in order to remove duplicates.
+            .max(Comparator.comparingLong(PropertyEntry::getTimestamp))
             .map(p -> new FactProperty<>(this, p.getName(), p.getValue()))
-            .collect(Collectors.toSet());
+            .orElse(null);
   }
 
   public static Builder builder() {

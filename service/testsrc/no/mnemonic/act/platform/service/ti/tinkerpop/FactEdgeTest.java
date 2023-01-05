@@ -5,7 +5,6 @@ import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
-import no.mnemonic.commons.utilities.collections.MapUtils;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
@@ -14,10 +13,10 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.junit.Test;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
+import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -147,7 +146,7 @@ public class FactEdgeTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testPropertiesOnlyFetchedOnce() {
+  public void testAllPropertiesOnlyFetchedOnce() {
     Edge edge = createEdge();
 
     assertEquals(list(edge.properties()), list(edge.properties()));
@@ -155,36 +154,63 @@ public class FactEdgeTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testPropertiesWithoutProperties() {
+  public void testAllPropertiesWithoutProperties() {
     Edge edge = createEdge();
     assertFalse(edge.properties().hasNext());
   }
 
   @Test
-  public void testPropertiesWithoutMatchingProperty() {
+  public void testAllPropertiesWithMatchingProperty() {
+    when(getPropertyHelper().getFactProperties(any(), any()))
+            .thenReturn(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("b", "2")));
+
+    Edge edge = createEdge();
+    assertEquals(set("p[a->1]", "p[b->2]"), set(edge.properties(), Object::toString));
+  }
+
+  @Test
+  public void testAllPropertiesWithSameName() {
+    when(getPropertyHelper().getFactProperties(any(), any()))
+            .thenReturn(list(new PropertyEntry<>("a", "1", 1), new PropertyEntry<>("a", "2", 2)));
+
+    Edge edge = createEdge();
+    assertEquals(set("p[a->2]"), set(edge.properties(), Object::toString));
+  }
+
+  @Test
+  public void testSinglePropertyOnlyFetchedOnce() {
+    when(getPropertyHelper().getFactProperties(any(), any(), eq("a")))
+            .thenReturn(list(new PropertyEntry<>("a", "1")));
+
+    Edge edge = createEdge();
+    assertEquals(list(edge.properties("a")), list(edge.properties("a")));
+    verify(getPropertyHelper()).getFactProperties(notNull(), notNull(), eq("a"));
+  }
+
+  @Test
+  public void testSinglePropertyWithoutMatchingProperty() {
     Edge edge = createEdge();
     assertFalse(edge.properties("something").hasNext());
   }
 
   @Test
-  public void testPropertiesWithMatchingProperty() {
-    when(getPropertyHelper().getFactProperties(any(), any()))
-            .thenReturn(list(new PropertyEntry<>("value", "test")));
+  public void testSinglePropertyWithMatchingProperty() {
+    when(getPropertyHelper().getFactProperties(any(), any(), eq("a")))
+            .thenReturn(list(new PropertyEntry<>("a", "1")));
+    when(getPropertyHelper().getFactProperties(any(), any(), eq("b")))
+            .thenReturn(list(new PropertyEntry<>("b", "2")));
 
     Edge edge = createEdge();
-    assertTrue(edge.properties("value").hasNext());
+    assertEquals(set("p[a->1]", "p[b->2]"), set(edge.properties("a", "b"), Object::toString));
   }
 
   @Test
-  public void testPropertiesWithMetaFacts() {
-    when(getPropertyHelper().getFactProperties(any(), any())).thenReturn(list(
-            new PropertyEntry<>("meta/tlp", "green"),
-            new PropertyEntry<>("meta/observationTime", "2")));
+  public void testSinglePropertyWithSameName() {
+    when(getPropertyHelper().getFactProperties(any(), any(), any()))
+            .thenReturn(list(new PropertyEntry<>("a", "1", 1), new PropertyEntry<>("a", "2", 2)));
 
     Edge edge = createEdge();
-    Map<String, Property<Object>> props = MapUtils.map(edge.properties(), p -> MapUtils.Pair.T(p.key(), p));
-    assertEquals("green", props.get("meta/tlp").value());
-    assertEquals("2", props.get("meta/observationTime").value());
+    assertEquals(set("p[a->2]"), set(edge.properties("a"), Object::toString));
   }
 
   /* The following tests are adapted from gremlin-test EdgeTest. */
@@ -217,7 +243,7 @@ public class FactEdgeTest extends AbstractGraphTest {
 
   @Test
   public void testAutotypeStringProperties() {
-    when(getPropertyHelper().getFactProperties(any(), any()))
+    when(getPropertyHelper().getFactProperties(any(), any(), any()))
             .thenReturn(list(new PropertyEntry<>("value", "value")));
 
     Edge edge = createEdge();
@@ -227,7 +253,7 @@ public class FactEdgeTest extends AbstractGraphTest {
 
   @Test
   public void testAutotypeLongProperties() {
-    when(getPropertyHelper().getFactProperties(any(), any()))
+    when(getPropertyHelper().getFactProperties(any(), any(), any()))
             .thenReturn(list(new PropertyEntry<>("timestamp", 123456789L)));
 
     Edge edge = createEdge();
@@ -237,7 +263,7 @@ public class FactEdgeTest extends AbstractGraphTest {
 
   @Test
   public void testAutotypeFloatProperties() {
-    when(getPropertyHelper().getFactProperties(any(), any()))
+    when(getPropertyHelper().getFactProperties(any(), any(), any()))
             .thenReturn(list(new PropertyEntry<>("trust", 0.3f)));
 
     Edge edge = createEdge();

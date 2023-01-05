@@ -72,7 +72,6 @@ public class TraverseGraphHandlerTest {
     initMocks(this);
 
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-    when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());
 
     handler = new TraverseGraphHandler(
             securityContext,
@@ -118,7 +117,7 @@ public class TraverseGraphHandlerTest {
     ObjectRecord destination = mockObjectRecord(mockObjectType(), "someOther");
     mockFact(source, destination);
 
-    when(propertyHelper.getObjectProperties(eq(source), any()))
+    when(propertyHelper.getObjectProperties(eq(source), any(), any()))
             .thenReturn(ListUtils.list(new PropertyEntry<>("value", "someValue")));
 
     ResultSet<?> resultSet = handler.traverse(set(source.getId()), "g.values('value')", emptyTraverseParams);

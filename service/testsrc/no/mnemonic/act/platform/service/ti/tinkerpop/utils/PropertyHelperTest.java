@@ -31,8 +31,7 @@ import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class PropertyHelperTest {
@@ -178,9 +177,7 @@ public class PropertyHelperTest {
 
     List<PropertyEntry<?>> props = helper.getObjectProperties(objectRecord, emptyTraverseParams);
 
-    assertEquals(1, props.size());
-    assertEquals("value", props.get(0).getName());
-    assertEquals("someValue", props.get(0).getValue());
+    assertEquals(set("value->someValue"), asKeyValueStrings(props));
     verify(objectFactDao).searchFacts(argThat(c -> {
       assertEquals(set(objectRecord.getId()), c.getObjectID());
       return true;
@@ -207,6 +204,50 @@ public class PropertyHelperTest {
 
     assertEquals(2, props.size());
     assertEquals(set("value->objectValue", "value->someFactValue"), asKeyValueStrings(props));
+  }
+
+  @Test
+  public void testGetObjectPropsForKeyInputValidation() {
+    assertThrows(IllegalArgumentException.class,
+            () -> helper.getObjectProperties(null, emptyTraverseParams, "key"));
+
+    assertThrows(IllegalArgumentException.class,
+            () -> helper.getObjectProperties(new ObjectRecord(), null, "key"));
+
+    assertThrows(IllegalArgumentException.class,
+            () -> helper.getObjectProperties(new ObjectRecord(), emptyTraverseParams, ""));
+  }
+
+  @Test
+  public void testGetObjectPropsForValueKey() {
+    ObjectRecord objectRecord = new ObjectRecord().setId(UUID.randomUUID()).setValue("someValue");
+
+    List<PropertyEntry<?>> props = helper.getObjectProperties(objectRecord, emptyTraverseParams, "value");
+
+    assertEquals(set("value->someValue"), asKeyValueStrings(props));
+    verify(objectFactDao, never()).searchFacts(any());
+  }
+
+  @Test
+  public void testGetObjectPropsForOneLeggedFact() {
+    UUID objectId = UUID.randomUUID();
+    ObjectRecord objectRecord = new ObjectRecord().setId(objectId);
+
+    FactTypeStruct factType1 = mockFactType("factType1");
+    FactTypeStruct factType2 = mockFactType("factType2");
+
+    FactRecord fact1 = new FactRecord().setTypeID(factType1.getId()).setValue("factValue1");
+    FactRecord fact2 = new FactRecord().setTypeID(factType2.getId()).setValue("factValue2");
+
+    when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
+    when(objectFactDao.searchFacts(argThat(x -> Objects.equals(x.getObjectID(), set(objectId))))).thenReturn(
+            ResultContainer.<FactRecord>builder().setValues(ListUtils.list(fact1, fact2).iterator()).build()
+    );
+
+    List<PropertyEntry<?>> props = helper.getObjectProperties(objectRecord, emptyTraverseParams, "factType1");
+
+    assertEquals(set("factType1->factValue1"), asKeyValueStrings(props));
+    verify(objectFactDao).searchFacts(notNull());
   }
 
   @Test
@@ -387,7 +428,8 @@ public class PropertyHelperTest {
             .setId(UUID.randomUUID())
             .setAddedByID(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID())
-            .setOriginID(UUID.randomUUID());
+            .setOriginID(UUID.randomUUID())
+            .setValue("value");
 
     when(objectFactDao.searchFacts(any())).thenReturn(ResultContainer.<FactRecord>builder().build());
     List<PropertyEntry<?>> props = helper.getFactProperties(factRecord, emptyTraverseParams);
@@ -397,6 +439,64 @@ public class PropertyHelperTest {
     verify(subjectResolver).apply(factRecord.getAddedByID());
     verify(organizationResolver).apply(factRecord.getOrganizationID());
     verify(originResolver).apply(factRecord.getOriginID());
+  }
+
+  @Test
+  public void testGetFactPropsForKeyInputValidation() {
+    assertThrows(IllegalArgumentException.class,
+            () -> helper.getFactProperties(null, emptyTraverseParams, "key"));
+
+    assertThrows(IllegalArgumentException.class,
+            () -> helper.getFactProperties(new FactRecord(), null, "key"));
+
+    assertThrows(IllegalArgumentException.class,
+            () -> helper.getFactProperties(new FactRecord(), emptyTraverseParams, ""));
+  }
+
+  @Test
+  public void testGetFactPropsForKeyNotFound() {
+    assertTrue(helper.getFactProperties(new FactRecord(), emptyTraverseParams, "somethingWeird").isEmpty());
+    verify(objectFactDao, never()).searchFacts(any());
+  }
+
+  @Test
+  public void testGetFactPropsForKeyMetaProperties() {
+    FactTypeStruct factType = mockFactType("someFactType");
+    FactTypeStruct metaFactType1 = mockFactType("metaFactType1");
+    FactTypeStruct metaFactType2 = mockFactType("metaFactType2");
+
+    UUID factId = UUID.randomUUID();
+    FactRecord fact = new FactRecord().setTypeID(factType.getId()).setValue("someFact").setId(factId);
+    FactRecord metaFact1 = new FactRecord().setTypeID(metaFactType1.getId()).setValue("metaFactValue1").setId(UUID.randomUUID()).setInReferenceToID(fact.getId());
+    FactRecord metaFact2 = new FactRecord().setTypeID(metaFactType2.getId()).setValue("metaFactValue2").setId(UUID.randomUUID()).setInReferenceToID(fact.getId());
+
+    when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
+    when(objectFactDao.searchFacts(argThat(x -> Objects.equals(x.getInReferenceTo(), set(factId))))).thenReturn(
+            ResultContainer.<FactRecord>builder().setValues(ListUtils.list(metaFact1, metaFact2).iterator()).build()
+    );
+
+    List<PropertyEntry<?>> props = helper.getFactProperties(fact, emptyTraverseParams, "meta/metaFactType1");
+
+    assertEquals(set("meta/metaFactType1->metaFactValue1"), asKeyValueStrings(props));
+    verify(objectFactDao).searchFacts(notNull());
+  }
+
+  @Test
+  public void testGetFactPropsForKeyStaticProperties() {
+    FactRecord fact = new FactRecord()
+            .setValue("someValue")
+            .setAddedByID(UUID.randomUUID())
+            .setOrganizationID(UUID.randomUUID())
+            .setOriginID(UUID.randomUUID())
+            .setAccessMode(FactRecord.AccessMode.Public);
+
+    when(subjectResolver.apply(fact.getAddedByID())).thenReturn(Subject.builder().setName("someSubjectName").build());
+    when(organizationResolver.apply(fact.getOrganizationID())).thenReturn(Organization.builder().setName("someOrgName").build());
+    when(originResolver.apply(fact.getOriginID())).thenReturn(Origin.builder().setName("someOriginName").build());
+
+    for (PropertyHelper.StaticFactProperty property : PropertyHelper.StaticFactProperty.values()) {
+      assertFalse(helper.getFactProperties(fact, emptyTraverseParams, property.name()).isEmpty());
+    }
   }
 
   private TraverseParams.Builder traverseParamsBuilder() {

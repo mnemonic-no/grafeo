@@ -305,7 +305,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testPropertiesOnlyFetchedOnce() {
+  public void testAllPropertiesOnlyFetchedOnce() {
     Vertex vertex = createVertex();
 
     assertEquals(list(vertex.properties()), list(vertex.properties()));
@@ -313,7 +313,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testPropertiesWithoutProperties() {
+  public void testAllPropertiesWithoutProperties() {
     Vertex vertex = createVertex();
 
     List<VertexProperty<Object>> props = list(vertex.properties());
@@ -321,24 +321,53 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   @Test
-  public void testPropertiesWithoutMatchingProperty() {
-    Vertex vertex = createVertex();
-    assertFalse(vertex.properties("something").hasNext());
-  }
-
-  @Test
-  public void testPropertiesWithMatchingProperty() {
+  public void testAllPropertiesWithMatchingProperty() {
     when(getPropertyHelper().getObjectProperties(any(), any()))
             .thenReturn(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("b", "2")));
 
     Vertex objectVertex = createVertex();
     assertEquals(set("vp[a->1]", "vp[b->2]"), set(objectVertex.properties(), Object::toString));
+  }
+
+  @Test
+  public void testAllPropertiesWithSameName() {
+    when(getPropertyHelper().getObjectProperties(any(), any()))
+            .thenReturn(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("a", "2")));
+
+    Vertex objectVertex = createVertex();
+    assertEquals(set("vp[a->1]", "vp[a->2]"), set(objectVertex.properties(), Object::toString));
+  }
+
+  @Test
+  public void testSinglePropertyOnlyFetchedOnce() {
+    when(getPropertyHelper().getObjectProperties(any(), any(), any()))
+            .thenReturn(list(new PropertyEntry<>("a", "1")));
+
+    Vertex objectVertex = createVertex();
+    assertEquals(set(objectVertex.properties("a")), set(objectVertex.properties("a")));
+    verify(getPropertyHelper()).getObjectProperties(notNull(), notNull(), eq("a"));
+  }
+
+  @Test
+  public void testSinglePropertyWithoutMatchingProperty() {
+    Vertex vertex = createVertex();
+    assertFalse(vertex.properties("something").hasNext());
+  }
+
+  @Test
+  public void testSinglePropertyWithMatchingProperty() {
+    when(getPropertyHelper().getObjectProperties(any(), any(), eq("a")))
+            .thenReturn(list(new PropertyEntry<>("a", "1")));
+    when(getPropertyHelper().getObjectProperties(any(), any(), eq("b")))
+            .thenReturn(list(new PropertyEntry<>("b", "2")));
+
+    Vertex objectVertex = createVertex();
     assertEquals(set("vp[a->1]", "vp[b->2]"), set(objectVertex.properties("a", "b"), Object::toString));
   }
 
   @Test
-  public void testPropertiesWithSameName() {
-    when(getPropertyHelper().getObjectProperties(any(), any()))
+  public void testSinglePropertyWithSameName() {
+    when(getPropertyHelper().getObjectProperties(any(), any(), any()))
             .thenReturn(list(new PropertyEntry<>("a", "1"), new PropertyEntry<>("a", "2")));
 
     Vertex objectVertex = createVertex();
@@ -375,7 +404,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test
   public void testAutotypeStringProperties() {
-    when(getPropertyHelper().getObjectProperties(any(), any()))
+    when(getPropertyHelper().getObjectProperties(any(), any(), any()))
             .thenReturn(list(new PropertyEntry<>("value", "someObjectValue")));
 
     Vertex vertex = createVertex();

@@ -4,7 +4,9 @@ import no.mnemonic.act.platform.dao.api.record.FactRecord;
 import no.mnemonic.act.platform.dao.api.record.ObjectRecord;
 import no.mnemonic.act.platform.dao.api.result.ResultContainer;
 import no.mnemonic.act.platform.service.ti.tinkerpop.utils.ObjectFactTypeResolver;
+import no.mnemonic.act.platform.service.ti.tinkerpop.utils.PropertyEntry;
 import no.mnemonic.commons.utilities.ObjectUtils;
+import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
@@ -13,6 +15,7 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.apache.tinkerpop.gremlin.structure.Direction.*;
 import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.edgeAdditionsNotSupported;
@@ -30,7 +33,10 @@ public class ObjectVertex implements Vertex {
   private final ActGraph graph;
   private final ObjectRecord object;
   private final ObjectFactTypeResolver.ObjectTypeStruct type;
-  private Set<VertexProperty<?>> allProperties = null;
+  // Key is the property name and value the actual property. Note that a vertex can have multiple properties for the
+  // same name (see https://tinkerpop.apache.org/docs/current/reference/#vertex-properties), hence using a list.
+  private Map<String, List<VertexProperty<?>>> properties = new HashMap<>();
+  private boolean hasFetchedAllProperties = false;
 
   private ObjectVertex(ActGraph graph,
                        ObjectRecord object,
@@ -77,14 +83,28 @@ public class ObjectVertex implements Vertex {
 
   @Override
   public <V> Iterator<VertexProperty<V>> properties(String... propertyKeys) {
-    if (allProperties == null) {
-      // Resolve properties the first time they are accessed. They are cached afterwards.
-      allProperties = getAllProperties();
+    // If no keys are specified all properties need to be returned.
+    boolean shouldReturnAllProperties = set(propertyKeys).isEmpty();
+
+    // 1. Step: Fetch all requested properties and cache them for later.
+    if (shouldReturnAllProperties) {
+      if (!hasFetchedAllProperties) {
+        properties = getAllProperties();
+        hasFetchedAllProperties = true;
+      }
+    } else {
+      // Only fetch the requested properties to avoid unnecessary calls towards ElasticSearch for instance.
+      for (String key : propertyKeys) {
+        properties.computeIfAbsent(key, this::getPropertiesForKey);
+      }
     }
 
+    // 2. Step: Filter and return requested properties.
     //noinspection unchecked
-    return allProperties.stream()
-            .filter(property -> set(propertyKeys).isEmpty() || SetUtils.in(property.key(), propertyKeys))
+    return properties.entrySet()
+            .stream()
+            .filter(entry -> shouldReturnAllProperties || SetUtils.in(entry.getKey(), propertyKeys))
+            .flatMap(entry -> entry.getValue().stream())
             .map(property -> (VertexProperty<V>) property)
             .iterator();
   }
@@ -140,12 +160,22 @@ public class ObjectVertex implements Vertex {
     return Objects.hash(id());
   }
 
-  private Set<VertexProperty<?>> getAllProperties() {
+  private Map<String, List<VertexProperty<?>>> getAllProperties() {
     return graph.getPropertyHelper()
             .getObjectProperties(object, graph.getTraverseParams())
             .stream()
-            .map(p -> new ObjectProperty<>(this, p.getName(), p.getValue()))
-            .collect(Collectors.toSet());
+            .collect(Collectors.toMap(
+                    PropertyEntry::getName,
+                    // If only one property for a given name exists this will create a list with one element.
+                    p -> list(new ObjectProperty<>(this, p.getName(), p.getValue())),
+                    // If there are multiple properties for a given name merge all into one list.
+                    ListUtils::concatenate
+            ));
+  }
+
+  private List<VertexProperty<?>> getPropertiesForKey(String key) {
+    return list(graph.getPropertyHelper().getObjectProperties(object, graph.getTraverseParams(), key),
+            p -> new ObjectProperty<>(this, p.getName(), p.getValue()));
   }
 
   static boolean matchesDirection(FactRecord fact, ObjectRecord object, Direction direction) {
