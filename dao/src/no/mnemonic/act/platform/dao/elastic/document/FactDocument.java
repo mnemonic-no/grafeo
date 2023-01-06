@@ -18,6 +18,10 @@ public class FactDocument implements ElasticDocument {
     Public, RoleBased, Explicit
   }
 
+  public enum Flag {
+    RetractedHint, TimeGlobalIndex
+  }
+
   public static final float DEFAULT_CONFIDENCE = 1.0f;
   public static final float DEFAULT_TRUST = 0.8f;
 
@@ -36,6 +40,7 @@ public class FactDocument implements ElasticDocument {
   private long timestamp;
   private long lastSeenTimestamp;
   private Set<UUID> acl;
+  private Set<Flag> flags;
   private Set<ObjectDocument> objects;
 
   public UUID getId() {
@@ -179,6 +184,20 @@ public class FactDocument implements ElasticDocument {
 
   public FactDocument addAclEntry(UUID entry) {
     this.acl = SetUtils.addToSet(this.acl, entry);
+    return this;
+  }
+
+  public Set<Flag> getFlags() {
+    return flags;
+  }
+
+  public FactDocument setFlags(Set<Flag> flags) {
+    this.flags = flags;
+    return this;
+  }
+
+  public FactDocument addFlag(Flag flag) {
+    this.flags = SetUtils.addToSet(this.flags, flag);
     return this;
   }
 

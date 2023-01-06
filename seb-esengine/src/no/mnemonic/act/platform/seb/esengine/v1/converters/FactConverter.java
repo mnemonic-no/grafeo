@@ -5,6 +5,7 @@ import no.mnemonic.act.platform.dao.elastic.document.ObjectDocument;
 import no.mnemonic.act.platform.seb.model.v1.*;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.collections.SetUtils;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -33,7 +34,8 @@ public class FactConverter implements Function<FactSEB, FactDocument> {
             .setTrust(seb.getTrust())
             .setTimestamp(seb.getTimestamp())
             .setLastSeenTimestamp(seb.getLastSeenTimestamp())
-            .setAcl(convertAcl(seb.getAcl()));
+            .setAcl(convertAcl(seb.getAcl()))
+            .setFlags(SetUtils.set(seb.getFlags(), flag -> FactDocument.Flag.valueOf(flag.name())));
 
     if (seb.getSourceObject() != null) {
       ObjectDocument.Direction direction = seb.isBidirectionalBinding() ? ObjectDocument.Direction.BiDirectional : ObjectDocument.Direction.FactIsDestination;

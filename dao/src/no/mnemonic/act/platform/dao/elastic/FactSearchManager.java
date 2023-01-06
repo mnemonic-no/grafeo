@@ -640,8 +640,21 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
 
   private void applyTimestampSearchQuery(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {
     if (criteria.getStartTimestamp() == null && criteria.getEndTimestamp() == null) return;
-    applyFieldStrategy(rootQuery, field -> createFieldQuery(field, criteria.getStartTimestamp(), criteria.getEndTimestamp()),
+
+    // For daily indices, apply time field and match strategies.
+    BoolQueryBuilder dailyQuery = boolQuery();
+    applyFieldStrategy(dailyQuery, field -> createFieldQuery(field, criteria.getStartTimestamp(), criteria.getEndTimestamp()),
             criteria.getTimeFieldStrategy(), criteria.getTimeMatchStrategy());
+
+    // For time global index, always search on 'timestamp' and ignore 'startTimestamp'. The 'flags' field is used
+    // as an indicator whether the document resides inside a daily or the time global index.
+    BoolQueryBuilder timeGlobalQuery = boolQuery()
+            .filter(termQuery("flags", FactDocument.Flag.TimeGlobalIndex))
+            .filter(createFieldQuery("timestamp", null, criteria.getEndTimestamp()));
+
+    rootQuery.filter(boolQuery()
+            .should(dailyQuery)
+            .should(timeGlobalQuery));
   }
 
   private void applyNumberSearchQuery(FactSearchCriteria criteria, BoolQueryBuilder rootQuery) {

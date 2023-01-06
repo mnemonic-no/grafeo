@@ -2,6 +2,43 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [New field in ElasticSearch mapping] - 2023-01-06
+A new field has been added to the ElasticSearch mapping. Execute the following curl command against you ElasticSearch cluster
+(or use Kibana) to update the existing mapping.
+```
+curl -X PUT "localhost:9200/act-time-global,act-daily-*/_mapping?include_type_name=false" -H 'Content-Type: application/json' -d'
+{
+  "properties": {
+    "flags": {
+      "type": "keyword"
+    }
+  }
+}
+'
+```
+
+The previous command only changes the mapping in ElasticSearch. In order to populate the new field for existing data also run the next curl command.
+**Only apply this to the time global index!**
+```
+curl -X POST "localhost:9200/act-time-global/_update_by_query?conflicts=proceed" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "must_not": {
+        "exists": {
+          "field": "flags"
+        }
+      }
+    }
+  },
+  "script": {
+    "source": "ctx._source.flags = new String[]{\"TimeGlobalIndex\"}",
+    "lang": "painless"
+  }
+}
+'
+```
+
 ## [Reindex data into daily indices] - 2022-06-22
 In order to reindex data into daily indices execute the following commands. Build the code with Maven to create the `act-platform-cli-tools` application.
 

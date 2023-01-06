@@ -42,6 +42,7 @@ public class FactConverterTest {
             .setTimestamp(123456789)
             .setLastSeenTimestamp(987654321)
             .addAclEntry(AclEntrySEB.builder().setSubject(SubjectInfoSEB.builder().setId(UUID.randomUUID()).build()).build())
+            .addFlag(FactSEB.Flag.TimeGlobalIndex)
             .build();
 
     FactDocument document = converter.apply(seb);
@@ -60,6 +61,7 @@ public class FactConverterTest {
     assertEquals(seb.getTimestamp(), document.getTimestamp());
     assertEquals(seb.getLastSeenTimestamp(), document.getLastSeenTimestamp());
     assertEquals(SetUtils.set(seb.getAcl(), entry -> entry.getSubject().getId()), document.getAcl());
+    assertEquals(SetUtils.set(seb.getFlags(), Enum::name), SetUtils.set(document.getFlags(), Enum::name));
   }
 
   @Test

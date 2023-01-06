@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,7 +61,8 @@ public class FactEntityToDocumentConverterTest {
             .setConfidence(0.1f)
             .setTrust(0.2f)
             .setTimestamp(123456789)
-            .setLastSeenTimestamp(987654321);
+            .setLastSeenTimestamp(987654321)
+            .addFlag(FactEntity.Flag.TimeGlobalIndex);
 
     FactDocument document = converter.apply(entity, null);
     assertNotNull(document);
@@ -77,6 +79,16 @@ public class FactEntityToDocumentConverterTest {
     assertEquals(entity.getTrust(), document.getTrust(), 0.0f);
     assertEquals(entity.getTimestamp(), document.getTimestamp());
     assertEquals(entity.getLastSeenTimestamp(), document.getLastSeenTimestamp());
+    assertEquals(SetUtils.set(entity.getFlags(), Enum::name), SetUtils.set(document.getFlags(), Enum::name));
+  }
+
+  @Test
+  public void testConvertSkipsCassandraOnlyFlags() {
+    FactEntity entity = new FactEntity();
+    Arrays.stream(FactEntity.Flag.values()).forEach(entity::addFlag);
+
+    FactDocument document = converter.apply(entity, null);
+    assertEquals(SetUtils.set(FactDocument.Flag.values()), document.getFlags());
   }
 
   @Test

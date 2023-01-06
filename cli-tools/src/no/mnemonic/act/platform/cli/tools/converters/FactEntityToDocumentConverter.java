@@ -38,7 +38,7 @@ public class FactEntityToDocumentConverter implements BiFunction<FactEntity, Fac
   public FactDocument apply(FactEntity fact, FactRefreshLogEntity logEntry) {
     if (fact == null) return null;
 
-    return new FactDocument()
+    FactDocument document = new FactDocument()
             .setId(fact.getId())
             .setTypeID(fact.getTypeID())
             .setValue(fact.getValue())
@@ -56,6 +56,13 @@ public class FactEntityToDocumentConverter implements BiFunction<FactEntity, Fac
             .setTrust(fact.getTrust())
             .setAcl(resolveAcl(fact, logEntry))
             .setObjects(resolveObjects(fact));
+
+    for (FactEntity.Flag flag : SetUtils.set(fact.getFlags())) {
+      if (flag.isCassandraOnly()) continue;
+      document.addFlag(FactDocument.Flag.valueOf(flag.name()));
+    }
+
+    return document;
   }
 
   private Set<UUID> resolveAcl(FactEntity fact, FactRefreshLogEntity logEntry) {

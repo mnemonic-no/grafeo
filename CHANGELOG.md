@@ -51,6 +51,9 @@ should be included in the response. The endpoint omits statistics by default now
 - (2020-06-26) Added configuration option `act.action.triggers.enabled` to enable/disable the action triggers framework.
 
 ### Changed
+- (2023-01-06) When searching for Facts by time `timeFieldStrategy` and `timeMatchStrategy` will only be applied to daily indices.
+When searching against the time global index only `endTimestamp` will be used (`startTimestamp` will be ignored) and the search
+will always filter on `timestamp`.
 - (2021-06-03) When searching for Objects the `before` and `after` parameters are now used to omit Facts with their
 `lastSeenTimestamp` outside the given time frame from statistics calculation (similar to the search itself).
 - (2021-02-19) All search and traverse endpoints with `before` and `after` parameters now filter Facts on their `lastSeenTimestamp`

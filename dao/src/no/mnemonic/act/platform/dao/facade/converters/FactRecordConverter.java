@@ -168,7 +168,8 @@ public class FactRecordConverter {
             .setTrust(record.getTrust())
             .setTimestamp(record.getTimestamp())
             .setLastSeenTimestamp(record.getLastSeenTimestamp())
-            .setAcl(SetUtils.set(record.getAcl(), FactAclEntryRecord::getSubjectID));
+            .setAcl(SetUtils.set(record.getAcl(), FactAclEntryRecord::getSubjectID))
+            .setFlags(SetUtils.set(record.getFlags(), flag -> FactDocument.Flag.valueOf(flag.name())));
 
     if (record.getSourceObject() != null) {
       ObjectDocument.Direction direction = record.isBidirectionalBinding() ? ObjectDocument.Direction.BiDirectional : ObjectDocument.Direction.FactIsDestination;

@@ -423,7 +423,8 @@ public class FactRecordConverterTest {
             .setConfidence(0.1f)
             .setTrust(0.2f)
             .setTimestamp(123456789L)
-            .setLastSeenTimestamp(987654321L);
+            .setLastSeenTimestamp(987654321L)
+            .addFlag(FactRecord.Flag.TimeGlobalIndex);
 
     FactDocument document = converter.toDocument(record);
     assertEquals(record.getId(), document.getId());
@@ -439,6 +440,7 @@ public class FactRecordConverterTest {
     assertEquals(record.getTrust(), document.getTrust(), 0.0f);
     assertEquals(record.getTimestamp(), document.getTimestamp());
     assertEquals(record.getLastSeenTimestamp(), document.getLastSeenTimestamp());
+    assertEquals(SetUtils.set(record.getFlags(), Enum::name), SetUtils.set(document.getFlags(), Enum::name));
   }
 
   @Test

@@ -90,6 +90,9 @@
         "acl": {
           "type": "keyword"
         },
+        "flags": {
+          "type": "keyword"
+        },
         "objectCount": {
           "type": "byte"
         },

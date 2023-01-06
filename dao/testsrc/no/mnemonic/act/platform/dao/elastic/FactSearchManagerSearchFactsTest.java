@@ -350,9 +350,28 @@ public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
   }
 
   @Test
+  public void testSearchFactsFilterByStartTimestampDefaultSettingsIncludesTimeGlobal() {
+    indexFact(d -> d.setTimestamp(DAY2).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.addFlag(FactDocument.Flag.TimeGlobalIndex).setTimestamp(DAY2 - 2000).setLastSeenTimestamp(DAY2 - 2000));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setStartTimestamp(DAY2 - 1000));
+    // Both facts should match because startTimestamp is ignored on time global facts.
+    testSearchFacts(criteria, 2);
+  }
+
+  @Test
   public void testSearchFactsFilterByEndTimestampDefaultSettings() {
     FactDocument accessibleFact = indexFact(d -> d.setTimestamp(DAY2).setLastSeenTimestamp(DAY2));
     indexFact(d -> d.setTimestamp(DAY2 + 2000).setLastSeenTimestamp(DAY2 + 2000));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setEndTimestamp(DAY2 + 1000));
+    testSearchFacts(criteria, accessibleFact);
+  }
+
+  @Test
+  public void testSearchFactsFilterByEndTimestampDefaultSettingsExcludesTimeGlobal() {
+    FactDocument accessibleFact = indexFact(d -> d.setTimestamp(DAY2).setLastSeenTimestamp(DAY2));
+    indexFact(d -> d.addFlag(FactDocument.Flag.TimeGlobalIndex).setTimestamp(DAY2 + 2000).setLastSeenTimestamp(DAY2 + 2000));
 
     FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setEndTimestamp(DAY2 + 1000));
     testSearchFacts(criteria, accessibleFact);
