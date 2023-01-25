@@ -163,7 +163,7 @@
         <version>${maven.enforcer.version}</version>
         <executions>
           <execution>
-            <id>enforce-maven</id>
+            <id>enforce-build-requirements</id>
             <goals>
               <goal>enforce</goal>
             </goals>
@@ -172,6 +172,10 @@
                 <requireMavenVersion>
                   <version>3.1.0</version>
                 </requireMavenVersion>
+                <!-- At least JDK11 is required for building. -->
+                <requireJavaVersion>
+                  <version>11.0.0</version>
+                </requireJavaVersion>
               </rules>
             </configuration>
           </execution>
@@ -217,6 +221,19 @@
             <!-- Execute integration tests by default. -->
             <include>**/*IT.java</include>
           </includes>
+          <!-- The following options are needed to be able to execute the integration tests with JDK17.
+               It contains the same configuration as init.sh for executing the application. -->
+          <argLine>
+            --add-modules java.se
+            --add-exports java.base/jdk.internal.ref=ALL-UNNAMED
+            --add-opens java.base/java.lang=ALL-UNNAMED
+            --add-opens java.base/java.nio=ALL-UNNAMED
+            --add-opens java.base/sun.nio.ch=ALL-UNNAMED
+            --add-opens java.management/sun.management=ALL-UNNAMED
+            --add-opens jdk.management/com.ibm.lang.management.internal=ALL-UNNAMED
+            --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+            --add-opens java.base/java.util=ALL-UNNAMED
+          </argLine>
         </configuration>
       </plugin>
       <plugin>
