@@ -103,9 +103,13 @@ start() {
   fi
 
   JAVA_VERSION=`$JAVA_BIN -version 2>&1 | grep -i version | cut -d '"' -f 2`
-  if [[ $JAVA_VERSION == 1.8* ]]; then
-    # With JDK8 unset this variable because the parameters are not supported by the JVM (and not needed).
-    JAVA_JPMS_OPTS=""
+  # For Java 9 and above the first digit of JAVA_VERSION will be the major version (e.g. version 9.0.0).
+  # For Java 8 and lower JAVA_MAJOR_VERSION will be 1 (e.g. version 1.8.0).
+  # The comparison will work correctly because the minimum required version is Java 11.
+  JAVA_MAJOR_VERSION=`echo $JAVA_VERSION | cut -d '.' -f 1`
+  if [[ $JAVA_MAJOR_VERSION -lt 11 ]]; then
+    echo "Java version $JAVA_VERSION is not supported. Minimum required version is Java 11."
+    exit 1
   fi
 
   echo "Executing application on Java version $JAVA_VERSION."
