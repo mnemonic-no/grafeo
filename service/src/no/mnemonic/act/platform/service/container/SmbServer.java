@@ -67,7 +67,7 @@ public class SmbServer implements LifecycleAspect {
             .setContextFactoryName(ACTIVEMQ_CONTEXT_FACTORY)
             .setConnectionFactoryName(ACTIVEMQ_CONNECTION_FACTORY)
             .setConnectionProperty("queue." + queueName, queueName)
-            .setDestinationName(queueName)
+            .setQueueName(queueName)
             .setContextURL(contextURL)
             .setUsername(userName)
             .setPassword(password)

@@ -42,20 +42,20 @@
 
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.4.20</mnemonic.commons.version>
-    <mnemonic.messaging.version>1.3.23</mnemonic.messaging.version>
+    <mnemonic.messaging.version>1.3.25</mnemonic.messaging.version>
     <mnemonic.services.common.version>0.3.46</mnemonic.services.common.version>
-    <mnemonic.services.triggers.version>0.0.13</mnemonic.services.triggers.version>
+    <mnemonic.services.triggers.version>0.0.14</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
     <activemq.version>5.17.3</activemq.version>
     <cassandra.version>4.15.0</cassandra.version>
     <disruptor.version>3.4.4</disruptor.version>
-    <elastic.search.version>7.16.3</elastic.search.version>
+    <elastic.search.version>7.17.9</elastic.search.version>
     <guava.version>31.1-jre</guava.version>
     <guice.version>5.1.0</guice.version>
     <hazelcast.version>3.12.13</hazelcast.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
-    <jackson.version>2.14.1</jackson.version>
+    <jackson.version>2.14.2</jackson.version>
     <jakarta.el.version>3.0.4</jakarta.el.version>
     <jakarta.inject.version>1.0.5</jakarta.inject.version>
     <jakarta.validation.version>2.0.2</jakarta.validation.version>
@@ -64,20 +64,16 @@
     <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <log4j.version>2.19.0</log4j.version>
-    <mockito.version>5.0.0</mockito.version>
-    <picocli.version>4.7.0</picocli.version>
+    <mockito.version>5.1.1</mockito.version>
+    <picocli.version>4.7.1</picocli.version>
     <resteasy.version>5.0.5.Final</resteasy.version>
     <swagger.version>1.6.9</swagger.version>
-    <tinkerpop.version>3.6.1</tinkerpop.version>
+    <tinkerpop.version>3.6.2</tinkerpop.version>
 
     <!-- force upgrade for transitive dependencies -->
     <commons.codec.version>1.15</commons.codec.version>
-    <commons.configuration.version>2.8.0</commons.configuration.version>
-    <commons.text.version>1.10.0</commons.text.version>
     <groovy.version>2.5.21</groovy.version>
     <httpclient.version>4.5.14</httpclient.version>
-    <netty.version>4.1.87.Final</netty.version>
-    <snakeyaml.version>1.33</snakeyaml.version>
     <xstream.version>1.4.20</xstream.version>
 
     <!-- build dependencies -->
@@ -106,26 +102,6 @@
         <artifactId>groovy</artifactId>
         <version>${groovy.version}</version>
         <classifier>indy</classifier>
-      </dependency>
-      <!-- Force a newer version of commons-configuration (used by TinkerPop) in order to fix CVE-2022-33980. -->
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-configuration2</artifactId>
-        <version>${commons.configuration.version}</version>
-      </dependency>
-      <!-- Force a newer version of commons-text (used by TinkerPop) in order to fix CVE-2022-42889. -->
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-text</artifactId>
-        <version>${commons.text.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <!-- Force a newer version of SnakeYAML (used by TinkerPop) in order to fix security warnings. -->
-      <dependency>
-        <groupId>org.yaml</groupId>
-        <artifactId>snakeyaml</artifactId>
-        <version>${snakeyaml.version}</version>
-        <scope>runtime</scope>
       </dependency>
       <!-- Force a newer version of XStream in order to fix security warnings. -->
       <dependency>

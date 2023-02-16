@@ -69,8 +69,7 @@ import java.util.stream.Collectors;
 
 import static no.mnemonic.act.platform.dao.elastic.helpers.DailyIndexNamesGenerator.formatIndexName;
 import static no.mnemonic.act.platform.dao.elastic.helpers.DailyIndexNamesGenerator.generateIndexNames;
-import static org.elasticsearch.action.support.IndicesOptions.Option.ALLOW_NO_INDICES;
-import static org.elasticsearch.action.support.IndicesOptions.Option.IGNORE_UNAVAILABLE;
+import static org.elasticsearch.action.support.IndicesOptions.Option.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 
@@ -123,8 +122,9 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private static final ObjectWriter FACT_DOCUMENT_WRITER = MAPPER.writerFor(FactDocument.class);
 
   private static final IndicesOptions INDICES_OPTIONS = new IndicesOptions(
-          // Required in case the user specifies a time period where no indices exist.
-          EnumSet.of(ALLOW_NO_INDICES, IGNORE_UNAVAILABLE),
+          // ALLOW_NO_INDICES and IGNORE_UNAVAILABLE are required in case the user specifies a time period where no indices exist.
+          // IGNORE_THROTTLED is added to avoid a deprecation warning on every request. It's safe because ACT doesn't use frozen indices.
+          EnumSet.of(ALLOW_NO_INDICES, IGNORE_THROTTLED, IGNORE_UNAVAILABLE),
           // Every index is explicitly selected, thus, now wildcard expansion is required.
           IndicesOptions.WildcardStates.NONE
   );

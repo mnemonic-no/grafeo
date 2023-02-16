@@ -20,7 +20,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 * Java 11 or newer for running the application.
 * Maven for managing dependencies, building the code, running the unit tests, etc.
 * An installation of [Apache Cassandra](https://cassandra.apache.org/) for storage. Any version of Apache Cassandra 3.x or 4.x is supported.
-* An installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch) for indexing. Version 7.16 of Elasticsearch is required.
+* An installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch) for indexing. Version 7.17 of Elasticsearch is required.
 * (Optional) An installation of [ActiveMQ](https://activemq.apache.org/) for the multi-node environment.
 * (Optional) An installation of [Apache Kafka](https://kafka.apache.org/) for data centre replication.
 * (Optional) An installation of [Docker](https://www.docker.com/) for running the integration tests.
@@ -33,7 +33,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 ##### Testing
 
 * Download a Cassandra image by `docker pull cassandra`.
-* Download an Elasticsearch image by `docker pull docker.elastic.co/elasticsearch/elasticsearch:7.16.3`.
+* Download an Elasticsearch image by `docker pull docker.elastic.co/elasticsearch/elasticsearch:7.17.9`.
 * Download an ActiveMQ image by `docker pull webcenter/activemq`.
 * Execute `mvn clean install` for running all tests including integration tests.
 * Execute `mvn clean install -DskipSlowTests` for skipping the integration tests.
