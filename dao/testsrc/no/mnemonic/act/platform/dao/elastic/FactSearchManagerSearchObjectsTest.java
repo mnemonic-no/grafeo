@@ -158,6 +158,49 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
   }
 
   @Test
+  public void testSearchObjectsFilterByMinimumFactsCount() {
+    ObjectDocument accessibleObject = createObjectDocument();
+    ObjectDocument inaccessibleObject = createObjectDocument();
+    indexFact(d -> d.setObjects(set(accessibleObject)));
+    indexFact(d -> d.setObjects(set(accessibleObject)));
+    indexFact(d -> d.setObjects(set(inaccessibleObject)));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setMinimumFactsCount(2));
+    testSearchObjectsWithoutCount(criteria, accessibleObject);
+  }
+
+  @Test
+  public void testSearchObjectsFilterByMaximumFactsCount() {
+    ObjectDocument accessibleObject = createObjectDocument();
+    ObjectDocument inaccessibleObject = createObjectDocument();
+    indexFact(d -> d.setObjects(set(accessibleObject)));
+    indexFact(d -> d.setObjects(set(inaccessibleObject)));
+    indexFact(d -> d.setObjects(set(inaccessibleObject)));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.setMaximumFactsCount(1));
+    testSearchObjectsWithoutCount(criteria, accessibleObject);
+  }
+
+  @Test
+  public void testSearchObjectsFilterByMinMaxFactsCountWithAdditionalFactFilter() {
+    UUID accessibleFactTypeID = UUID.randomUUID();
+    UUID inaccessibleFactTypeID = UUID.randomUUID();
+    ObjectDocument accessibleObject = createObjectDocument();
+    ObjectDocument inaccessibleObject = createObjectDocument();
+    indexFact(d -> d.setTypeID(accessibleFactTypeID).setObjects(set(accessibleObject)));
+    indexFact(d -> d.setTypeID(accessibleFactTypeID).setObjects(set(accessibleObject)));
+    indexFact(d -> d.setTypeID(inaccessibleFactTypeID).setObjects(set(accessibleObject)));
+    indexFact(d -> d.setTypeID(accessibleFactTypeID).setObjects(set(inaccessibleObject)));
+    indexFact(d -> d.setTypeID(inaccessibleFactTypeID).setObjects(set(inaccessibleObject)));
+    indexFact(d -> d.setTypeID(inaccessibleFactTypeID).setObjects(set(inaccessibleObject)));
+
+    FactSearchCriteria criteria = createFactSearchCriteria(b -> b.addFactTypeID(accessibleFactTypeID)
+            .setMinimumFactsCount(2)
+            .setMaximumFactsCount(2));
+    testSearchObjectsWithoutCount(criteria, accessibleObject);
+  }
+
+  @Test
   public void testSearchObjectsReturnUniqueObjects() {
     ObjectDocument accessibleObject = createObjectDocument();
     indexFact(d -> d.setObjects(set(accessibleObject)));
@@ -214,6 +257,12 @@ public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
   private void testSearchObjects(FactSearchCriteria criteria, ObjectDocument accessibleObject) {
     SearchResult<UUID> result = getFactSearchManager().searchObjects(criteria);
     assertEquals(1, result.getCount());
+    assertEquals(1, result.getValues().size());
+    assertEquals(accessibleObject.getId(), result.getValues().get(0));
+  }
+
+  private void testSearchObjectsWithoutCount(FactSearchCriteria criteria, ObjectDocument accessibleObject) {
+    SearchResult<UUID> result = getFactSearchManager().searchObjects(criteria);
     assertEquals(1, result.getValues().size());
     assertEquals(accessibleObject.getId(), result.getValues().get(0));
   }

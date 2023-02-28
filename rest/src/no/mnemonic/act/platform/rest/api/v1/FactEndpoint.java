@@ -80,8 +80,8 @@ public class FactEndpoint {
                   "level deep, i.e. only Objects directly linked to a Fact will be searched. Only the Facts a user has " +
                   "access to will be returned.\n\n" +
                   "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
-                  "Fact organization, Fact origin, Fact value and Object value. The 'keywords' parameter must match one " +
-                  "of those fields. The following search features are available when using this parameter.\n\n" +
+                  "Fact value and Object value. The 'keywords' parameter must match one of those fields. The following " +
+                  "search features are available when using this parameter.\n\n" +
                   "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
                   "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
                   "* A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.\n\n" +

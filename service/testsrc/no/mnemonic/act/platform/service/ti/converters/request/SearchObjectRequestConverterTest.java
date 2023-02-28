@@ -186,6 +186,16 @@ public class SearchObjectRequestConverterTest {
   }
 
   @Test
+  public void testConvertRequestFilterOnMinMaxFactsCount() throws Exception {
+    FactSearchCriteria criteria = converter.apply(new SearchObjectRequest()
+            .setMinimumFactsCount(1)
+            .setMaximumFactsCount(2)
+    );
+    assertEquals(1, (int) criteria.getMinimumFactsCount());
+    assertEquals(2, (int) criteria.getMaximumFactsCount());
+  }
+
+  @Test
   public void testConvertRequestWithLimit() throws Exception {
     FactSearchCriteria criteria = converter.apply(new SearchObjectRequest().setLimit(123));
     assertEquals(123, criteria.getLimit());

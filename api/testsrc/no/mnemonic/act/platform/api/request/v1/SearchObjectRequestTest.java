@@ -32,6 +32,8 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
             "dimension : 'trust'," +
             "before : '2016-11-30T15:47:00Z'," +
             "after : '2016-11-30T15:47:01Z'," +
+            "minimumFactsCount : 1," +
+            "maximumFactsCount : 2," +
             "limit : 25," +
             "includeStatistics : true" +
             "}", objectID, factID);
@@ -51,6 +53,8 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
     assertEquals(Dimension.trust, request.getDimension());
     assertEquals(1480520820000L, request.getBefore().longValue());
     assertEquals(1480520821000L, request.getAfter().longValue());
+    assertEquals(1, (int) request.getMinimumFactsCount());
+    assertEquals(2, (int) request.getMaximumFactsCount());
     assertEquals(25, request.getLimit().intValue());
     assertTrue(request.isIncludeStatistics());
   }
@@ -76,12 +80,16 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
     Set<ConstraintViolation<SearchObjectRequest>> violations = getValidator().validate(new SearchObjectRequest()
             .setMinimum(-0.1f)
             .setMaximum(-0.2f)
+            .setMinimumFactsCount(-1)
+            .setMaximumFactsCount(-1)
             .setLimit(-1)
     );
 
-    assertEquals(3, violations.size());
+    assertEquals(5, violations.size());
     assertPropertyInvalid(violations, "minimum");
     assertPropertyInvalid(violations, "maximum");
+    assertPropertyInvalid(violations, "minimumFactsCount");
+    assertPropertyInvalid(violations, "maximumFactsCount");
     assertPropertyInvalid(violations, "limit");
   }
 

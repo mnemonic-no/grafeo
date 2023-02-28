@@ -46,6 +46,8 @@ public class SearchObjectRequestConverter {
             .addNumberFieldStrategy(ObjectUtils.ifNotNull(request.getDimension(),
                     dimension -> FactSearchCriteria.NumberFieldStrategy.valueOf(dimension.name()),
                     FactSearchCriteria.NumberFieldStrategy.certainty))
+            .setMinimumFactsCount(request.getMinimumFactsCount())
+            .setMaximumFactsCount(request.getMaximumFactsCount())
             .setLimit(ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT))
             .setAccessControlCriteria(accessControlCriteriaResolver.get())
             .setIndexSelectCriteria(indexSelectCriteriaResolver.validateAndCreateCriteria(request.getStartTimestamp(), request.getEndTimestamp()))

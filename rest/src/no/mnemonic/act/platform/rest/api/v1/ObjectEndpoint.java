@@ -237,15 +237,15 @@ public class ObjectEndpoint {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(
           value = "Search for Objects.",
-          notes = "This operation searches for Objects and returns any matching Objects. The result includes statistics " +
-                  "about the Facts linked to the returned Objects. With the request body the user can specify which " +
-                  "Objects will be returned. Searching against linked Facts will only be performed one level deep, " +
+          notes = "This operation searches for Objects and returns any matching Objects. The result optionally includes " +
+                  "statistics about the Facts linked to the returned Objects. With the request body the user can specify " +
+                  "which Objects will be returned. Searching against linked Facts will only be performed one level deep, " +
                   "i.e. only Facts directly linked to an Object will be searched. The result will be restricted to the " +
                   "Objects and Facts a user has access to. In order to return an Object a user needs to have access to " +
                   "at least one Fact linked to the Object.\n\n" +
                   "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
-                  "Fact organization, Fact origin, Fact value and Object value. The 'keywords' parameter must match one " +
-                  "of those fields. The following search features are available when using this parameter.\n\n" +
+                  "Fact value and Object value. The 'keywords' parameter must match one of those fields. The following " +
+                  "search features are available when using this parameter.\n\n" +
                   "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
                   "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
                   "* A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.\n\n" +
@@ -254,10 +254,14 @@ public class ObjectEndpoint {
                   "'factType' or 'objectType' in addition.\n\n" +
                   "In contrast to the fuzzy search above other filter parameters such as 'objectValue' and 'factValue' " +
                   "require an exact match. When searching on 'objectType', 'factType', 'organization' or 'origin' it is " +
-                  "possible to either specify the name or UUID of the referenced entity. It is allowed to request an " +
-                  "unlimited search result (i.e. 'limit' parameter set to 0), however, the API will enforce a maximum " +
-                  "upper limit in order to protect system resources. In this case the search should be narrowed down " +
-                  "using additional search parameters.\n\n" +
+                  "possible to either specify the name or UUID of the referenced entity. With the 'minimumFactsCount' and " +
+                  "'maximumFactsCount' parameters it is possible to exclude Objects based on the number of Facts bound to " +
+                  "them. The count is calculated based on any applied Fact filters, e.g. if the search is restricted to " +
+                  "Facts of a specific FactType only those Facts will be counted. Be aware that the returned 'count' in the " +
+                  "response will be inaccurate when using 'minimumFactsCount' or 'maximumFactsCount'.\n\n" +
+                  "It is allowed to request an unlimited search result (i.e. 'limit' parameter set to 0), however, the API " +
+                  "will enforce a maximum upper limit in order to protect system resources. In this case the search should " +
+                  "be narrowed down using additional search parameters.\n\n" +
                   "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
           response = Object.class,
           responseContainer = "list"

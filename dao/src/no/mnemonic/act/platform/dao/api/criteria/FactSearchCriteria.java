@@ -120,10 +120,10 @@ public class FactSearchCriteria {
   private final Set<NumberFieldStrategy> numberFieldStrategy;
   private final MatchStrategy numberMatchStrategy;
 
-  // Number of objects associated with fact
-  private final FactBinding factBinding;
-
   // Additional search options.
+  private final FactBinding factBinding;
+  private final Integer minimumFactsCount;
+  private final Integer maximumFactsCount;
   private final int limit;
 
   // Fields required for access control.
@@ -153,6 +153,8 @@ public class FactSearchCriteria {
                              Set<NumberFieldStrategy> numberFieldStrategy,
                              MatchStrategy numberMatchStrategy,
                              FactBinding factBinding,
+                             Integer minimumFactsCount,
+                             Integer maximumFactsCount,
                              int limit,
                              AccessControlCriteria accessControlCriteria,
                              IndexSelectCriteria indexSelectCriteria) {
@@ -174,6 +176,8 @@ public class FactSearchCriteria {
     this.minNumber = minNumber;
     this.maxNumber = maxNumber;
     this.factBinding = factBinding;
+    this.minimumFactsCount = minimumFactsCount;
+    this.maximumFactsCount = maximumFactsCount;
     this.limit = limit;
     this.accessControlCriteria = accessControlCriteria;
     this.indexSelectCriteria = indexSelectCriteria;
@@ -389,6 +393,28 @@ public class FactSearchCriteria {
   }
 
   /**
+   * Filter Objects which have a minimum amount of bound Facts.
+   * <p>
+   * The amount of bound Facts is calculated after filtering out Facts. Note that this filter is only applied to Object search.
+   *
+   * @return Minimum amount of bound Facts
+   */
+  public Integer getMinimumFactsCount() {
+    return minimumFactsCount;
+  }
+
+  /**
+   * Filter Objects which have a maximum amount of bound Facts.
+   * <p>
+   * The amount of bound Facts is calculated after filtering out Facts. Note that this filter is only applied to Object search.
+   *
+   * @return Maximum amount of bound Facts
+   */
+  public Integer getMaximumFactsCount() {
+    return maximumFactsCount;
+  }
+
+  /**
    * Restrict the maximum amount of returned Facts. The amount actually returned might be smaller.
    *
    * @return Maximum amount of returned Facts
@@ -435,7 +461,9 @@ public class FactSearchCriteria {
             startTimestamp == null &&
             endTimestamp == null &&
             minNumber == null &&
-            maxNumber == null;
+            maxNumber == null &&
+            minimumFactsCount == null &&
+            maximumFactsCount == null;
   }
 
   /**
@@ -467,6 +495,8 @@ public class FactSearchCriteria {
             .setNumberFieldStrategy(numberFieldStrategy)
             .setNumberMatchStrategy(numberMatchStrategy)
             .setFactBinding(factBinding)
+            .setMinimumFactsCount(minimumFactsCount)
+            .setMaximumFactsCount(maximumFactsCount)
             .setLimit(limit)
             .setAccessControlCriteria(accessControlCriteria)
             .setIndexSelectCriteria(indexSelectCriteria);
@@ -505,9 +535,10 @@ public class FactSearchCriteria {
     private Set<NumberFieldStrategy> numberFieldStrategy;
     private MatchStrategy numberMatchStrategy;
 
-    private FactBinding factBinding;
-
     // Additional search options.
+    private FactBinding factBinding;
+    private Integer minimumFactsCount;
+    private Integer maximumFactsCount;
     private int limit;
 
     // Fields required for access control.
@@ -522,8 +553,8 @@ public class FactSearchCriteria {
     public FactSearchCriteria build() {
       return new FactSearchCriteria(factID, factTypeID, factValue, inReferenceTo, organizationID, originID, objectID, objectTypeID,
               objectValue, keywords, keywordFieldStrategy, keywordMatchStrategy, startTimestamp, endTimestamp, timeFieldStrategy,
-              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, factBinding, limit,
-              accessControlCriteria, indexSelectCriteria);
+              timeMatchStrategy, minNumber, maxNumber, numberFieldStrategy, numberMatchStrategy, factBinding, minimumFactsCount,
+              maximumFactsCount, limit, accessControlCriteria, indexSelectCriteria);
     }
 
     public Builder setFactID(Set<UUID> factID) {
@@ -688,6 +719,16 @@ public class FactSearchCriteria {
 
     public Builder setFactBinding(FactBinding factBinding) {
       this.factBinding = factBinding;
+      return this;
+    }
+
+    public Builder setMinimumFactsCount(Integer minimumFactsCount) {
+      this.minimumFactsCount = minimumFactsCount;
+      return this;
+    }
+
+    public Builder setMaximumFactsCount(Integer maximumFactsCount) {
+      this.maximumFactsCount = maximumFactsCount;
       return this;
     }
 

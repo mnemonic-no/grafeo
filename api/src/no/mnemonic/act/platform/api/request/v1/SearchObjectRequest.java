@@ -56,6 +56,12 @@ public class SearchObjectRequest implements TimeFieldSearchRequest, ValidatingRe
   // Annotations are specified on the TimeFieldSearchRequest interface.
   private TimeMatchStrategy timeMatchStrategy;
   private Set<TimeFieldStrategy> timeFieldStrategy;
+  @ApiModelProperty(value = "Only return Objects where the amount of Facts after filtering is above a specific value (inclusive)")
+  @Min(0)
+  private Integer minimumFactsCount;
+  @ApiModelProperty(value = "Only return Objects where the amount of Facts after filtering is below a specific value (inclusive)")
+  @Min(0)
+  private Integer maximumFactsCount;
   @ApiModelProperty(value = "Limit the number of returned Objects (default 25, 0 means all)", example = "25")
   @Min(0)
   private Integer limit;
@@ -268,6 +274,24 @@ public class SearchObjectRequest implements TimeFieldSearchRequest, ValidatingRe
 
   public SearchObjectRequest addTimeFieldStrategy(TimeFieldStrategy strategy) {
     this.timeFieldStrategy = SetUtils.addToSet(this.timeFieldStrategy, strategy);
+    return this;
+  }
+
+  public Integer getMinimumFactsCount() {
+    return minimumFactsCount;
+  }
+
+  public SearchObjectRequest setMinimumFactsCount(Integer minimumFactsCount) {
+    this.minimumFactsCount = minimumFactsCount;
+    return this;
+  }
+
+  public Integer getMaximumFactsCount() {
+    return maximumFactsCount;
+  }
+
+  public SearchObjectRequest setMaximumFactsCount(Integer maximumFactsCount) {
+    this.maximumFactsCount = maximumFactsCount;
     return this;
   }
 

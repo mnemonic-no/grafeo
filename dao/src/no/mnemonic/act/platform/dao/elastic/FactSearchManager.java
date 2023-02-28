@@ -44,11 +44,13 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.SimpleQueryStringBuilder;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.script.Script;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.HasAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.Cardinality;
 import org.elasticsearch.search.aggregations.metrics.Max;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -59,10 +61,7 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -72,6 +71,7 @@ import static no.mnemonic.act.platform.dao.elastic.helpers.DailyIndexNamesGenera
 import static org.elasticsearch.action.support.IndicesOptions.Option.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
+import static org.elasticsearch.search.aggregations.PipelineAggregatorBuilders.bucketSelector;
 
 /**
  * Class for indexing Facts into ElasticSearch as well as for retrieving and searching indexed Facts.
@@ -110,6 +110,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private static final String OBJECTS_COUNT_AGGREGATION_NAME = "ObjectsCountAggregation";
   private static final String UNIQUE_OBJECTS_AGGREGATION_NAME = "UniqueObjectsAggregation";
   private static final String REVERSED_FACTS_AGGREGATION_NAME = "ReversedFactsAggregation";
+  private static final String MIN_MAX_FACTS_FILTERED_AGGREGATION_NAME = "MinMaxFactsFilteredAggregation";
   private static final String UNIQUE_FACT_TYPES_AGGREGATION_NAME = "UniqueFactTypesAggregation";
   private static final String FACTS_COUNT_PER_TYPE_AGGREGATION_NAME = "FactsCountPerTypeAggregation";
   private static final String MAX_LAST_ADDED_TIMESTAMP_AGGREGATION_NAME = "MaxLastAddedTimestampAggregation";
@@ -744,10 +745,32 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
                     )
                     // 4. Reduce to buckets of unique Objects by id, restricted to the search criteria's limit.
                     // This will give the actual search results.
-                    .subAggregation(terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
+                    .subAggregation(applyOptionalBucketSelector(criteria, terms(UNIQUE_OBJECTS_AGGREGATION_NAME)
                             .field("objects.id")
                             .size(calculateMaximumSize(criteria))
-                    )
+                    ))
+            );
+  }
+
+  private TermsAggregationBuilder applyOptionalBucketSelector(FactSearchCriteria criteria, TermsAggregationBuilder uniqueObjectsAggr) {
+    if (criteria.getMinimumFactsCount() == null && criteria.getMaximumFactsCount() == null) {
+      // No additional selection of buckets.
+      return uniqueObjectsAggr;
+    }
+
+    long min = ObjectUtils.ifNull(criteria.getMinimumFactsCount(), 0);
+    long max = ObjectUtils.ifNull(criteria.getMaximumFactsCount(), Integer.MAX_VALUE);
+
+    return uniqueObjectsAggr
+            // Reverse nested aggregation to have access to parent Facts.
+            .subAggregation(reverseNested(REVERSED_FACTS_AGGREGATION_NAME)
+                    // Calculate the number of Facts. The result will exclude Facts which have been filtered out previously.
+                    .subAggregation(buildFactsCountAggregation())
+            )
+            // Only select Objects, i.e. omit buckets, which have min <= count(facts) <= max.
+            .subAggregation(bucketSelector(MIN_MAX_FACTS_FILTERED_AGGREGATION_NAME,
+                    Collections.singletonMap("count", REVERSED_FACTS_AGGREGATION_NAME + ">" + FACTS_COUNT_AGGREGATION_NAME),
+                    new Script(String.format("params.count >= %d && params.count <= %d", min, max)))
             );
   }
 
