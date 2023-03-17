@@ -1,15 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>act-platform-service</artifactId>
+  <artifactId>grafeo-service</artifactId>
   <packaging>jar</packaging>
 
-  <name>ACT platform - service</name>
+  <name>grafeo - service</name>
   <description>Implementation of the service logic</description>
 
   <parent>
-    <groupId>no.mnemonic.act.platform</groupId>
-    <artifactId>parent</artifactId>
-    <version>0.0.123-SNAPSHOT</version>
+    <groupId>no.mnemonic.services.grafeo</groupId>
+    <artifactId>grafeo-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -34,28 +34,28 @@
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>
-      <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>act-platform-api</artifactId>
+      <groupId>no.mnemonic.services.grafeo</groupId>
+      <artifactId>grafeo-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>act-platform-auth</artifactId>
+      <groupId>no.mnemonic.services.grafeo</groupId>
+      <artifactId>grafeo-auth</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>act-platform-dao</artifactId>
+      <groupId>no.mnemonic.services.grafeo</groupId>
+      <artifactId>grafeo-dao</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>act-platform-seb-esengine</artifactId>
+      <groupId>no.mnemonic.services.grafeo</groupId>
+      <artifactId>grafeo-seb-esengine</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>act-platform-seb-producer</artifactId>
+      <groupId>no.mnemonic.services.grafeo</groupId>
+      <artifactId>grafeo-seb-producer</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

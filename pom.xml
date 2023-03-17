@@ -1,12 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>no.mnemonic.act.platform</groupId>
-  <artifactId>parent</artifactId>
+  <groupId>no.mnemonic.services.grafeo</groupId>
+  <artifactId>grafeo-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.0.123-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
 
-  <name>ACT platform</name>
-  <description>Open platform for collection and exchange of threat intelligence information</description>
+  <name>grafeo</name>
+  <description>Open platform for modelling, collection and exchange of knowledge</description>
   <url>https://github.com/mnemonic-no/act-platform</url>
   <inceptionYear>2017</inceptionYear>
 

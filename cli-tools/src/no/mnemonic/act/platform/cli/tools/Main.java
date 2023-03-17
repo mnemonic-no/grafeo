@@ -8,7 +8,7 @@ import picocli.CommandLine.IVersionProvider;
 
 @Command(
         description = "Command line tools for managing the application",
-        name = "act-platform-cli-tools",
+        name = "grafeo-cli-tools",
         mixinStandardHelpOptions = true,
         scope = CommandLine.ScopeType.INHERIT,
         subcommands = {MigrateCommand.class, ReindexCommand.class},

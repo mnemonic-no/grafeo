@@ -1,15 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>act-platform-seb-esengine</artifactId>
+  <artifactId>grafeo-seb-esengine</artifactId>
   <packaging>jar</packaging>
 
-  <name>ACT platform - seb-esengine</name>
+  <name>grafeo - seb-esengine</name>
   <description>Component reading messages from the Service Event Bus (SEB) and indexes data into ElasticSearch</description>
 
   <parent>
-    <groupId>no.mnemonic.act.platform</groupId>
-    <artifactId>parent</artifactId>
-    <version>0.0.123-SNAPSHOT</version>
+    <groupId>no.mnemonic.services.grafeo</groupId>
+    <artifactId>grafeo-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -28,13 +28,13 @@
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>
-      <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>act-platform-dao</artifactId>
+      <groupId>no.mnemonic.services.grafeo</groupId>
+      <artifactId>grafeo-dao</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>act-platform-seb-model</artifactId>
+      <groupId>no.mnemonic.services.grafeo</groupId>
+      <artifactId>grafeo-seb-model</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

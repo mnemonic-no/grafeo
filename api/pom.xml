@@ -1,15 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>act-platform-api</artifactId>
+  <artifactId>grafeo-api</artifactId>
   <packaging>jar</packaging>
 
-  <name>ACT platform - api</name>
+  <name>grafeo - api</name>
   <description>Definition of the Service and REST APIs</description>
 
   <parent>
-    <groupId>no.mnemonic.act.platform</groupId>
-    <artifactId>parent</artifactId>
-    <version>0.0.123-SNAPSHOT</version>
+    <groupId>no.mnemonic.services.grafeo</groupId>
+    <artifactId>grafeo-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -36,8 +36,8 @@
   <dependencies>
     <!-- runtime dependencies -->
     <dependency>
-      <groupId>no.mnemonic.act.platform</groupId>
-      <artifactId>act-platform-utilities</artifactId>
+      <groupId>no.mnemonic.services.grafeo</groupId>
+      <artifactId>grafeo-utilities</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
