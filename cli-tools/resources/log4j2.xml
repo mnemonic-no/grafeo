@@ -20,7 +20,7 @@
   </Appenders>
   <Loggers>
     <!-- Write everything related to the CLI application to stdout. -->
-    <AsyncLogger name="no.mnemonic.act.platform.cli.tools" level="info" additivity="true">
+    <AsyncLogger name="no.mnemonic.services.grafeo.cli.tools" level="info" additivity="true">
       <AppenderRef ref="stdout"/>
     </AsyncLogger>
     <!-- Everything else goes into a file for further debugging purposes. -->

@@ -2,7 +2,7 @@
 id: 290dc4c8-6b2f-48ac-ad0e-805993689edb
 name: IntegrationTestAction
 description: Action used during integration tests
-triggerActionClass: no.mnemonic.act.platform.test.integration.FactIT$TestTriggerAction
+triggerActionClass: no.mnemonic.services.grafeo.test.integration.FactIT$TestTriggerAction
 requiredPermission: allowIntegrationTestAction
 
 ...

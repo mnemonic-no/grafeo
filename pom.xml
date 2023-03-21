@@ -409,9 +409,9 @@
                 <!-- Exclude all integration tests. -->
                 <exclude>**/*IT.java</exclude>
                 <!-- Exclude all Cassandra tests. -->
-                <exclude>no/mnemonic/act/platform/dao/cassandra/*</exclude>
+                <exclude>no/mnemonic/services/grafeo/dao/cassandra/*</exclude>
                 <!-- Exclude all ElasticSearch tests. -->
-                <exclude>no/mnemonic/act/platform/dao/elastic/*</exclude>
+                <exclude>no/mnemonic/services/grafeo/dao/elastic/*</exclude>
               </excludes>
             </configuration>
           </plugin>
