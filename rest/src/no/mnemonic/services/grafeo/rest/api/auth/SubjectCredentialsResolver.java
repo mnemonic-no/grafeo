@@ -8,11 +8,14 @@ import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
 
 /**
- * A {@link CredentialsResolver} implementation which identifies a user based on the "ACT-User-ID" HTTP header.
+ * A {@link CredentialsResolver} implementation which identifies a user based on the "Grafeo-User-ID" HTTP header.
  */
 public class SubjectCredentialsResolver implements CredentialsResolver {
 
+  // The "ACT-User-ID" header is deprecated in favour of the "Grafeo-User-ID" header.
+  // For now both are supported to not break existing clients. This will be removed in the future!
   private static final String ACT_USER_ID_HEADER = "ACT-User-ID";
+  private static final String GRAFEO_USER_ID_HEADER = "Grafeo-User-ID";
 
   private final HttpHeaders headers;
 
@@ -23,15 +26,26 @@ public class SubjectCredentialsResolver implements CredentialsResolver {
 
   @Override
   public Credentials getCredentials() {
-    String header = headers.getHeaderString(ACT_USER_ID_HEADER);
-    if (StringUtils.isBlank(header) || parseUserID(header) == -1) {
-      // Rely on service to validate credentials and reject unauthenticated requests.
-      return null;
-    }
+    // Prioritize "Grafeo-User-ID" header.
+    String grafeoHeader = headers.getHeaderString(GRAFEO_USER_ID_HEADER);
+    if (isHeaderSet(grafeoHeader)) return createCredentials(grafeoHeader);
 
+    // Still support "ACT-User-ID" header for backwards compatibility.
+    String actHeader = headers.getHeaderString(ACT_USER_ID_HEADER);
+    if (isHeaderSet(actHeader)) return createCredentials(actHeader);
+
+    // Rely on service to validate credentials and reject unauthenticated requests.
+    return null;
+  }
+
+  private SubjectCredentials createCredentials(String header) {
     return SubjectCredentials.builder()
             .setSubjectID(parseUserID(header))
             .build();
+  }
+
+  private boolean isHeaderSet(String header) {
+    return !StringUtils.isBlank(header) && parseUserID(header) != -1;
   }
 
   private long parseUserID(String userID) {

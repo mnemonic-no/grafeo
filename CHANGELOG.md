@@ -34,6 +34,8 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 
 ## [Miscellaneous]
 ### Added
+- (2023-03-23) Added support for `Grafeo-User-ID` HTTP header as a replacement for the `ACT-User-ID` HTTP header.
+Clients need to replace `ACT-User-ID` with `Grafeo-User-ID`.
 - (2023-02-28) Added parameters `minimumFactsCount` and `maximumFactsCount` to `POST /v1/object/search` and
 `POST /v1/traverse/objects/search` to be able to filter Objects based on the amount of Facts bound to them.
 - (2022-11-18) Added parameters `startTimestamp`, `endTimestamp`, `timeFieldStrategy` and `timeMatchStrategy` to all search

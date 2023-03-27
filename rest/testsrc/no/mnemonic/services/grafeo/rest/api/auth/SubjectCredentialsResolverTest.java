@@ -26,6 +26,23 @@ public class SubjectCredentialsResolverTest {
   }
 
   @Test
+  public void testGrafeoUserIdIsSetInRequestHeader() {
+    when(httpHeaders.getHeaderString("Grafeo-User-ID")).thenReturn("1");
+
+    RequestHeader rh = resolver.getRequestHeader();
+
+    assertNotNull(rh.getCredentials());
+    assertTrue(rh.getCredentials() instanceof SubjectCredentials);
+    assertEquals(1, ((SubjectCredentials) rh.getCredentials()).getSubjectID());
+  }
+
+  @Test
+  public void testGrafeoUserIdOmitsNegativeId() {
+    when(httpHeaders.getHeaderString("Grafeo-User-ID")).thenReturn("-1");
+    assertNull(resolver.getRequestHeader().getCredentials());
+  }
+
+  @Test
   public void testActUserIdIsSetInRequestHeader() {
     when(httpHeaders.getHeaderString("ACT-User-ID")).thenReturn("1");
 
@@ -37,13 +54,13 @@ public class SubjectCredentialsResolverTest {
   }
 
   @Test
-  public void testActUserIdOmittedHeader() {
+  public void testActUserIdOmitsNegativeId() {
+    when(httpHeaders.getHeaderString("ACT-User-ID")).thenReturn("-1");
     assertNull(resolver.getRequestHeader().getCredentials());
   }
 
   @Test
-  public void testActUserIdOmitsNegativeId() {
-    when(httpHeaders.getHeaderString("ACT-User-ID")).thenReturn("-1");
+  public void testOmittedHeaders() {
     assertNull(resolver.getRequestHeader().getCredentials());
   }
 }

@@ -31,7 +31,7 @@ public class CorsFilterFeature implements Feature {
     // Allow the following HTTP methods.
     filter.setAllowedMethods("GET, POST, PUT, DELETE");
     // Allow the following headers (in addition to CORS-safelisted headers).
-    filter.setAllowedHeaders("ACT-User-ID, Content-Type");
+    filter.setAllowedHeaders("ACT-User-ID, Content-Type, Grafeo-User-ID");
     // Allow the browser to send credentials, i.e. cookies.
     filter.setAllowCredentials(true);
     // Allow the browser to cache results of preflight requests for 1 minute.

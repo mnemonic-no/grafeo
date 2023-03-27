@@ -27,7 +27,7 @@ public class CorsFilterFeatureTest extends AbstractEndpointTest {
     when(getTiService().getFact(any(), isA(GetFactByIdRequest.class))).thenReturn(Fact.builder().build());
 
     Response response = target("/v1/fact/uuid/" + UUID.randomUUID()).request()
-            .header("ACT-User-ID", 1)
+            .header("Grafeo-User-ID", 1)
             .header("origin", allowedOrigin)
             .get();
     assertEquals(200, response.getStatus());
@@ -41,7 +41,7 @@ public class CorsFilterFeatureTest extends AbstractEndpointTest {
     when(getTiService().getFact(any(), isA(GetFactByIdRequest.class))).thenThrow(ObjectNotFoundException.class);
 
     Response response = target("/v1/fact/uuid/" + UUID.randomUUID()).request()
-            .header("ACT-User-ID", 1)
+            .header("Grafeo-User-ID", 1)
             .header("origin", allowedOrigin)
             .get();
     assertEquals(404, response.getStatus());
@@ -55,7 +55,7 @@ public class CorsFilterFeatureTest extends AbstractEndpointTest {
     when(getTiService().getFact(any(), isA(GetFactByIdRequest.class))).thenReturn(Fact.builder().build());
 
     Response response = target("/v1/fact/uuid/" + UUID.randomUUID()).request()
-            .header("ACT-User-ID", 1)
+            .header("Grafeo-User-ID", 1)
             .get();
     assertEquals(200, response.getStatus());
     assertFalse(response.getHeaders().containsKey("Access-Control-Allow-Origin"));
@@ -66,7 +66,7 @@ public class CorsFilterFeatureTest extends AbstractEndpointTest {
   @Test
   public void testFailedCrossOriginRequest() {
     Response response = target("/v1/fact/uuid/" + UUID.randomUUID()).request()
-            .header("ACT-User-ID", 1)
+            .header("Grafeo-User-ID", 1)
             .header("origin", "http://www.evil.com")
             .get();
     assertEquals(403, response.getStatus());

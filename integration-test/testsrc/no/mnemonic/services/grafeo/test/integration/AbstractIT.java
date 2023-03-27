@@ -148,11 +148,11 @@ public abstract class AbstractIT {
     return request(url, 1);
   }
 
-  Invocation.Builder request(String url, long actUserID) {
+  Invocation.Builder request(String url, long grafeoUserID) {
     return ClientBuilder.newClient()
             .target("http://localhost:" + API_SERVER_PORT + url)
             .request()
-            .header("ACT-User-ID", actUserID);
+            .header("Grafeo-User-ID", grafeoUserID);
   }
 
   JsonNode getPayload(Response response) throws IOException {
