@@ -27,7 +27,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
   @Test
   public void testGetFactTypeById() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().getFactType(any(), isA(GetFactTypeByIdRequest.class))).then(i -> {
+    when(getService().getFactType(any(), isA(GetFactTypeByIdRequest.class))).then(i -> {
       assertEquals(id, i.<GetFactTypeByIdRequest>getArgument(1).getId());
       return FactType.builder().setId(id).build();
     });
@@ -36,12 +36,12 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getFactType(notNull(), isA(GetFactTypeByIdRequest.class));
+    verify(getService(), times(1)).getFactType(notNull(), isA(GetFactTypeByIdRequest.class));
   }
 
   @Test
   public void testSearchFactTypes() throws Exception {
-    when(getTiService().searchFactTypes(any(), isA(SearchFactTypeRequest.class))).then(i -> StreamingResultSet.<FactType>builder().setValues(createFactTypes()).build());
+    when(getService().searchFactTypes(any(), isA(SearchFactTypeRequest.class))).then(i -> StreamingResultSet.<FactType>builder().setValues(createFactTypes()).build());
 
     Response response = target("/v1/factType").request().get();
     JsonNode payload = getPayload(response);
@@ -49,25 +49,25 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchFactTypes(notNull(), isA(SearchFactTypeRequest.class));
+    verify(getService(), times(1)).searchFactTypes(notNull(), isA(SearchFactTypeRequest.class));
   }
 
   @Test
   public void testCreateFactType() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().createFactType(any(), isA(CreateFactTypeRequest.class))).then(i -> FactType.builder().setId(id).build());
+    when(getService().createFactType(any(), isA(CreateFactTypeRequest.class))).then(i -> FactType.builder().setId(id).build());
 
     Response response = target("/v1/factType").request().post(Entity.json(createCreateFactTypeRequest()));
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createFactType(notNull(), isA(CreateFactTypeRequest.class));
+    verify(getService(), times(1)).createFactType(notNull(), isA(CreateFactTypeRequest.class));
   }
 
   @Test
   public void testUpdateFactType() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().updateFactType(any(), isA(UpdateFactTypeRequest.class))).then(i -> {
+    when(getService().updateFactType(any(), isA(UpdateFactTypeRequest.class))).then(i -> {
       assertEquals(id, i.<UpdateFactTypeRequest>getArgument(1).getId());
       return FactType.builder().setId(id).build();
     });
@@ -76,7 +76,7 @@ public class FactTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).updateFactType(notNull(), isA(UpdateFactTypeRequest.class));
+    verify(getService(), times(1)).updateFactType(notNull(), isA(UpdateFactTypeRequest.class));
   }
 
   private Collection<FactType> createFactTypes() {

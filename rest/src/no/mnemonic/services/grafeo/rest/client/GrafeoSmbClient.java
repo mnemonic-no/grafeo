@@ -13,7 +13,7 @@ import no.mnemonic.services.common.api.ServiceTimeOutException;
 import no.mnemonic.services.common.messagebus.ServiceMessageClient;
 import no.mnemonic.services.common.messagebus.ServiceResponseValueMessage;
 import no.mnemonic.services.common.messagebus.ServiceStreamingResultSetResponseMessage;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -28,13 +28,13 @@ import java.util.concurrent.atomic.AtomicReference;
  * Client-side implementation of the Service Message Bus using ActiveMQ.
  */
 @Singleton
-public class SmbClient implements Provider<ThreatIntelligenceService>, LifecycleAspect {
+public class GrafeoSmbClient implements Provider<GrafeoService>, LifecycleAspect {
 
   private static final String ACTIVEMQ_CONTEXT_FACTORY = "org.apache.activemq.jndi.ActiveMQInitialContextFactory";
   private static final String ACTIVEMQ_CONNECTION_FACTORY = "ConnectionFactory";
   private static final int MAX_WAIT_MS = 2000;
 
-  private static final Logger logger = Logging.getLogger(SmbClient.class);
+  private static final Logger logger = Logging.getLogger(GrafeoSmbClient.class);
 
   private final AtomicReference<Instance> instance = new AtomicReference<>();
 
@@ -44,10 +44,10 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
   private final String password;
 
   @Inject
-  public SmbClient(@Named(value = "act.smb.queue.name") String queueName,
-                   @Named(value = "act.smb.client.url") String contextURL,
-                   @Named(value = "act.smb.client.username") String userName,
-                   @Named(value = "act.smb.client.password") String password) {
+  public GrafeoSmbClient(@Named(value = "act.smb.queue.name") String queueName,
+                         @Named(value = "act.smb.client.url") String contextURL,
+                         @Named(value = "act.smb.client.username") String userName,
+                         @Named(value = "act.smb.client.password") String password) {
     this.queueName = queueName;
     this.contextURL = contextURL;
     this.userName = userName;
@@ -55,7 +55,7 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
   }
 
   @Override
-  public ThreatIntelligenceService get() {
+  public GrafeoService get() {
     return instance.updateAndGet(i -> {
       if (i != null) return i;
       return setupInstance();
@@ -89,7 +89,7 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
             .setSerializer(createSerializer())
             .build();
 
-    ServiceMessageClient<ThreatIntelligenceService> client = ServiceMessageClient.builder(ThreatIntelligenceService.class)
+    ServiceMessageClient<GrafeoService> client = ServiceMessageClient.builder(GrafeoService.class)
             .setRequestSink(sink)
             .setMaxWait(MAX_WAIT_MS)
             .build();
@@ -125,9 +125,9 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
 
   private class Instance {
     private final JMSRequestSink requestSink;
-    private final ServiceMessageClient<ThreatIntelligenceService> messageClient;
+    private final ServiceMessageClient<GrafeoService> messageClient;
 
-    private Instance(JMSRequestSink requestSink, ServiceMessageClient<ThreatIntelligenceService> messageClient) {
+    private Instance(JMSRequestSink requestSink, ServiceMessageClient<GrafeoService> messageClient) {
       this.requestSink = requestSink;
       this.messageClient = messageClient;
     }
@@ -136,7 +136,7 @@ public class SmbClient implements Provider<ThreatIntelligenceService>, Lifecycle
       return requestSink;
     }
 
-    private ServiceMessageClient<ThreatIntelligenceService> getMessageClient() {
+    private ServiceMessageClient<GrafeoService> getMessageClient() {
       return messageClient;
     }
   }

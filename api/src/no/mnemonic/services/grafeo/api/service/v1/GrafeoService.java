@@ -8,9 +8,9 @@ import no.mnemonic.services.grafeo.api.model.v1.*;
 import no.mnemonic.services.grafeo.api.request.v1.*;
 
 /**
- * Service handling all Threat Intelligence data - i.e. Facts, Objects and related data - stored inside the ACT platform.
+ * Service handling all data - i.e. Facts, Objects and related metadata - stored inside the application.
  */
-public interface ThreatIntelligenceService extends Service {
+public interface GrafeoService extends Service {
 
   /**
    * Fetch an ObjectType by its id.

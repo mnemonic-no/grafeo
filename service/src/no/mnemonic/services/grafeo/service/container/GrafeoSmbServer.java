@@ -9,7 +9,7 @@ import no.mnemonic.messaging.requestsink.jms.JMSRequestProxy;
 import no.mnemonic.messaging.requestsink.jms.serializer.MessageSerializer;
 import no.mnemonic.services.common.api.ServiceSessionFactory;
 import no.mnemonic.services.common.messagebus.ServiceMessageHandler;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,15 +17,15 @@ import javax.inject.Named;
 /**
  * Server-side implementation of the Service Message Bus using ActiveMQ.
  */
-public class SmbServer implements LifecycleAspect {
+public class GrafeoSmbServer implements LifecycleAspect {
 
   private static final String ACTIVEMQ_CONTEXT_FACTORY = "org.apache.activemq.jndi.ActiveMQInitialContextFactory";
   private static final String ACTIVEMQ_CONNECTION_FACTORY = "ConnectionFactory";
 
-  private static final Logger logger = Logging.getLogger(SmbServer.class);
+  private static final Logger logger = Logging.getLogger(GrafeoSmbServer.class);
 
   @Dependency
-  private final ThreatIntelligenceService service;
+  private final GrafeoService service;
   @Dependency
   private final ServiceSessionFactory sessionFactory;
 
@@ -40,13 +40,13 @@ public class SmbServer implements LifecycleAspect {
   private JMSRequestProxy requestProxy;
 
   @Inject
-  public SmbServer(ThreatIntelligenceService service,
-                   ServiceSessionFactory sessionFactory,
-                   MessageSerializer messageSerializer,
-                   @Named(value = "act.smb.queue.name") String queueName,
-                   @Named(value = "act.smb.server.url") String contextURL,
-                   @Named(value = "act.smb.server.username") String userName,
-                   @Named(value = "act.smb.server.password") String password) {
+  public GrafeoSmbServer(GrafeoService service,
+                         ServiceSessionFactory sessionFactory,
+                         MessageSerializer messageSerializer,
+                         @Named(value = "act.smb.queue.name") String queueName,
+                         @Named(value = "act.smb.server.url") String contextURL,
+                         @Named(value = "act.smb.server.username") String userName,
+                         @Named(value = "act.smb.server.password") String password) {
     this.service = service;
     this.sessionFactory = sessionFactory;
     this.messageSerializer = messageSerializer;

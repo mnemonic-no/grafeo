@@ -14,9 +14,9 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 /**
- * Module which configures the REST API including Swagger documentation of the ThreatIntelligenceService.
+ * Module which configures the REST API including Swagger documentation of Grafeo.
  */
-public class TiRestModule extends AbstractModule {
+public class GrafeoRestModule extends AbstractModule {
 
   private boolean skipDefaultCredentialsResolver;
   private boolean skipDefaultCorsFilter;
@@ -53,7 +53,7 @@ public class TiRestModule extends AbstractModule {
    *
    * @return this
    */
-  public TiRestModule withoutDefaultCredentialsResolver() {
+  public GrafeoRestModule withoutDefaultCredentialsResolver() {
     this.skipDefaultCredentialsResolver = true;
     return this;
   }
@@ -63,7 +63,7 @@ public class TiRestModule extends AbstractModule {
    *
    * @return this
    */
-  public TiRestModule withoutDefaultCorsFilter() {
+  public GrafeoRestModule withoutDefaultCorsFilter() {
     this.skipDefaultCorsFilter = true;
     return this;
   }

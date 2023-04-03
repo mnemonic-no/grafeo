@@ -88,7 +88,7 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   public void testOperationTimeoutMapperReturns408() throws Exception {
     TraverseByObjectIdRequest request = new TraverseByObjectIdRequest()
             .setQuery("while (true) {}");
-    when(getTiService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class)))
+    when(getService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class)))
             .thenThrow(new OperationTimeoutException("message", "template"));
 
     Response response = target(String.format("/v1/object/uuid/%s/traverse", UUID.randomUUID())).request().post(Entity.json(request));
@@ -249,7 +249,7 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
   }
 
   private Response executeRequest(Throwable ex) throws Exception {
-    when(getTiService().getFact(any(), isA(GetFactByIdRequest.class))).thenThrow(ex);
+    when(getService().getFact(any(), isA(GetFactByIdRequest.class))).thenThrow(ex);
     return target("/v1/fact/uuid/" + UUID.randomUUID()).request().get();
   }
 

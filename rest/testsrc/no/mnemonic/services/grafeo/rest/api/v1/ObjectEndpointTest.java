@@ -26,7 +26,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
   @Test
   public void testGetObjectById() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().getObject(any(), isA(GetObjectByIdRequest.class))).then(i -> {
+    when(getService().getObject(any(), isA(GetObjectByIdRequest.class))).then(i -> {
       GetObjectByIdRequest request = i.getArgument(1);
       assertEquals(id, request.getId());
       assertEquals(1480520820000L, (long) request.getBefore());
@@ -42,7 +42,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getObject(notNull(), isA(GetObjectByIdRequest.class));
+    verify(getService(), times(1)).getObject(notNull(), isA(GetObjectByIdRequest.class));
   }
 
   @Test
@@ -50,7 +50,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     UUID id = UUID.randomUUID();
     String type = "ip";
     String value = "27.13.4.125";
-    when(getTiService().getObject(any(), isA(GetObjectByTypeValueRequest.class))).then(i -> {
+    when(getService().getObject(any(), isA(GetObjectByTypeValueRequest.class))).then(i -> {
       GetObjectByTypeValueRequest request = i.getArgument(1);
       assertEquals(type, request.getType());
       assertEquals(value, request.getValue());
@@ -67,13 +67,13 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getObject(notNull(), isA(GetObjectByTypeValueRequest.class));
+    verify(getService(), times(1)).getObject(notNull(), isA(GetObjectByTypeValueRequest.class));
   }
 
   @Test
   public void testSearchObjectFactsById() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().searchObjectFacts(any(), isA(SearchObjectFactsRequest.class))).then(i -> {
+    when(getService().searchObjectFacts(any(), isA(SearchObjectFactsRequest.class))).then(i -> {
       assertEquals(id, i.<SearchObjectFactsRequest>getArgument(1).getObjectID());
       return StreamingResultSet.<Fact>builder().setValues(createFacts()).build();
     });
@@ -84,14 +84,14 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchObjectFacts(notNull(), isA(SearchObjectFactsRequest.class));
+    verify(getService(), times(1)).searchObjectFacts(notNull(), isA(SearchObjectFactsRequest.class));
   }
 
   @Test
   public void testSearchObjectFactsByTypeValue() throws Exception {
     String type = "ip";
     String value = "27.13.4.125";
-    when(getTiService().searchObjectFacts(any(), isA(SearchObjectFactsRequest.class))).then(i -> {
+    when(getService().searchObjectFacts(any(), isA(SearchObjectFactsRequest.class))).then(i -> {
       SearchObjectFactsRequest request = i.getArgument(1);
       assertEquals(type, request.getObjectType());
       assertEquals(value, request.getObjectValue());
@@ -104,13 +104,13 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchObjectFacts(notNull(), isA(SearchObjectFactsRequest.class));
+    verify(getService(), times(1)).searchObjectFacts(notNull(), isA(SearchObjectFactsRequest.class));
   }
 
   @Test
   public void testTraverseObjectById() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class))).then(i -> {
+    when(getService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class))).then(i -> {
       assertEquals(id, i.<TraverseByObjectIdRequest>getArgument(1).getId());
       return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
     });
@@ -124,14 +124,14 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
 
-    verify(getTiService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectIdRequest.class));
+    verify(getService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectIdRequest.class));
   }
 
   @Test
   public void testTraverseObjectByTypeValue() throws Exception {
     String type = "ip";
     String value = "27.13.4.125";
-    when(getTiService().traverseGraph(any(), isA(TraverseByObjectTypeValueRequest.class))).then(i -> {
+    when(getService().traverseGraph(any(), isA(TraverseByObjectTypeValueRequest.class))).then(i -> {
       TraverseByObjectTypeValueRequest request = i.getArgument(1);
       assertEquals(type, request.getType());
       assertEquals(value, request.getValue());
@@ -147,12 +147,12 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
 
-    verify(getTiService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectTypeValueRequest.class));
+    verify(getService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectTypeValueRequest.class));
   }
 
   @Test
   public void testSearchObjects() throws Exception {
-    when(getTiService().searchObjects(any(), isA(SearchObjectRequest.class))).then(i -> StreamingResultSet.<Object>builder().setValues(createObjects()).build());
+    when(getService().searchObjects(any(), isA(SearchObjectRequest.class))).then(i -> StreamingResultSet.<Object>builder().setValues(createObjects()).build());
 
     Response response = target("/v1/object/search").request().post(Entity.json(new SearchObjectRequest()));
     JsonNode payload = getPayload(response);
@@ -160,12 +160,12 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchObjects(notNull(), isA(SearchObjectRequest.class));
+    verify(getService(), times(1)).searchObjects(notNull(), isA(SearchObjectRequest.class));
   }
 
   @Test
   public void testTraverseByObjectSearch() throws Exception {
-    when(getTiService().traverseGraph(any(), isA(TraverseByObjectSearchRequest.class)))
+    when(getService().traverseGraph(any(), isA(TraverseByObjectSearchRequest.class)))
             .then(i -> StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build());
 
     TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest()
@@ -177,7 +177,7 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(1, payload.size());
     assertEquals("something", payload.get(0).asText());
 
-    verify(getTiService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectSearchRequest.class));
+    verify(getService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectSearchRequest.class));
   }
 
   private Collection<Fact> createFacts() {

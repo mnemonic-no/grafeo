@@ -7,8 +7,8 @@ import no.mnemonic.services.grafeo.api.exceptions.*;
 import no.mnemonic.services.grafeo.api.model.v1.Object;
 import no.mnemonic.services.grafeo.api.model.v1.*;
 import no.mnemonic.services.grafeo.api.request.v1.*;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
 import no.mnemonic.services.grafeo.auth.IdentitySPI;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
@@ -19,7 +19,7 @@ import no.mnemonic.services.grafeo.service.implementation.delegates.*;
 import javax.inject.Inject;
 import java.util.UUID;
 
-public class GrafeoServiceImpl implements Service, ThreatIntelligenceService {
+public class GrafeoServiceImpl implements GrafeoService, Service {
 
   public static final UUID GLOBAL_NAMESPACE = UUID.fromString("00000000-0000-0000-0000-000000000000");
 

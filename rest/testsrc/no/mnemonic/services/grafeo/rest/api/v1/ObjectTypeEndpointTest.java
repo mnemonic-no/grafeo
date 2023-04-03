@@ -27,7 +27,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
   @Test
   public void testGetObjectTypeById() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().getObjectType(any(), isA(GetObjectTypeByIdRequest.class))).then(i -> {
+    when(getService().getObjectType(any(), isA(GetObjectTypeByIdRequest.class))).then(i -> {
       assertEquals(id, i.<GetObjectTypeByIdRequest>getArgument(1).getId());
       return ObjectType.builder().setId(id).build();
     });
@@ -36,12 +36,12 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getObjectType(notNull(), isA(GetObjectTypeByIdRequest.class));
+    verify(getService(), times(1)).getObjectType(notNull(), isA(GetObjectTypeByIdRequest.class));
   }
 
   @Test
   public void testSearchObjectTypes() throws Exception {
-    when(getTiService().searchObjectTypes(any(), isA(SearchObjectTypeRequest.class))).then(i -> StreamingResultSet.<ObjectType>builder().setValues(createObjectTypes()).build());
+    when(getService().searchObjectTypes(any(), isA(SearchObjectTypeRequest.class))).then(i -> StreamingResultSet.<ObjectType>builder().setValues(createObjectTypes()).build());
 
     Response response = target("/v1/objectType").request().get();
     JsonNode payload = getPayload(response);
@@ -49,25 +49,25 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchObjectTypes(notNull(), isA(SearchObjectTypeRequest.class));
+    verify(getService(), times(1)).searchObjectTypes(notNull(), isA(SearchObjectTypeRequest.class));
   }
 
   @Test
   public void testCreateObjectType() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().createObjectType(any(), isA(CreateObjectTypeRequest.class))).then(i -> ObjectType.builder().setId(id).build());
+    when(getService().createObjectType(any(), isA(CreateObjectTypeRequest.class))).then(i -> ObjectType.builder().setId(id).build());
 
     Response response = target("/v1/objectType").request().post(Entity.json(createCreateObjectTypeRequest()));
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createObjectType(notNull(), isA(CreateObjectTypeRequest.class));
+    verify(getService(), times(1)).createObjectType(notNull(), isA(CreateObjectTypeRequest.class));
   }
 
   @Test
   public void testUpdateObjectType() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().updateObjectType(any(), isA(UpdateObjectTypeRequest.class))).then(i -> {
+    when(getService().updateObjectType(any(), isA(UpdateObjectTypeRequest.class))).then(i -> {
       assertEquals(id, i.<UpdateObjectTypeRequest>getArgument(1).getId());
       return ObjectType.builder().setId(id).build();
     });
@@ -76,7 +76,7 @@ public class ObjectTypeEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).updateObjectType(notNull(), isA(UpdateObjectTypeRequest.class));
+    verify(getService(), times(1)).updateObjectType(notNull(), isA(UpdateObjectTypeRequest.class));
   }
 
   private Collection<ObjectType> createObjectTypes() {

@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.hazelcast.core.HazelcastInstance;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.auth.properties.module.PropertiesBasedAccessControllerModule;
 import no.mnemonic.services.grafeo.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.services.grafeo.dao.modules.DaoModule;
@@ -30,9 +30,9 @@ import java.util.UUID;
 import java.util.function.Function;
 
 /**
- * Module which configures the implementation of the ThreatIntelligenceService.
+ * Module which configures the implementation of the GrafeoService.
  */
-public class TiServiceModule extends AbstractModule {
+public class GrafeoServiceModule extends AbstractModule {
 
   private boolean skipDefaultAccessController;
   private boolean skipDefaultHazelcastInstanceProvider;
@@ -67,10 +67,10 @@ public class TiServiceModule extends AbstractModule {
     // is already a Singleton TriggerAdministrationService will only be instantiated once.
     bind(TriggerAdministrationService.class).to(TriggerAdministrationServiceImpl.class);
 
-    // Bind the concrete implementation classes of the ThreatIntelligenceService.
+    // Bind the concrete implementation classes of the GrafeoService.
     bind(LockProvider.class).to(HazelcastBasedLockProvider.class).in(Scopes.SINGLETON);
     bind(ValidatorFactory.class).to(DefaultValidatorFactory.class).in(Scopes.SINGLETON);
-    bind(ThreatIntelligenceService.class).to(GrafeoServiceImpl.class).in(Scopes.SINGLETON);
+    bind(GrafeoService.class).to(GrafeoServiceImpl.class).in(Scopes.SINGLETON);
   }
 
   @Provides
@@ -86,7 +86,7 @@ public class TiServiceModule extends AbstractModule {
    *
    * @return this
    */
-  public TiServiceModule withoutDefaultAccessController() {
+  public GrafeoServiceModule withoutDefaultAccessController() {
     this.skipDefaultAccessController = true;
     return this;
   }
@@ -97,7 +97,7 @@ public class TiServiceModule extends AbstractModule {
    *
    * @return this
    */
-  public TiServiceModule withoutDefaultHazelcastInstanceProvider() {
+  public GrafeoServiceModule withoutDefaultHazelcastInstanceProvider() {
     this.skipDefaultHazelcastInstanceProvider = true;
     return this;
   }

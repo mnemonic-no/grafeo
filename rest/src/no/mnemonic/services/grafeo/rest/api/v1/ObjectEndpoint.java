@@ -9,7 +9,7 @@ import no.mnemonic.services.grafeo.api.exceptions.OperationTimeoutException;
 import no.mnemonic.services.grafeo.api.model.v1.Fact;
 import no.mnemonic.services.grafeo.api.model.v1.Object;
 import no.mnemonic.services.grafeo.api.request.v1.*;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.rest.api.ResultStash;
 import no.mnemonic.services.grafeo.rest.api.auth.CredentialsResolver;
 
@@ -32,10 +32,10 @@ import static no.mnemonic.services.grafeo.rest.api.ResultStash.buildResponse;
 public class ObjectEndpoint {
 
   private final CredentialsResolver credentialsResolver;
-  private final ThreatIntelligenceService service;
+  private final GrafeoService service;
 
   @Inject
-  public ObjectEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+  public ObjectEndpoint(CredentialsResolver credentialsResolver, GrafeoService service) {
     this.credentialsResolver = credentialsResolver;
     this.service = service;
   }

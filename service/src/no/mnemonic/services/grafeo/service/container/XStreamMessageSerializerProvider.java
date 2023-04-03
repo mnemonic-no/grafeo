@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Provides a {@link MessageSerializer} implementation based on XStream intended to be used by {@link SmbServer}.
+ * Provides a {@link MessageSerializer} implementation based on XStream intended to be used by {@link GrafeoSmbServer}.
  */
 public class XStreamMessageSerializerProvider implements Provider<MessageSerializer> {
 

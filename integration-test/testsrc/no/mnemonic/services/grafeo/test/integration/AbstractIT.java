@@ -23,10 +23,10 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.dao.elastic.FactSearchManager;
-import no.mnemonic.services.grafeo.rest.modules.TiClientModule;
-import no.mnemonic.services.grafeo.rest.modules.TiRestModule;
-import no.mnemonic.services.grafeo.service.modules.TiServerModule;
-import no.mnemonic.services.grafeo.service.modules.TiServiceModule;
+import no.mnemonic.services.grafeo.rest.modules.GrafeoClientModule;
+import no.mnemonic.services.grafeo.rest.modules.GrafeoRestModule;
+import no.mnemonic.services.grafeo.service.modules.GrafeoServerModule;
+import no.mnemonic.services.grafeo.service.modules.GrafeoServiceModule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -320,8 +320,8 @@ public abstract class AbstractIT {
   private static class ServiceModuleIT extends AbstractModule {
     @Override
     protected void configure() {
-      install(new TiServiceModule());
-      install(new TiServerModule());
+      install(new GrafeoServiceModule());
+      install(new GrafeoServerModule());
       // Configuration
       String smbServerUrl = "tcp://" + activemq.getExposedHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("act.access.controller.properties.configuration.file")).toInstance(ACL_FILE);
@@ -356,8 +356,8 @@ public abstract class AbstractIT {
   private static class RestModuleIT extends AbstractModule {
     @Override
     protected void configure() {
-      install(new TiRestModule());
-      install(new TiClientModule());
+      install(new GrafeoRestModule());
+      install(new GrafeoClientModule());
       // Configuration
       String smbClientUrl = "tcp://" + activemq.getExposedHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("act.api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));

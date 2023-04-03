@@ -9,9 +9,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.rest.container.ApiServer;
-import no.mnemonic.services.grafeo.rest.modules.TiRestModule;
+import no.mnemonic.services.grafeo.rest.modules.GrafeoRestModule;
 import org.junit.After;
 import org.junit.Before;
 import org.mockito.Mock;
@@ -29,7 +29,7 @@ public abstract class AbstractEndpointTest {
   private final static int port = AvailablePortFinder.getAvailablePort(9000);
 
   @Mock
-  private ThreatIntelligenceService tiService;
+  private GrafeoService service;
 
   private ApiServer server;
 
@@ -46,8 +46,8 @@ public abstract class AbstractEndpointTest {
     server.stopComponent();
   }
 
-  protected ThreatIntelligenceService getTiService() {
-    return tiService;
+  protected GrafeoService getService() {
+    return service;
   }
 
   protected WebTarget target(String url) {
@@ -68,8 +68,8 @@ public abstract class AbstractEndpointTest {
 
     @Override
     protected void configure() {
-      install(new TiRestModule());
-      bind(ThreatIntelligenceService.class).toInstance(tiService);
+      install(new GrafeoRestModule());
+      bind(GrafeoService.class).toInstance(service);
       bind(String.class).annotatedWith(Names.named("act.api.server.port")).toInstance(String.valueOf(port));
       bind(String.class).annotatedWith(Names.named("act.api.cors.allowed.origins")).toInstance("http://www.example.org");
     }

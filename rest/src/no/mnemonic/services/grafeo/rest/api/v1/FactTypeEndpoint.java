@@ -10,7 +10,7 @@ import no.mnemonic.services.grafeo.api.request.v1.CreateFactTypeRequest;
 import no.mnemonic.services.grafeo.api.request.v1.GetFactTypeByIdRequest;
 import no.mnemonic.services.grafeo.api.request.v1.SearchFactTypeRequest;
 import no.mnemonic.services.grafeo.api.request.v1.UpdateFactTypeRequest;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.rest.api.ResultStash;
 import no.mnemonic.services.grafeo.rest.api.auth.CredentialsResolver;
 
@@ -30,10 +30,10 @@ import static no.mnemonic.services.grafeo.rest.api.ResultStash.buildResponse;
 public class FactTypeEndpoint {
 
   private final CredentialsResolver credentialsResolver;
-  private final ThreatIntelligenceService service;
+  private final GrafeoService service;
 
   @Inject
-  public FactTypeEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+  public FactTypeEndpoint(CredentialsResolver credentialsResolver, GrafeoService service) {
     this.credentialsResolver = credentialsResolver;
     this.service = service;
   }

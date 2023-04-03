@@ -7,7 +7,7 @@ import no.mnemonic.services.grafeo.api.exceptions.InvalidArgumentException;
 import no.mnemonic.services.grafeo.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.services.grafeo.api.model.v1.Origin;
 import no.mnemonic.services.grafeo.api.request.v1.*;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.rest.api.ResultStash;
 import no.mnemonic.services.grafeo.rest.api.auth.CredentialsResolver;
 
@@ -29,10 +29,10 @@ import static no.mnemonic.services.grafeo.rest.api.ResultStash.buildResponse;
 public class OriginEndpoint {
 
   private final CredentialsResolver credentialsResolver;
-  private final ThreatIntelligenceService service;
+  private final GrafeoService service;
 
   @Inject
-  public OriginEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+  public OriginEndpoint(CredentialsResolver credentialsResolver, GrafeoService service) {
     this.credentialsResolver = credentialsResolver;
     this.service = service;
   }

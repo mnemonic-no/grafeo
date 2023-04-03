@@ -25,7 +25,7 @@ RESOURCESDIR="resources"
 # Define parameters for executing the application.
 PROPERTIES="$CONFDIR/application.properties"
 MAINCLASS="no.mnemonic.commons.container.BootStrap"
-ARGS="guice module=no.mnemonic.services.grafeo.rest.modules.TiRestModule module=no.mnemonic.services.grafeo.rest.modules.TiClientModule"
+ARGS="guice module=no.mnemonic.services.grafeo.rest.modules.GrafeoRestModule module=no.mnemonic.services.grafeo.rest.modules.GrafeoClientModule"
 
 STDOUT_FILE="$LOGDIR/stdout.log"
 STDERR_FILE="$LOGDIR/stderr.log"

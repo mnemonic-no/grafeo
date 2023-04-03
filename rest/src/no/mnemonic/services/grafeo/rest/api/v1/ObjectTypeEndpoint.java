@@ -10,7 +10,7 @@ import no.mnemonic.services.grafeo.api.request.v1.CreateObjectTypeRequest;
 import no.mnemonic.services.grafeo.api.request.v1.GetObjectTypeByIdRequest;
 import no.mnemonic.services.grafeo.api.request.v1.SearchObjectTypeRequest;
 import no.mnemonic.services.grafeo.api.request.v1.UpdateObjectTypeRequest;
-import no.mnemonic.services.grafeo.api.service.v1.ThreatIntelligenceService;
+import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.rest.api.ResultStash;
 import no.mnemonic.services.grafeo.rest.api.auth.CredentialsResolver;
 
@@ -30,10 +30,10 @@ import static no.mnemonic.services.grafeo.rest.api.ResultStash.buildResponse;
 public class ObjectTypeEndpoint {
 
   private final CredentialsResolver credentialsResolver;
-  private final ThreatIntelligenceService service;
+  private final GrafeoService service;
 
   @Inject
-  public ObjectTypeEndpoint(CredentialsResolver credentialsResolver, ThreatIntelligenceService service) {
+  public ObjectTypeEndpoint(CredentialsResolver credentialsResolver, GrafeoService service) {
     this.credentialsResolver = credentialsResolver;
     this.service = service;
   }

@@ -25,7 +25,7 @@ public class OriginEndpointTest extends AbstractEndpointTest {
   @Test
   public void testGetOriginById() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().getOrigin(any(), isA(GetOriginByIdRequest.class))).then(i -> {
+    when(getService().getOrigin(any(), isA(GetOriginByIdRequest.class))).then(i -> {
       assertEquals(id, i.<GetOriginByIdRequest>getArgument(1).getId());
       return Origin.builder().setId(id).build();
     });
@@ -34,12 +34,12 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getOrigin(notNull(), isA(GetOriginByIdRequest.class));
+    verify(getService(), times(1)).getOrigin(notNull(), isA(GetOriginByIdRequest.class));
   }
 
   @Test
   public void testSearchOrigins() throws Exception {
-    when(getTiService().searchOrigins(any(), isA(SearchOriginRequest.class))).then(i -> {
+    when(getService().searchOrigins(any(), isA(SearchOriginRequest.class))).then(i -> {
       SearchOriginRequest request = i.getArgument(1);
       assertEquals(SetUtils.set(SearchOriginRequest.Type.Group), request.getType());
       assertTrue(request.getIncludeDeleted());
@@ -58,25 +58,25 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchOrigins(notNull(), isA(SearchOriginRequest.class));
+    verify(getService(), times(1)).searchOrigins(notNull(), isA(SearchOriginRequest.class));
   }
 
   @Test
   public void testCreateOrigin() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().createOrigin(any(), isA(CreateOriginRequest.class))).then(i -> Origin.builder().setId(id).build());
+    when(getService().createOrigin(any(), isA(CreateOriginRequest.class))).then(i -> Origin.builder().setId(id).build());
 
     Response response = target("/v1/origin").request().post(Entity.json(new CreateOriginRequest().setName("name")));
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createOrigin(notNull(), isA(CreateOriginRequest.class));
+    verify(getService(), times(1)).createOrigin(notNull(), isA(CreateOriginRequest.class));
   }
 
   @Test
   public void testUpdateOrigin() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().updateOrigin(any(), isA(UpdateOriginRequest.class))).then(i -> {
+    when(getService().updateOrigin(any(), isA(UpdateOriginRequest.class))).then(i -> {
       assertEquals(id, i.<UpdateOriginRequest>getArgument(1).getId());
       return Origin.builder().setId(id).build();
     });
@@ -85,13 +85,13 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).updateOrigin(notNull(), isA(UpdateOriginRequest.class));
+    verify(getService(), times(1)).updateOrigin(notNull(), isA(UpdateOriginRequest.class));
   }
 
   @Test
   public void testDeleteOrigin() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().deleteOrigin(any(), isA(DeleteOriginRequest.class))).then(i -> {
+    when(getService().deleteOrigin(any(), isA(DeleteOriginRequest.class))).then(i -> {
       assertEquals(id, i.<DeleteOriginRequest>getArgument(1).getId());
       return Origin.builder().setId(id).build();
     });
@@ -100,7 +100,7 @@ public class OriginEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).deleteOrigin(notNull(), isA(DeleteOriginRequest.class));
+    verify(getService(), times(1)).deleteOrigin(notNull(), isA(DeleteOriginRequest.class));
   }
 
   private Collection<Origin> createOrigins() {

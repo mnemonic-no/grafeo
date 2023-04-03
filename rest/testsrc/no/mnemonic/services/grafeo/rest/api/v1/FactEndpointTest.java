@@ -26,7 +26,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
   @Test
   public void testGetFactById() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().getFact(any(), isA(GetFactByIdRequest.class))).then(i -> {
+    when(getService().getFact(any(), isA(GetFactByIdRequest.class))).then(i -> {
       assertEquals(id, i.<GetFactByIdRequest>getArgument(1).getId());
       return Fact.builder().setId(id).build();
     });
@@ -35,12 +35,12 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(200, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).getFact(notNull(), isA(GetFactByIdRequest.class));
+    verify(getService(), times(1)).getFact(notNull(), isA(GetFactByIdRequest.class));
   }
 
   @Test
   public void testSearchFacts() throws Exception {
-    when(getTiService().searchFacts(any(), isA(SearchFactRequest.class))).then(i -> StreamingResultSet.<Fact>builder().setValues(createFacts()).build());
+    when(getService().searchFacts(any(), isA(SearchFactRequest.class))).then(i -> StreamingResultSet.<Fact>builder().setValues(createFacts()).build());
 
     Response response = target("/v1/fact/search").request().post(Entity.json(new SearchFactRequest()));
     JsonNode payload = getPayload(response);
@@ -48,25 +48,25 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchFacts(notNull(), isA(SearchFactRequest.class));
+    verify(getService(), times(1)).searchFacts(notNull(), isA(SearchFactRequest.class));
   }
 
   @Test
   public void testCreateFact() throws Exception {
     UUID id = UUID.randomUUID();
-    when(getTiService().createFact(any(), isA(CreateFactRequest.class))).then(i -> Fact.builder().setId(id).build());
+    when(getService().createFact(any(), isA(CreateFactRequest.class))).then(i -> Fact.builder().setId(id).build());
 
     Response response = target("/v1/fact").request().post(Entity.json(createCreateFactRequest()));
     assertEquals(201, response.getStatus());
     assertEquals(id.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createFact(notNull(), isA(CreateFactRequest.class));
+    verify(getService(), times(1)).createFact(notNull(), isA(CreateFactRequest.class));
   }
 
   @Test
   public void testGetMetaFacts() throws Exception {
     UUID fact = UUID.randomUUID();
-    when(getTiService().searchMetaFacts(any(), isA(SearchMetaFactsRequest.class))).then(i -> {
+    when(getService().searchMetaFacts(any(), isA(SearchMetaFactsRequest.class))).then(i -> {
       SearchMetaFactsRequest request = i.getArgument(1);
       assertEquals(fact, request.getFact());
       assertTrue(request.getIncludeRetracted());
@@ -88,14 +88,14 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).searchMetaFacts(notNull(), isA(SearchMetaFactsRequest.class));
+    verify(getService(), times(1)).searchMetaFacts(notNull(), isA(SearchMetaFactsRequest.class));
   }
 
   @Test
   public void testCreateMetaFact() throws Exception {
     UUID oldFact = UUID.randomUUID();
     UUID newFact = UUID.randomUUID();
-    when(getTiService().createMetaFact(any(), isA(CreateMetaFactRequest.class))).then(i -> {
+    when(getService().createMetaFact(any(), isA(CreateMetaFactRequest.class))).then(i -> {
       assertEquals(oldFact, i.<CreateMetaFactRequest>getArgument(1).getFact());
       return Fact.builder().setId(newFact).build();
     });
@@ -104,14 +104,14 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(newFact.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createMetaFact(notNull(), isA(CreateMetaFactRequest.class));
+    verify(getService(), times(1)).createMetaFact(notNull(), isA(CreateMetaFactRequest.class));
   }
 
   @Test
   public void testRetractFact() throws Exception {
     UUID oldFact = UUID.randomUUID();
     UUID newFact = UUID.randomUUID();
-    when(getTiService().retractFact(any(), isA(RetractFactRequest.class))).then(i -> {
+    when(getService().retractFact(any(), isA(RetractFactRequest.class))).then(i -> {
       assertEquals(oldFact, i.<RetractFactRequest>getArgument(1).getFact());
       return Fact.builder().setId(newFact).build();
     });
@@ -120,13 +120,13 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(newFact.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).retractFact(notNull(), isA(RetractFactRequest.class));
+    verify(getService(), times(1)).retractFact(notNull(), isA(RetractFactRequest.class));
   }
 
   @Test
   public void testGetFactAcl() throws Exception {
     UUID fact = UUID.randomUUID();
-    when(getTiService().getFactAcl(any(), isA(GetFactAclRequest.class))).then(i -> {
+    when(getService().getFactAcl(any(), isA(GetFactAclRequest.class))).then(i -> {
       assertEquals(fact, i.<GetFactAclRequest>getArgument(1).getFact());
       return StreamingResultSet.<AclEntry>builder().setValues(createFactAcl()).build();
     });
@@ -137,7 +137,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).getFactAcl(notNull(), isA(GetFactAclRequest.class));
+    verify(getService(), times(1)).getFactAcl(notNull(), isA(GetFactAclRequest.class));
   }
 
   @Test
@@ -145,7 +145,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     UUID fact = UUID.randomUUID();
     UUID subject = UUID.randomUUID();
     UUID entry = UUID.randomUUID();
-    when(getTiService().grantFactAccess(any(), isA(GrantFactAccessRequest.class))).then(i -> {
+    when(getService().grantFactAccess(any(), isA(GrantFactAccessRequest.class))).then(i -> {
       GrantFactAccessRequest request = i.getArgument(1);
       assertEquals(fact, request.getFact());
       assertEquals(subject.toString(), request.getSubject());
@@ -156,13 +156,13 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(entry.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).grantFactAccess(notNull(), isA(GrantFactAccessRequest.class));
+    verify(getService(), times(1)).grantFactAccess(notNull(), isA(GrantFactAccessRequest.class));
   }
 
   @Test
   public void testGetFactComments() throws Exception {
     UUID fact = UUID.randomUUID();
-    when(getTiService().getFactComments(any(), isA(GetFactCommentsRequest.class))).then(i -> {
+    when(getService().getFactComments(any(), isA(GetFactCommentsRequest.class))).then(i -> {
       GetFactCommentsRequest request = i.getArgument(1);
       assertEquals(fact, request.getFact());
       assertEquals(1480520820000L, (long) request.getBefore());
@@ -180,14 +180,14 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertTrue(payload.isArray());
     assertEquals(3, payload.size());
 
-    verify(getTiService(), times(1)).getFactComments(notNull(), isA(GetFactCommentsRequest.class));
+    verify(getService(), times(1)).getFactComments(notNull(), isA(GetFactCommentsRequest.class));
   }
 
   @Test
   public void testCreateFactComment() throws Exception {
     UUID fact = UUID.randomUUID();
     UUID comment = UUID.randomUUID();
-    when(getTiService().createFactComment(any(), isA(CreateFactCommentRequest.class))).then(i -> {
+    when(getService().createFactComment(any(), isA(CreateFactCommentRequest.class))).then(i -> {
       assertEquals(fact, i.<CreateFactCommentRequest>getArgument(1).getFact());
       return FactComment.builder().setId(comment).build();
     });
@@ -196,7 +196,7 @@ public class FactEndpointTest extends AbstractEndpointTest {
     assertEquals(201, response.getStatus());
     assertEquals(comment.toString(), getPayload(response).get("id").textValue());
 
-    verify(getTiService(), times(1)).createFactComment(notNull(), isA(CreateFactCommentRequest.class));
+    verify(getService(), times(1)).createFactComment(notNull(), isA(CreateFactCommentRequest.class));
   }
 
   private Collection<Fact> createFacts() {
