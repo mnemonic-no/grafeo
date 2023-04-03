@@ -8,8 +8,8 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.Direction;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectFactBindingEntity;
-import no.mnemonic.services.grafeo.dao.tinkerpop.ActGraph;
 import no.mnemonic.services.grafeo.dao.tinkerpop.FactEdge;
+import no.mnemonic.services.grafeo.dao.tinkerpop.ObjectFactGraph;
 import no.mnemonic.services.grafeo.dao.tinkerpop.ObjectVertex;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -27,7 +27,7 @@ public class ElementFactory {
 
   private static final int CACHE_MAXIMUM_SIZE = 10000;
 
-  private final ActGraph owner;
+  private final ObjectFactGraph owner;
   // Maps the triplet (factID, inVertex, outVertex) to UUID returned by Edge.id().
   // Needed in order to identify entry in 'edgeCache'.
   private final Map<EdgeID, UUID> edgeIdMap;
@@ -36,7 +36,7 @@ public class ElementFactory {
   // Cache for created vertices. This cache is automatically populated.
   private final LoadingCache<UUID, Vertex> vertexCache;
 
-  private ElementFactory(ActGraph owner) {
+  private ElementFactory(ObjectFactGraph owner) {
     this.owner = ObjectUtils.notNull(owner, "'owner is null!'");
     this.edgeIdMap = new ConcurrentHashMap<>();
     this.edgeCache = createEdgeCache();
@@ -169,7 +169,7 @@ public class ElementFactory {
   }
 
   public static class Builder {
-    private ActGraph owner;
+    private ObjectFactGraph owner;
 
     private Builder() {
     }
@@ -178,7 +178,7 @@ public class ElementFactory {
       return new ElementFactory(owner);
     }
 
-    public Builder setOwner(ActGraph owner) {
+    public Builder setOwner(ObjectFactGraph owner) {
       this.owner = owner;
       return this;
     }

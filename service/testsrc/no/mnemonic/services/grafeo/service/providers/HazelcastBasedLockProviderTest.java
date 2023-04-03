@@ -24,7 +24,7 @@ public class HazelcastBasedLockProviderTest {
             "224.2.2.3",
             54327,
             false,
-            new ActHazelcastConfiguration());
+            new HazelcastServiceConfiguration());
     hazelcastInstanceProvider.startComponent();
   }
 

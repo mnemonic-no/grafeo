@@ -5,9 +5,9 @@ import com.google.inject.matcher.Matchers;
 import no.mnemonic.services.grafeo.service.Service;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import no.mnemonic.services.grafeo.service.contexts.TriggerContext;
+import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.scopes.ServiceRequestScope;
 import no.mnemonic.services.grafeo.service.scopes.ServiceRequestScopeImpl;
-import no.mnemonic.services.grafeo.service.ti.TiSecurityContext;
 import org.aopalliance.intercept.MethodInvocation;
 
 import javax.inject.Provider;
@@ -35,7 +35,7 @@ public class ServiceRequestScopeAspect extends AbstractAspect {
   public ServiceRequestScopeAspect() {
     // Add all contexts which will be seeded in the service request scope.
     contexts.put(SecurityContext.class, SecurityContext::get);
-    contexts.put(TiSecurityContext.class, TiSecurityContext::get);
+    contexts.put(GrafeoSecurityContext.class, GrafeoSecurityContext::get);
     contexts.put(TriggerContext.class, TriggerContext::get);
   }
 

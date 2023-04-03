@@ -7,8 +7,8 @@ import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
 import no.mnemonic.services.grafeo.service.Service;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import no.mnemonic.services.grafeo.service.contexts.TriggerContext;
+import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.scopes.ServiceRequestScope;
-import no.mnemonic.services.grafeo.service.ti.TiSecurityContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +23,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class ServiceRequestScopeAspectTest {
 
   @Mock
-  private TiSecurityContext securityContext;
+  private GrafeoSecurityContext securityContext;
   @Mock
   private TriggerContext triggerContext;
 
@@ -33,13 +33,13 @@ public class ServiceRequestScopeAspectTest {
   public void setUp() {
     initMocks(this);
 
-    TiSecurityContext.set(securityContext);
+    GrafeoSecurityContext.set(securityContext);
     TriggerContext.set(triggerContext);
   }
 
   @After
   public void cleanUp() {
-    TiSecurityContext.clear();
+    GrafeoSecurityContext.clear();
     TriggerContext.clear();
 
     initializationCounter.set(0);
@@ -67,9 +67,9 @@ public class ServiceRequestScopeAspectTest {
   @ServiceRequestScope
   static class RequestScoped {
     @Inject
-    RequestScoped(TiSecurityContext context1, TriggerContext context2) {
+    RequestScoped(GrafeoSecurityContext context1, TriggerContext context2) {
       // Verify that the injected contexts are the same as the ones provided by Context.get().
-      assertSame(context1, TiSecurityContext.get());
+      assertSame(context1, GrafeoSecurityContext.get());
       assertSame(context2, TriggerContext.get());
 
       initializationCounter.incrementAndGet();

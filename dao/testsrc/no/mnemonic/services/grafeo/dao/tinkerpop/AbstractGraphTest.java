@@ -20,13 +20,13 @@ abstract class AbstractGraphTest {
   @Mock
   private FactManager factManager;
 
-  private ActGraph actGraph;
+  private ObjectFactGraph graph;
 
   @Before
   public void setup() {
     initMocks(this);
 
-    actGraph = ActGraph.builder()
+    graph = ObjectFactGraph.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
             .setHasFactAccess(f -> true)
@@ -41,8 +41,8 @@ abstract class AbstractGraphTest {
     return factManager;
   }
 
-  ActGraph getActGraph() {
-    return actGraph;
+  ObjectFactGraph getGraph() {
+    return graph;
   }
 
   UUID mockObject() {

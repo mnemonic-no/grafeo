@@ -22,7 +22,7 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
   private final String multicastAddress;
   private final int multicastPort;
   private final boolean multicastEnabled;
-  private final ActHazelcastConfiguration actConfig;
+  private final HazelcastServiceConfiguration serviceConfig;
 
   @Inject
   public HazelcastInstanceProvider(
@@ -31,14 +31,14 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
           @Named("act.hazelcast.multicast.address") String multicastAddress,
           @Named("act.hazelcast.multicast.port") int multicastPort,
           @Named("act.hazelcast.multicast.enabled") boolean multicastEnabled,
-          ActHazelcastConfiguration actConfig
+          HazelcastServiceConfiguration serviceConfig
   ) {
     this.instanceName = instanceName;
     this.groupName = groupName;
     this.multicastAddress = multicastAddress;
     this.multicastPort = multicastPort;
     this.multicastEnabled = multicastEnabled;
-    this.actConfig = actConfig;
+    this.serviceConfig = serviceConfig;
   }
 
   @Override
@@ -68,7 +68,7 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
 
     // Specify log4j2 to collect the Hazelcast logs together with the service logs (instead of stdout).
     cfg.setProperty("hazelcast.logging.type", "log4j2");
-    // Disable Hazelcast's own shutdown hook because termination must be handle by the LifecycleAspect.
+    // Disable Hazelcast's own shutdown hook because termination must be handled by the LifecycleAspect.
     cfg.setProperty("hazelcast.shutdownhook.enabled", "false");
 
     // Specify network configuration for multicast.
@@ -78,12 +78,12 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
             .setMulticastPort(multicastPort);
     // Only allow well-known classes to be deserialized, especially it shouldn't be allowed to deserialize arbitrary
     // classes implementing Serializable to avoid deserialization vulnerabilities. This uses the default whitelist
-    // provided in Hazelcast. It's not necessary to allow ACT specific classes because they are using custom
+    // provided in Hazelcast. It's not necessary to allow service specific classes because they are using custom
     // serializers based on JSON and don't implement Serializable.
     cfg.getSerializationConfig().setJavaSerializationFilterConfig(new JavaSerializationFilterConfig());
 
-    // Apply configuration required by the ACT implementation (queues, maps, etc).
-    actConfig.apply(cfg);
+    // Apply configuration required by the service implementation (queues, maps, etc).
+    serviceConfig.apply(cfg);
 
     return Hazelcast.getOrCreateHazelcastInstance(cfg);
   }

@@ -28,7 +28,7 @@ public class FactEdgeTest extends AbstractGraphTest {
 
   @Test(expected = RuntimeException.class)
   public void testCreateEdgeWithoutFact() {
-    new FactEdge(getActGraph(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+    new FactEdge(getGraph(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
   }
 
   @Test(expected = RuntimeException.class)
@@ -40,7 +40,7 @@ public class FactEdgeTest extends AbstractGraphTest {
             .setValue("value")
     );
 
-    new FactEdge(getActGraph(), factID, UUID.randomUUID(), UUID.randomUUID());
+    new FactEdge(getGraph(), factID, UUID.randomUUID(), UUID.randomUUID());
   }
 
   @Test
@@ -48,7 +48,7 @@ public class FactEdgeTest extends AbstractGraphTest {
     Edge edge = createEdge();
     assertNotNull(edge.id());
     assertEquals("type", edge.label());
-    assertSame(getActGraph(), edge.graph());
+    assertSame(getGraph(), edge.graph());
   }
 
   @Test
@@ -56,7 +56,7 @@ public class FactEdgeTest extends AbstractGraphTest {
     UUID factID = mockFact(null);
     UUID inVertexObjectID = mockObject();
     UUID outVertexObjectID = mockObject();
-    Edge edge = new FactEdge(getActGraph(), factID, inVertexObjectID, outVertexObjectID);
+    Edge edge = new FactEdge(getGraph(), factID, inVertexObjectID, outVertexObjectID);
 
     Iterator<Vertex> vertices = edge.vertices(Direction.IN);
     assertSame(inVertexObjectID, vertices.next().id());
@@ -68,7 +68,7 @@ public class FactEdgeTest extends AbstractGraphTest {
     UUID factID = mockFact(null);
     UUID inVertexObjectID = mockObject();
     UUID outVertexObjectID = mockObject();
-    Edge edge = new FactEdge(getActGraph(), factID, inVertexObjectID, outVertexObjectID);
+    Edge edge = new FactEdge(getGraph(), factID, inVertexObjectID, outVertexObjectID);
 
     Iterator<Vertex> vertices = edge.vertices(Direction.OUT);
     assertSame(outVertexObjectID, vertices.next().id());
@@ -80,7 +80,7 @@ public class FactEdgeTest extends AbstractGraphTest {
     UUID factID = mockFact(null);
     UUID inVertexObjectID = mockObject();
     UUID outVertexObjectID = mockObject();
-    Edge edge = new FactEdge(getActGraph(), factID, inVertexObjectID, outVertexObjectID);
+    Edge edge = new FactEdge(getGraph(), factID, inVertexObjectID, outVertexObjectID);
 
     Iterator<Vertex> vertices = edge.vertices(Direction.BOTH);
     assertSame(outVertexObjectID, vertices.next().id());
@@ -158,7 +158,7 @@ public class FactEdgeTest extends AbstractGraphTest {
   @Test
   public void testGetPropertyKeysOnEdge() {
     UUID factID = mockFact(null);
-    Edge edge = new FactEdge(getActGraph(), factID, mockObject(), mockObject());
+    Edge edge = new FactEdge(getGraph(), factID, mockObject(), mockObject());
 
     // Test that the following properties exists on the edge.
     Map<String, Object> expected = MapUtils.map(
@@ -209,7 +209,7 @@ public class FactEdgeTest extends AbstractGraphTest {
     UUID factID = mockFact(null);
     UUID inVertexObjectID = mockObject();
     UUID outVertexObjectID = mockObject();
-    Edge edge = new FactEdge(getActGraph(), factID, inVertexObjectID, outVertexObjectID);
+    Edge edge = new FactEdge(getGraph(), factID, inVertexObjectID, outVertexObjectID);
 
     assertEquals(outVertexObjectID, edge.outVertex().id());
     assertEquals(inVertexObjectID, edge.inVertex().id());
@@ -226,7 +226,7 @@ public class FactEdgeTest extends AbstractGraphTest {
     UUID factID = mockFact(null);
     UUID inVertexObjectID = mockObject();
     UUID outVertexObjectID = mockObject();
-    return new FactEdge(getActGraph(), factID, inVertexObjectID, outVertexObjectID);
+    return new FactEdge(getGraph(), factID, inVertexObjectID, outVertexObjectID);
   }
 
 }

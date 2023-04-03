@@ -29,13 +29,13 @@ import static org.apache.tinkerpop.gremlin.structure.Vertex.Exceptions.vertexRem
 @Deprecated
 public class ObjectVertex implements Vertex {
 
-  private final ActGraph graph;
+  private final ObjectFactGraph graph;
   private final ObjectEntity object;
   private final ObjectTypeEntity type;
   private final List<ObjectFactBindingEntity> bindings;
   private final Set<VertexProperty> allProperties;
 
-  public ObjectVertex(ActGraph graph, UUID objectID) {
+  public ObjectVertex(ObjectFactGraph graph, UUID objectID) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
     this.object = ObjectUtils.notNull(graph.getObjectManager().getObject(objectID), String.format("Object with id = %s does not exist.", objectID));
     this.type = ObjectUtils.notNull(graph.getObjectManager().getObjectType(object.getTypeID()), String.format("ObjectType with id = %s does not exist.", object.getTypeID()));

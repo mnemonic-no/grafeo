@@ -11,13 +11,13 @@ import no.mnemonic.services.grafeo.dao.modules.DaoModule;
 import no.mnemonic.services.grafeo.seb.esengine.modules.SebESEngineModule;
 import no.mnemonic.services.grafeo.seb.producer.modules.SebProducerModule;
 import no.mnemonic.services.grafeo.service.aspects.*;
+import no.mnemonic.services.grafeo.service.caches.DaoCachesModule;
+import no.mnemonic.services.grafeo.service.caches.ResponseCachesModule;
+import no.mnemonic.services.grafeo.service.implementation.GrafeoServiceImpl;
 import no.mnemonic.services.grafeo.service.providers.HazelcastBasedLockProvider;
 import no.mnemonic.services.grafeo.service.providers.HazelcastInstanceProvider;
 import no.mnemonic.services.grafeo.service.providers.LockProvider;
 import no.mnemonic.services.grafeo.service.providers.TriggerEventConsumerProvider;
-import no.mnemonic.services.grafeo.service.ti.ThreatIntelligenceServiceImpl;
-import no.mnemonic.services.grafeo.service.ti.caches.DaoCachesModule;
-import no.mnemonic.services.grafeo.service.ti.caches.ResponseCachesModule;
 import no.mnemonic.services.grafeo.service.validators.DefaultValidatorFactory;
 import no.mnemonic.services.grafeo.service.validators.ValidatorFactory;
 import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
@@ -70,7 +70,7 @@ public class TiServiceModule extends AbstractModule {
     // Bind the concrete implementation classes of the ThreatIntelligenceService.
     bind(LockProvider.class).to(HazelcastBasedLockProvider.class).in(Scopes.SINGLETON);
     bind(ValidatorFactory.class).to(DefaultValidatorFactory.class).in(Scopes.SINGLETON);
-    bind(ThreatIntelligenceService.class).to(ThreatIntelligenceServiceImpl.class).in(Scopes.SINGLETON);
+    bind(ThreatIntelligenceService.class).to(GrafeoServiceImpl.class).in(Scopes.SINGLETON);
   }
 
   @Provides

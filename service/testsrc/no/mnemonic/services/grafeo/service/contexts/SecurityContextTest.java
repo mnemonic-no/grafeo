@@ -18,7 +18,7 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static no.mnemonic.services.grafeo.service.ti.TiFunctionConstants.viewThreatIntelFact;
+import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewThreatIntelFact;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;

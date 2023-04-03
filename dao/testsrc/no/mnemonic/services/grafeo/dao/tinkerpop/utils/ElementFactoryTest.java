@@ -4,7 +4,7 @@ import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.*;
-import no.mnemonic.services.grafeo.dao.tinkerpop.ActGraph;
+import no.mnemonic.services.grafeo.dao.tinkerpop.ObjectFactGraph;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Before;
@@ -30,12 +30,12 @@ public class ElementFactoryTest {
   public void setup() {
     initMocks(this);
 
-    ActGraph actGraph = ActGraph.builder()
+    ObjectFactGraph graph = ObjectFactGraph.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
             .setHasFactAccess(f -> true)
             .build();
-    elementFactory = ElementFactory.builder().setOwner(actGraph).build();
+    elementFactory = ElementFactory.builder().setOwner(graph).build();
   }
 
   @Test(expected = RuntimeException.class)
@@ -56,7 +56,7 @@ public class ElementFactoryTest {
 
   @Test
   public void testCreateEdgesWithoutFactAccess() {
-    ActGraph graph = ActGraph.builder()
+    ObjectFactGraph graph = ObjectFactGraph.builder()
             .setObjectManager(objectManager)
             .setFactManager(factManager)
             .setHasFactAccess(f -> false)

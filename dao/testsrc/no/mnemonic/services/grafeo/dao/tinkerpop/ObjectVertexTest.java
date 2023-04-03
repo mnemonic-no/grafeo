@@ -30,7 +30,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
 
   @Test(expected = RuntimeException.class)
   public void testCreateVertexWithoutObject() {
-    new ObjectVertex(getActGraph(), UUID.randomUUID());
+    new ObjectVertex(getGraph(), UUID.randomUUID());
   }
 
   @Test(expected = RuntimeException.class)
@@ -42,22 +42,22 @@ public class ObjectVertexTest extends AbstractGraphTest {
             .setValue("value")
     );
 
-    new ObjectVertex(getActGraph(), objectID);
+    new ObjectVertex(getGraph(), objectID);
   }
 
   @Test
   public void testCreateVertexFromObject() {
     UUID objectID = mockObject();
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
     assertEquals(objectID, vertex.id());
     assertEquals("type", vertex.label());
-    assertSame(getActGraph(), vertex.graph());
+    assertSame(getGraph(), vertex.graph());
   }
 
   @Test
   public void testEdgesWithDirectionBiDirectional() {
     UUID objectID = mockObjectWithFact(Direction.BiDirectional);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
 
     assertTrue(vertex.edges(BOTH).hasNext());
     assertTrue(vertex.edges(IN).hasNext());
@@ -67,7 +67,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testEdgesWithDirectionFactIsDestination() {
     UUID objectID = mockObjectWithFact(Direction.FactIsDestination);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
 
     assertTrue(vertex.edges(BOTH).hasNext());
     assertFalse(vertex.edges(IN).hasNext());
@@ -77,7 +77,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testEdgesWithDirectionFactIsSource() {
     UUID objectID = mockObjectWithFact(Direction.FactIsSource);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
 
     assertTrue(vertex.edges(BOTH).hasNext());
     assertTrue(vertex.edges(IN).hasNext());
@@ -87,7 +87,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testEdgesFilterByLabel() {
     UUID objectID = mockObjectWithFact(Direction.BiDirectional);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
 
     assertTrue(vertex.edges(BOTH, "type").hasNext());
     assertFalse(vertex.edges(BOTH, "something").hasNext());
@@ -96,7 +96,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testVerticesWithDirectionBiDirectional() {
     UUID objectID = mockObjectWithFact(Direction.BiDirectional);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
 
     assertTrue(vertex.vertices(BOTH).hasNext());
     assertTrue(vertex.vertices(IN).hasNext());
@@ -106,7 +106,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testVerticesWithDirectionFactIsDestination() {
     UUID objectID = mockObjectWithFact(Direction.FactIsDestination);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
 
     assertTrue(vertex.vertices(BOTH).hasNext());
     assertFalse(vertex.vertices(IN).hasNext());
@@ -116,7 +116,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testVerticesWithDirectionFactIsSource() {
     UUID objectID = mockObjectWithFact(Direction.FactIsSource);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
 
     assertTrue(vertex.vertices(BOTH).hasNext());
     assertTrue(vertex.vertices(IN).hasNext());
@@ -126,7 +126,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   @Test
   public void testVerticesFilterByLabel() {
     UUID objectID = mockObjectWithFact(Direction.BiDirectional);
-    Vertex vertex = new ObjectVertex(getActGraph(), objectID);
+    Vertex vertex = new ObjectVertex(getGraph(), objectID);
 
     assertTrue(vertex.vertices(BOTH, "type").hasNext());
     assertFalse(vertex.vertices(BOTH, "something").hasNext());
@@ -225,7 +225,7 @@ public class ObjectVertexTest extends AbstractGraphTest {
   }
 
   private Vertex createVertex() {
-    return new ObjectVertex(getActGraph(), mockObject());
+    return new ObjectVertex(getGraph(), mockObject());
   }
 
   private UUID mockObjectWithFact(Direction inDirection) {

@@ -23,7 +23,7 @@ import static org.apache.tinkerpop.gremlin.structure.Edge.Exceptions.edgeRemoval
 @Deprecated
 public class FactEdge implements Edge {
 
-  private final ActGraph graph;
+  private final ObjectFactGraph graph;
   private final FactEntity fact;
   private final FactTypeEntity type;
   private final Vertex inVertex;
@@ -31,7 +31,7 @@ public class FactEdge implements Edge {
   private final UUID edgeID;
   private final Set<Property> allProperties;
 
-  public FactEdge(ActGraph graph, UUID factID, UUID inVertexObjectID, UUID outVertexObjectID) {
+  public FactEdge(ObjectFactGraph graph, UUID factID, UUID inVertexObjectID, UUID outVertexObjectID) {
     this.graph = ObjectUtils.notNull(graph, "'graph' is null!");
     this.fact = ObjectUtils.notNull(graph.getFactManager().getFact(factID), String.format("Fact with id = %s does not exist.", factID));
     this.type = ObjectUtils.notNull(graph.getFactManager().getFactType(fact.getTypeID()), String.format("FactType with id = %s does not exist.", fact.getTypeID()));
