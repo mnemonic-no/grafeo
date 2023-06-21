@@ -1,0 +1,10 @@
+{
+  "projectName": "ACT platform",
+  "projectPage": "https://github.com/mnemonic-no/act-platform",
+  "systemOwner": "joakim",
+  "repositoryOwner": "konstantin",
+  "language": "java",
+  "criticality": "critical",
+  "policyExceptions": [
+  ]
+}
