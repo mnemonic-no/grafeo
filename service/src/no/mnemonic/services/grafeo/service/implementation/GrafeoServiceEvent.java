@@ -15,7 +15,7 @@ import java.util.UUID;
  */
 public class GrafeoServiceEvent implements TriggerEvent {
 
-  private static final String TI_SERVICE_NAME = "ThreatIntelligenceService";
+  private static final String SERVICE_NAME = "GrafeoService";
 
   public enum ContextParameter {
     AddedFact, RetractionFact, RetractedFact
@@ -53,7 +53,7 @@ public class GrafeoServiceEvent implements TriggerEvent {
 
   @Override
   public String getService() {
-    return TI_SERVICE_NAME;
+    return SERVICE_NAME;
   }
 
   @Override

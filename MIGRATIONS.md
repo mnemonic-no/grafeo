@@ -2,6 +2,10 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Rename trigger events] - 2023-07-05
+The service name of the generated trigger events has been renamed. Adjust the two configuration files `triggerEventDefinition.yaml`
+and `triggerRule.yaml` and change the properties named `service` from `ThreatIntelligenceService` to `GrafeoService`.
+
 ## [New field in ElasticSearch mapping] - 2023-01-06
 A new field has been added to the ElasticSearch mapping. Execute the following curl command against you ElasticSearch cluster
 (or use Kibana) to update the existing mapping.

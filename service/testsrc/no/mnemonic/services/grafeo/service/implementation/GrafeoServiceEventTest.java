@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 public class GrafeoServiceEventTest {
 
   @Test
-  public void testCreateTiServiceEventWithAccessModePublic() {
+  public void testCreateServiceEventWithAccessModePublic() {
     UUID organizationID = UUID.randomUUID();
     TriggerEvent event = GrafeoServiceEvent.forEvent(FactAdded)
             .setOrganization(organizationID)
@@ -20,14 +20,14 @@ public class GrafeoServiceEventTest {
             .build();
     assertNotNull(event.getId());
     assertTrue(event.getTimestamp() > 0);
-    assertEquals("ThreatIntelligenceService", event.getService());
+    assertEquals("GrafeoService", event.getService());
     assertEquals(FactAdded.name(), event.getEvent());
     assertEquals(organizationID, event.getOrganization());
     assertEquals(AccessMode.Public, event.getAccessMode());
   }
 
   @Test
-  public void testCreateTiServiceEventWithAccessModeRoleBased() {
+  public void testCreateServiceEventWithAccessModeRoleBased() {
     UUID organizationID = UUID.randomUUID();
     TriggerEvent event = GrafeoServiceEvent.forEvent(FactAdded)
             .setOrganization(organizationID)
@@ -35,14 +35,14 @@ public class GrafeoServiceEventTest {
             .build();
     assertNotNull(event.getId());
     assertTrue(event.getTimestamp() > 0);
-    assertEquals("ThreatIntelligenceService", event.getService());
+    assertEquals("GrafeoService", event.getService());
     assertEquals(FactAdded.name(), event.getEvent());
     assertEquals(organizationID, event.getOrganization());
     assertEquals(AccessMode.RoleBased, event.getAccessMode());
   }
 
   @Test
-  public void testCreateTiServiceEventWithAccessModeExplicit() {
+  public void testCreateServiceEventWithAccessModeExplicit() {
     UUID organizationID = UUID.randomUUID();
     TriggerEvent event = GrafeoServiceEvent.forEvent(FactAdded)
             .setOrganization(organizationID)
@@ -50,14 +50,14 @@ public class GrafeoServiceEventTest {
             .build();
     assertNotNull(event.getId());
     assertTrue(event.getTimestamp() > 0);
-    assertEquals("ThreatIntelligenceService", event.getService());
+    assertEquals("GrafeoService", event.getService());
     assertEquals(FactAdded.name(), event.getEvent());
     assertEquals(organizationID, event.getOrganization());
     assertEquals(AccessMode.Private, event.getAccessMode());
   }
 
   @Test
-  public void testCreateTiServiceEventWithContextParameters() {
+  public void testCreateServiceEventWithContextParameters() {
     TriggerEvent event = GrafeoServiceEvent.forEvent(FactAdded)
             .setOrganization(UUID.randomUUID())
             .setAccessMode(no.mnemonic.services.grafeo.api.model.v1.AccessMode.Public)
@@ -69,7 +69,7 @@ public class GrafeoServiceEventTest {
   }
 
   @Test(expected = RuntimeException.class)
-  public void testCreateTiServiceEventWithoutEvent() {
+  public void testCreateServiceEventWithoutEvent() {
     GrafeoServiceEvent.forEvent(null)
             .setOrganization(UUID.randomUUID())
             .setAccessMode(no.mnemonic.services.grafeo.api.model.v1.AccessMode.Public)
@@ -77,14 +77,14 @@ public class GrafeoServiceEventTest {
   }
 
   @Test(expected = RuntimeException.class)
-  public void testCreateTiServiceEventWithoutOrganization() {
+  public void testCreateServiceEventWithoutOrganization() {
     GrafeoServiceEvent.forEvent(FactAdded)
             .setAccessMode(no.mnemonic.services.grafeo.api.model.v1.AccessMode.Public)
             .build();
   }
 
   @Test(expected = RuntimeException.class)
-  public void testCreateTiServiceEventWithoutAccessMode() {
+  public void testCreateServiceEventWithoutAccessMode() {
     GrafeoServiceEvent.forEvent(FactAdded)
             .setOrganization(UUID.randomUUID())
             .build();

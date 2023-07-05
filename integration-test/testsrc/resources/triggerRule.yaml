@@ -1,6 +1,6 @@
 ---
 id: 28656f78-a792-423c-a043-fcc5e35663df
-service: ThreatIntelligenceService
+service: GrafeoService
 events: [ FactAdded ]
 organizations: [ 00000000-0000-0000-0000-000000000001 ]
 accessMode: RoleBased
@@ -11,7 +11,7 @@ triggerParameters:
 
 ---
 id: 7a9c74fe-5485-4997-9f1a-f9ab230997a5
-service: ThreatIntelligenceService
+service: GrafeoService
 events: [ FactRetracted ]
 organizations: [ 00000000-0000-0000-0000-000000000001 ]
 accessMode: RoleBased
