@@ -49,7 +49,7 @@ public class OriginUpdateDelegate implements Delegate {
       // Check that the requested organization exists.
       assertOrganizationExists(request);
       // Check update permission for requested organization.
-      securityContext.checkPermission(FunctionConstants.updateThreatIntelOrigin, request.getOrganization());
+      securityContext.checkPermission(FunctionConstants.updateGrafeoOrigin, request.getOrganization());
       entity.setOrganizationID(request.getOrganization());
     }
 
@@ -83,10 +83,10 @@ public class OriginUpdateDelegate implements Delegate {
   private void checkUpdatePermission(OriginEntity entity) throws AccessDeniedException, AuthenticationFailedException {
     if (entity.getOrganizationID() != null) {
       // Check specific update permission for the Origin.
-      securityContext.checkPermission(FunctionConstants.updateThreatIntelOrigin, entity.getOrganizationID());
+      securityContext.checkPermission(FunctionConstants.updateGrafeoOrigin, entity.getOrganizationID());
     } else {
       // Only check general update permission.
-      securityContext.checkPermission(FunctionConstants.updateThreatIntelOrigin);
+      securityContext.checkPermission(FunctionConstants.updateGrafeoOrigin);
     }
   }
 

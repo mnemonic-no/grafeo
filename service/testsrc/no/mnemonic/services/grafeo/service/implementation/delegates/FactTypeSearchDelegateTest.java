@@ -39,7 +39,7 @@ public class FactTypeSearchDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchFactTypesWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewThreatIntelType);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoType);
     delegate.handle(new SearchFactTypeRequest());
   }
 

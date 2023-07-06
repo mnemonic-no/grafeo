@@ -41,7 +41,7 @@ public class OriginSearchDelegate implements Delegate {
   public ResultSet<Origin> handle(SearchOriginRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     // Verify that the user is allowed to view Origins in general.
-    securityContext.checkPermission(FunctionConstants.viewThreatIntelOrigin);
+    securityContext.checkPermission(FunctionConstants.viewGrafeoOrigin);
 
     int limit = ObjectUtils.ifNull(request.getLimit(), DEFAULT_LIMIT);
     List<Origin> origins = originManager.fetchOrigins()

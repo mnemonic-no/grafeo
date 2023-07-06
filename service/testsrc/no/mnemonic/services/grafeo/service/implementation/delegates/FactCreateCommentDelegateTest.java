@@ -53,7 +53,7 @@ public class FactCreateCommentDelegateTest {
   public void testCreateFactCommentNoAddPermission() throws Exception {
     CreateFactCommentRequest request = createFactCommentRequest();
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(FunctionConstants.addThreatIntelFactComment), any());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(FunctionConstants.addGrafeoFactComment), any());
 
     delegate.handle(request);
   }

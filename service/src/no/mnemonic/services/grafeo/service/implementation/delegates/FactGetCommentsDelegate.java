@@ -41,7 +41,7 @@ public class FactGetCommentsDelegate implements Delegate {
     // Verify that user is allowed to access the Fact.
     securityContext.checkReadPermission(fact);
     // Verify that user is allowed to view the Fact's comments.
-    securityContext.checkPermission(FunctionConstants.viewThreatIntelFactComment, fact.getOrganizationID());
+    securityContext.checkPermission(FunctionConstants.viewGrafeoFactComment, fact.getOrganizationID());
     // Fetch comments for Fact and filter by 'before' and 'after' timestamps.
     List<FactComment> comments = ListUtils.list(fact.getComments())
             .stream()

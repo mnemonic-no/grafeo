@@ -43,7 +43,7 @@ public class FactTypeCreateDelegate implements Delegate {
 
   public FactType handle(CreateFactTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(FunctionConstants.addThreatIntelType);
+    securityContext.checkPermission(FunctionConstants.addGrafeoType);
 
     // A FactType can either link Objects or Facts not both, i.e. exactly one of 'relevantObjectBindings' or 'relevantFactBindings' must be set
     if (CollectionUtils.isEmpty(request.getRelevantObjectBindings()) && CollectionUtils.isEmpty(request.getRelevantFactBindings())) {

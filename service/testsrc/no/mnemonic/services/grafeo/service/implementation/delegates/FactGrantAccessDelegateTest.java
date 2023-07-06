@@ -74,7 +74,7 @@ public class FactGrantAccessDelegateTest {
   public void testGrantFactAccessNoGrantPermission() throws Exception {
     GrantFactAccessRequest request = createGrantAccessRequest();
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(FunctionConstants.grantThreatIntelFactAccess), any());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(FunctionConstants.grantGrafeoFactAccess), any());
 
     delegate.handle(request);
   }

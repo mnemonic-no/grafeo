@@ -39,7 +39,7 @@ public class OriginCreateDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testCreateOriginWithoutGeneralAddPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addThreatIntelOrigin);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoOrigin);
     delegate.handle(new CreateOriginRequest());
   }
 
@@ -47,7 +47,7 @@ public class OriginCreateDelegateTest {
   public void testCreateOriginWithoutSpecificAddPermission() throws Exception {
     CreateOriginRequest request = new CreateOriginRequest().setOrganization(UUID.randomUUID());
     when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(request.getOrganization()));
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addThreatIntelOrigin, request.getOrganization());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoOrigin, request.getOrganization());
     delegate.handle(request);
   }
 
@@ -75,7 +75,7 @@ public class OriginCreateDelegateTest {
     when(originManager.saveOrigin(notNull())).thenReturn(new OriginEntity());
 
     delegate.handle(request);
-    verify(securityContext).checkPermission(FunctionConstants.addThreatIntelOrigin, request.getOrganization());
+    verify(securityContext).checkPermission(FunctionConstants.addGrafeoOrigin, request.getOrganization());
     verify(originResponseConverter).apply(notNull());
     verify(originManager).saveOrigin(argThat(entity -> {
       assertNotNull(entity.getId());
@@ -96,7 +96,7 @@ public class OriginCreateDelegateTest {
     when(originManager.saveOrigin(notNull())).thenReturn(new OriginEntity());
 
     delegate.handle(request);
-    verify(securityContext).checkPermission(FunctionConstants.addThreatIntelOrigin);
+    verify(securityContext).checkPermission(FunctionConstants.addGrafeoOrigin);
     verify(originResponseConverter).apply(notNull());
     verify(originManager).saveOrigin(argThat(entity -> {
       assertNotNull(entity.getId());

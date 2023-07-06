@@ -115,7 +115,7 @@ public class FactCreateDelegateTest {
   public void testCreateFactWithoutAddPermission() throws Exception {
     mockFetchingOrganization();
     mockFetchingFactType();
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addThreatIntelFact, organization.getId());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoFact, organization.getId());
     delegate.handle(createRequest());
   }
 

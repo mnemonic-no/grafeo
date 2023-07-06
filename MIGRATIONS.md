@@ -2,6 +2,27 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Rename permission functions] - 2023-07-06
+All permission functions have been renamed. Change the configuration file `acl.properties` according to the table below.
+
+Old Name | New Name
+-------- | --------
+addThreatIntelType | addGrafeoType
+updateThreatIntelType | updateGrafeoType
+viewThreatIntelType | viewGrafeoType
+addThreatIntelOrigin | addGrafeoOrigin
+deleteThreatIntelOrigin | deleteGrafeoOrigin
+updateThreatIntelOrigin | updateGrafeoOrigin
+viewThreatIntelOrigin | viewGrafeoOrigin
+addThreatIntelFact | addGrafeoFact
+traverseThreatIntelFact | traverseGrafeoFact
+viewThreatIntelFact | viewGrafeoFact
+addThreatIntelFactComment | addGrafeoFactComment
+viewThreatIntelFactComment | viewGrafeoFactComment
+grantThreatIntelFactAccess | grantGrafeoFactAccess
+viewThreatIntelFactAccess | viewGrafeoFactAccess
+unlimitedThreatIntelSearch | unlimitedGrafeoSearch
+
 ## [Rename trigger events] - 2023-07-05
 The service name of the generated trigger events has been renamed. Adjust the two configuration files `triggerEventDefinition.yaml`
 and `triggerRule.yaml` and change the properties named `service` from `ThreatIntelligenceService` to `GrafeoService`.

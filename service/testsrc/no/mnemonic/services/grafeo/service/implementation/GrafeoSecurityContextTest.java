@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewThreatIntelFact;
-import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewThreatIntelOrigin;
+import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewGrafeoFact;
+import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewGrafeoOrigin;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
@@ -93,14 +93,14 @@ public class GrafeoSecurityContextTest {
 
   @Test
   public void testCheckReadPermissionWithAccessModePublic() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(true);
     context.checkReadPermission(new FactEntity().setAccessMode(AccessMode.Public));
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionWithAccessModePublicNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false);
     context.checkReadPermission(new FactEntity().setAccessMode(AccessMode.Public));
   }
 
@@ -110,9 +110,9 @@ public class GrafeoSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
 
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(true);
     context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test
@@ -126,7 +126,7 @@ public class GrafeoSecurityContextTest {
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController, never()).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -135,7 +135,7 @@ public class GrafeoSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(AccessMode.RoleBased);
 
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(false);
     context.checkReadPermission(fact);
   }
 
@@ -149,7 +149,7 @@ public class GrafeoSecurityContextTest {
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController, never()).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -160,7 +160,7 @@ public class GrafeoSecurityContextTest {
 
     context.checkReadPermission(fact);
     verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController, never()).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test
@@ -169,20 +169,20 @@ public class GrafeoSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(null);
 
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(true);
     context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test
   public void testHasReadPermissionReturnsTrueOnAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(true);
     assertTrue(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
   }
 
   @Test
   public void testHasReadPermissionReturnsFalseOnNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false);
     assertFalse(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
   }
 
@@ -193,14 +193,14 @@ public class GrafeoSecurityContextTest {
 
   @Test
   public void testCheckReadPermissionForFactRecordWithAccessModePublic() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(true);
     context.checkReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public));
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionForFactRecordWithAccessModePublicNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false);
     context.checkReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public));
   }
 
@@ -210,9 +210,9 @@ public class GrafeoSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.RoleBased);
 
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(true);
     context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test
@@ -224,7 +224,7 @@ public class GrafeoSecurityContextTest {
             .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUserIdentities()));
 
     context.checkReadPermission(fact);
-    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController, never()).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -233,7 +233,7 @@ public class GrafeoSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(FactRecord.AccessMode.RoleBased);
 
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(false);
     context.checkReadPermission(fact);
   }
 
@@ -245,7 +245,7 @@ public class GrafeoSecurityContextTest {
             .addAclEntry(new FactAclEntryRecord().setSubjectID(mockCurrentUserIdentities()));
 
     context.checkReadPermission(fact);
-    verify(accessController, never()).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController, never()).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
@@ -263,20 +263,20 @@ public class GrafeoSecurityContextTest {
             .setOrganizationID(UUID.randomUUID())
             .setAccessMode(null);
 
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(true);
     context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test
   public void testHasReadPermissionForFactRecordReturnsTrueOnAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(true);
     assertTrue(context.hasReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public)));
   }
 
   @Test
   public void testHasReadPermissionForFactRecordReturnsFalseOnNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false);
     assertFalse(context.hasReadPermission(new FactRecord().setAccessMode(FactRecord.AccessMode.Public)));
   }
 
@@ -301,7 +301,7 @@ public class GrafeoSecurityContextTest {
   public void testCheckReadPermissionForObjectRecordWithAccessToFact() throws Exception {
     ObjectRecord object = mockCheckPermissionForObjectRecord(true);
     context.checkReadPermission(object);
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact);
   }
 
   @Test
@@ -309,10 +309,10 @@ public class GrafeoSecurityContextTest {
     FactRecord fact = new FactRecord().setAccessMode(FactRecord.AccessMode.Public);
 
     when(objectFactDao.retrieveObjectFacts(notNull())).thenReturn(ListUtils.list(fact, fact, fact).iterator());
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false, true, false);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false, true, false);
 
     context.checkReadPermission(new ObjectRecord().setId(UUID.randomUUID()));
-    verify(accessController, times(2)).hasPermission(credentials, viewThreatIntelFact);
+    verify(accessController, times(2)).hasPermission(credentials, viewGrafeoFact);
   }
 
   @Test
@@ -334,39 +334,39 @@ public class GrafeoSecurityContextTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionForOriginWithOrganizationNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelOrigin, organization)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoOrigin, organization)).thenReturn(false);
     context.checkReadPermission(new OriginEntity().setOrganizationID(UUID.randomUUID()));
   }
 
   @Test
   public void testCheckReadPermissionForOriginWithOrganizationAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelOrigin, organization)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoOrigin, organization)).thenReturn(true);
     context.checkReadPermission(new OriginEntity().setOrganizationID(UUID.randomUUID()));
-    verify(accessController).hasPermission(credentials, viewThreatIntelOrigin, organization);
+    verify(accessController).hasPermission(credentials, viewGrafeoOrigin, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckReadPermissionForOriginWithoutOrganizationNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelOrigin)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoOrigin)).thenReturn(false);
     context.checkReadPermission(new OriginEntity());
   }
 
   @Test
   public void testCheckReadPermissionForOriginWithoutOrganizationAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelOrigin)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoOrigin)).thenReturn(true);
     context.checkReadPermission(new OriginEntity());
-    verify(accessController).hasPermission(credentials, viewThreatIntelOrigin);
+    verify(accessController).hasPermission(credentials, viewGrafeoOrigin);
   }
 
   @Test
   public void testHasReadPermissionForOriginReturnsTrueOnAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelOrigin)).thenReturn(true);
+    when(accessController.hasPermission(credentials, viewGrafeoOrigin)).thenReturn(true);
     assertTrue(context.hasReadPermission(new OriginEntity()));
   }
 
   @Test
   public void testHasReadPermissionForOriginReturnsFalseOnNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelOrigin)).thenReturn(false);
+    when(accessController.hasPermission(credentials, viewGrafeoOrigin)).thenReturn(false);
     assertFalse(context.hasReadPermission(new OriginEntity()));
   }
 
@@ -407,7 +407,7 @@ public class GrafeoSecurityContextTest {
     // Mock retrieval of bound Facts.
     when(objectFactDao.retrieveObjectFacts(notNull())).thenReturn(ListUtils.list(fact).iterator());
     // Mock access to bound Facts.
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(result);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(result);
 
     return object;
   }

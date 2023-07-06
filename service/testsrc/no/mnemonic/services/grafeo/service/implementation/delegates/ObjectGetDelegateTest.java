@@ -70,7 +70,7 @@ public class ObjectGetDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByIdWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewThreatIntelFact);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
     delegate.handle(new GetObjectByIdRequest());
   }
 
@@ -123,7 +123,7 @@ public class ObjectGetDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchObjectByTypeValueWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewThreatIntelFact);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
     delegate.handle(new GetObjectByTypeValueRequest());
   }
 

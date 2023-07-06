@@ -53,7 +53,7 @@ public class ObjectSearchDelegate implements Delegate {
 
   public ResultSet<Object> handle(SearchObjectRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(FunctionConstants.viewThreatIntelFact);
+    securityContext.checkPermission(FunctionConstants.viewGrafeoFact);
 
     FactSearchCriteria criteria = requestConverter.apply(request);
     if (criteria.isUnbounded()) {

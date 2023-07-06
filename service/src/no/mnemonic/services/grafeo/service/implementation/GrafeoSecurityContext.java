@@ -63,7 +63,7 @@ public class GrafeoSecurityContext extends SecurityContext {
 
     if (fact.getAccessMode() == AccessMode.Public) {
       // Only verify that user has general permission to view Facts.
-      checkPermission(FunctionConstants.viewThreatIntelFact);
+      checkPermission(FunctionConstants.viewGrafeoFact);
       // Access allowed because user is generally allowed to view Facts.
       return;
     }
@@ -80,7 +80,7 @@ public class GrafeoSecurityContext extends SecurityContext {
 
     // Fallback to role-based access control and verify that user has access to Facts of a specific organization.
     // This also catches the case where AccessMode == RoleBased and user is not in the Fact's ACL.
-    checkPermission(FunctionConstants.viewThreatIntelFact, fact.getOrganizationID());
+    checkPermission(FunctionConstants.viewGrafeoFact, fact.getOrganizationID());
   }
 
   /**
@@ -95,7 +95,7 @@ public class GrafeoSecurityContext extends SecurityContext {
 
     if (fact.getAccessMode() == FactRecord.AccessMode.Public) {
       // Only verify that user has general permission to view Facts.
-      checkPermission(FunctionConstants.viewThreatIntelFact);
+      checkPermission(FunctionConstants.viewGrafeoFact);
       // Access allowed because user is generally allowed to view Facts.
       return;
     }
@@ -113,7 +113,7 @@ public class GrafeoSecurityContext extends SecurityContext {
 
     // Fallback to role-based access control and verify that user has access to Facts of a specific organization.
     // This also catches the case where AccessMode == RoleBased and user is not in the Fact's ACL.
-    checkPermission(FunctionConstants.viewThreatIntelFact, fact.getOrganizationID());
+    checkPermission(FunctionConstants.viewGrafeoFact, fact.getOrganizationID());
   }
 
   /**
@@ -152,10 +152,10 @@ public class GrafeoSecurityContext extends SecurityContext {
 
     if (origin.getOrganizationID() != null) {
       // Check that the user has view permission for the organization the Origin belongs to.
-      checkPermission(FunctionConstants.viewThreatIntelOrigin, origin.getOrganizationID());
+      checkPermission(FunctionConstants.viewGrafeoOrigin, origin.getOrganizationID());
     } else {
       // Only check that the user has general view permission.
-      checkPermission(FunctionConstants.viewThreatIntelOrigin);
+      checkPermission(FunctionConstants.viewGrafeoOrigin);
     }
   }
 

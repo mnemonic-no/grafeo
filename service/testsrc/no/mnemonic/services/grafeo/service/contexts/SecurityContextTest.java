@@ -18,7 +18,7 @@ import org.mockito.Mock;
 
 import java.util.UUID;
 
-import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewThreatIntelFact;
+import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewGrafeoFact;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -104,46 +104,46 @@ public class SecurityContextTest {
 
   @Test
   public void testCheckPermissionWithAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(true);
-    context.checkPermission(viewThreatIntelFact);
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(true);
+    context.checkPermission(viewGrafeoFact);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckPermissionThrowsAccessDeniedException() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenReturn(false);
-    context.checkPermission(viewThreatIntelFact);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false);
+    context.checkPermission(viewGrafeoFact);
   }
 
   @Test(expected = AuthenticationFailedException.class)
   public void testCheckPermissionThrowsAuthenticationFailedException() throws Exception {
-    when(accessController.hasPermission(credentials, viewThreatIntelFact)).thenThrow(InvalidCredentialsException.class);
-    context.checkPermission(viewThreatIntelFact);
+    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenThrow(InvalidCredentialsException.class);
+    context.checkPermission(viewGrafeoFact);
   }
 
   @Test
   public void testCheckPermissionForOrganizationWithAccess() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(true);
-    context.checkPermission(viewThreatIntelFact, organizationID);
-    verify(accessController).hasPermission(credentials, viewThreatIntelFact, organization);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(true);
+    context.checkPermission(viewGrafeoFact, organizationID);
+    verify(accessController).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
   @Test(expected = AccessDeniedException.class)
   public void testCheckPermissionForOrganizationThrowsAccessDeniedException() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenReturn(false);
-    context.checkPermission(viewThreatIntelFact, organizationID);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(false);
+    context.checkPermission(viewGrafeoFact, organizationID);
   }
 
   @Test(expected = AuthenticationFailedException.class)
   public void testCheckPermissionForOrganizationThrowsAuthenticationFailedException() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
-    when(accessController.hasPermission(credentials, viewThreatIntelFact, organization)).thenThrow(InvalidCredentialsException.class);
-    context.checkPermission(viewThreatIntelFact, organizationID);
+    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenThrow(InvalidCredentialsException.class);
+    context.checkPermission(viewGrafeoFact, organizationID);
   }
 
   @Test

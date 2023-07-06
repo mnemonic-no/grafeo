@@ -46,7 +46,7 @@ public class ObjectTypeCreateDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testCreateObjectTypeWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addThreatIntelType);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoType);
     delegate.handle(createRequest());
   }
 

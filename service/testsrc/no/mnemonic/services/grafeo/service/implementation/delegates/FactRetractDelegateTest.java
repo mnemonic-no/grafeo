@@ -93,7 +93,7 @@ public class FactRetractDelegateTest {
   @Test(expected = AccessDeniedException.class)
   public void testRetractFactWithoutAddPermission() throws Exception {
     RetractFactRequest request = mockRetractingFact();
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addThreatIntelFact, organization.getId());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoFact, organization.getId());
 
     delegate.handle(request);
   }

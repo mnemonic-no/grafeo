@@ -64,7 +64,7 @@ public class TraverseByObjectsDelegateTest {
 
   @Test
   public void testTraverseWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.traverseThreatIntelFact);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.traverseGrafeoFact);
     assertThrows(AccessDeniedException.class, () -> delegate.handle(new TraverseGraphByObjectsRequest()));
   }
 

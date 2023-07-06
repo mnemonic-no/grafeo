@@ -50,7 +50,7 @@ public class ObjectTypeUpdateDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testUpdateObjectTypeWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateThreatIntelType);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateGrafeoType);
     delegate.handle(createRequest());
   }
 

@@ -42,7 +42,7 @@ public class ObjectTypeCreateDelegate implements Delegate {
 
   public ObjectType handle(CreateObjectTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(FunctionConstants.addThreatIntelType);
+    securityContext.checkPermission(FunctionConstants.addGrafeoType);
 
     objectTypeHandler.assertObjectTypeNotExists(request.getName());
     validatorHandler.assertValidator(request.getValidator(), request.getValidatorParameter(), Validator.ApplicableType.ObjectType);

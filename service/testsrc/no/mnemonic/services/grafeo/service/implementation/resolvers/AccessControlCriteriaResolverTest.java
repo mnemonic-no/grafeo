@@ -45,7 +45,7 @@ public class AccessControlCriteriaResolverTest {
     assertEquals(availableOrganizationID, criteria.getAvailableOrganizationID());
 
     verify(securityContext, times(availableOrganizationID.size()))
-            .checkPermission(eq(FunctionConstants.viewThreatIntelFact), argThat(availableOrganizationID::contains));
+            .checkPermission(eq(FunctionConstants.viewGrafeoFact), argThat(availableOrganizationID::contains));
   }
 
   @Test

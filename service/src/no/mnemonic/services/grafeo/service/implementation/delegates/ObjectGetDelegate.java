@@ -50,7 +50,7 @@ public class ObjectGetDelegate implements Delegate {
 
   public Object handle(GetObjectByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(FunctionConstants.viewThreatIntelFact);
+    securityContext.checkPermission(FunctionConstants.viewGrafeoFact);
     ObjectRecord object = objectFactDao.getObject(request.getId());
     securityContext.checkReadPermission(object);
     return createObjectConverter(request.getAfter(), request.getBefore()).apply(object);
@@ -58,7 +58,7 @@ public class ObjectGetDelegate implements Delegate {
 
   public Object handle(GetObjectByTypeValueRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(FunctionConstants.viewThreatIntelFact);
+    securityContext.checkPermission(FunctionConstants.viewGrafeoFact);
     objectTypeHandler.assertObjectTypeExists(request.getType(), "type");
     ObjectRecord object = objectFactDao.getObject(request.getType(), request.getValue());
     securityContext.checkReadPermission(object);

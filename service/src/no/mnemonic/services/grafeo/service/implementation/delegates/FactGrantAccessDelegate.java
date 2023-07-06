@@ -51,7 +51,7 @@ public class FactGrantAccessDelegate implements Delegate {
     // Verify that user is allowed to access the Fact.
     securityContext.checkReadPermission(fact);
     // Verify that user is allowed to grant further access to the Fact.
-    securityContext.checkPermission(FunctionConstants.grantThreatIntelFactAccess, fact.getOrganizationID());
+    securityContext.checkPermission(FunctionConstants.grantGrafeoFactAccess, fact.getOrganizationID());
     // It doesn't make sense to grant explicit access to a public Fact.
     if (fact.getAccessMode() == FactRecord.AccessMode.Public) {
       throw new InvalidArgumentException()

@@ -43,7 +43,7 @@ public class AccessControlCriteriaResolver implements Supplier<AccessControlCrit
 
   private boolean isAllowedToViewFacts(UUID organizationID) {
     try {
-      securityContext.checkPermission(FunctionConstants.viewThreatIntelFact, organizationID);
+      securityContext.checkPermission(FunctionConstants.viewGrafeoFact, organizationID);
       return true;
     } catch (AccessDeniedException | AuthenticationFailedException ignored) {
       return false;

@@ -52,7 +52,7 @@ public class ObjectTypeEndpoint {
           @ApiResponse(code = 404, message = "Requested ObjectType does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewThreatIntelType")
+  @RolesAllowed("viewGrafeoType")
   public Response getObjectTypeById(
           @PathParam("id") @ApiParam(value = "UUID of the requested ObjectType.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
@@ -72,7 +72,7 @@ public class ObjectTypeEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewThreatIntelType")
+  @RolesAllowed("viewGrafeoType")
   public Response searchObjectTypes()
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildResponse(service.searchObjectTypes(credentialsResolver.getRequestHeader(), new SearchObjectTypeRequest()));
@@ -101,7 +101,7 @@ public class ObjectTypeEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("addThreatIntelType")
+  @RolesAllowed("addGrafeoType")
   public Response createObjectType(
           @ApiParam(value = "Request to create ObjectType.") @NotNull @Valid CreateObjectTypeRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
@@ -126,7 +126,7 @@ public class ObjectTypeEndpoint {
           @ApiResponse(code = 404, message = "ObjectType does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("updateThreatIntelType")
+  @RolesAllowed("updateGrafeoType")
   public Response updateObjectType(
           @PathParam("id") @ApiParam(value = "UUID of ObjectType.") @NotNull @Valid UUID id,
           @ApiParam(value = "Request to update ObjectType.") @NotNull @Valid UpdateObjectTypeRequest request

@@ -44,7 +44,7 @@ public class FactCreateCommentDelegate implements Delegate {
     // Verify that user is allowed to access the Fact.
     securityContext.checkReadPermission(fact);
     // Verify that user is allowed to comment on the Fact.
-    securityContext.checkPermission(FunctionConstants.addThreatIntelFactComment, fact.getOrganizationID());
+    securityContext.checkPermission(FunctionConstants.addGrafeoFactComment, fact.getOrganizationID());
     // Verify that the 'replyTo' comment exists.
     verifyReplyToCommentExists(fact, request);
     // Save comment and return it to the user.

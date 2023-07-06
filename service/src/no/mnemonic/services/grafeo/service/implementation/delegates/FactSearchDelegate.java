@@ -31,7 +31,7 @@ public class FactSearchDelegate implements Delegate {
 
   public ResultSet<Fact> handle(SearchFactRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(FunctionConstants.viewThreatIntelFact);
+    securityContext.checkPermission(FunctionConstants.viewGrafeoFact);
 
     FactSearchCriteria criteria = requestConverter.apply(request);
     if (criteria.isUnbounded()) {

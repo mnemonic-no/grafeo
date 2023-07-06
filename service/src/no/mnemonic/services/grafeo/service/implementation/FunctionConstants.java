@@ -3,21 +3,21 @@ package no.mnemonic.services.grafeo.service.implementation;
 import no.mnemonic.services.common.auth.model.NamedFunction;
 
 public enum FunctionConstants implements NamedFunction {
-  addThreatIntelType,
-  updateThreatIntelType,
-  viewThreatIntelType,
-  addThreatIntelOrigin,
-  deleteThreatIntelOrigin,
-  updateThreatIntelOrigin,
-  viewThreatIntelOrigin,
-  addThreatIntelFact,
-  traverseThreatIntelFact,
-  viewThreatIntelFact,
-  addThreatIntelFactComment,
-  viewThreatIntelFactComment,
-  grantThreatIntelFactAccess,
-  viewThreatIntelFactAccess,
-  unlimitedThreatIntelSearch;
+  addGrafeoType,
+  updateGrafeoType,
+  viewGrafeoType,
+  addGrafeoOrigin,
+  deleteGrafeoOrigin,
+  updateGrafeoOrigin,
+  viewGrafeoOrigin,
+  addGrafeoFact,
+  traverseGrafeoFact,
+  viewGrafeoFact,
+  addGrafeoFactComment,
+  viewGrafeoFactComment,
+  grantGrafeoFactAccess,
+  viewGrafeoFactAccess,
+  unlimitedGrafeoSearch;
 
   @Override
   public String getName() {

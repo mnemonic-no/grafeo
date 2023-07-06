@@ -65,7 +65,7 @@ public class FactSearchDelegateTest {
 
   @Test
   public void testSearchFactsWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewThreatIntelFact);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
     assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchFactRequest()));
   }
 

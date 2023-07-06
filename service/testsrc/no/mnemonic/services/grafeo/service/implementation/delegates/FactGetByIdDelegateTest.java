@@ -35,7 +35,7 @@ public class FactGetByIdDelegateTest {
 
   @Test(expected = AccessDeniedException.class)
   public void testFetchFactWithoutViewPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewThreatIntelFact);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
     delegate.handle(new GetFactByIdRequest());
   }
 

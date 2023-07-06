@@ -54,7 +54,7 @@ public class FactTypeCreateDelegateTest{
 
   @Test(expected = AccessDeniedException.class)
   public void testCreateFactTypeWithoutPermission() throws Exception {
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addThreatIntelType);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoType);
     delegate.handle(createFactTypeRequest());
   }
 

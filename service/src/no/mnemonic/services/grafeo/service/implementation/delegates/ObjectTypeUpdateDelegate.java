@@ -40,7 +40,7 @@ public class ObjectTypeUpdateDelegate implements Delegate {
 
   public ObjectType handle(UpdateObjectTypeRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    securityContext.checkPermission(FunctionConstants.updateThreatIntelType);
+    securityContext.checkPermission(FunctionConstants.updateGrafeoType);
 
     ObjectTypeEntity entity = objectTypeRequestResolver.fetchExistingObjectType(request.getId());
 

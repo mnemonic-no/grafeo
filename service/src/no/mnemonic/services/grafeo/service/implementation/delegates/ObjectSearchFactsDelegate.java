@@ -41,7 +41,7 @@ public class ObjectSearchFactsDelegate implements Delegate {
 
   public ResultSet<Fact> handle(SearchObjectFactsRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
-    securityContext.checkPermission(FunctionConstants.viewThreatIntelFact);
+    securityContext.checkPermission(FunctionConstants.viewGrafeoFact);
     assertRequest(request);
     // Resolve Object based on parameters set in request.
     ObjectRecord object = resolveObject(request);

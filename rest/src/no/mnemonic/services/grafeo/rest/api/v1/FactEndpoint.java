@@ -62,7 +62,7 @@ public class FactEndpoint {
           @ApiResponse(code = 404, message = "Requested Fact does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewThreatIntelFact")
+  @RolesAllowed("viewGrafeoFact")
   public Response getFactById(
           @PathParam("id") @ApiParam(value = "UUID of the requested Fact.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
@@ -104,7 +104,7 @@ public class FactEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewThreatIntelFact")
+  @RolesAllowed("viewGrafeoFact")
   public Response searchFacts(
           @ApiParam(value = "Request to search for Facts.") @NotNull @Valid SearchFactRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
@@ -137,7 +137,7 @@ public class FactEndpoint {
           @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("addThreatIntelFact")
+  @RolesAllowed("addGrafeoFact")
   public Response createFact(
           @ApiParam(value = "Request to create Fact.") @NotNull @Valid CreateFactRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
@@ -163,7 +163,7 @@ public class FactEndpoint {
           @ApiResponse(code = 404, message = "Referenced Fact does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewThreatIntelFact")
+  @RolesAllowed("viewGrafeoFact")
   public Response getMetaFacts(
           @PathParam("fact") @ApiParam(value = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
           @QueryParam("includeRetracted") @ApiParam(value = "Include retracted meta Facts (default false)") Boolean includeRetracted,
@@ -206,7 +206,7 @@ public class FactEndpoint {
           @ApiResponse(code = 404, message = "Referenced Fact does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("addThreatIntelFact")
+  @RolesAllowed("addGrafeoFact")
   public Response createMetaFact(
           @PathParam("fact") @ApiParam(value = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
           @ApiParam(value = "Request to create meta Fact.") @NotNull @Valid CreateMetaFactRequest request
@@ -239,7 +239,7 @@ public class FactEndpoint {
           @ApiResponse(code = 404, message = "Fact to retract does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("addThreatIntelFact")
+  @RolesAllowed("addGrafeoFact")
   public Response retractFact(
           @PathParam("fact") @ApiParam(value = "UUID of Fact to retract.") @NotNull @Valid UUID fact,
           @ApiParam(value = "Request to retract a Fact.") @NotNull @Valid RetractFactRequest request
@@ -267,7 +267,7 @@ public class FactEndpoint {
           @ApiResponse(code = 404, message = "Fact does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewThreatIntelFactAccess")
+  @RolesAllowed("viewGrafeoFactAccess")
   public Response getFactAcl(
           @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
@@ -291,7 +291,7 @@ public class FactEndpoint {
           @ApiResponse(code = 404, message = "Fact does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("grantThreatIntelFactAccess")
+  @RolesAllowed("grantGrafeoFactAccess")
   public Response grantFactAccess(
           @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact,
           @PathParam("subject") @ApiParam(value = "UUID or name of Subject.") @NotBlank String subject,
@@ -322,7 +322,7 @@ public class FactEndpoint {
           @ApiResponse(code = 404, message = "Fact does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("viewThreatIntelFactComment")
+  @RolesAllowed("viewGrafeoFactComment")
   public Response getFactComments(
           @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact,
           @QueryParam("before") @ApiParam(value = "Only return comments added before the given timestamp.") String before,
@@ -352,7 +352,7 @@ public class FactEndpoint {
           @ApiResponse(code = 404, message = "Fact does not exist."),
           @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
   })
-  @RolesAllowed("addThreatIntelFactComment")
+  @RolesAllowed("addGrafeoFactComment")
   public Response createFactComment(
           @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact,
           @ApiParam(value = "Request to add comment.") @NotNull @Valid CreateFactCommentRequest request

@@ -57,7 +57,7 @@ public class OriginUpdateDelegateTest {
   public void testUpdateOriginNoUpdatePermissionWithoutOrganization() throws Exception {
     OriginEntity entity = new OriginEntity().setId(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateThreatIntelOrigin);
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateGrafeoOrigin);
     delegate.handle(new UpdateOriginRequest().setId(entity.getId()));
   }
 
@@ -67,7 +67,7 @@ public class OriginUpdateDelegateTest {
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateThreatIntelOrigin, entity.getOrganizationID());
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateGrafeoOrigin, entity.getOrganizationID());
     delegate.handle(new UpdateOriginRequest().setId(entity.getId()));
   }
 
@@ -102,7 +102,7 @@ public class OriginUpdateDelegateTest {
     when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(request.getOrganization()));
 
     delegate.handle(request);
-    verify(securityContext).checkPermission(FunctionConstants.updateThreatIntelOrigin, request.getOrganization());
+    verify(securityContext).checkPermission(FunctionConstants.updateGrafeoOrigin, request.getOrganization());
     verify(originManager).saveOrigin(argThat(origin -> Objects.equals(request.getOrganization(), origin.getOrganizationID())));
   }
 

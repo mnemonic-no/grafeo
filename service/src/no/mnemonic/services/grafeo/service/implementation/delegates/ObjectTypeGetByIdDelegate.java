@@ -30,7 +30,7 @@ public class ObjectTypeGetByIdDelegate implements Delegate {
 
   public ObjectType handle(GetObjectTypeByIdRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
-    securityContext.checkPermission(FunctionConstants.viewThreatIntelType);
+    securityContext.checkPermission(FunctionConstants.viewGrafeoType);
     return objectTypeResponseConverter.apply(objectTypeRequestResolver.fetchExistingObjectType(request.getId()));
   }
 }
