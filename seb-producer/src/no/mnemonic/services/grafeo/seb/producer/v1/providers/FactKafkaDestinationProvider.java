@@ -24,10 +24,10 @@ public class FactKafkaDestinationProvider implements LifecycleAspect, Provider<D
 
   @Inject
   public FactKafkaDestinationProvider(
-          @Named("act.seb.kafka.port") int port,
-          @Named("act.seb.kafka.contact.points") String contactPoints,
-          @Named("act.seb.kafka.producer.topic") String producerTopic,
-          @Named("act.seb.kafka.producer.enabled") boolean producerEnabled) {
+          @Named("grafeo.seb.kafka.port") int port,
+          @Named("grafeo.seb.kafka.contact.points") String contactPoints,
+          @Named("grafeo.seb.kafka.producer.topic") String producerTopic,
+          @Named("grafeo.seb.kafka.producer.enabled") boolean producerEnabled) {
     this.port = port;
     this.contactPoints = contactPoints;
     this.producerTopic = producerTopic;

@@ -404,11 +404,11 @@ public class ObjectFactGraphIT {
       });
 
       // Configuration required for Cassandra + ElasticSearch
-      bind(String.class).annotatedWith(Names.named("act.cassandra.data.center")).toInstance("datacenter1");
-      bind(String.class).annotatedWith(Names.named("act.cassandra.contact.points")).toInstance(cassandra.getExposedHost());
-      bind(String.class).annotatedWith(Names.named("act.cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
-      bind(String.class).annotatedWith(Names.named("act.elasticsearch.contact.points")).toInstance(elastic.getExposedHost());
-      bind(String.class).annotatedWith(Names.named("act.elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.data.center")).toInstance("datacenter1");
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.contact.points")).toInstance(cassandra.getExposedHost());
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
+      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.contact.points")).toInstance(elastic.getExposedHost());
+      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
     }
   }
 }

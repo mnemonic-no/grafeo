@@ -70,8 +70,8 @@ public abstract class AbstractEndpointTest {
     protected void configure() {
       install(new GrafeoRestModule());
       bind(GrafeoService.class).toInstance(service);
-      bind(String.class).annotatedWith(Names.named("act.api.server.port")).toInstance(String.valueOf(port));
-      bind(String.class).annotatedWith(Names.named("act.api.cors.allowed.origins")).toInstance("http://www.example.org");
+      bind(String.class).annotatedWith(Names.named("grafeo.api.server.port")).toInstance(String.valueOf(port));
+      bind(String.class).annotatedWith(Names.named("grafeo.api.cors.allowed.origins")).toInstance("http://www.example.org");
     }
 
   }

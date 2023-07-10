@@ -117,11 +117,11 @@ public class ESEngineIT {
   private class TestModule extends AbstractModule {
     @Override
     protected void configure() {
-      bind(String.class).annotatedWith(Names.named("act.hazelcast.instance.name")).toInstance(UUID.randomUUID().toString());
-      bind(String.class).annotatedWith(Names.named("act.hazelcast.group.name")).toInstance(UUID.randomUUID().toString());
-      bind(String.class).annotatedWith(Names.named("act.hazelcast.multicast.address")).toInstance("224.2.2.3");
-      bind(String.class).annotatedWith(Names.named("act.hazelcast.multicast.port")).toInstance("54327");
-      bind(String.class).annotatedWith(Names.named("act.hazelcast.multicast.enabled")).toInstance("false");
+      bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.instance.name")).toInstance(UUID.randomUUID().toString());
+      bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.group.name")).toInstance(UUID.randomUUID().toString());
+      bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.address")).toInstance("224.2.2.3");
+      bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.port")).toInstance("54327");
+      bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.enabled")).toInstance("false");
 
       bind(HazelcastInstance.class).toProvider(HazelcastInstanceProvider.class).in(Scopes.SINGLETON);
       bind(new TypeLiteral<TransactionalConsumer<FactSEB>>() {}).to(FactConsumer.class);

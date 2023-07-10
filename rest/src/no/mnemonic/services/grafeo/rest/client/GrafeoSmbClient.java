@@ -44,10 +44,10 @@ public class GrafeoSmbClient implements Provider<GrafeoService>, LifecycleAspect
   private final String password;
 
   @Inject
-  public GrafeoSmbClient(@Named(value = "act.smb.queue.name") String queueName,
-                         @Named(value = "act.smb.client.url") String contextURL,
-                         @Named(value = "act.smb.client.username") String userName,
-                         @Named(value = "act.smb.client.password") String password) {
+  public GrafeoSmbClient(@Named(value = "grafeo.smb.queue.name") String queueName,
+                         @Named(value = "grafeo.smb.client.url") String contextURL,
+                         @Named(value = "grafeo.smb.client.username") String userName,
+                         @Named(value = "grafeo.smb.client.password") String password) {
     this.queueName = queueName;
     this.contextURL = contextURL;
     this.userName = userName;

@@ -11,10 +11,10 @@ import javax.inject.Singleton;
 public class PropertiesBasedAccessControllerProvider implements Provider<PropertiesBasedAccessController> {
 
   @Inject
-  @Named("act.access.controller.properties.configuration.file")
+  @Named("grafeo.access.controller.properties.configuration.file")
   private String propertiesFile;
   @Inject
-  @Named("act.access.controller.properties.reload.interval")
+  @Named("grafeo.access.controller.properties.reload.interval")
   private String readInterval;
 
   // There should only be one instance of this access controller. Ever.

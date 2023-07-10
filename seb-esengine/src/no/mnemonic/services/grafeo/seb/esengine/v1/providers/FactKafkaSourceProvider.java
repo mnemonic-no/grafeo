@@ -27,11 +27,11 @@ public class FactKafkaSourceProvider implements LifecycleAspect, Provider<Docume
 
   @Inject
   public FactKafkaSourceProvider(
-          @Named("act.seb.kafka.port") int port,
-          @Named("act.seb.kafka.contact.points") String contactPoints,
-          @Named("act.seb.kafka.esengine.consumer.topics") String consumerTopics,
-          @Named("act.seb.kafka.esengine.consumer.group") String consumerGroup,
-          @Named("act.seb.kafka.esengine.consumer.enabled") boolean consumerEnabled) {
+          @Named("grafeo.seb.kafka.port") int port,
+          @Named("grafeo.seb.kafka.contact.points") String contactPoints,
+          @Named("grafeo.seb.kafka.esengine.consumer.topics") String consumerTopics,
+          @Named("grafeo.seb.kafka.esengine.consumer.group") String consumerGroup,
+          @Named("grafeo.seb.kafka.esengine.consumer.enabled") boolean consumerEnabled) {
     this.port = port;
     this.contactPoints = contactPoints;
     this.consumerTopics = consumerTopics;

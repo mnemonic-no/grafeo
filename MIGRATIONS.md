@@ -2,6 +2,11 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Rename configuration properties and environment variables] - 2023-07-10
+All configuration properties and environment variables have been renamed. Change the configuration file `application.properties`
+and replace the `act` prefix with `grafeo` in all properties. In addition, change all environment variables starting with
+`ACT_PLATFORM_` by replacing that prefix with `GRAFEO_`.
+
 ## [Rename permission functions] - 2023-07-06
 All permission functions have been renamed. Change the configuration file `acl.properties` according to the table below.
 

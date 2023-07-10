@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# Set ACT_PLATFORM_* environment variables to override default directories.
-CONFDIR="${ACT_PLATFORM_CONFDIR:-conf}"
-LOGDIR="${ACT_PLATFORM_LOGDIR:-logs}"
+# Set GRAFEO_* environment variables to override default directories.
+CONFDIR="${GRAFEO_CONFDIR:-conf}"
+LOGDIR="${GRAFEO_LOGDIR:-logs}"
 
-# Set ACT_PLATFORM_JAVA_OPTS environment variable to override default options.
-JAVA_OPTS="${ACT_PLATFORM_JAVA_OPTS:--XX:-OmitStackTraceInFastThrow}"
+# Set GRAFEO_JAVA_OPTS environment variable to override default options.
+JAVA_OPTS="${GRAFEO_JAVA_OPTS:--XX:-OmitStackTraceInFastThrow}"
 # With Java versions newer than JDK8 add the required configuration for the Java module system.
 JAVA_JPMS_OPTS="--add-modules java.se \
                 --add-exports java.base/jdk.internal.ref=ALL-UNNAMED \

@@ -43,10 +43,10 @@ public class GrafeoSmbServer implements LifecycleAspect {
   public GrafeoSmbServer(GrafeoService service,
                          ServiceSessionFactory sessionFactory,
                          MessageSerializer messageSerializer,
-                         @Named(value = "act.smb.queue.name") String queueName,
-                         @Named(value = "act.smb.server.url") String contextURL,
-                         @Named(value = "act.smb.server.username") String userName,
-                         @Named(value = "act.smb.server.password") String password) {
+                         @Named(value = "grafeo.smb.queue.name") String queueName,
+                         @Named(value = "grafeo.smb.server.url") String contextURL,
+                         @Named(value = "grafeo.smb.server.username") String userName,
+                         @Named(value = "grafeo.smb.server.password") String password) {
     this.service = service;
     this.sessionFactory = sessionFactory;
     this.messageSerializer = messageSerializer;

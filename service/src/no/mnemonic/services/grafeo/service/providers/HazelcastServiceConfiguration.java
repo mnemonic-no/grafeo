@@ -47,55 +47,55 @@ public class HazelcastServiceConfiguration {
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setDaoCacheFactTimeToLive(@Named("act.dao.cache.fact.ttl") long timeToLive) {
+  public HazelcastServiceConfiguration setDaoCacheFactTimeToLive(@Named("grafeo.dao.cache.fact.ttl") long timeToLive) {
     this.daoCacheFactTimeToLive = Duration.ofMinutes(timeToLive);
     return this;
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setDaoCacheObjectTimeToIdle(@Named("act.dao.cache.object.ttl") long timeToIdle) {
+  public HazelcastServiceConfiguration setDaoCacheObjectTimeToIdle(@Named("grafeo.dao.cache.object.ttl") long timeToIdle) {
     this.daoCacheObjectTimeToIdle = Duration.ofMinutes(timeToIdle);
     return this;
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setDaoCacheFactNearCacheTimeToLive(@Named("act.dao.cache.fact.near.cache.ttl") long timeToLive) {
+  public HazelcastServiceConfiguration setDaoCacheFactNearCacheTimeToLive(@Named("grafeo.dao.cache.fact.near.cache.ttl") long timeToLive) {
     this.daoCacheFactNearCacheTimeToLive = Duration.ofMinutes(timeToLive);
     return this;
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setDaoCacheObjectNearCacheTimeToIdle(@Named("act.dao.cache.object.near.cache.ttl") long timeToIdle) {
+  public HazelcastServiceConfiguration setDaoCacheObjectNearCacheTimeToIdle(@Named("grafeo.dao.cache.object.near.cache.ttl") long timeToIdle) {
     this.daoCacheObjectNearCacheTimeToIdle = Duration.ofMinutes(timeToIdle);
     return this;
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setDaoCacheFactMaximumCacheSize(@Named("act.dao.cache.fact.size") int maxSize) {
+  public HazelcastServiceConfiguration setDaoCacheFactMaximumCacheSize(@Named("grafeo.dao.cache.fact.size") int maxSize) {
     this.daoCacheFactMaximumCacheSize = maxSize;
     return this;
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setDaoCacheObjectMaximumCacheSize(@Named("act.dao.cache.object.size") int maxSize) {
+  public HazelcastServiceConfiguration setDaoCacheObjectMaximumCacheSize(@Named("grafeo.dao.cache.object.size") int maxSize) {
     this.daoCacheObjectMaximumCacheSize = maxSize;
     return this;
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setDaoCacheFactNearCacheMaximumCacheSize(@Named("act.dao.cache.fact.near.cache.size") int maxSize) {
+  public HazelcastServiceConfiguration setDaoCacheFactNearCacheMaximumCacheSize(@Named("grafeo.dao.cache.fact.near.cache.size") int maxSize) {
     this.daoCacheFactNearCacheMaximumCacheSize = maxSize;
     return this;
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setDaoCacheObjectNearCacheMaximumCacheSize(@Named("act.dao.cache.object.near.cache.size") int maxSize) {
+  public HazelcastServiceConfiguration setDaoCacheObjectNearCacheMaximumCacheSize(@Named("grafeo.dao.cache.object.near.cache.size") int maxSize) {
     this.daoCacheObjectNearCacheMaximumCacheSize = maxSize;
     return this;
   }
 
   @Inject(optional = true)
-  public HazelcastServiceConfiguration setEsEngineFactMaximumQueueSize(@Named("act.es.engine.fact.queue.size") int maxSize) {
+  public HazelcastServiceConfiguration setEsEngineFactMaximumQueueSize(@Named("grafeo.es.engine.fact.queue.size") int maxSize) {
     this.esEngineFactMaximumQueueSize = maxSize;
     return this;
   }

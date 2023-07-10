@@ -18,7 +18,7 @@ public class TriggerEventConsumerProvider implements Provider<TriggerEventConsum
   @Inject
   public TriggerEventConsumerProvider(
           Provider<TriggerAdministrationService> triggerAdministrationServiceProvider,
-          @Named("act.action.triggers.enabled") boolean enableActionTriggers) {
+          @Named("grafeo.action.triggers.enabled") boolean enableActionTriggers) {
     this.triggerAdministrationServiceProvider = triggerAdministrationServiceProvider;
     this.enableActionTriggers = enableActionTriggers;
   }

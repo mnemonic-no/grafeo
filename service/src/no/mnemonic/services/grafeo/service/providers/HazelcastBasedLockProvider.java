@@ -83,14 +83,14 @@ public class HazelcastBasedLockProvider implements LockProvider, MetricAspect {
 
   @Inject(optional = true)
   public HazelcastBasedLockProvider setLockWaitTimeoutSeconds(
-          @Named("act.service.lock.provider.wait.timeout") long lockWaitTimeoutSeconds) {
+          @Named("grafeo.service.lock.provider.wait.timeout") long lockWaitTimeoutSeconds) {
     this.lockWaitTimeoutSeconds = lockWaitTimeoutSeconds;
     return this;
   }
 
   @Inject(optional = true)
   public HazelcastBasedLockProvider setLockLeaseTimeoutSeconds(
-          @Named("act.service.lock.provider.lease.timeout") long lockLeaseTimeoutSeconds) {
+          @Named("grafeo.service.lock.provider.lease.timeout") long lockLeaseTimeoutSeconds) {
     this.lockLeaseTimeoutSeconds = lockLeaseTimeoutSeconds;
     return this;
   }

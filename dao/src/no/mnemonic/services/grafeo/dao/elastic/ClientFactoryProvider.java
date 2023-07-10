@@ -12,10 +12,10 @@ import javax.inject.Provider;
 public class ClientFactoryProvider implements Provider<ClientFactory> {
 
   @Inject
-  @Named("act.elasticsearch.port")
+  @Named("grafeo.elasticsearch.port")
   private String port;
   @Inject
-  @Named("act.elasticsearch.contact.points")
+  @Named("grafeo.elasticsearch.contact.points")
   private String contactPoints;
 
   @Override

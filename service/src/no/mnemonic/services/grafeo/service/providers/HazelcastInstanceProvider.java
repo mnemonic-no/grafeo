@@ -26,11 +26,11 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
 
   @Inject
   public HazelcastInstanceProvider(
-          @Named("act.hazelcast.instance.name") String instanceName,
-          @Named("act.hazelcast.group.name") String groupName,
-          @Named("act.hazelcast.multicast.address") String multicastAddress,
-          @Named("act.hazelcast.multicast.port") int multicastPort,
-          @Named("act.hazelcast.multicast.enabled") boolean multicastEnabled,
+          @Named("grafeo.hazelcast.instance.name") String instanceName,
+          @Named("grafeo.hazelcast.group.name") String groupName,
+          @Named("grafeo.hazelcast.multicast.address") String multicastAddress,
+          @Named("grafeo.hazelcast.multicast.port") int multicastPort,
+          @Named("grafeo.hazelcast.multicast.enabled") boolean multicastEnabled,
           HazelcastServiceConfiguration serviceConfig
   ) {
     this.instanceName = instanceName;

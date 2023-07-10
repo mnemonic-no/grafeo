@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="warn">
   <Properties>
-    <Property name="baseDir">${env:ACT_PLATFORM_LOGDIR:-logs}</Property>
+    <Property name="baseDir">${env:GRAFEO_LOGDIR:-logs}</Property>
   </Properties>
   <Appenders>
     <RollingRandomAccessFile name="ActionTriggersLogs"

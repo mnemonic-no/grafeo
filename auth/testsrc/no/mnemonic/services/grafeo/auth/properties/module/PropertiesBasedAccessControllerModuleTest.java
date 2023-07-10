@@ -28,9 +28,9 @@ public class PropertiesBasedAccessControllerModuleTest {
     @Override
     protected void configure() {
       install(new PropertiesBasedAccessControllerModule());
-      bind(String.class).annotatedWith(Names.named("act.access.controller.properties.configuration.file")).toInstance("test.properties");
-      bind(String.class).annotatedWith(Names.named("act.access.controller.properties.reload.interval")).toInstance("60000");
-      bind(String.class).annotatedWith(Names.named("act.access.controller.properties.service.account.user.id")).toInstance("1");
+      bind(String.class).annotatedWith(Names.named("grafeo.access.controller.properties.configuration.file")).toInstance("test.properties");
+      bind(String.class).annotatedWith(Names.named("grafeo.access.controller.properties.reload.interval")).toInstance("60000");
+      bind(String.class).annotatedWith(Names.named("grafeo.access.controller.properties.service.account.user.id")).toInstance("1");
     }
   }
 

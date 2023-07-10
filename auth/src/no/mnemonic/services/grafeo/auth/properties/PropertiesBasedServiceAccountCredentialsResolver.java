@@ -17,7 +17,7 @@ public class PropertiesBasedServiceAccountCredentialsResolver implements Service
 
   @Inject
   public PropertiesBasedServiceAccountCredentialsResolver(
-          @Named("act.access.controller.properties.service.account.user.id") long serviceAccountUserID) {
+          @Named("grafeo.access.controller.properties.service.account.user.id") long serviceAccountUserID) {
     this.serviceAccountUserID = serviceAccountUserID;
   }
 
