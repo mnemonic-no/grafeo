@@ -1,17 +1,13 @@
-Semi-Automated Cyber Threat Intelligence - ACT Platform
-=======================================================
+ACT Platform is now called grafeo!
+==================================
 
-[*Semi-Automated Cyber Threat Intelligence*](https://www.mnemonic.no/research-and-development/semi-automated-cyber-threat-intelligence/) (ACT) is a research project led by mnemonic as with contributions from the University of Oslo, NTNU, Norwegian Security Authority (NSM), KraftCERT and Nordic Financial CERT.
-
-The main objective of the ACT project is to develop a platform for cyber threat intelligence to uncover cyber attacks, cyber espionage and sabotage.
-The project will result in new methods for data enrichment and data analysis to enable identification of threat agents, their motives, resources and attack methodologies.
-In addition, the project will develop new methods, work processes and mechanisms for creating and distributing threat intelligence and countermeasures to stop ongoing and prevent future attacks.
-
-In this repository the code of the ACT platform is published under an Open Source license.
+Grafeo is a versatile platform to create custom data models, collect and share knowledge. It is a flexible, well-rounded
+solution that can be used for any purpose. Developed as part of the [ACT research project](https://www.mnemonic.no/research-and-development/semi-automated-cyber-threat-intelligence/),
+it remains at the core of ACT and powers the ACT backend. Learn more about ACT [here](https://github.com/mnemonic-no/act).
 
 ## Usage
 
-The ACT platform exposes a set of REST APIs. See this [guideline](https://github.com/mnemonic-no/act-platform/wiki/REST-API-Usage-Guideline) on how to work with the API.
+Grafeo exposes a set of REST APIs. See this [guideline](https://github.com/mnemonic-no/grafeo/wiki/REST-API-Usage-Guideline) on how to work with the API.
 
 ## Installation
 
@@ -28,7 +24,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 ##### Compilation
 
 * Execute `mvn clean install -DskipTests` from the repository's root folder to compile the code.
-* Afterwards follow the [deployment guide](https://github.com/mnemonic-no/act-platform/wiki/Architecture-and-Deployment-Guide) to run the application.
+* Afterwards follow the [deployment guide](https://github.com/mnemonic-no/grafeo/wiki/Architecture-and-Deployment-Guide) to run the application.
 
 ##### Testing
 
@@ -41,7 +37,7 @@ The ACT platform exposes a set of REST APIs. See this [guideline](https://github
 
 ## Known issues
 
-See [Issues](https://github.com/mnemonic-no/act-platform/issues).
+See [Issues](https://github.com/mnemonic-no/grafeo/issues).
 
 ## Contributing
 
@@ -49,4 +45,4 @@ See the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 ## License
 
-The ACT platform is released under the ISC License. See the bundled LICENSE file for details.
+Grafeo is released under the ISC License. See the bundled LICENSE file for details.

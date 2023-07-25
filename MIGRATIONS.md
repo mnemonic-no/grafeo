@@ -70,7 +70,7 @@ curl -X POST "localhost:9200/act-time-global/_update_by_query?conflicts=proceed"
 ```
 
 ## [Reindex data into daily indices] - 2022-06-22
-In order to reindex data into daily indices execute the following commands. Build the code with Maven to create the `act-platform-cli-tools` application.
+In order to reindex data into daily indices execute the following commands. Build the code with Maven to create the `grafeo-cli-tools` application.
 
 (1) Update ObjectTypes with the correct `indexOption` of `TimeGlobal`.  Execute the following CQL commands against your Cassandra cluster (e.g. using cqlsh).
 ```
@@ -86,7 +86,7 @@ campaign, country, organization, person, region, sector, subRegion, tactic, tech
 
 (2) Execute the following migration to correctly set the `TimeGlobalIndex` flag for Facts in Cassandra.
 ```
-act-platform-cli-tools migrate timeGlobalFlag --conf=<path to application.properties file> --start=<start timestamp> --end=<end timestamp>
+grafeo-cli-tools migrate timeGlobalFlag --conf=<path to application.properties file> --start=<start timestamp> --end=<end timestamp>
 ```
 
 (3) Execute the following command against your ElasticSearch cluster to delete *all* existing daily indices and the time global index.
@@ -96,7 +96,7 @@ curl -X DELETE "localhost:9200/act-time-global,act-daily-*"
 
 (4) Reindex data into daily indices and the time global index. This will recreate the previously deleted indices from scratch.
 ```
-act-platform-cli-tools reindex --conf=<path to application.properties file> --start=<start timestamp> --end=<end timestamp>
+grafeo-cli-tools reindex --conf=<path to application.properties file> --start=<start timestamp> --end=<end timestamp>
 ```
 
 Specify `--start` and `--end` based on the time frame you want to reindex. Depending on the amount of data steps (2) and (4) may take a while.
