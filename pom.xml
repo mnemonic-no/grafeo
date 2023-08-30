@@ -38,7 +38,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- JDK compile target -->
-    <jdk.version>1.8</jdk.version>
+    <jdk.version>17</jdk.version>
 
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.4.20</mnemonic.commons.version>
@@ -79,12 +79,12 @@
     <!-- build dependencies -->
     <maven.assembly.version>3.3.0</maven.assembly.version>
     <maven.clean.version>3.1.0</maven.clean.version>
-    <maven.compiler.version>3.8.1</maven.compiler.version>
+    <maven.compiler.version>3.11.0</maven.compiler.version>
     <maven.deploy.version>2.8.2</maven.deploy.version>
     <maven.enforcer.version>1.4.1</maven.enforcer.version>
     <maven.install.version>2.5.2</maven.install.version>
     <maven.jar.version>3.2.0</maven.jar.version>
-    <maven.javadoc.version>3.2.0</maven.javadoc.version>
+    <maven.javadoc.version>3.5.0</maven.javadoc.version>
     <maven.license.version>1.20</maven.license.version>
     <maven.really.executable.jar.version>1.5.0</maven.really.executable.jar.version>
     <maven.release.version>2.5.3</maven.release.version>
@@ -164,9 +164,9 @@
                 <requireMavenVersion>
                   <version>3.1.0</version>
                 </requireMavenVersion>
-                <!-- At least JDK11 is required for building. -->
+                <!-- At least JDK17 is required for building. -->
                 <requireJavaVersion>
-                  <version>11.0.0</version>
+                  <version>17.0.0</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -178,6 +178,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven.compiler.version}</version>
         <configuration>
+          <release>${jdk.version}</release>
           <source>${jdk.version}</source>
           <target>${jdk.version}</target>
           <compilerArgs>
@@ -276,6 +277,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>${maven.javadoc.version}</version>
         <configuration>
+          <release>${jdk.version}</release>
           <source>${jdk.version}</source>
         </configuration>
         <executions>
