@@ -3,7 +3,7 @@
   <groupId>no.mnemonic.services.grafeo</groupId>
   <artifactId>grafeo-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.1.10</version>
+  <version>0.1.11-SNAPSHOT</version>
 
   <name>grafeo</name>
   <description>Open platform for modelling, collection and exchange of knowledge</description>
@@ -134,7 +134,7 @@
     <connection>scm:git:git://github.com/mnemonic-no/grafeo.git</connection>
     <developerConnection>scm:git:ssh://github.com:mnemonic-no/grafeo.git</developerConnection>
     <url>https://github.com/mnemonic-no/grafeo</url>
-    <tag>grafeo-parent-0.1.10</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <distributionManagement>
