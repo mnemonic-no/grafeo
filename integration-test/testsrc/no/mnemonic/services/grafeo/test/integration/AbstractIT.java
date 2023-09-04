@@ -81,7 +81,8 @@ public abstract class AbstractIT {
           .setImageName("webcenter/activemq")
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(61616)
-          .addEnvironmentVariable("ACTIVEMQ_CONFIG_QUEUES_ACT", "Service.ACT")
+          .addEnvironmentVariable("ACTIVEMQ_CONFIG_QUEUES_GRAFEO", "Grafeo")
+          .addEnvironmentVariable("ACTIVEMQ_CONFIG_TOPICS_GRAFEO", "Grafeo.ALL")
           .build();
 
   @ClassRule
@@ -346,7 +347,8 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.address")).toInstance("224.2.2.3");
       bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.port")).toInstance("54327");
       bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.enabled")).toInstance("false");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.queue.name")).toInstance("Service.ACT");
+      bind(String.class).annotatedWith(Names.named("grafeo.smb.queue.name")).toInstance("Grafeo");
+      bind(String.class).annotatedWith(Names.named("grafeo.smb.topic.name")).toInstance("Grafeo.ALL");
       bind(String.class).annotatedWith(Names.named("grafeo.smb.server.url")).toInstance(smbServerUrl);
       bind(String.class).annotatedWith(Names.named("grafeo.smb.server.username")).toInstance("admin");
       bind(String.class).annotatedWith(Names.named("grafeo.smb.server.password")).toInstance("admin");
@@ -362,7 +364,8 @@ public abstract class AbstractIT {
       String smbClientUrl = "tcp://" + activemq.getExposedHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("grafeo.api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
       bind(String.class).annotatedWith(Names.named("grafeo.api.cors.allowed.origins")).toInstance("http://www.example.org");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.queue.name")).toInstance("Service.ACT");
+      bind(String.class).annotatedWith(Names.named("grafeo.smb.queue.name")).toInstance("Grafeo");
+      bind(String.class).annotatedWith(Names.named("grafeo.smb.topic.name")).toInstance("Grafeo.ALL");
       bind(String.class).annotatedWith(Names.named("grafeo.smb.client.url")).toInstance(smbClientUrl);
       bind(String.class).annotatedWith(Names.named("grafeo.smb.client.username")).toInstance("admin");
       bind(String.class).annotatedWith(Names.named("grafeo.smb.client.password")).toInstance("admin");

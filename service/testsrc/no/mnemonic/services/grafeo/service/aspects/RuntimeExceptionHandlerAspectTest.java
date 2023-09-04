@@ -42,7 +42,7 @@ public class RuntimeExceptionHandlerAspectTest {
 
     assertThrows(UnexpectedAuthenticationFailedException.class, () -> service.method(RequestHeader.builder().build(), new UnexpectedAuthenticationFailedException("test")));
     assertThrows(UnhandledRuntimeException.class, () -> service.method(RequestHeader.builder().build(), new UnhandledRuntimeException("test")));
-    assertThrows(ServiceTimeOutException.class, () -> service.method(RequestHeader.builder().build(), new ServiceTimeOutException("test")));
+    assertThrows(ServiceTimeOutException.class, () -> service.method(RequestHeader.builder().build(), new ServiceTimeOutException("test", "test")));
   }
 
   @Test

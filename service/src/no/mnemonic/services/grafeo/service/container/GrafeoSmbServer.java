@@ -32,6 +32,7 @@ public class GrafeoSmbServer implements LifecycleAspect {
   private final MessageSerializer messageSerializer;
 
   private final String queueName;
+  private final String topicName;
   private final String contextURL;
   private final String userName;
   private final String password;
@@ -44,6 +45,7 @@ public class GrafeoSmbServer implements LifecycleAspect {
                          ServiceSessionFactory sessionFactory,
                          MessageSerializer messageSerializer,
                          @Named(value = "grafeo.smb.queue.name") String queueName,
+                         @Named(value = "grafeo.smb.topic.name") String topicName,
                          @Named(value = "grafeo.smb.server.url") String contextURL,
                          @Named(value = "grafeo.smb.server.username") String userName,
                          @Named(value = "grafeo.smb.server.password") String password) {
@@ -51,6 +53,7 @@ public class GrafeoSmbServer implements LifecycleAspect {
     this.sessionFactory = sessionFactory;
     this.messageSerializer = messageSerializer;
     this.queueName = queueName;
+    this.topicName = topicName;
     this.contextURL = contextURL;
     this.userName = userName;
     this.password = password;
@@ -67,7 +70,9 @@ public class GrafeoSmbServer implements LifecycleAspect {
             .setContextFactoryName(ACTIVEMQ_CONTEXT_FACTORY)
             .setConnectionFactoryName(ACTIVEMQ_CONNECTION_FACTORY)
             .setConnectionProperty("queue." + queueName, queueName)
+            .setConnectionProperty("topic." + topicName, topicName)
             .setQueueName(queueName)
+            .setTopicName(topicName)
             .setContextURL(contextURL)
             .setUsername(userName)
             .setPassword(password)

@@ -35,7 +35,7 @@ public class RuntimeExceptionHandlerAspect extends AbstractAspect {
         LOGGER.warning(ex, "Received timeout from Cassandra client driver in service call %s().", invocation.getMethod().getName());
         // Timeouts from the Cassandra client driver are re-thrown as ServiceTimeOutException
         // such that REST clients will receive a 503 error code.
-        throw new ServiceTimeOutException("Received timeout from Cassandra client driver.");
+        throw new ServiceTimeOutException("Received timeout from Cassandra client driver.", invocation.getMethod().getDeclaringClass().getSimpleName());
       }
 
       String msg = String.format("Exception in service call %s(): %s", invocation.getMethod().getName(), ex.getMessage());

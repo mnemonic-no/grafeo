@@ -39,16 +39,19 @@ public class GrafeoSmbClient implements Provider<GrafeoService>, LifecycleAspect
   private final AtomicReference<Instance> instance = new AtomicReference<>();
 
   private final String queueName;
+  private final String topicName;
   private final String contextURL;
   private final String userName;
   private final String password;
 
   @Inject
   public GrafeoSmbClient(@Named(value = "grafeo.smb.queue.name") String queueName,
+                         @Named(value = "grafeo.smb.topic.name") String topicName,
                          @Named(value = "grafeo.smb.client.url") String contextURL,
                          @Named(value = "grafeo.smb.client.username") String userName,
                          @Named(value = "grafeo.smb.client.password") String password) {
     this.queueName = queueName;
+    this.topicName = topicName;
     this.contextURL = contextURL;
     this.userName = userName;
     this.password = password;
@@ -80,7 +83,9 @@ public class GrafeoSmbClient implements Provider<GrafeoService>, LifecycleAspect
             .setContextFactoryName(ACTIVEMQ_CONTEXT_FACTORY)
             .setConnectionFactoryName(ACTIVEMQ_CONNECTION_FACTORY)
             .setConnectionProperty("queue." + queueName, queueName)
+            .setConnectionProperty("topic." + topicName, topicName)
             .setQueueName(queueName)
+            .setTopicName(topicName)
             .setContextURL(contextURL)
             .setUsername(userName)
             .setPassword(password)

@@ -98,7 +98,7 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testServiceTimeoutMapperReturns503() throws Exception {
-    Response response = executeRequest(new ServiceTimeOutException());
+    Response response = executeRequest(new ServiceTimeOutException("test", "test"));
     assertEquals(503, response.getStatus());
     assertMessages(getMessages(response), "Request timed out, service may be overloaded or unavailable. Please try again later.", "service.timeout");
   }

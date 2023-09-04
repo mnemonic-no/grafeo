@@ -41,10 +41,10 @@
     <jdk.version>17</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.4.20</mnemonic.commons.version>
-    <mnemonic.messaging.version>1.3.25</mnemonic.messaging.version>
-    <mnemonic.services.common.version>0.3.46</mnemonic.services.common.version>
-    <mnemonic.services.triggers.version>0.0.16</mnemonic.services.triggers.version>
+    <mnemonic.commons.version>0.4.25</mnemonic.commons.version>
+    <mnemonic.messaging.version>1.3.35</mnemonic.messaging.version>
+    <mnemonic.services.common.version>0.3.52</mnemonic.services.common.version>
+    <mnemonic.services.triggers.version>0.0.18</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
     <activemq.version>5.17.3</activemq.version>
@@ -74,7 +74,6 @@
     <commons.codec.version>1.15</commons.codec.version>
     <groovy.version>2.5.21</groovy.version>
     <httpclient.version>4.5.14</httpclient.version>
-    <xstream.version>1.4.20</xstream.version>
 
     <!-- build dependencies -->
     <maven.assembly.version>3.3.0</maven.assembly.version>
@@ -102,13 +101,6 @@
         <artifactId>groovy</artifactId>
         <version>${groovy.version}</version>
         <classifier>indy</classifier>
-      </dependency>
-      <!-- Force a newer version of XStream in order to fix security warnings. -->
-      <dependency>
-        <groupId>com.thoughtworks.xstream</groupId>
-        <artifactId>xstream</artifactId>
-        <version>${xstream.version}</version>
-        <scope>runtime</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
