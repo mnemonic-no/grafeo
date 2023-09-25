@@ -77,6 +77,7 @@ public class ObjectFactGraphIT {
   @ClassRule
   public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
           .setImageName("cassandra")
+          .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
           .skipReachabilityCheck()
@@ -86,7 +87,8 @@ public class ObjectFactGraphIT {
   public static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
-          .setImageName("elasticsearch/elasticsearch:7.17.9")
+          .setImageName("elasticsearch/elasticsearch:7.17.13")
+          .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
           .skipReachabilityCheck()

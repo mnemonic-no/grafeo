@@ -43,36 +43,36 @@
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.4.25</mnemonic.commons.version>
     <mnemonic.messaging.version>1.3.35</mnemonic.messaging.version>
-    <mnemonic.services.common.version>0.3.52</mnemonic.services.common.version>
+    <mnemonic.services.common.version>0.3.53</mnemonic.services.common.version>
     <mnemonic.services.triggers.version>0.0.18</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
-    <activemq.version>5.17.3</activemq.version>
-    <cassandra.version>4.15.0</cassandra.version>
+    <activemq.version>5.18.2</activemq.version>
+    <cassandra.version>4.17.0</cassandra.version>
     <disruptor.version>3.4.4</disruptor.version>
-    <elastic.search.version>7.17.9</elastic.search.version>
-    <guava.version>31.1-jre</guava.version>
+    <elastic.search.version>7.17.13</elastic.search.version>
+    <guava.version>32.1.2-jre</guava.version>
     <guice.version>5.1.0</guice.version>
     <hazelcast.version>3.12.13</hazelcast.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
-    <jackson.version>2.14.2</jackson.version>
+    <jackson.version>2.15.2</jackson.version>
     <jakarta.el.version>3.0.4</jakarta.el.version>
     <jakarta.inject.version>1.0.5</jakarta.inject.version>
     <jakarta.validation.version>2.0.2</jakarta.validation.version>
     <jakarta.ws.rs.version>2.1.6</jakarta.ws.rs.version>
-    <jetty.version>10.0.13</jetty.version>
+    <jetty.version>10.0.16</jetty.version>
     <junit.version>4.13.2</junit.version>
-    <junit.jupiter.version>5.9.2</junit.jupiter.version>
-    <log4j.version>2.19.0</log4j.version>
-    <mockito.version>5.1.1</mockito.version>
-    <picocli.version>4.7.1</picocli.version>
-    <resteasy.version>5.0.5.Final</resteasy.version>
-    <swagger.version>1.6.9</swagger.version>
-    <tinkerpop.version>3.6.2</tinkerpop.version>
+    <junit.jupiter.version>5.10.0</junit.jupiter.version>
+    <log4j.version>2.20.0</log4j.version>
+    <mockito.version>5.5.0</mockito.version>
+    <picocli.version>4.7.5</picocli.version>
+    <resteasy.version>5.0.8.Final</resteasy.version>
+    <slf4j.version>2.0.9</slf4j.version>
+    <swagger.version>1.6.11</swagger.version>
+    <tinkerpop.version>3.7.0</tinkerpop.version>
 
     <!-- force upgrade for transitive dependencies -->
-    <commons.codec.version>1.15</commons.codec.version>
-    <groovy.version>2.5.21</groovy.version>
+    <commons.codec.version>1.16.0</commons.codec.version>
     <httpclient.version>4.5.14</httpclient.version>
 
     <!-- build dependencies -->
@@ -95,12 +95,12 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- Required to execute Gremlin queries on JDK17. Consider removing this when upgrading TinkerPop. -->
+      <!-- Force version of slf4j-api to avoid incompatibilities with Log4j. Note that slf4j-api is backward compatible,
+           see https://www.slf4j.org/faq.html#compatibility. -->
       <dependency>
-        <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy</artifactId>
-        <version>${groovy.version}</version>
-        <classifier>indy</classifier>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -341,6 +341,7 @@
             <includedLicense>New BSD License</includedLicense>
             <includedLicense>The New BSD License</includedLicense>
             <includedLicense>The BSD License</includedLicense>
+            <includedLicense>BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)</includedLicense>
             <includedLicense>EDL 1.0</includedLicense>
             <includedLicense>Eclipse Distribution License - v 1.0</includedLicense>
             <!-- CDDL and dual-licensed CDDL -->
@@ -362,12 +363,14 @@
             <includedLicense>Eclipse Public License - Version 1.0</includedLicense>
             <includedLicense>Eclipse Public License - v 2.0</includedLicense>
             <includedLicense>Eclipse Public License v2.0</includedLicense>
+            <includedLicense>Eclipse Public License 2.0</includedLicense>
             <!-- MIT and variants-->
             <includedLicense>Bouncy Castle Licence</includedLicense>
             <includedLicense>ISC</includedLicense>
             <includedLicense>MIT license</includedLicense>
             <includedLicense>MIT License</includedLicense>
             <includedLicense>The MIT License</includedLicense>
+            <includedLicense>MIT-0</includedLicense>
             <!-- Public domain -->
             <includedLicense>CC0</includedLicense>
             <includedLicense>Public Domain</includedLicense>

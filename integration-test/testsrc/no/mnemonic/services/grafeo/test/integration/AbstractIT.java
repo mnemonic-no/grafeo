@@ -61,6 +61,7 @@ public abstract class AbstractIT {
 
   private static CassandraDockerResource cassandra = CassandraDockerResource.builder()
           .setImageName("cassandra")
+          .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
           .skipReachabilityCheck()
@@ -70,7 +71,8 @@ public abstract class AbstractIT {
   private static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
-          .setImageName("elasticsearch/elasticsearch:7.17.9")
+          .setImageName("elasticsearch/elasticsearch:7.17.13")
+          .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9200)
           .skipReachabilityCheck()
@@ -79,6 +81,7 @@ public abstract class AbstractIT {
 
   private static DockerResource activemq = DockerResource.builder()
           .setImageName("webcenter/activemq")
+          .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(61616)
           .addEnvironmentVariable("ACTIVEMQ_CONFIG_QUEUES_GRAFEO", "Grafeo")

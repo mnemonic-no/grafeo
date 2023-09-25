@@ -33,6 +33,7 @@ public class ObjectFactGraphIT {
   @ClassRule
   public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
           .setImageName("cassandra")
+          .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
           .addApplicationPort(9042)
           .skipReachabilityCheck()
