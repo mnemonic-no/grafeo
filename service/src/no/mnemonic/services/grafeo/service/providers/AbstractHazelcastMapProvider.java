@@ -1,9 +1,9 @@
 package no.mnemonic.services.grafeo.service.providers;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import com.hazelcast.monitor.LocalMapStats;
-import com.hazelcast.monitor.NearCacheStats;
+import com.hazelcast.map.IMap;
+import com.hazelcast.map.LocalMapStats;
+import com.hazelcast.nearcache.NearCacheStats;
 import no.mnemonic.commons.metrics.MetricAspect;
 import no.mnemonic.commons.metrics.MetricException;
 import no.mnemonic.commons.metrics.Metrics;

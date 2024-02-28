@@ -53,7 +53,7 @@
     <elastic.search.version>7.17.13</elastic.search.version>
     <guava.version>32.1.2-jre</guava.version>
     <guice.version>5.1.0</guice.version>
-    <hazelcast.version>3.12.13</hazelcast.version>
+    <hazelcast.version>5.3.6</hazelcast.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
     <jackson.version>2.15.2</jackson.version>
     <jakarta.el.version>3.0.4</jakarta.el.version>

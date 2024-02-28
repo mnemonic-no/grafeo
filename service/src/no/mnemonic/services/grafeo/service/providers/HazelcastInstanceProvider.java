@@ -64,7 +64,7 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
 
   private HazelcastInstance createInstance() {
     Config cfg = new Config(instanceName);
-    cfg.getGroupConfig().setName(groupName);
+    cfg.setClusterName(groupName);
 
     // Specify log4j2 to collect the Hazelcast logs together with the service logs (instead of stdout).
     cfg.setProperty("hazelcast.logging.type", "log4j2");
