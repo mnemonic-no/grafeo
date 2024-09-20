@@ -14,6 +14,7 @@ import no.mnemonic.services.grafeo.rest.providers.ObjectMapperResolver;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -105,6 +106,11 @@ public class ResultStash<T> {
                 try (JsonGenerator gen = ObjectMapperResolver.getInstance().getFactory().createGenerator(output)) {
                   gen.writeObject(new ResultStash<>(status.getStatusCode(), limit, count, messages, data));
                   gen.flush();
+                } finally {
+                  // Ensure that resources are released!
+                  if (data instanceof Closeable closeable) {
+                    closeable.close();
+                  }
                 }
               })
               .build();

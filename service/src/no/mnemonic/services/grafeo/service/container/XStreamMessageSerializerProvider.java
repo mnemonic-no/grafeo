@@ -1,8 +1,7 @@
 package no.mnemonic.services.grafeo.service.container;
 
-import no.mnemonic.messaging.requestsink.jms.serializer.MessageSerializer;
-import no.mnemonic.messaging.requestsink.jms.serializer.XStreamMessageSerializer;
-import no.mnemonic.services.common.messagebus.ServiceRequestMessage;
+import no.mnemonic.services.common.api.proxy.serializer.Serializer;
+import no.mnemonic.services.common.api.proxy.serializer.XStreamSerializer;
 import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
 import no.mnemonic.services.grafeo.auth.properties.model.SubjectCredentials;
 
@@ -12,27 +11,25 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Provides a {@link MessageSerializer} implementation based on XStream intended to be used by {@link GrafeoSmbServer}.
+ * Provides a {@link Serializer} implementation based on XStream intended to be used by {@link GrafeoServiceProxyServer}.
  */
-public class XStreamMessageSerializerProvider implements Provider<MessageSerializer> {
+public class XStreamMessageSerializerProvider implements Provider<Serializer> {
 
   @Override
-  public MessageSerializer get() {
-    XStreamMessageSerializer.Builder builder = XStreamMessageSerializer.builder()
+  public Serializer get() {
+    XStreamSerializer.XStreamSerializerBuilder builder = XStreamSerializer.builder()
             // Common Java classes used in requests (required for collections holding those).
-            .addAllowedClass(String.class)
-            .addAllowedClass(UUID.class)
-            // Request message used by SMB.
-            .addAllowedClass(ServiceRequestMessage.class)
+            .setAllowedClass(String.class)
+            .setAllowedClass(UUID.class)
             // RequestHeader and SubjectCredentials are part of every service request.
-            .addAllowedClass(RequestHeader.class)
-            .addAllowedClass(SubjectCredentials.class)
+            .setAllowedClass(RequestHeader.class)
+            .setAllowedClass(SubjectCredentials.class)
             // Allow all request classes defined in the API.
-            .addAllowedClass("no.mnemonic.services.grafeo.api.request.*");
+            .setAllowedClassesRegex("no.mnemonic.services.grafeo.api.request.*");
 
     // Add additional classes to white-list as specified by subclasses.
-    additionalAllowedClasses().forEach(builder::addAllowedClass);
-    additionalAllowedClassesRegex().forEach(builder::addAllowedClass);
+    additionalAllowedClasses().forEach(builder::setAllowedClass);
+    additionalAllowedClassesRegex().forEach(builder::setAllowedClassesRegex);
 
     return builder.build();
   }

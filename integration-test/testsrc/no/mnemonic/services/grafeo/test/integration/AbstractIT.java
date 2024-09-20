@@ -9,7 +9,6 @@ import com.google.inject.name.Names;
 import no.mnemonic.commons.container.ComponentContainer;
 import no.mnemonic.commons.container.providers.GuiceBeanProvider;
 import no.mnemonic.commons.junit.docker.CassandraDockerResource;
-import no.mnemonic.commons.junit.docker.DockerResource;
 import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
@@ -30,8 +29,6 @@ import no.mnemonic.services.grafeo.service.modules.GrafeoServiceModule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -49,6 +46,9 @@ public abstract class AbstractIT {
   private static final String ACL_FILE = ClassLoader.getSystemResource("acl.properties").getPath();
   private static final String RESOURCES_FOLDER = ClassLoader.getSystemResource("").getPath();
   private static final int API_SERVER_PORT = AvailablePortFinder.getAvailablePort(8000);
+  private static final int SPI_STANDARD_PORT = AvailablePortFinder.getAvailablePort(8000);
+  private static final int SPI_BULK_PORT = AvailablePortFinder.getAvailablePort(8000);
+  private static final int SPI_EXPEDITE_PORT = AvailablePortFinder.getAvailablePort(8000);
 
   private static final ObjectMapper mapper = JsonMapper.builder().build();
 
@@ -59,7 +59,8 @@ public abstract class AbstractIT {
   private FactManager factManager;
   private ObjectFactDao objectFactDao;
 
-  private static CassandraDockerResource cassandra = CassandraDockerResource.builder()
+  @ClassRule
+  public static final CassandraDockerResource cassandra = CassandraDockerResource.builder()
           .setImageName("cassandra")
           .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
@@ -68,7 +69,8 @@ public abstract class AbstractIT {
           .setTruncateScript("truncate.cql")
           .build();
 
-  private static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
+  @ClassRule
+  public static final ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
           .setImageName("elasticsearch/elasticsearch:7.17.13")
@@ -78,19 +80,6 @@ public abstract class AbstractIT {
           .skipReachabilityCheck()
           .addEnvironmentVariable("discovery.type", "single-node")
           .build();
-
-  private static DockerResource activemq = DockerResource.builder()
-          .setImageName("webcenter/activemq")
-          .setSkipPullDockerImage(true)
-          .setExposedPortsRange("15000-25000")
-          .addApplicationPort(61616)
-          .addEnvironmentVariable("ACTIVEMQ_CONFIG_QUEUES_GRAFEO", "Grafeo")
-          .addEnvironmentVariable("ACTIVEMQ_CONFIG_TOPICS_GRAFEO", "Grafeo.ALL")
-          .build();
-
-  @ClassRule
-  // Chain resources in order to allow ActiveMQ to start up properly while Cassandra and ElasticSearch are initializing.
-  public static TestRule chain = RuleChain.outerRule(activemq).around(cassandra).around(elastic);
 
   @Before
   public void setup() {
@@ -327,7 +316,6 @@ public abstract class AbstractIT {
       install(new GrafeoServiceModule());
       install(new GrafeoServerModule());
       // Configuration
-      String smbServerUrl = "tcp://" + activemq.getExposedHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("grafeo.access.controller.properties.configuration.file")).toInstance(ACL_FILE);
       bind(String.class).annotatedWith(Names.named("grafeo.access.controller.properties.reload.interval")).toInstance("60000");
       bind(String.class).annotatedWith(Names.named("grafeo.access.controller.properties.service.account.user.id")).toInstance("3");
@@ -350,11 +338,9 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.address")).toInstance("224.2.2.3");
       bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.port")).toInstance("54327");
       bind(String.class).annotatedWith(Names.named("grafeo.hazelcast.multicast.enabled")).toInstance("false");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.queue.name")).toInstance("Grafeo");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.topic.name")).toInstance("Grafeo.ALL");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.server.url")).toInstance(smbServerUrl);
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.server.username")).toInstance("admin");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.server.password")).toInstance("admin");
+      bind(String.class).annotatedWith(Names.named("grafeo.service.proxy.standard.port")).toInstance(String.valueOf(SPI_STANDARD_PORT));
+      bind(String.class).annotatedWith(Names.named("grafeo.service.proxy.bulk.port")).toInstance(String.valueOf(SPI_BULK_PORT));
+      bind(String.class).annotatedWith(Names.named("grafeo.service.proxy.expedite.port")).toInstance(String.valueOf(SPI_EXPEDITE_PORT));
     }
   }
 
@@ -364,14 +350,12 @@ public abstract class AbstractIT {
       install(new GrafeoRestModule());
       install(new GrafeoClientModule());
       // Configuration
-      String smbClientUrl = "tcp://" + activemq.getExposedHost() + ":" + activemq.getExposedHostPort(61616);
       bind(String.class).annotatedWith(Names.named("grafeo.api.server.port")).toInstance(String.valueOf(API_SERVER_PORT));
       bind(String.class).annotatedWith(Names.named("grafeo.api.cors.allowed.origins")).toInstance("http://www.example.org");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.queue.name")).toInstance("Grafeo");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.topic.name")).toInstance("Grafeo.ALL");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.client.url")).toInstance(smbClientUrl);
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.client.username")).toInstance("admin");
-      bind(String.class).annotatedWith(Names.named("grafeo.smb.client.password")).toInstance("admin");
+      bind(String.class).annotatedWith(Names.named("grafeo.service.client.base.uri")).toInstance("http://localhost");
+      bind(String.class).annotatedWith(Names.named("grafeo.service.client.standard.port")).toInstance(String.valueOf(SPI_STANDARD_PORT));
+      bind(String.class).annotatedWith(Names.named("grafeo.service.client.bulk.port")).toInstance(String.valueOf(SPI_BULK_PORT));
+      bind(String.class).annotatedWith(Names.named("grafeo.service.client.expedite.port")).toInstance(String.valueOf(SPI_EXPEDITE_PORT));
     }
   }
 }

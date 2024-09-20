@@ -2,6 +2,12 @@
 This file contains migrations which are required to be performed when upgrading the application code to a newer version.
 It is not necessary to perform these steps when installing the application for the first time.
 
+## [Migrate from JMS to HTTP] - 2024-09-20
+The communication mechanism between the REST layer and service back-end has been changed from JMS to HTTP. Any JMS middleware
+is not required anymore. If the application is deployed in a multi-node environment with several back-end nodes an HTTP
+load balancer needs to be placed in front of the back-end nodes. See the example `application.properties` configuration
+files for the new configuration options.
+
 ## [Rename configuration properties and environment variables] - 2023-07-10
 All configuration properties and environment variables have been renamed. Change the configuration file `application.properties`
 and replace the `act` prefix with `grafeo` in all properties. In addition, change all environment variables starting with

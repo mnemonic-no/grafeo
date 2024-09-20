@@ -53,18 +53,13 @@
       <version>${mnemonic.commons.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.mnemonic.messaging</groupId>
-      <artifactId>requestsink-jms</artifactId>
-      <version>${mnemonic.messaging.version}</version>
-    </dependency>
-    <dependency>
       <groupId>no.mnemonic.services.common</groupId>
       <artifactId>service-api</artifactId>
       <version>${mnemonic.services.common.version}</version>
     </dependency>
     <dependency>
       <groupId>no.mnemonic.services.common</groupId>
-      <artifactId>messagebus</artifactId>
+      <artifactId>service-proxy</artifactId>
       <version>${mnemonic.services.common.version}</version>
     </dependency>
     <dependency>
