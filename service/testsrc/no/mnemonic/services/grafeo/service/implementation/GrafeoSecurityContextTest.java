@@ -12,18 +12,13 @@ import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
-import no.mnemonic.services.grafeo.dao.cassandra.entity.AccessMode;
-import no.mnemonic.services.grafeo.dao.cassandra.entity.FactAclEntity;
-import no.mnemonic.services.grafeo.dao.cassandra.entity.FactEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewGrafeoFact;
 import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewGrafeoOrigin;
@@ -47,8 +42,6 @@ public class GrafeoSecurityContextTest {
   private SubjectIdentity subject;
   @Mock
   private ObjectFactDao objectFactDao;
-  @Mock
-  private Function<UUID, List<FactAclEntity>> aclResolver;
 
   private GrafeoSecurityContext context;
 
@@ -62,7 +55,6 @@ public class GrafeoSecurityContextTest {
             .setIdentityResolver(identityResolver)
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
-            .setAclResolver(aclResolver)
             .build();
   }
 
@@ -72,118 +64,7 @@ public class GrafeoSecurityContextTest {
             .setAccessController(accessController)
             .setIdentityResolver(identityResolver)
             .setCredentials(credentials)
-            .setAclResolver(aclResolver)
             .build();
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testCreateContextWithoutAclResolverThrowsException() {
-    GrafeoSecurityContext.builder()
-            .setAccessController(accessController)
-            .setIdentityResolver(identityResolver)
-            .setCredentials(credentials)
-            .setObjectFactDao(objectFactDao)
-            .build();
-  }
-
-  @Test(expected = AccessDeniedException.class)
-  public void testCheckReadPermissionWithoutFact() throws Exception {
-    context.checkReadPermission((FactEntity) null);
-  }
-
-  @Test
-  public void testCheckReadPermissionWithAccessModePublic() throws Exception {
-    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(true);
-    context.checkReadPermission(new FactEntity().setAccessMode(AccessMode.Public));
-    verify(accessController).hasPermission(credentials, viewGrafeoFact);
-  }
-
-  @Test(expected = AccessDeniedException.class)
-  public void testCheckReadPermissionWithAccessModePublicNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false);
-    context.checkReadPermission(new FactEntity().setAccessMode(AccessMode.Public));
-  }
-
-  @Test
-  public void testCheckReadPermissionWithAccessModeRoleBased() throws Exception {
-    FactEntity fact = new FactEntity()
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode(AccessMode.RoleBased);
-
-    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(true);
-    context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewGrafeoFact, organization);
-  }
-
-  @Test
-  public void testCheckReadPermissionWithAccessModeRoleBasedUserInAcl() throws Exception {
-    FactEntity fact = new FactEntity()
-            .setId(UUID.randomUUID())
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode(AccessMode.RoleBased);
-    UUID currentUserID = mockCurrentUserIdentities();
-    when(aclResolver.apply(any())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(currentUserID)));
-
-    context.checkReadPermission(fact);
-    verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewGrafeoFact, organization);
-  }
-
-  @Test(expected = AccessDeniedException.class)
-  public void testCheckReadPermissionWithAccessModeRoleBasedNoAccess() throws Exception {
-    FactEntity fact = new FactEntity()
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode(AccessMode.RoleBased);
-
-    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(false);
-    context.checkReadPermission(fact);
-  }
-
-  @Test
-  public void testCheckReadPermissionWithAccessModeExplicit() throws Exception {
-    FactEntity fact = new FactEntity()
-            .setId(UUID.randomUUID())
-            .setAccessMode(AccessMode.Explicit);
-    UUID currentUserID = mockCurrentUserIdentities();
-    when(aclResolver.apply(any())).thenReturn(ListUtils.list(new FactAclEntity().setSubjectID(currentUserID)));
-
-    context.checkReadPermission(fact);
-    verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewGrafeoFact, organization);
-  }
-
-  @Test(expected = AccessDeniedException.class)
-  public void testCheckReadPermissionWithAccessModeExplicitNoAccess() throws Exception {
-    FactEntity fact = new FactEntity()
-            .setId(UUID.randomUUID())
-            .setAccessMode(AccessMode.Explicit);
-
-    context.checkReadPermission(fact);
-    verify(aclResolver).apply(fact.getId());
-    verify(accessController, never()).hasPermission(credentials, viewGrafeoFact, organization);
-  }
-
-  @Test
-  public void testCheckReadPermissionFallbackToRoleBased() throws Exception {
-    FactEntity fact = new FactEntity()
-            .setOrganizationID(UUID.randomUUID())
-            .setAccessMode(null);
-
-    when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(true);
-    context.checkReadPermission(fact);
-    verify(accessController).hasPermission(credentials, viewGrafeoFact, organization);
-  }
-
-  @Test
-  public void testHasReadPermissionReturnsTrueOnAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(true);
-    assertTrue(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
-  }
-
-  @Test
-  public void testHasReadPermissionReturnsFalseOnNoAccess() throws Exception {
-    when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false);
-    assertFalse(context.hasReadPermission(new FactEntity().setAccessMode(AccessMode.Public)));
   }
 
   @Test(expected = AccessDeniedException.class)

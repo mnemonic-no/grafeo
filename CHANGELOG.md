@@ -14,7 +14,7 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0
 - Traversal now exposes meta-facts and retraction status as fact properties
  
 ### Deprecated
-- REST endpoint `POST /v1/object/{id}/traverse`, use `POST /v1/traverse/object/{id}`
+- REST endpoint `POST /v1/object/uuid/{id}/traverse`, use `POST /v1/traverse/object/{id}`
 - REST endpoint `POST /v1/object/{type}/{value}/traverse`, use `POST /v1/traverse/object/{type}/{value}`
 - REST endpoint `POST /v1/object/traverse`, use `POST /v1/traverse/objects/search`
 
@@ -76,6 +76,8 @@ For this use case one-legged Facts with bi-directional binding should be created
 ElasticSearch in order to avoid outdated names in the index. If an entity cannot be resolved a 412 response will be returned.
 
 ### Removed
+- (2024-10-16) Removed deprecated traverse endpoints `POST /v1/object/uuid/{id}/traverse`, `POST /v1/object/{type}/{value}/traverse`
+and `POST /v1/object/traverse`.
 - (2024-10-15) Removed deprecated `before` and `after` parameters from all search and traverse endpoints which accept a request body.
 - (2022-10-21) Removed handling of the legacy 'act' index. Ensure that all installations have reindexed their data into
 daily indices, see [MIGRATIONS.md](MIGRATIONS.md).

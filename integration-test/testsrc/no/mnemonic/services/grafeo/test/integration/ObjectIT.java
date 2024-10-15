@@ -1,7 +1,8 @@
 package no.mnemonic.services.grafeo.test.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import no.mnemonic.services.grafeo.api.request.v1.*;
+import no.mnemonic.services.grafeo.api.request.v1.SearchObjectFactsRequest;
+import no.mnemonic.services.grafeo.api.request.v1.SearchObjectRequest;
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
@@ -82,51 +83,6 @@ public class ObjectIT extends AbstractIT {
 
     // ... and check that only one Object after filtering is found via the REST API.
     fetchAndAssertList("/v1/object/search", new SearchObjectRequest().addObjectValue(object1.getValue()), object1.getId());
-  }
-
-  @Test
-  public void testTraverseObjects() throws Exception {
-    // Create an Object and a related Fact in the database ...
-    ObjectTypeEntity objectType = createObjectType();
-    ObjectRecord object = createObject(objectType.getId());
-    FactRecord fact = createFact(object);
-
-    // ... and check that the Fact can be received via a simple graph traversal.
-    fetchAndAssertList(String.format("/v1/object/uuid/%s/traverse", object.getId()),
-            new TraverseByObjectIdRequest().setQuery("g.outE()"), fact.getId());
-    fetchAndAssertList(String.format("/v1/object/%s/%s/traverse", objectType.getName(), object.getValue()),
-            new TraverseByObjectTypeValueRequest().setQuery("g.outE()"), fact.getId());
-  }
-
-  @Test
-  public void testTraverseObjectsWithACL() throws Exception {
-    // Create one Object and multiple related Facts with different access modes in the database ...
-    ObjectTypeEntity objectType = createObjectType();
-    FactTypeEntity factType = createFactType(objectType.getId());
-    ObjectRecord object = createObject(objectType.getId());
-    FactRecord fact = createFact(object, factType, f -> f.setAccessMode(FactRecord.AccessMode.Public));
-    createFact(object, factType, f -> f.setAccessMode(FactRecord.AccessMode.Explicit));
-
-    // ... and check that only one Fact can be received via a simple graph traversal.
-    fetchAndAssertList(String.format("/v1/object/uuid/%s/traverse", object.getId()),
-            new TraverseByObjectIdRequest().setQuery("g.outE()"), fact.getId());
-  }
-
-  @Test
-  public void testTraverseObjectsWithFiltering() throws Exception {
-    // Create multiple Objects and related Facts in the database ...
-    ObjectTypeEntity objectType = createObjectType();
-    FactTypeEntity factType = createFactType(objectType.getId());
-    ObjectRecord object1 = createObject(objectType.getId(), o -> o.setValue("value"));
-    ObjectRecord object2 = createObject(objectType.getId(), o -> o.setValue("otherValue"));
-    FactRecord fact = createFact(object1, factType, f -> f.setValue("fact1"));
-    createFact(object2, factType, f -> f.setValue("fact2"));
-
-    // ... and check that only one Fact can be received via a simple graph traversal after filtering.
-    TraverseByObjectSearchRequest request = (TraverseByObjectSearchRequest) new TraverseByObjectSearchRequest()
-            .setQuery("g.outE()")
-            .addObjectValue(object1.getValue());
-    fetchAndAssertList("/v1/object/traverse", request, fact.getId());
   }
 
 }

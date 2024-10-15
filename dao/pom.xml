@@ -152,11 +152,6 @@
       <version>${jackson.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.tinkerpop</groupId>
-      <artifactId>gremlin-core</artifactId>
-      <version>${tinkerpop.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.elasticsearch.client</groupId>
       <artifactId>elasticsearch-rest-high-level-client</artifactId>
       <version>${elastic.search.version}</version>

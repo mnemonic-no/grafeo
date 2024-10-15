@@ -5,12 +5,13 @@ import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.services.grafeo.api.exceptions.AccessDeniedException;
 import no.mnemonic.services.grafeo.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.services.grafeo.api.exceptions.InvalidArgumentException;
-import no.mnemonic.services.grafeo.api.exceptions.OperationTimeoutException;
 import no.mnemonic.services.grafeo.api.model.v1.Fact;
 import no.mnemonic.services.grafeo.api.model.v1.Object;
-import no.mnemonic.services.grafeo.api.request.v1.*;
+import no.mnemonic.services.grafeo.api.request.v1.GetObjectByIdRequest;
+import no.mnemonic.services.grafeo.api.request.v1.GetObjectByTypeValueRequest;
+import no.mnemonic.services.grafeo.api.request.v1.SearchObjectFactsRequest;
+import no.mnemonic.services.grafeo.api.request.v1.SearchObjectRequest;
 import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
-import no.mnemonic.services.grafeo.rest.api.ResultStash;
 import no.mnemonic.services.grafeo.rest.api.auth.CredentialsResolver;
 
 import javax.annotation.security.RolesAllowed;
@@ -156,81 +157,6 @@ public class ObjectEndpoint {
     return buildResponse(service.searchObjectFacts(credentialsResolver.getRequestHeader(), request.setObjectType(type).setObjectValue(value)));
   }
 
-  @Deprecated
-  @POST
-  @Path("/uuid/{id}/traverse")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Traverse the Object/Fact graph starting at a specific Object.",
-          notes = "Deprecated, use 'v1/traverse/object/{id}' instead.\n\n" +
-                  "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal. " +
-                  "Objects are represented as graph vertices and Facts as graph edges. The labels of vertices and edges " +
-                  "are the names of the corresponding ObjectTypes and FactTypes, respectively.\n\n" +
-                  "The traversal query contained in the request must be a valid Gremlin query [0,1]. Inside the query the " +
-                  "graph is referenced as 'g' and the starting point of the traversal is set to the Object specified in the " +
-                  "request. Therefore, it is not necessary to either instantiate a graph instance or to set the starting " +
-                  "point of the traversal by using V() or E(). For example, a query to fetch all outgoing edges from the " +
-                  "starting Object would simply be 'g.outE()'.\n\n" +
-                  "If the result of the graph traversal are edges the response will contain the Facts belonging to those " +
-                  "edges. If the result are vertices the response will contain Objects. In all other cases the result " +
-                  "of the traversal is returned as-is, for instance, when the result is a list of vertex or edge properties.\n\n" +
-                  "[0] Tutorial: https://tinkerpop.apache.org/docs/current/tutorials/getting-started/\n\n" +
-                  "[1] Reference documentation: https://tinkerpop.apache.org/docs/current/reference/",
-          response = ResultStash.class
-  )
-  @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 408, message = "Execution of this operation timed out."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
-  })
-  @RolesAllowed("traverseGrafeoFact")
-  public Response traverseObjectById(
-          @PathParam("id") @ApiParam(value = "UUID of Object.") @NotNull @Valid UUID id,
-          @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectIdRequest request
-  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return buildResponse(service.traverseGraph(credentialsResolver.getRequestHeader(), request.setId(id)));
-  }
-
-  @Deprecated
-  @POST
-  @Path("/{type}/{value}/traverse")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Traverse the Object/Fact graph starting at a specific Object.",
-          notes = "Deprecated, use 'v1/traverse/object/{type}/{value}' instead.\n\n" +
-                  "This operation traverses the graph of Objects and Facts, and returns the result of the graph traversal. " +
-                  "Objects are represented as graph vertices and Facts as graph edges. The labels of vertices and edges " +
-                  "are the names of the corresponding ObjectTypes and FactTypes, respectively.\n\n" +
-                  "The traversal query contained in the request must be a valid Gremlin query [0,1]. Inside the query the " +
-                  "graph is referenced as 'g' and the starting point of the traversal is set to the Object specified in the " +
-                  "request. Therefore, it is not necessary to either instantiate a graph instance or to set the starting " +
-                  "point of the traversal by using V() or E(). For example, a query to fetch all outgoing edges from the " +
-                  "starting Object would simply be 'g.outE()'.\n\n" +
-                  "If the result of the graph traversal are edges the response will contain the Facts belonging to those " +
-                  "edges. If the result are vertices the response will contain Objects. In all other cases the result " +
-                  "of the traversal is returned as-is, for instance, when the result is a list of vertex or edge properties.\n\n" +
-                  "[0] Tutorial: https://tinkerpop.apache.org/docs/current/tutorials/getting-started/\n\n" +
-                  "[1] Reference documentation: https://tinkerpop.apache.org/docs/current/reference/",
-          response = ResultStash.class
-  )
-  @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 408, message = "Execution of this operation timed out."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
-  })
-  @RolesAllowed("traverseGrafeoFact")
-  public Response traverseObjectByTypeValue(
-          @PathParam("type") @ApiParam(value = "Type name of Object.") @NotBlank String type,
-          @PathParam("value") @ApiParam(value = "Value of Object.") @NotBlank String value,
-          @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectTypeValueRequest request
-  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return buildResponse(service.traverseGraph(credentialsResolver.getRequestHeader(), request.setType(type).setValue(value)));
-  }
-
   @POST
   @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -276,35 +202,6 @@ public class ObjectEndpoint {
           @ApiParam(value = "Request to search for Objects.") @NotNull @Valid SearchObjectRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildResponse(service.searchObjects(credentialsResolver.getRequestHeader(), request));
-  }
-
-  @Deprecated
-  @POST
-  @Path("/traverse")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Traverse the Object/Fact graph after performing an Object search.",
-          notes = "Deprecated, use 'v1/traverse/object/search' instead.\n\n" +
-                  "This operation performs first an Object search and then traverses the graph of Objects and Facts " +
-                  "starting at the Objects returned from the Object search. For more information about Object search " +
-                  "see '/v1/object/search' and about graph traversal '/v1/object/{type}/{value}/traverse'. This operation " +
-                  "accepts the same search parameters than '/v1/object/search' in addition to a Gremlin query for the " +
-                  "graph traversal. Note that any limit provided in the request will only be applied to the Object search " +
-                  "and not to the graph traversal. A limit to the graph traversal must be provided as part of the Gremlin query.",
-          response = ResultStash.class
-  )
-  @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 408, message = "Execution of this operation timed out."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
-  })
-  @RolesAllowed("traverseGrafeoFact")
-  public Response traverseObjects(
-          @ApiParam(value = "Request to traverse graph.") @NotNull @Valid TraverseByObjectSearchRequest request
-  ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return buildResponse(service.traverseGraph(credentialsResolver.getRequestHeader(), request));
   }
 
   private Long parseTimestamp(String parameter, String timestamp) throws InvalidArgumentException {

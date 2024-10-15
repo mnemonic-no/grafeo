@@ -11,7 +11,6 @@ import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
 import no.mnemonic.services.grafeo.auth.IdentitySPI;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
-import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.service.Service;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.delegates.*;
@@ -25,19 +24,16 @@ public class GrafeoServiceImpl implements GrafeoService, Service {
 
   private final AccessController accessController;
   private final IdentitySPI identityResolver;
-  private final FactManager factManager;
   private final ObjectFactDao objectFactDao;
   private final DelegateProvider delegateProvider;
 
   @Inject
   public GrafeoServiceImpl(AccessController accessController,
                            IdentitySPI identityResolver,
-                           FactManager factManager,
                            ObjectFactDao objectFactDao,
                            DelegateProvider delegateProvider) {
     this.accessController = accessController;
     this.identityResolver = identityResolver;
-    this.factManager = factManager;
     this.objectFactDao = objectFactDao;
     this.delegateProvider = delegateProvider;
   }
@@ -49,7 +45,6 @@ public class GrafeoServiceImpl implements GrafeoService, Service {
             .setIdentityResolver(identityResolver)
             .setCredentials(credentials)
             .setObjectFactDao(objectFactDao)
-            .setAclResolver(factManager::fetchFactAcl)
             .build();
   }
 
@@ -183,27 +178,6 @@ public class GrafeoServiceImpl implements GrafeoService, Service {
   public AclEntry grantFactAccess(RequestHeader rh, GrantFactAccessRequest request)
           throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return delegateProvider.get(FactGrantAccessDelegate.class).handle(request);
-  }
-
-  @Deprecated
-  @Override
-  public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectIdRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return delegateProvider.get(TraverseGraphDelegate.class).handle(request);
-  }
-
-  @Deprecated
-  @Override
-  public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectTypeValueRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return delegateProvider.get(TraverseGraphDelegate.class).handle(request);
-  }
-
-  @Deprecated
-  @Override
-  public ResultSet<?> traverseGraph(RequestHeader rh, TraverseByObjectSearchRequest request)
-          throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, OperationTimeoutException {
-    return delegateProvider.get(TraverseGraphDelegate.class).handle(request);
   }
 
   @Override

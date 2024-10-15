@@ -6,7 +6,6 @@ import no.mnemonic.services.grafeo.api.request.v1.*;
 import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
 import no.mnemonic.services.grafeo.auth.IdentitySPI;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
-import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.service.implementation.delegates.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,8 +24,6 @@ public class GrafeoServiceImplTest {
   @Mock
   private IdentitySPI identityResolver;
   @Mock
-  private FactManager factManager;
-  @Mock
   private ObjectFactDao objectFactDao;
   @Mock
   private DelegateProvider delegateProvider;
@@ -39,7 +36,6 @@ public class GrafeoServiceImplTest {
     service = new GrafeoServiceImpl(
             accessController,
             identityResolver,
-            factManager,
             objectFactDao,
             delegateProvider
     );
@@ -267,36 +263,6 @@ public class GrafeoServiceImplTest {
 
     GrantFactAccessRequest request = new GrantFactAccessRequest();
     service.grantFactAccess(RequestHeader.builder().build(), request);
-    verify(delegate).handle(request);
-  }
-
-  @Test
-  public void testTraverseGraphByObjectIdCallsDelegate() throws Exception {
-    TraverseGraphDelegate delegate = mock(TraverseGraphDelegate.class);
-    when(delegateProvider.get(TraverseGraphDelegate.class)).thenReturn(delegate);
-
-    TraverseByObjectIdRequest request = new TraverseByObjectIdRequest();
-    service.traverseGraph(RequestHeader.builder().build(), request);
-    verify(delegate).handle(request);
-  }
-
-  @Test
-  public void testTraverseGraphByObjectTypeValueCallsDelegate() throws Exception {
-    TraverseGraphDelegate delegate = mock(TraverseGraphDelegate.class);
-    when(delegateProvider.get(TraverseGraphDelegate.class)).thenReturn(delegate);
-
-    TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest();
-    service.traverseGraph(RequestHeader.builder().build(), request);
-    verify(delegate).handle(request);
-  }
-
-  @Test
-  public void testTraverseGraphByObjectSearchCallsDelegate() throws Exception {
-    TraverseGraphDelegate delegate = mock(TraverseGraphDelegate.class);
-    when(delegateProvider.get(TraverseGraphDelegate.class)).thenReturn(delegate);
-
-    TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest();
-    service.traverseGraph(RequestHeader.builder().build(), request);
     verify(delegate).handle(request);
   }
 

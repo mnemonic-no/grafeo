@@ -12,16 +12,10 @@ import no.mnemonic.services.grafeo.auth.IdentitySPI;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
-import no.mnemonic.services.grafeo.dao.cassandra.entity.AccessMode;
-import no.mnemonic.services.grafeo.dao.cassandra.entity.FactAclEntity;
-import no.mnemonic.services.grafeo.dao.cassandra.entity.FactEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Function;
 
 /**
  * Specific SecurityContext for the GrafeoService.
@@ -29,16 +23,13 @@ import java.util.function.Function;
 public class GrafeoSecurityContext extends SecurityContext {
 
   private final ObjectFactDao objectFactDao;
-  private final Function<UUID, List<FactAclEntity>> aclResolver;
 
   private GrafeoSecurityContext(AccessController accessController,
                                 IdentitySPI identityResolver,
                                 Credentials credentials,
-                                ObjectFactDao objectFactDao,
-                                Function<UUID, List<FactAclEntity>> aclResolver) {
+                                ObjectFactDao objectFactDao) {
     super(accessController, identityResolver, credentials);
     this.objectFactDao = objectFactDao;
-    this.aclResolver = aclResolver;
   }
 
   public static GrafeoSecurityContext get() {
@@ -47,40 +38,6 @@ public class GrafeoSecurityContext extends SecurityContext {
 
   public static Builder builder() {
     return new Builder();
-  }
-
-  /**
-   * Check if a user is allowed to view a specific Fact based on the Fact's AccessMode.
-   *
-   * @param fact Fact to verify access to.
-   * @throws AccessDeniedException         If the user is not allowed to view the Fact.
-   * @throws AuthenticationFailedException If the user could not be authenticated.
-   * @deprecated Use {@link #checkReadPermission(FactRecord)} instead.
-   */
-  @Deprecated
-  public void checkReadPermission(FactEntity fact) throws AccessDeniedException, AuthenticationFailedException {
-    if (fact == null) throw new AccessDeniedException("No access to Fact.");
-
-    if (fact.getAccessMode() == AccessMode.Public) {
-      // Only verify that user has general permission to view Facts.
-      checkPermission(FunctionConstants.viewGrafeoFact);
-      // Access allowed because user is generally allowed to view Facts.
-      return;
-    }
-
-    if (isInAcl(fact)) {
-      // Access allowed because user is in the Fact's ACL, either granted directly or to a parent group.
-      return;
-    }
-
-    if (fact.getAccessMode() == AccessMode.Explicit) {
-      // User is not in ACL of the Fact but explicit access is required.
-      throw new AccessDeniedException(String.format("No access to Fact with id = %s.", fact.getId()));
-    }
-
-    // Fallback to role-based access control and verify that user has access to Facts of a specific organization.
-    // This also catches the case where AccessMode == RoleBased and user is not in the Fact's ACL.
-    checkPermission(FunctionConstants.viewGrafeoFact, fact.getOrganizationID());
   }
 
   /**
@@ -180,23 +137,6 @@ public class GrafeoSecurityContext extends SecurityContext {
    *
    * @param fact Fact to verify access to.
    * @return True if user has access to the Fact.
-   * @deprecated Use {@link #hasReadPermission(FactRecord)} instead.
-   */
-  @Deprecated
-  public boolean hasReadPermission(FactEntity fact) {
-    try {
-      checkReadPermission(fact);
-      return true;
-    } catch (AccessDeniedException | AuthenticationFailedException ignored) {
-      return false;
-    }
-  }
-
-  /**
-   * Check if a user is allowed to view a specific Fact based on the Fact's AccessMode.
-   *
-   * @param fact Fact to verify access to.
-   * @return True if user has access to the Fact.
    */
   public boolean hasReadPermission(FactRecord fact) {
     try {
@@ -252,25 +192,18 @@ public class GrafeoSecurityContext extends SecurityContext {
     }
   }
 
-  private boolean isInAcl(FactEntity fact) {
-    List<FactAclEntity> acl = aclResolver.apply(fact.getId());
-    return !CollectionUtils.isEmpty(acl) && acl.stream().anyMatch(entry -> getCurrentUserIdentities().contains(entry.getSubjectID()));
-  }
-
   public static class Builder {
     private AccessController accessController;
     private IdentitySPI identityResolver;
     private Credentials credentials;
     private ObjectFactDao objectFactDao;
-    private Function<UUID, List<FactAclEntity>> aclResolver;
 
     private Builder() {
     }
 
     public GrafeoSecurityContext build() {
       ObjectUtils.notNull(objectFactDao, "'objectFactDao' not set in SecurityContext.");
-      ObjectUtils.notNull(aclResolver, "'aclResolver' not set in SecurityContext.");
-      return new GrafeoSecurityContext(accessController, identityResolver, credentials, objectFactDao, aclResolver);
+      return new GrafeoSecurityContext(accessController, identityResolver, credentials, objectFactDao);
     }
 
     public Builder setAccessController(AccessController accessController) {
@@ -290,11 +223,6 @@ public class GrafeoSecurityContext extends SecurityContext {
 
     public Builder setObjectFactDao(ObjectFactDao objectFactDao) {
       this.objectFactDao = objectFactDao;
-      return this;
-    }
-
-    public Builder setAclResolver(Function<UUID, List<FactAclEntity>> aclResolver) {
-      this.aclResolver = aclResolver;
       return this;
     }
   }

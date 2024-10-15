@@ -1,10 +1,12 @@
 package no.mnemonic.services.grafeo.rest.api.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.grafeo.api.model.v1.Fact;
 import no.mnemonic.services.grafeo.api.model.v1.Object;
-import no.mnemonic.services.grafeo.api.request.v1.*;
+import no.mnemonic.services.grafeo.api.request.v1.GetObjectByIdRequest;
+import no.mnemonic.services.grafeo.api.request.v1.GetObjectByTypeValueRequest;
+import no.mnemonic.services.grafeo.api.request.v1.SearchObjectFactsRequest;
+import no.mnemonic.services.grafeo.api.request.v1.SearchObjectRequest;
 import no.mnemonic.services.grafeo.api.service.v1.StreamingResultSet;
 import no.mnemonic.services.grafeo.rest.AbstractEndpointTest;
 import org.junit.Test;
@@ -108,49 +110,6 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
   }
 
   @Test
-  public void testTraverseObjectById() throws Exception {
-    UUID id = UUID.randomUUID();
-    when(getService().traverseGraph(any(), isA(TraverseByObjectIdRequest.class))).then(i -> {
-      assertEquals(id, i.<TraverseByObjectIdRequest>getArgument(1).getId());
-      return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
-    });
-
-    TraverseByObjectIdRequest request = new TraverseByObjectIdRequest()
-            .setQuery("g.values('value')");
-    Response response = target(String.format("/v1/object/uuid/%s/traverse", id)).request().post(Entity.json(request));
-    JsonNode payload = getPayload(response);
-    assertEquals(200, response.getStatus());
-    assertTrue(payload.isArray());
-    assertEquals(1, payload.size());
-    assertEquals("something", payload.get(0).asText());
-
-    verify(getService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectIdRequest.class));
-  }
-
-  @Test
-  public void testTraverseObjectByTypeValue() throws Exception {
-    String type = "ip";
-    String value = "27.13.4.125";
-    when(getService().traverseGraph(any(), isA(TraverseByObjectTypeValueRequest.class))).then(i -> {
-      TraverseByObjectTypeValueRequest request = i.getArgument(1);
-      assertEquals(type, request.getType());
-      assertEquals(value, request.getValue());
-      return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
-    });
-
-    TraverseByObjectTypeValueRequest request = new TraverseByObjectTypeValueRequest()
-            .setQuery("g.values('value')");
-    Response response = target(String.format("/v1/object/%s/%s/traverse", type, value)).request().post(Entity.json(request));
-    JsonNode payload = getPayload(response);
-    assertEquals(200, response.getStatus());
-    assertTrue(payload.isArray());
-    assertEquals(1, payload.size());
-    assertEquals("something", payload.get(0).asText());
-
-    verify(getService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectTypeValueRequest.class));
-  }
-
-  @Test
   public void testSearchObjects() throws Exception {
     when(getService().searchObjects(any(), isA(SearchObjectRequest.class))).then(i -> StreamingResultSet.<Object>builder().setValues(createObjects()).build());
 
@@ -161,23 +120,6 @@ public class ObjectEndpointTest extends AbstractEndpointTest {
     assertEquals(3, payload.size());
 
     verify(getService(), times(1)).searchObjects(notNull(), isA(SearchObjectRequest.class));
-  }
-
-  @Test
-  public void testTraverseByObjectSearch() throws Exception {
-    when(getService().traverseGraph(any(), isA(TraverseByObjectSearchRequest.class)))
-            .then(i -> StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build());
-
-    TraverseByObjectSearchRequest request = new TraverseByObjectSearchRequest()
-            .setQuery("g.values('value')");
-    Response response = target("/v1/object/traverse").request().post(Entity.json(request));
-    JsonNode payload = getPayload(response);
-    assertEquals(200, response.getStatus());
-    assertTrue(payload.isArray());
-    assertEquals(1, payload.size());
-    assertEquals("something", payload.get(0).asText());
-
-    verify(getService(), times(1)).traverseGraph(notNull(), isA(TraverseByObjectSearchRequest.class));
   }
 
   private Collection<Fact> createFacts() {
