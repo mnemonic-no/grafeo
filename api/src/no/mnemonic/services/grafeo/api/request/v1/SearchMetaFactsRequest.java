@@ -8,7 +8,6 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.services.grafeo.utilities.json.RoundingFloatDeserializer;
-import no.mnemonic.services.grafeo.utilities.json.TimestampDeserializer;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -45,13 +44,9 @@ public class SearchMetaFactsRequest implements TimeFieldSearchRequest, Validatin
   private Dimension dimension;
   @ApiModelProperty(value = "Include retracted meta Facts (default false)", example = "false")
   private Boolean includeRetracted;
-  @ApiModelProperty(value = "Deprecated: Use endTimestamp instead", example = "2016-09-28T21:26:22Z", dataType = "string")
-  @JsonDeserialize(using = TimestampDeserializer.class)
-  private Long before;
-  @ApiModelProperty(value = "Deprecated: Use startTimestamp instead", example = "2016-09-28T21:26:22Z", dataType = "string")
-  @JsonDeserialize(using = TimestampDeserializer.class)
-  private Long after;
   // Annotations are specified on the TimeFieldSearchRequest interface.
+  private Long startTimestamp;
+  private Long endTimestamp;
   private TimeMatchStrategy timeMatchStrategy;
   private Set<TimeFieldStrategy> timeFieldStrategy;
   @ApiModelProperty(value = "Limit the number of returned meta Facts (default 25, 0 means all)", example = "25")
@@ -168,40 +163,24 @@ public class SearchMetaFactsRequest implements TimeFieldSearchRequest, Validatin
     return this;
   }
 
-  public Long getBefore() {
-    return before;
-  }
-
-  public SearchMetaFactsRequest setBefore(Long before) {
-    this.before = before;
-    return this;
-  }
-
-  public Long getAfter() {
-    return after;
-  }
-
-  public SearchMetaFactsRequest setAfter(Long after) {
-    this.after = after;
-    return this;
-  }
-
   @Override
   public Long getStartTimestamp() {
-    return getAfter();
+    return startTimestamp;
   }
 
   public SearchMetaFactsRequest setStartTimestamp(Long timestamp) {
-    return setAfter(timestamp);
+    this.startTimestamp = timestamp;
+    return this;
   }
 
   @Override
   public Long getEndTimestamp() {
-    return getBefore();
+    return endTimestamp;
   }
 
   public SearchMetaFactsRequest setEndTimestamp(Long timestamp) {
-    return setBefore(timestamp);
+    this.endTimestamp = timestamp;
+    return this;
   }
 
   @Override

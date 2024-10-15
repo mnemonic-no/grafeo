@@ -181,9 +181,9 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFieldParsingErrorWithWrongTimestampReturns412() throws Exception {
-    Response response = target("/v1/fact/search").request().post(Entity.json("{\"after\" : \"something\"}"));
+    Response response = target("/v1/fact/search").request().post(Entity.json("{\"startTimestamp\" : \"something\"}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "after", "something");
+    assertMessages(getMessages(response), "JSON field has an invalid value.", "invalid.json.field.value", "startTimestamp", "something");
   }
 
   @Test
@@ -202,9 +202,9 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
 
   @Test
   public void testFieldParsingTypeErrorWithWrongTimestampReturns412() throws Exception {
-    Response response = target("/v1/fact/search").request().post(Entity.json("{\"after\" : true}"));
+    Response response = target("/v1/fact/search").request().post(Entity.json("{\"startTimestamp\" : true}"));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "JSON field has an invalid type.", "invalid.json.field.type", "after", "");
+    assertMessages(getMessages(response), "JSON field has an invalid type.", "invalid.json.field.type", "startTimestamp", "");
   }
 
   @Test

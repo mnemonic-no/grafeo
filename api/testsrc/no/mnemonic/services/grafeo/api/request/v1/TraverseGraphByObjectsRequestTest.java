@@ -27,8 +27,6 @@ public class TraverseGraphByObjectsRequestTest extends AbstractRequestTest {
     UUID id = UUID.randomUUID();
     String json = "{" +
             "objects : ['" + id + "', 'ThreatActor/Sofacy']," +
-            "before : '2016-11-30T15:47:00Z'," +
-            "after : '2016-11-30T15:47:01Z'," +
             "includeRetracted : true," +
             "limit: 10," +
             "query : 'g.out()'" +
@@ -36,9 +34,6 @@ public class TraverseGraphByObjectsRequestTest extends AbstractRequestTest {
     TraverseGraphByObjectsRequest request = getMapper().readValue(json, TraverseGraphByObjectsRequest.class);
 
     assertEquals(set(id.toString(), "ThreatActor/Sofacy"), request.getObjects());
-
-    assertEquals(1480520820000L, request.getBefore().longValue());
-    assertEquals(1480520821000L, request.getAfter().longValue());
     assertTrue(request.getIncludeRetracted());
     assertEquals(Integer.valueOf(10), request.getLimit());
     assertEquals("g.out()", request.getQuery());
@@ -124,20 +119,14 @@ public class TraverseGraphByObjectsRequestTest extends AbstractRequestTest {
 
   @Test
   public void testFromObjectRequest() {
-    long after = 1470000000000L;
-    long before = 1480000000000L;
     TraverseGraphByObjectsRequest request = TraverseGraphByObjectsRequest.from(
             new TraverseGraphRequest()
                     .setQuery("g.out()")
                     .setLimit(10)
-                    .setIncludeRetracted(true)
-                    .setAfter(after)
-                    .setBefore(before),
+                    .setIncludeRetracted(true),
             "test");
 
     assertEquals(set("test"), request.getObjects());
-    assertEquals(after, request.getAfter().longValue());
-    assertEquals(before, request.getBefore().longValue());
     assertTrue(request.getIncludeRetracted());
     assertEquals(Integer.valueOf(10), request.getLimit());
     assertEquals("g.out()", request.getQuery());

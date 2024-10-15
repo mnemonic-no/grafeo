@@ -1,12 +1,10 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
-import no.mnemonic.services.grafeo.utilities.json.TimestampDeserializer;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -29,13 +27,9 @@ public class TraverseGraphByObjectsRequest implements TimeFieldSearchRequest, Va
   private String query;
   @ApiModelProperty(value = "Traverse retracted Facts (default false)", example = "false")
   private Boolean includeRetracted;
-  @ApiModelProperty(value = "Deprecated: Use endTimestamp instead", example = "2016-09-28T21:26:22Z", dataType = "string")
-  @JsonDeserialize(using = TimestampDeserializer.class)
-  private Long before;
-  @ApiModelProperty(value = "Deprecated: Use startTimestamp instead", example = "2016-09-28T21:26:22Z", dataType = "string")
-  @JsonDeserialize(using = TimestampDeserializer.class)
-  private Long after;
   // Annotations are specified on the TimeFieldSearchRequest interface.
+  private Long startTimestamp;
+  private Long endTimestamp;
   private TimeMatchStrategy timeMatchStrategy;
   private Set<TimeFieldStrategy> timeFieldStrategy;
   @ApiModelProperty(value = "Limit the result size (default 25, 0 means all)", example = "25")
@@ -74,40 +68,24 @@ public class TraverseGraphByObjectsRequest implements TimeFieldSearchRequest, Va
     return this;
   }
 
-  public Long getBefore() {
-    return before;
-  }
-
-  public TraverseGraphByObjectsRequest setBefore(Long before) {
-    this.before = before;
-    return this;
-  }
-
-  public Long getAfter() {
-    return after;
-  }
-
-  public TraverseGraphByObjectsRequest setAfter(Long after) {
-    this.after = after;
-    return this;
-  }
-
   @Override
   public Long getStartTimestamp() {
-    return getAfter();
+    return startTimestamp;
   }
 
   public TraverseGraphByObjectsRequest setStartTimestamp(Long timestamp) {
-    return setAfter(timestamp);
+    this.startTimestamp = timestamp;
+    return this;
   }
 
   @Override
   public Long getEndTimestamp() {
-    return getBefore();
+    return endTimestamp;
   }
 
   public TraverseGraphByObjectsRequest setEndTimestamp(Long timestamp) {
-    return setBefore(timestamp);
+    this.endTimestamp = timestamp;
+    return this;
   }
 
   @Override
@@ -147,8 +125,6 @@ public class TraverseGraphByObjectsRequest implements TimeFieldSearchRequest, Va
   public static TraverseGraphByObjectsRequest from(TraverseGraphRequest request, String object) {
     return new TraverseGraphByObjectsRequest()
             .setQuery(request.getQuery())
-            .setAfter(request.getAfter())
-            .setBefore(request.getBefore())
             .setStartTimestamp(request.getStartTimestamp())
             .setEndTimestamp(request.getEndTimestamp())
             .setTimeMatchStrategy(request.getTimeMatchStrategy())

@@ -76,6 +76,7 @@ For this use case one-legged Facts with bi-directional binding should be created
 ElasticSearch in order to avoid outdated names in the index. If an entity cannot be resolved a 412 response will be returned.
 
 ### Removed
+- (2024-10-15) Removed deprecated `before` and `after` parameters from all search and traverse endpoints which accept a request body.
 - (2022-10-21) Removed handling of the legacy 'act' index. Ensure that all installations have reindexed their data into
 daily indices, see [MIGRATIONS.md](MIGRATIONS.md).
 - (2022-02-11) Removed the old mechanism to check for already existing Facts, including the configuration property

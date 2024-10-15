@@ -174,8 +174,8 @@ public class FactEndpoint {
     return buildResponse(service.searchMetaFacts(credentialsResolver.getRequestHeader(), new SearchMetaFactsRequest()
             .setFact(fact)
             .setIncludeRetracted(includeRetracted)
-            .setBefore(parseTimestamp("before", before))
-            .setAfter(parseTimestamp("after", after))
+            .setEndTimestamp(parseTimestamp("before", before))
+            .setStartTimestamp(parseTimestamp("after", after))
             .setLimit(limit)
     ));
   }

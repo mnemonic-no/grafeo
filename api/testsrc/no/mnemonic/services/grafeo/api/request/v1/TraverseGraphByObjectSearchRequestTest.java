@@ -82,8 +82,6 @@ public class TraverseGraphByObjectSearchRequestTest extends AbstractRequestTest 
                     .setSearch(new SearchObjectRequest())
                     .setTraverse(new TraverseGraphRequest()
                             .setQuery("g.out()")
-                            .setAfter(1400000000000L)
-                            .setBefore(1500000000000L)
                             .setIncludeRetracted(true))
             );
     assertTrue(violations.isEmpty());

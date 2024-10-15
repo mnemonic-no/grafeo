@@ -143,8 +143,8 @@ public class ObjectSearchDelegate implements Delegate {
         // Use the Object IDs to retrieve the Fact statistics for one batch of Objects.
         ObjectStatisticsCriteria criteria = ObjectStatisticsCriteria.builder()
                 .setObjectID(SetUtils.set(currentBatch, ObjectRecord::getId))
-                .setStartTimestamp(request.getAfter())
-                .setEndTimestamp(request.getBefore())
+                .setStartTimestamp(request.getStartTimestamp())
+                .setEndTimestamp(request.getEndTimestamp())
                 .setAccessControlCriteria(accessControlCriteriaResolver.get())
                 .setIndexSelectCriteria(indexSelectCriteria)
                 .build();

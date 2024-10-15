@@ -14,16 +14,12 @@ public class TraverseGraphRequestTest extends AbstractRequestTest {
   @Test
   public void testDecodeRequest() throws Exception {
     String json = "{" +
-            "before : '2016-11-30T15:47:00Z'," +
-            "after : '2016-11-30T15:47:01Z'," +
             "includeRetracted : true," +
             "limit: 10," +
             "query : 'g.out()'" +
             "}";
     TraverseGraphRequest request = getMapper().readValue(json, TraverseGraphRequest.class);
 
-    assertEquals(1480520820000L, request.getBefore().longValue());
-    assertEquals(1480520821000L, request.getAfter().longValue());
     assertTrue(request.getIncludeRetracted());
     assertEquals(Integer.valueOf(10), request.getLimit());
     assertEquals("g.out()", request.getQuery());

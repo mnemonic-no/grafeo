@@ -70,8 +70,8 @@ public class FactEndpointTest extends AbstractEndpointTest {
       SearchMetaFactsRequest request = i.getArgument(1);
       assertEquals(fact, request.getFact());
       assertTrue(request.getIncludeRetracted());
-      assertEquals(1480520820000L, (long) request.getBefore());
-      assertEquals(1480520821000L, (long) request.getAfter());
+      assertEquals(1480520820000L, (long) request.getEndTimestamp());
+      assertEquals(1480520821000L, (long) request.getStartTimestamp());
       assertEquals(25, (int) request.getLimit());
       return StreamingResultSet.<Fact>builder().setValues(createFacts()).build();
     });

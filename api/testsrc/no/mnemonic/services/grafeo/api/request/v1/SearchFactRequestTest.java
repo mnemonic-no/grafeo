@@ -31,8 +31,6 @@ public class SearchFactRequestTest extends AbstractRequestTest {
             "maximum : 0.2," +
             "dimension : 'trust'," +
             "includeRetracted : true," +
-            "before : '2016-11-30T15:47:00Z'," +
-            "after : '2016-11-30T15:47:01Z'," +
             "limit : 25" +
             "}", objectID, factID);
 
@@ -50,8 +48,6 @@ public class SearchFactRequestTest extends AbstractRequestTest {
     assertEquals(0.2f, request.getMaximum(), 0.0);
     assertEquals(Dimension.trust, request.getDimension());
     assertTrue(request.getIncludeRetracted());
-    assertEquals(1480520820000L, request.getBefore().longValue());
-    assertEquals(1480520821000L, request.getAfter().longValue());
     assertEquals(25, request.getLimit().intValue());
   }
 

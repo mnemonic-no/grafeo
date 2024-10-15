@@ -165,16 +165,16 @@ public class ObjectSearchDelegateTest {
 
     SearchObjectRequest request = new SearchObjectRequest()
             .setIncludeStatistics(true)
-            .setAfter(11111L)
-            .setBefore(22222L);
+            .setStartTimestamp(11111L)
+            .setEndTimestamp(22222L);
     ResultSet<Object> result = delegate.handle(request);
     assertEquals(count, result.getCount());
     assertEquals(count, ListUtils.list(result.iterator()).size());
 
     verify(objectFactDao).searchObjects(notNull());
     verify(objectFactDao).calculateObjectStatistics(argThat(criteria -> {
-      assertEquals(request.getAfter(), criteria.getStartTimestamp());
-      assertEquals(request.getBefore(), criteria.getEndTimestamp());
+      assertEquals(request.getStartTimestamp(), criteria.getStartTimestamp());
+      assertEquals(request.getEndTimestamp(), criteria.getEndTimestamp());
       return true;
     }));
   }

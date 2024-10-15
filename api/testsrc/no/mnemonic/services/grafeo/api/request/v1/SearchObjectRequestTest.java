@@ -30,8 +30,6 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
             "minimum : 0.1," +
             "maximum : 0.2," +
             "dimension : 'trust'," +
-            "before : '2016-11-30T15:47:00Z'," +
-            "after : '2016-11-30T15:47:01Z'," +
             "minimumFactsCount : 1," +
             "maximumFactsCount : 2," +
             "limit : 25," +
@@ -51,8 +49,6 @@ public class SearchObjectRequestTest extends AbstractRequestTest {
     assertEquals(0.1f, request.getMinimum(), 0.0);
     assertEquals(0.2f, request.getMaximum(), 0.0);
     assertEquals(Dimension.trust, request.getDimension());
-    assertEquals(1480520820000L, request.getBefore().longValue());
-    assertEquals(1480520821000L, request.getAfter().longValue());
     assertEquals(1, (int) request.getMinimumFactsCount());
     assertEquals(2, (int) request.getMaximumFactsCount());
     assertEquals(25, request.getLimit().intValue());

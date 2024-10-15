@@ -26,20 +26,20 @@ public class TraverseEndpointTest extends AbstractEndpointTest {
   @Test
   public void testTraverseByObjectId() throws Exception {
     UUID id = UUID.randomUUID();
-    Long before = 1L;
-    Long after = 2L;
+    Long start = 1L;
+    Long end = 2L;
     when(getService().traverse(any(), isA(TraverseGraphByObjectsRequest.class))).then(i -> {
       TraverseGraphByObjectsRequest request = i.getArgument(1);
       assertEquals(set(id.toString()), request.getObjects());
-      assertEquals(after, request.getAfter());
-      assertEquals(before, request.getBefore());
+      assertEquals(start, request.getStartTimestamp());
+      assertEquals(end, request.getEndTimestamp());
       assertTrue(request.getIncludeRetracted());
       return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
     });
 
     TraverseGraphRequest request = new TraverseGraphRequest()
-            .setAfter(after)
-            .setBefore(before)
+            .setStartTimestamp(start)
+            .setEndTimestamp(end)
             .setIncludeRetracted(true)
             .setQuery("g.values('value')");
     Response response = target(String.format("/v1/traverse/object/%s", id)).request().post(Entity.json(request));
@@ -56,22 +56,22 @@ public class TraverseEndpointTest extends AbstractEndpointTest {
   public void testTraverseObjectByTypeValue() throws Exception {
     String type = "ip";
     String value = "27.13.4.125";
-    Long before = 1L;
-    Long after = 2L;
+    Long start = 1L;
+    Long end = 2L;
 
     when(getService().traverse(any(), isA(TraverseGraphByObjectsRequest.class))).then(i -> {
       TraverseGraphByObjectsRequest request = i.getArgument(1);
       assertEquals(set("ip/27.13.4.125"), request.getObjects());
-      assertEquals(after, request.getAfter());
-      assertEquals(before, request.getBefore());
+      assertEquals(start, request.getStartTimestamp());
+      assertEquals(end, request.getEndTimestamp());
       assertTrue(request.getIncludeRetracted());
       return StreamingResultSet.<String>builder().setValues(ListUtils.list("something")).build();
     });
 
     TraverseGraphRequest request = new TraverseGraphRequest()
             .setQuery("g.values('value')")
-            .setAfter(after)
-            .setBefore(before)
+            .setStartTimestamp(start)
+            .setEndTimestamp(end)
             .setIncludeRetracted(true);
     Response response = target(String.format("/v1/traverse/object/%s/%s", type, value)).request().post(Entity.json(request));
     JsonNode payload = getPayload(response);
