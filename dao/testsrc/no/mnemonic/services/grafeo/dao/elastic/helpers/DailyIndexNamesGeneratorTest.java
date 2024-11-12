@@ -1,14 +1,14 @@
 package no.mnemonic.services.grafeo.dao.elastic.helpers;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.services.grafeo.dao.elastic.helpers.DailyIndexNamesGenerator.formatIndexName;
 import static no.mnemonic.services.grafeo.dao.elastic.helpers.DailyIndexNamesGenerator.generateIndexNames;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DailyIndexNamesGeneratorTest {
 

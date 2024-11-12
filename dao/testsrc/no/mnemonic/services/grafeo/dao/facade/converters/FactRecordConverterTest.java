@@ -11,18 +11,20 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.*;
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import no.mnemonic.services.grafeo.dao.elastic.document.ObjectDocument;
 import no.mnemonic.services.grafeo.dao.facade.resolvers.CachedObjectResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactRecordConverterTest {
 
   @Mock
@@ -33,22 +35,8 @@ public class FactRecordConverterTest {
   private FactAclEntryRecordConverter factAclEntryRecordConverter;
   @Mock
   private FactCommentRecordConverter factCommentRecordConverter;
-
+  @InjectMocks
   private FactRecordConverter converter;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-
-    when(objectResolver.getObject(notNull())).thenReturn(new ObjectRecord());
-
-    converter = new FactRecordConverter(
-            factManager,
-            objectResolver,
-            factAclEntryRecordConverter,
-            factCommentRecordConverter
-    );
-  }
 
   @Test
   public void testFromEntityWithNullEntity() {
@@ -106,6 +94,8 @@ public class FactRecordConverterTest {
 
   @Test
   public void testFromEntityUsesSeparatedObjectFields() {
+    when(objectResolver.getObject(notNull())).thenReturn(new ObjectRecord());
+
     FactEntity entity = new FactEntity()
             .setSourceObjectID(UUID.randomUUID())
             .setDestinationObjectID(UUID.randomUUID())
@@ -123,6 +113,8 @@ public class FactRecordConverterTest {
 
   @Test
   public void testFromEntityWithBindingOfCardinalityTwo() {
+    when(objectResolver.getObject(notNull())).thenReturn(new ObjectRecord());
+
     FactEntity.FactObjectBinding source = new FactEntity.FactObjectBinding()
             .setObjectID(UUID.randomUUID())
             .setDirection(Direction.FactIsDestination);
@@ -142,6 +134,8 @@ public class FactRecordConverterTest {
 
   @Test
   public void testFromEntityWithBindingOfCardinalityTwoBidirectional() {
+    when(objectResolver.getObject(notNull())).thenReturn(new ObjectRecord());
+
     FactEntity.FactObjectBinding source = new FactEntity.FactObjectBinding()
             .setObjectID(UUID.randomUUID())
             .setDirection(Direction.BiDirectional);
@@ -161,6 +155,8 @@ public class FactRecordConverterTest {
 
   @Test
   public void testFromEntityWithBindingOfCardinalityOneFactIsSource() {
+    when(objectResolver.getObject(notNull())).thenReturn(new ObjectRecord());
+
     FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
             .setObjectID(UUID.randomUUID())
             .setDirection(Direction.FactIsSource);
@@ -176,6 +172,8 @@ public class FactRecordConverterTest {
 
   @Test
   public void testFromEntityWithBindingOfCardinalityOneFactIsDestination() {
+    when(objectResolver.getObject(notNull())).thenReturn(new ObjectRecord());
+
     FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
             .setObjectID(UUID.randomUUID())
             .setDirection(Direction.FactIsDestination);
@@ -191,6 +189,8 @@ public class FactRecordConverterTest {
 
   @Test
   public void testFromEntityWithBindingOfCardinalityOneBiDirectional() {
+    when(objectResolver.getObject(notNull())).thenReturn(new ObjectRecord());
+
     FactEntity.FactObjectBinding binding = new FactEntity.FactObjectBinding()
             .setObjectID(UUID.randomUUID())
             .setDirection(Direction.BiDirectional);

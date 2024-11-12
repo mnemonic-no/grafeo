@@ -1,11 +1,14 @@
 package no.mnemonic.services.grafeo.dao.elastic;
 
-import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
+import no.mnemonic.commons.jupiter.docker.ElasticSearchDockerExtension;
 import no.mnemonic.services.grafeo.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
-import org.junit.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -21,8 +24,8 @@ public abstract class AbstractManagerTest {
   private static ClientFactory clientFactory;
   private FactSearchManager factSearchManager;
 
-  @ClassRule
-  public static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
+  @RegisterExtension
+  public static ElasticSearchDockerExtension elastic = ElasticSearchDockerExtension.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
           .setImageName("elasticsearch/elasticsearch:7.17.13")
@@ -31,9 +34,10 @@ public abstract class AbstractManagerTest {
           .addApplicationPort(9200)
           .skipReachabilityCheck()
           .addEnvironmentVariable("discovery.type", "single-node")
+          .addDeleteIndex("_all")
           .build();
 
-  @BeforeClass
+  @BeforeAll
   public static void setup() {
     clientFactory = ClientFactory.builder()
             .setPort(elastic.getExposedHostPort(9200))
@@ -42,23 +46,18 @@ public abstract class AbstractManagerTest {
     clientFactory.startComponent();
   }
 
-  @Before
+  @AfterAll
+  public static void teardown() {
+    clientFactory.stopComponent();
+  }
+
+  @BeforeEach
   public void initialize() {
     factSearchManager = new FactSearchManager(clientFactory)
             .setTestEnvironment(true)
             .setSearchScrollExpiration("5s")
             .setSearchScrollSize(1);
     factSearchManager.startComponent();
-  }
-
-  @After
-  public void cleanup() {
-    elastic.deleteIndices();
-  }
-
-  @AfterClass
-  public static void teardown() {
-    clientFactory.stopComponent();
   }
 
   protected FactSearchManager getFactSearchManager() {

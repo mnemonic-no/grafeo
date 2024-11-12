@@ -4,17 +4,19 @@ import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactEntity;
 import no.mnemonic.services.grafeo.dao.facade.converters.FactRecordConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class MapBackedFactResolverTest {
 
   @Mock
@@ -24,9 +26,8 @@ public class MapBackedFactResolverTest {
 
   private CachedFactResolver factResolver;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
     factResolver = new MapBackedFactResolver(factManager, factRecordConverter, new HashMap<>(), new HashMap<>());
   }
 

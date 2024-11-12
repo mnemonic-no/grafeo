@@ -1,7 +1,10 @@
 package no.mnemonic.services.grafeo.dao.cassandra;
 
-import no.mnemonic.commons.junit.docker.CassandraDockerResource;
-import org.junit.*;
+import no.mnemonic.commons.jupiter.docker.CassandraDockerExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractManagerTest {
 
@@ -10,8 +13,8 @@ public abstract class AbstractManagerTest {
   private ObjectManager objectManager;
   private OriginManager originManager;
 
-  @ClassRule
-  public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
+  @RegisterExtension
+  public static CassandraDockerExtension cassandra = CassandraDockerExtension.builder()
           .setImageName("cassandra")
           .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
@@ -20,7 +23,7 @@ public abstract class AbstractManagerTest {
           .setTruncateScript("truncate.cql")
           .build();
 
-  @BeforeClass
+  @BeforeAll
   public static void setup() {
     clusterManager = ClusterManager.builder()
             .setDataCenter("datacenter1")
@@ -30,7 +33,12 @@ public abstract class AbstractManagerTest {
     clusterManager.startComponent();
   }
 
-  @Before
+  @AfterAll
+  public static void teardown() {
+    clusterManager.stopComponent();
+  }
+
+  @BeforeEach
   public void initialize() {
     factManager = new FactManager(clusterManager);
     objectManager = new ObjectManager(clusterManager);
@@ -39,17 +47,6 @@ public abstract class AbstractManagerTest {
     factManager.startComponent();
     objectManager.startComponent();
     originManager.startComponent();
-  }
-
-  @After
-  public void cleanup() {
-    // Truncate database.
-    cassandra.truncate();
-  }
-
-  @AfterClass
-  public static void teardown() {
-    clusterManager.stopComponent();
   }
 
   protected FactManager getFactManager() {

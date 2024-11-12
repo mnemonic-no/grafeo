@@ -4,17 +4,19 @@ import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.services.grafeo.dao.facade.converters.ObjectRecordConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class MapBackedObjectResolverTest {
 
   @Mock
@@ -24,9 +26,8 @@ public class MapBackedObjectResolverTest {
 
   private CachedObjectResolver objectResolver;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
     objectResolver = new MapBackedObjectResolver(objectManager, objectRecordConverter, new HashMap<>(), new HashMap<>());
   }
 

@@ -2,11 +2,11 @@ package no.mnemonic.services.grafeo.dao.facade.converters;
 
 import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ObjectRecordConverterTest {
 

@@ -6,14 +6,14 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectFactBindingEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.exceptions.ImmutableViolationException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ObjectManagerTest extends AbstractManagerTest {
 
@@ -78,10 +78,10 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertNotSame(type1, type2);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testSaveObjectTypeWithSameNameThrowsException() {
-    getObjectManager().saveObjectType(createObjectType("objectType"));
-    getObjectManager().saveObjectType(createObjectType("objectType"));
+    assertDoesNotThrow(() -> getObjectManager().saveObjectType(createObjectType("objectType")));
+    assertThrows(IllegalArgumentException.class, () -> getObjectManager().saveObjectType(createObjectType("objectType")));
   }
 
   @Test
@@ -125,10 +125,10 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertObject(object, getObjectManager().getObject(type.getName(), object.getValue()));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testGetObjectByTypeValueWithNonExistingObjectType() {
     ObjectEntity entity = createAndSaveObject(createAndSaveObjectType().getId());
-    getObjectManager().getObject("nonExisting", entity.getValue());
+    assertThrows(IllegalArgumentException.class, () -> getObjectManager().getObject("nonExisting", entity.getValue()));
   }
 
   @Test
@@ -145,17 +145,17 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertNull(getObjectManager().getObject("ignored", ""));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testSaveObjectWithNonExistingObjectType() {
-    getObjectManager().saveObject(createObject());
+    assertThrows(IllegalArgumentException.class, () -> getObjectManager().saveObject(createObject()));
   }
 
-  @Test(expected = ImmutableViolationException.class)
+  @Test
   public void testSaveSameObjectTwice() {
     ObjectTypeEntity type = createAndSaveObjectType();
     ObjectEntity object = createObject(type.getId());
-    getObjectManager().saveObject(object);
-    getObjectManager().saveObject(object);
+    assertDoesNotThrow(() -> getObjectManager().saveObject(object));
+    assertThrows(ImmutableViolationException.class, () -> getObjectManager().saveObject(object));
   }
 
   @Test
@@ -196,16 +196,16 @@ public class ObjectManagerTest extends AbstractManagerTest {
     assertNull(getObjectManager().saveObjectFactBinding(null));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testSaveObjectFactBindingWithNonExistingObjectThrowsException() {
-    getObjectManager().saveObjectFactBinding(createObjectFactBinding(UUID.randomUUID()));
+    assertThrows(IllegalArgumentException.class, () -> getObjectManager().saveObjectFactBinding(createObjectFactBinding(UUID.randomUUID())));
   }
 
-  @Test(expected = ImmutableViolationException.class)
+  @Test
   public void testSaveObjectFactBindingTwiceThrowsException() {
     ObjectFactBindingEntity binding = createObjectFactBinding(createAndSaveObject().getId());
-    getObjectManager().saveObjectFactBinding(binding);
-    getObjectManager().saveObjectFactBinding(binding);
+    assertDoesNotThrow(() -> getObjectManager().saveObjectFactBinding(binding));
+    assertThrows(ImmutableViolationException.class, () -> getObjectManager().saveObjectFactBinding(binding));
   }
 
   private ObjectTypeEntity createObjectType() {
@@ -260,21 +260,6 @@ public class ObjectManagerTest extends AbstractManagerTest {
 
   private ObjectEntity createAndSaveObject(UUID typeID) {
     return getObjectManager().saveObject(createObject(typeID));
-  }
-
-  private List<ObjectEntity> createAndSaveObjects() {
-    ObjectTypeEntity type = createAndSaveObjectType();
-    List<ObjectEntity> entities = new ArrayList<>();
-
-    for (int i = 0; i < 3; i++) {
-      entities.add(getObjectManager().saveObject(new ObjectEntity()
-              .setId(UUID.randomUUID())
-              .setTypeID(type.getId())
-              .setValue("object-" + i)
-      ));
-    }
-
-    return entities;
   }
 
   private ObjectFactBindingEntity createAndSaveObjectFactBinding(UUID objectID) {

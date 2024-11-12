@@ -5,14 +5,14 @@ import no.mnemonic.services.grafeo.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import no.mnemonic.services.grafeo.dao.elastic.document.ObjectDocument;
 import no.mnemonic.services.grafeo.dao.elastic.result.SearchResult;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static no.mnemonic.services.grafeo.dao.elastic.DocumentTestUtils.createObjectDocument;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class FactSearchManagerSearchObjectsTest extends AbstractManagerTest {
 

@@ -2,11 +2,11 @@ package no.mnemonic.services.grafeo.dao.facade.converters;
 
 import no.mnemonic.services.grafeo.dao.api.record.FactCommentRecord;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactCommentEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FactCommentRecordConverterTest {
 

@@ -1,14 +1,14 @@
 package no.mnemonic.services.grafeo.dao.cassandra;
 
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OriginManagerTest extends AbstractManagerTest {
 
@@ -73,10 +73,10 @@ public class OriginManagerTest extends AbstractManagerTest {
     assertNotSame(origin1, origin2);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testSaveOriginWithSameNameThrowsException() {
-    getOriginManager().saveOrigin(createOrigin("origin"));
-    getOriginManager().saveOrigin(createOrigin("origin"));
+    assertDoesNotThrow(() -> getOriginManager().saveOrigin(createOrigin("origin")));
+    assertThrows(IllegalArgumentException.class, () -> getOriginManager().saveOrigin(createOrigin("origin")));
   }
 
   @Test

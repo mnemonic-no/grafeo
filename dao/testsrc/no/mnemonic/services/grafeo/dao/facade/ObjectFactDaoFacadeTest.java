@@ -1,7 +1,6 @@
 package no.mnemonic.services.grafeo.dao.facade;
 
 import no.mnemonic.commons.utilities.collections.ListUtils;
-import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.IndexSelectCriteria;
@@ -26,9 +25,11 @@ import no.mnemonic.services.grafeo.dao.facade.converters.ObjectRecordConverter;
 import no.mnemonic.services.grafeo.dao.facade.helpers.FactRecordHasher;
 import no.mnemonic.services.grafeo.dao.facade.resolvers.CachedFactResolver;
 import no.mnemonic.services.grafeo.dao.facade.resolvers.CachedObjectResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -38,11 +39,11 @@ import java.util.function.Consumer;
 
 import static no.mnemonic.services.grafeo.dao.elastic.FactSearchManager.TargetIndex.Daily;
 import static no.mnemonic.services.grafeo.dao.elastic.FactSearchManager.TargetIndex.TimeGlobal;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectFactDaoFacadeTest {
 
   private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
@@ -71,25 +72,8 @@ public class ObjectFactDaoFacadeTest {
   private CachedFactResolver factResolver;
   @Mock
   private Consumer<FactRecord> dcReplicationConsumer;
-
-  private ObjectFactDao dao;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-    dao = new ObjectFactDaoFacade(
-            objectManager,
-            factManager,
-            factSearchManager,
-            objectRecordConverter,
-            factRecordConverter,
-            factAclEntryRecordConverter,
-            factCommentRecordConverter,
-            objectResolver,
-            factResolver,
-            dcReplicationConsumer
-    );
-  }
+  @InjectMocks
+  private ObjectFactDaoFacade dao;
 
   @Test
   public void testGetObjectById() {

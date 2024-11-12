@@ -2,11 +2,11 @@ package no.mnemonic.services.grafeo.dao.facade.helpers;
 
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FactRecordHasherTest {
 

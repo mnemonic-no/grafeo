@@ -61,9 +61,9 @@
     <jakarta.ws.rs.version>2.1.6</jakarta.ws.rs.version>
     <jetty.version>10.0.16</jetty.version>
     <junit.version>4.13.2</junit.version>
-    <junit.jupiter.version>5.10.0</junit.jupiter.version>
+    <junit.jupiter.version>5.11.3</junit.jupiter.version>
     <log4j.version>2.20.0</log4j.version>
-    <mockito.version>5.5.0</mockito.version>
+    <mockito.version>5.14.2</mockito.version>
     <picocli.version>4.7.5</picocli.version>
     <resteasy.version>5.0.8.Final</resteasy.version>
     <slf4j.version>2.0.9</slf4j.version>
@@ -370,6 +370,7 @@
             <includedLicense>MIT License</includedLicense>
             <includedLicense>The MIT License</includedLicense>
             <includedLicense>MIT-0</includedLicense>
+            <includedLicense>MIT</includedLicense>
             <!-- Public domain -->
             <includedLicense>CC0</includedLicense>
             <includedLicense>Public Domain</includedLicense>

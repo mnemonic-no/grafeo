@@ -7,15 +7,15 @@ import no.mnemonic.services.grafeo.dao.api.criteria.FactSearchCriteria.FactBindi
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import no.mnemonic.services.grafeo.dao.elastic.document.ObjectDocument;
 import no.mnemonic.services.grafeo.dao.elastic.result.ScrollingSearchResult;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static no.mnemonic.services.grafeo.dao.elastic.DocumentTestUtils.createObjectDocument;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class FactSearchManagerSearchFactsTest extends AbstractManagerTest {
 

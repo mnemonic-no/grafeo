@@ -1,7 +1,7 @@
 package no.mnemonic.services.grafeo.dao.elastic;
 
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -10,7 +10,7 @@ import static no.mnemonic.services.grafeo.dao.elastic.DocumentTestUtils.assertFa
 import static no.mnemonic.services.grafeo.dao.elastic.DocumentTestUtils.createFactDocument;
 import static no.mnemonic.services.grafeo.dao.elastic.FactSearchManager.TargetIndex.Daily;
 import static no.mnemonic.services.grafeo.dao.elastic.FactSearchManager.TargetIndex.TimeGlobal;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FactSearchManagerIndexFactsTest extends AbstractManagerTest {
 
