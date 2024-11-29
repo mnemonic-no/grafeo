@@ -4,12 +4,12 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import no.mnemonic.services.grafeo.dao.elastic.document.ObjectDocument;
 import no.mnemonic.services.grafeo.seb.model.v1.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FactConverterTest {
 

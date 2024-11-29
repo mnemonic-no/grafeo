@@ -4,32 +4,28 @@ import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.seb.model.v1.FactInfoSEB;
 import no.mnemonic.services.grafeo.seb.model.v1.FactTypeInfoSEB;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactInfoDaoResolverTest {
 
   @Mock
   private ObjectFactDao objectFactDao;
   @Mock
   private FactTypeInfoDaoResolver typeResolver;
-
+  @InjectMocks
   private FactInfoDaoResolver resolver;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-    resolver = new FactInfoDaoResolver(objectFactDao, typeResolver);
-  }
 
   @Test
   public void testResolveNull() {

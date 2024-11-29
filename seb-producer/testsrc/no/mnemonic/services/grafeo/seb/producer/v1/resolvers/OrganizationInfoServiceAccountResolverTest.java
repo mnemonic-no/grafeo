@@ -6,19 +6,21 @@ import no.mnemonic.services.grafeo.api.model.v1.Organization;
 import no.mnemonic.services.grafeo.auth.OrganizationSPI;
 import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
 import no.mnemonic.services.grafeo.seb.model.v1.OrganizationInfoSEB;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OrganizationInfoServiceAccountResolverTest {
 
   @Mock
@@ -29,10 +31,9 @@ public class OrganizationInfoServiceAccountResolverTest {
   private Map<UUID, Organization> organizationCache;
   private OrganizationInfoServiceAccountResolver resolver;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-    when(credentialsResolver.get()).thenReturn(new Credentials() {});
+    lenient().when(credentialsResolver.get()).thenReturn(new Credentials() {});
     organizationCache = new HashMap<>();
     resolver = new OrganizationInfoServiceAccountResolver(organizationResolver, credentialsResolver, organizationCache);
   }

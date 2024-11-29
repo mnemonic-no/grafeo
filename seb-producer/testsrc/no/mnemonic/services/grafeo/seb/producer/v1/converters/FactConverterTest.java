@@ -6,18 +6,20 @@ import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
 import no.mnemonic.services.grafeo.seb.model.v1.*;
 import no.mnemonic.services.grafeo.seb.producer.v1.resolvers.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactConverterTest {
 
   @Mock
@@ -34,31 +36,8 @@ public class FactConverterTest {
   private ObjectInfoConverter objectConverter;
   @Mock
   private AclEntryConverter aclEntryConverter;
-
+  @InjectMocks
   private FactConverter converter;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-
-    when(typeResolver.apply(any())).thenReturn(FactTypeInfoSEB.builder().build());
-    when(inReferenceToResolver.apply(any())).thenReturn(FactInfoSEB.builder().build());
-    when(organizationResolver.apply(any())).thenReturn(OrganizationInfoSEB.builder().build());
-    when(originResolver.apply(any())).thenReturn(OriginInfoSEB.builder().build());
-    when(subjectResolver.apply(any())).thenReturn(SubjectInfoSEB.builder().build());
-    when(objectConverter.apply(any())).thenReturn(ObjectInfoSEB.builder().build());
-    when(aclEntryConverter.apply(any())).thenReturn(AclEntrySEB.builder().build());
-
-    converter = new FactConverter(
-            typeResolver,
-            inReferenceToResolver,
-            organizationResolver,
-            originResolver,
-            subjectResolver,
-            objectConverter,
-            aclEntryConverter
-    );
-  }
 
   @Test
   public void testConvertNull() {
@@ -72,6 +51,14 @@ public class FactConverterTest {
 
   @Test
   public void testConvertFull() {
+    when(typeResolver.apply(any())).thenReturn(FactTypeInfoSEB.builder().build());
+    when(inReferenceToResolver.apply(any())).thenReturn(FactInfoSEB.builder().build());
+    when(organizationResolver.apply(any())).thenReturn(OrganizationInfoSEB.builder().build());
+    when(originResolver.apply(any())).thenReturn(OriginInfoSEB.builder().build());
+    when(subjectResolver.apply(any())).thenReturn(SubjectInfoSEB.builder().build());
+    when(objectConverter.apply(any())).thenReturn(ObjectInfoSEB.builder().build());
+    when(aclEntryConverter.apply(any())).thenReturn(AclEntrySEB.builder().build());
+
     ObjectRecord source = new ObjectRecord();
     ObjectRecord destination = new ObjectRecord();
     FactAclEntryRecord aclEntry = new FactAclEntryRecord();

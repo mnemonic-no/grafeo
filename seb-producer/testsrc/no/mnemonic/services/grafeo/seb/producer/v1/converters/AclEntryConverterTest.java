@@ -6,36 +6,28 @@ import no.mnemonic.services.grafeo.seb.model.v1.OriginInfoSEB;
 import no.mnemonic.services.grafeo.seb.model.v1.SubjectInfoSEB;
 import no.mnemonic.services.grafeo.seb.producer.v1.resolvers.OriginInfoDaoResolver;
 import no.mnemonic.services.grafeo.seb.producer.v1.resolvers.SubjectInfoServiceAccountResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class AclEntryConverterTest {
 
   @Mock
   private SubjectInfoServiceAccountResolver subjectResolver;
   @Mock
   private OriginInfoDaoResolver originResolver;
-
+  @InjectMocks
   private AclEntryConverter converter;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-
-    when(subjectResolver.apply(any())).thenReturn(SubjectInfoSEB.builder().build());
-    when(originResolver.apply(any())).thenReturn(OriginInfoSEB.builder().build());
-
-    converter = new AclEntryConverter(subjectResolver, originResolver);
-  }
 
   @Test
   public void testConvertNull() {
@@ -49,6 +41,9 @@ public class AclEntryConverterTest {
 
   @Test
   public void testConvertFull() {
+    when(subjectResolver.apply(any())).thenReturn(SubjectInfoSEB.builder().build());
+    when(originResolver.apply(any())).thenReturn(OriginInfoSEB.builder().build());
+
     FactAclEntryRecord record = new FactAclEntryRecord()
             .setId(UUID.randomUUID())
             .setSubjectID(UUID.randomUUID())

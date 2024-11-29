@@ -3,30 +3,26 @@ package no.mnemonic.services.grafeo.seb.producer.v1.resolvers;
 import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.services.grafeo.seb.model.v1.FactTypeInfoSEB;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactTypeInfoDaoResolverTest {
 
   @Mock
   private FactManager factManager;
-
+  @InjectMocks
   private FactTypeInfoDaoResolver resolver;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-    resolver = new FactTypeInfoDaoResolver(factManager);
-  }
 
   @Test
   public void testResolveNull() {

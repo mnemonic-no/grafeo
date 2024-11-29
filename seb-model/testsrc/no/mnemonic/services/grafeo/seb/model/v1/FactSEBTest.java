@@ -2,11 +2,11 @@ package no.mnemonic.services.grafeo.seb.model.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import no.mnemonic.commons.utilities.collections.SetUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FactSEBTest extends AbstractSEBTest {
 

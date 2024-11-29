@@ -3,30 +3,26 @@ package no.mnemonic.services.grafeo.seb.producer.v1.resolvers;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.seb.model.v1.ObjectTypeInfoSEB;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectTypeInfoDaoResolverTest {
 
   @Mock
   private ObjectManager objectManager;
-
+  @InjectMocks
   private ObjectTypeInfoDaoResolver resolver;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-    resolver = new ObjectTypeInfoDaoResolver(objectManager);
-  }
 
   @Test
   public void testResolveNull() {

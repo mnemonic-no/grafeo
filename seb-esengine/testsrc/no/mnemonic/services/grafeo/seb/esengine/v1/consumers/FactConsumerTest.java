@@ -5,30 +5,25 @@ import no.mnemonic.services.grafeo.dao.elastic.FactSearchManager;
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import no.mnemonic.services.grafeo.seb.esengine.v1.converters.FactConverter;
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static no.mnemonic.services.grafeo.dao.elastic.FactSearchManager.TargetIndex.Daily;
 import static no.mnemonic.services.grafeo.dao.elastic.FactSearchManager.TargetIndex.TimeGlobal;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactConsumerTest {
 
   @Mock
   private FactSearchManager factSearchManager;
   @Mock
   private FactConverter factConverter;
-
+  @InjectMocks
   private FactConsumer factConsumer;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-
-    factConsumer = new FactConsumer(factSearchManager, factConverter);
-  }
 
   @Test
   public void testConsumeNothing() {

@@ -6,19 +6,21 @@ import no.mnemonic.services.grafeo.api.model.v1.Subject;
 import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
 import no.mnemonic.services.grafeo.auth.SubjectSPI;
 import no.mnemonic.services.grafeo.seb.model.v1.SubjectInfoSEB;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class SubjectInfoServiceAccountResolverTest {
 
   @Mock
@@ -29,10 +31,9 @@ public class SubjectInfoServiceAccountResolverTest {
   private Map<UUID, Subject> subjectCache;
   private SubjectInfoServiceAccountResolver resolver;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-    when(credentialsResolver.get()).thenReturn(new Credentials() {});
+    lenient().when(credentialsResolver.get()).thenReturn(new Credentials() {});
     subjectCache = new HashMap<>();
     resolver = new SubjectInfoServiceAccountResolver(subjectResolver, credentialsResolver, subjectCache);
   }

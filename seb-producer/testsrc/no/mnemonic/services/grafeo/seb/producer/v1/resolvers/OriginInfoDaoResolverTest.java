@@ -3,30 +3,26 @@ package no.mnemonic.services.grafeo.seb.producer.v1.resolvers;
 import no.mnemonic.services.grafeo.dao.cassandra.OriginManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.seb.model.v1.OriginInfoSEB;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OriginInfoDaoResolverTest {
 
   @Mock
   private OriginManager originManager;
-
+  @InjectMocks
   private OriginInfoDaoResolver resolver;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-    resolver = new OriginInfoDaoResolver(originManager);
-  }
 
   @Test
   public void testResolveNull() {

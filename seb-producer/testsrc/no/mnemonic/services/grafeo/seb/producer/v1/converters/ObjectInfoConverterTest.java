@@ -4,33 +4,26 @@ import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
 import no.mnemonic.services.grafeo.seb.model.v1.ObjectInfoSEB;
 import no.mnemonic.services.grafeo.seb.model.v1.ObjectTypeInfoSEB;
 import no.mnemonic.services.grafeo.seb.producer.v1.resolvers.ObjectTypeInfoDaoResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectInfoConverterTest {
 
   @Mock
   private ObjectTypeInfoDaoResolver typeResolver;
-
+  @InjectMocks
   private ObjectInfoConverter converter;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-
-    when(typeResolver.apply(any())).thenReturn(ObjectTypeInfoSEB.builder().build());
-
-    converter = new ObjectInfoConverter(typeResolver);
-  }
 
   @Test
   public void testConvertNull() {
@@ -44,6 +37,8 @@ public class ObjectInfoConverterTest {
 
   @Test
   public void testConvertFull() {
+    when(typeResolver.apply(any())).thenReturn(ObjectTypeInfoSEB.builder().build());
+
     ObjectRecord record = new ObjectRecord()
             .setId(UUID.randomUUID())
             .setTypeID(UUID.randomUUID())
