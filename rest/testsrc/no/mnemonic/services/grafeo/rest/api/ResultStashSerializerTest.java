@@ -7,15 +7,15 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.api.model.v1.Fact;
 import no.mnemonic.services.grafeo.api.service.v1.StreamingResultSet;
 import no.mnemonic.services.grafeo.rest.providers.ObjectMapperResolver;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ResultStashSerializerTest {
 

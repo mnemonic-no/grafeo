@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.api.model.v1.Origin;
 import no.mnemonic.services.grafeo.api.request.v1.*;
 import no.mnemonic.services.grafeo.api.service.v1.StreamingResultSet;
 import no.mnemonic.services.grafeo.rest.AbstractEndpointTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
@@ -14,8 +14,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;

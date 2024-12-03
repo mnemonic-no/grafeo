@@ -12,17 +12,18 @@ import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 import no.mnemonic.services.grafeo.rest.container.ApiServer;
 import no.mnemonic.services.grafeo.rest.modules.GrafeoRestModule;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
-import static org.mockito.MockitoAnnotations.initMocks;
-
+@ExtendWith(MockitoExtension.class)
 public abstract class AbstractEndpointTest {
 
   private final static ObjectMapper mapper = JsonMapper.builder().build();
@@ -33,15 +34,14 @@ public abstract class AbstractEndpointTest {
 
   private ApiServer server;
 
-  @Before
+  @BeforeEach
   public void initialize() {
-    initMocks(this);
     Injector injector = Guice.createInjector(new TestRestModule());
     server = injector.getInstance(ApiServer.class);
     server.startComponent();
   }
 
-  @After
+  @AfterEach
   public void shutdown() {
     server.stopComponent();
   }

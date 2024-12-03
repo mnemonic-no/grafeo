@@ -8,7 +8,7 @@ import no.mnemonic.services.grafeo.api.exceptions.*;
 import no.mnemonic.services.grafeo.api.request.v1.*;
 import no.mnemonic.services.grafeo.rest.AbstractEndpointTest;
 import no.mnemonic.services.grafeo.rest.api.ResultMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.client.Entity;
@@ -18,7 +18,7 @@ import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.rest.api.ResultMessage.Type.ActionError;
 import static no.mnemonic.services.grafeo.rest.api.ResultMessage.Type.FieldError;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;

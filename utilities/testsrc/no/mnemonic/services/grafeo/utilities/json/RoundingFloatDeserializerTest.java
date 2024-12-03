@@ -4,17 +4,19 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class RoundingFloatDeserializerTest {
 
   @Mock
@@ -23,11 +25,6 @@ public class RoundingFloatDeserializerTest {
   private DeserializationContext context;
 
   private final RoundingFloatDeserializer deserializer = new RoundingFloatDeserializer();
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-  }
 
   @Test
   public void testDeserializeInteger() throws IOException {
@@ -38,6 +35,7 @@ public class RoundingFloatDeserializerTest {
 
   @Test
   public void testDeserializeFloatRoundDown() throws IOException {
+    when(parser.hasToken(eq(JsonToken.VALUE_NUMBER_INT))).thenReturn(false);
     when(parser.hasToken(eq(JsonToken.VALUE_NUMBER_FLOAT))).thenReturn(true);
     when(parser.getFloatValue()).thenReturn(0.444f);
     assertEquals(0.44f, deserializer.deserialize(parser, context), 0.0f);
@@ -45,15 +43,16 @@ public class RoundingFloatDeserializerTest {
 
   @Test
   public void testDeserializeFloatRoundUp() throws IOException {
+    when(parser.hasToken(eq(JsonToken.VALUE_NUMBER_INT))).thenReturn(false);
     when(parser.hasToken(eq(JsonToken.VALUE_NUMBER_FLOAT))).thenReturn(true);
     when(parser.getFloatValue()).thenReturn(0.555f);
     assertEquals(0.56f, deserializer.deserialize(parser, context), 0.0f);
   }
 
-  @Test(expected = MismatchedInputException.class)
+  @Test
   public void testDeserializeInvalidToken() throws IOException {
     when(context.handleUnexpectedToken(eq(Float.class), eq(parser))).thenThrow(MismatchedInputException.class);
-    deserializer.deserialize(parser, context);
+    assertThrows(MismatchedInputException.class, () -> deserializer.deserialize(parser, context));
   }
 
 }

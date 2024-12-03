@@ -1,7 +1,7 @@
 package no.mnemonic.services.grafeo.utilities.json;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
