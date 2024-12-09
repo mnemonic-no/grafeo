@@ -2,16 +2,18 @@ package no.mnemonic.services.grafeo.service.contexts;
 
 import no.mnemonic.services.triggers.pipeline.api.TriggerEvent;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class TriggerContextTest {
 
   @Mock
@@ -21,26 +23,25 @@ public class TriggerContextTest {
 
   private TriggerContext context;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
     context = TriggerContext.builder().setTriggerEventConsumer(triggerEventConsumer).build();
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateContextWithoutTriggerEventConsumerThrowsException() {
-    TriggerContext.builder().build();
+    assertThrows(RuntimeException.class, () -> TriggerContext.builder().build());
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testGetContextNotSet() {
-    TriggerContext.get();
+    assertThrows(IllegalStateException.class, TriggerContext::get);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testSetContextTwice() throws Exception {
     try (TriggerContext ignored = TriggerContext.set(context)) {
-      TriggerContext.set(context);
+      assertThrows(IllegalStateException.class, () -> TriggerContext.set(context));
     }
   }
 

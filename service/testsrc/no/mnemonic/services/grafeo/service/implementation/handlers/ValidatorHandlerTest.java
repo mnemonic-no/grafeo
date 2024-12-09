@@ -5,30 +5,26 @@ import no.mnemonic.services.grafeo.api.exceptions.InvalidArgumentException;
 import no.mnemonic.services.grafeo.service.validators.Validator;
 import no.mnemonic.services.grafeo.service.validators.ValidatorConfigurationException;
 import no.mnemonic.services.grafeo.service.validators.ValidatorFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static no.mnemonic.services.grafeo.service.validators.ValidatorConfigurationException.Reason.Misconfigured;
 import static no.mnemonic.services.grafeo.service.validators.ValidatorConfigurationException.Reason.NotFound;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ValidatorHandlerTest {
 
   @Mock
   private ValidatorFactory validatorFactory;
-
+  @InjectMocks
   private ValidatorHandler validatorHandler;
-
-  @Before
-  public void initialize() {
-    initMocks(this);
-    validatorHandler = new ValidatorHandler(validatorFactory);
-  }
 
   @Test
   public void testValidatorExists() throws InvalidArgumentException {

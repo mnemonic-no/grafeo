@@ -9,32 +9,28 @@ import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactTypeHelperTest {
 
   @Mock
   private FactManager factManager;
   @Mock
   private ObjectManager objectManager;
-
+  @InjectMocks
   private FactTypeHelper helper;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-    helper = new FactTypeHelper(factManager, objectManager);
-  }
 
   @Test
   public void testAssertFactTypeNotExistsSuccess() throws Exception {
@@ -42,10 +38,10 @@ public class FactTypeHelperTest {
     verify(factManager).getFactType("type");
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testAssertFactTypeNotExistsFailure() throws Exception {
+  @Test
+  public void testAssertFactTypeNotExistsFailure() {
     when(factManager.getFactType(anyString())).thenReturn(new FactTypeEntity());
-    helper.assertFactTypeNotExists("type");
+    assertThrows(InvalidArgumentException.class, () -> helper.assertFactTypeNotExists("type"));
   }
 
   @Test
@@ -74,12 +70,7 @@ public class FactTypeHelperTest {
   public void testAssertObjectTypesToBindExistWithoutSourceAndDestination() {
     List<FactObjectBindingDefinition> definitions = ListUtils.list(new FactObjectBindingDefinition());
 
-    try {
-      helper.assertObjectTypesToBindExist(definitions, "property");
-      fail();
-    } catch (InvalidArgumentException ignored) {
-    }
-
+    assertThrows(InvalidArgumentException.class, () -> helper.assertObjectTypesToBindExist(definitions, "property"));
     verifyNoInteractions(objectManager);
   }
 
@@ -90,12 +81,7 @@ public class FactTypeHelperTest {
             .setSourceObjectType(sourceObjectType)
     );
 
-    try {
-      helper.assertObjectTypesToBindExist(definitions, "property");
-      fail();
-    } catch (InvalidArgumentException ignored) {
-    }
-
+    assertThrows(InvalidArgumentException.class, () -> helper.assertObjectTypesToBindExist(definitions, "property"));
     verify(objectManager).getObjectType(sourceObjectType);
   }
 
@@ -106,12 +92,7 @@ public class FactTypeHelperTest {
             .setDestinationObjectType(destinationObjectType)
     );
 
-    try {
-      helper.assertObjectTypesToBindExist(definitions, "property");
-      fail();
-    } catch (InvalidArgumentException ignored) {
-    }
-
+    assertThrows(InvalidArgumentException.class, () -> helper.assertObjectTypesToBindExist(definitions, "property"));
     verify(objectManager).getObjectType(destinationObjectType);
   }
 
@@ -141,12 +122,7 @@ public class FactTypeHelperTest {
             .setFactType(factType)
     );
 
-    try {
-      helper.assertFactTypesToBindExist(definitions, "property");
-      fail();
-    } catch (InvalidArgumentException ignored) {
-    }
-
+    assertThrows(InvalidArgumentException.class, () -> helper.assertFactTypesToBindExist(definitions, "property"));
     verify(factManager).getFactType(factType);
   }
 

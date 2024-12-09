@@ -13,18 +13,21 @@ import no.mnemonic.services.grafeo.service.implementation.handlers.ObjectTypeHan
 import no.mnemonic.services.grafeo.service.implementation.handlers.TraverseGraphHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.IndexSelectCriteriaResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class TraverseByObjectsDelegateTest {
 
   @Mock
@@ -39,27 +42,17 @@ public class TraverseByObjectsDelegateTest {
   private AccessControlCriteriaResolver accessControlCriteriaResolver;
   @Mock
   private IndexSelectCriteriaResolver indexSelectCriteriaResolver;
-
+  @InjectMocks
   private TraverseByObjectsDelegate delegate;
 
-  @Before
+  @BeforeEach
   public void setup() throws Exception {
-    initMocks(this);
-
-    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
+    lenient().when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
             .addCurrentUserIdentity(UUID.randomUUID())
             .addAvailableOrganizationID(UUID.randomUUID())
             .build());
-    when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any()))
+    lenient().when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any()))
             .thenReturn(IndexSelectCriteria.builder().build());
-
-    delegate = new TraverseByObjectsDelegate(
-            securityContext,
-            traverseGraphHandler,
-            objectFactDao,
-            objectTypeHandler,
-            accessControlCriteriaResolver,
-            indexSelectCriteriaResolver);
   }
 
   @Test
@@ -70,12 +63,9 @@ public class TraverseByObjectsDelegateTest {
 
   @Test
   public void testTraverseWithoutObject() throws Exception {
-
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
-    assertThrows(AccessDeniedException.class, () -> {
-      delegate.handle(new TraverseGraphByObjectsRequest().setObjects(set("ThreatActor/Sofacy")));
-    });
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new TraverseGraphByObjectsRequest().setObjects(set("ThreatActor/Sofacy"))));
 
     verify(objectFactDao).getObject("ThreatActor", "Sofacy");
   }

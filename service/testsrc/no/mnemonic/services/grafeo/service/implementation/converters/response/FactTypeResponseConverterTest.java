@@ -8,39 +8,44 @@ import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.NamespaceByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.ObjectTypeByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class FactTypeResponseConverterTest {
 
+  @Mock
+  private NamespaceByIdResponseResolver namespaceConverter;
+  @Mock
+  private ObjectTypeByIdResponseResolver objectTypeConverter;
+  @Mock
+  private FactManager factManager;
+  @InjectMocks
   private FactTypeResponseConverter converter;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    NamespaceByIdResponseResolver namespaceConverter = mock(NamespaceByIdResponseResolver.class);
-    when(namespaceConverter.apply(notNull())).thenAnswer(i -> Namespace.builder().setId(i.getArgument(0)).setName("Namespace").build());
-
-    ObjectTypeByIdResponseResolver objectTypeConverter = mock(ObjectTypeByIdResponseResolver.class);
-    when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).setName("ObjectType").build());
-
-    FactManager factManager = mock(FactManager.class);
-    when(factManager.getFactType(isA(UUID.class))).thenAnswer(i -> new FactTypeEntity().setId(i.getArgument(0)));
-
-    converter = new FactTypeResponseConverter(namespaceConverter, objectTypeConverter, factManager);
+    lenient().when(namespaceConverter.apply(notNull())).thenAnswer(i -> Namespace.builder().setId(i.getArgument(0)).setName("Namespace").build());
   }
 
   @Test
   public void testConvertFactTypeWithBothSourceAndDestination() {
+    when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).setName("ObjectType").build());
+
     FactTypeEntity.FactObjectBindingDefinition binding1 = new FactTypeEntity.FactObjectBindingDefinition()
       .setSourceObjectTypeID(UUID.randomUUID())
       .setDestinationObjectTypeID(UUID.randomUUID());
@@ -61,6 +66,8 @@ public class FactTypeResponseConverterTest {
 
   @Test
   public void testConvertFactTypeWithOnlySource() {
+    when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).setName("ObjectType").build());
+
     FactTypeEntity entity = createEntity()
       .addRelevantObjectBinding(new FactTypeEntity.FactObjectBindingDefinition().setSourceObjectTypeID(UUID.randomUUID()));
     FactType model = converter.apply(entity);
@@ -70,6 +77,8 @@ public class FactTypeResponseConverterTest {
 
   @Test
   public void testConvertFactTypeWithOnlyDestination() {
+    when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).setName("ObjectType").build());
+
     FactTypeEntity entity = createEntity()
       .addRelevantObjectBinding(new FactTypeEntity.FactObjectBindingDefinition().setDestinationObjectTypeID(UUID.randomUUID()));
     FactType model = converter.apply(entity);
@@ -79,6 +88,8 @@ public class FactTypeResponseConverterTest {
 
   @Test
   public void testConvertFactTypeWithFactBindings() {
+    when(factManager.getFactType(isA(UUID.class))).thenAnswer(i -> new FactTypeEntity().setId(i.getArgument(0)));
+
     FactTypeEntity entity = createEntity()
       .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(UUID.randomUUID()))
       .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(UUID.randomUUID()));

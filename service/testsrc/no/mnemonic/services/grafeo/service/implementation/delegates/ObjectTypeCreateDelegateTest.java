@@ -11,17 +11,18 @@ import no.mnemonic.services.grafeo.service.implementation.converters.response.Ob
 import no.mnemonic.services.grafeo.service.implementation.handlers.ObjectTypeHandler;
 import no.mnemonic.services.grafeo.service.implementation.handlers.ValidatorHandler;
 import no.mnemonic.services.grafeo.service.validators.Validator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectTypeCreateDelegateTest {
 
-  private ObjectTypeCreateDelegate delegate;
   @Mock
   private ObjectTypeHandler objectTypeHandler;
   @Mock
@@ -32,37 +33,28 @@ public class ObjectTypeCreateDelegateTest {
   private ObjectTypeResponseConverter objectTypeResponseConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
+  @InjectMocks
+  private ObjectTypeCreateDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new ObjectTypeCreateDelegate(
-      securityContext,
-      objectManager,
-      objectTypeResponseConverter,
-      objectTypeHandler,
-      validatorHandler);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateObjectTypeWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoType);
-    delegate.handle(createRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(createRequest()));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testCreateAlreadyExistingObjectType() throws Exception {
     CreateObjectTypeRequest request = createRequest();
     doThrow(InvalidArgumentException.class).when(objectTypeHandler).assertObjectTypeNotExists(request.getName());
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testCreateObjectTypeValidatorNotFound() throws Exception {
     CreateObjectTypeRequest request = createRequest();
     doThrow(InvalidArgumentException.class)
             .when(validatorHandler).assertValidator(request.getValidator(), request.getValidatorParameter(), Validator.ApplicableType.ObjectType);
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
   @Test

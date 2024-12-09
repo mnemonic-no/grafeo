@@ -17,20 +17,24 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoServiceEvent;
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactCreateHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import java.time.Clock;
 import java.util.Objects;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class FactCreateMetaDelegateTest {
 
   @Mock
@@ -43,9 +47,7 @@ public class FactCreateMetaDelegateTest {
   private GrafeoSecurityContext securityContext;
   @Mock
   private TriggerContext triggerContext;
-  @Mock
-  private Clock clock;
-
+  @InjectMocks
   private FactCreateMetaDelegate delegate;
 
   private final OriginEntity origin = new OriginEntity()
@@ -60,51 +62,36 @@ public class FactCreateMetaDelegateTest {
           .setId(UUID.randomUUID())
           .setName("subject")
           .build();
-  private FactTypeEntity seenInFactType = new FactTypeEntity()
+  private final FactTypeEntity seenInFactType = new FactTypeEntity()
           .setId(UUID.randomUUID())
           .setName("seenIn");
-  private FactTypeEntity observationFactType = new FactTypeEntity()
+  private final FactTypeEntity observationFactType = new FactTypeEntity()
           .setId(UUID.randomUUID())
           .setName("observation")
           .setValidator("validator")
           .setValidatorParameter("validatorParameter")
           .setDefaultConfidence(0.2f)
           .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition().setFactTypeID(seenInFactType.getId()));
-  private FactRecord seenIn = new FactRecord()
+  private final FactRecord seenIn = new FactRecord()
           .setId(UUID.randomUUID())
           .setTypeID(seenInFactType.getId())
           .setAccessMode(FactRecord.AccessMode.RoleBased);
 
-
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new FactCreateMetaDelegate(
-            securityContext,
-            triggerContext,
-            factTypeRequestResolver,
-            factRequestResolver,
-            factCreateHandler
-    ).withClock(clock);
-
-    when(clock.millis()).thenReturn(1000L, 2000L, 3000L);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateMetaFactNoAccessToReferencedFact() throws Exception {
     when(factRequestResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(seenIn);
 
-    delegate.handle(createRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(createRequest()));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateMetaFactWithoutAddPermission() throws Exception {
     when(factRequestResolver.resolveFact(seenIn.getId())).thenReturn(seenIn);
     mockFetchingOrganization();
     mockFetchingFactType();
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoFact, organization.getId());
-    delegate.handle(createRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(createRequest()));
   }
 
   @Test

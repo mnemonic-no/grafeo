@@ -20,20 +20,24 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoServiceEvent;
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactCreateHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.ObjectRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import java.time.Clock;
 import java.util.Objects;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class FactCreateDelegateTest {
 
   @Mock
@@ -48,9 +52,7 @@ public class FactCreateDelegateTest {
   private GrafeoSecurityContext securityContext;
   @Mock
   private TriggerContext triggerContext;
-  @Mock
-  private Clock clock;
-
+  @InjectMocks
   private FactCreateDelegate delegate;
 
   private final OriginEntity origin = new OriginEntity()
@@ -96,27 +98,12 @@ public class FactCreateDelegateTest {
           .setTypeID(UUID.randomUUID())
           .setValue("APT1");
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new FactCreateDelegate(
-            securityContext,
-            triggerContext,
-            factTypeRequestResolver,
-            objectRequestResolver,
-            factCreateHandler,
-            objectManager
-    ).withClock(clock);
-
-    when(clock.millis()).thenReturn(1000L, 2000L, 3000L);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateFactWithoutAddPermission() throws Exception {
     mockFetchingOrganization();
     mockFetchingFactType();
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoFact, organization.getId());
-    delegate.handle(createRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(createRequest()));
   }
 
   @Test

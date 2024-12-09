@@ -30,6 +30,8 @@ import java.util.UUID;
 
 public class FactCreateMetaDelegate implements Delegate {
 
+  private final Clock clock = Clock.systemUTC();
+
   private final GrafeoSecurityContext securityContext;
   private final TriggerContext triggerContext;
   private final FactTypeRequestResolver factTypeRequestResolver;
@@ -39,8 +41,6 @@ public class FactCreateMetaDelegate implements Delegate {
   private FactTypeEntity requestedFactType;
   private OriginEntity requestedOrigin;
   private Organization requestedOrganization;
-
-  private Clock clock = Clock.systemUTC();
 
   @Inject
   public FactCreateMetaDelegate(GrafeoSecurityContext securityContext,
@@ -123,12 +123,5 @@ public class FactCreateMetaDelegate implements Delegate {
             .addContextParameter(GrafeoServiceEvent.ContextParameter.AddedFact.name(), addedFact)
             .build();
     triggerContext.registerTriggerEvent(event);
-  }
-
-  /* Setters used for unit testing */
-
-  FactCreateMetaDelegate withClock(Clock clock) {
-    this.clock = clock;
-    return this;
   }
 }

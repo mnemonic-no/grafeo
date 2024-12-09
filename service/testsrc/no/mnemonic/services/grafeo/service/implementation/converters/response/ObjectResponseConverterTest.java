@@ -7,18 +7,20 @@ import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
 import no.mnemonic.services.grafeo.dao.api.result.ObjectStatisticsContainer;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.ObjectTypeByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectResponseConverterTest {
 
   @Mock
@@ -28,13 +30,8 @@ public class ObjectResponseConverterTest {
 
   private ObjectResponseConverter converter;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
-    when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).build());
-    when(factTypeConverter.apply(notNull())).thenAnswer(i -> FactType.builder().setId(i.getArgument(0)).build());
-
     converter = new ObjectResponseConverter(objectTypeConverter, factTypeConverter, id -> null);
   }
 
@@ -50,12 +47,17 @@ public class ObjectResponseConverterTest {
 
   @Test
   public void testConvertWithoutStatistics() {
+    when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).build());
+
     ObjectRecord record = createRecord();
     assertModel(record, converter.apply(record));
   }
 
   @Test
   public void testConvertWithStatistics() {
+    when(objectTypeConverter.apply(notNull())).thenAnswer(i -> ObjectType.builder().setId(i.getArgument(0)).build());
+    when(factTypeConverter.apply(notNull())).thenAnswer(i -> FactType.builder().setId(i.getArgument(0)).build());
+
     ObjectResponseConverter converter = new ObjectResponseConverter(objectTypeConverter, factTypeConverter,
             id -> Collections.singleton(new ObjectStatisticsContainer.FactStatistic(UUID.randomUUID(), 42, 123456789, 987654321)));
 

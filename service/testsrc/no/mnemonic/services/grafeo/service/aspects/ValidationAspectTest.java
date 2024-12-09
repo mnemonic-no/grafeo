@@ -9,14 +9,14 @@ import no.mnemonic.services.grafeo.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.services.grafeo.service.Service;
 import no.mnemonic.services.grafeo.service.TestSecurityContext;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ValidationAspectTest {
 
@@ -30,60 +30,45 @@ public class ValidationAspectTest {
   public void testValidateSimpleRequest() {
     TestService service = createService();
 
-    try {
-      service.method(RequestHeader.builder().build(), new TestRequest());
-      fail("No InvalidArgumentException thrown.");
-    } catch (InvalidArgumentException ex) {
-      assertMinException(ex, "value");
-    }
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
+            () -> service.method(RequestHeader.builder().build(), new TestRequest()));
+    assertMinException(ex, "value");
   }
 
   @Test
   public void testValidateRequestIsNull() {
     TestService service = createService();
 
-    try {
-      service.method(RequestHeader.builder().build(), (TestRequest) null);
-      fail("No InvalidArgumentException thrown.");
-    } catch (InvalidArgumentException ex) {
-      assertNotNullRequest(ex);
-    }
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
+            () -> service.method(RequestHeader.builder().build(), (TestRequest) null));
+    assertNotNullRequest(ex);
   }
 
   @Test
   public void testValidateServiceRequest() {
     TestService service = createService();
 
-    try {
-      service.method(RequestHeader.builder().build(), new ServiceTestRequest());
-      fail("No InvalidArgumentException thrown.");
-    } catch (InvalidArgumentException ex) {
-      assertServiceNotNullException(ex, "value");
-    }
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
+            () -> service.method(RequestHeader.builder().build(), new ServiceTestRequest()));
+    assertServiceNotNullException(ex, "value");
   }
 
   @Test
   public void testValidateNestedRequest() {
     TestService service = createService();
 
-    try {
-      service.method(RequestHeader.builder().build(), new NestedTestRequest().setInner(new TestRequest()));
-      fail("No InvalidArgumentException thrown.");
-    } catch (InvalidArgumentException ex) {
-      assertMinException(ex, "inner.value");
-    }
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
+            () -> service.method(RequestHeader.builder().build(), new NestedTestRequest().setInner(new TestRequest())));
+    assertMinException(ex, "inner.value");
   }
 
   @Test
   public void testValidateNestedRequestIsNull() {
     TestService service = createService();
 
-    try {
-      service.method(RequestHeader.builder().build(), new NestedTestRequest());
-      fail("No InvalidArgumentException thrown.");
-    } catch (InvalidArgumentException ex) {
-      assertNotNullException(ex, "inner");
-    }
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
+            () -> service.method(RequestHeader.builder().build(), new NestedTestRequest()));
+    assertNotNullException(ex, "inner");
   }
 
   private TestService createService() {

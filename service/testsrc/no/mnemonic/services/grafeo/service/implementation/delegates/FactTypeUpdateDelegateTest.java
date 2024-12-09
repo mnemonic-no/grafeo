@@ -14,17 +14,19 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.FactTypeResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.helpers.FactTypeHelper;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactTypeUpdateDelegateTest {
 
   @Mock
@@ -37,45 +39,38 @@ public class FactTypeUpdateDelegateTest {
   private FactTypeRequestResolver factTypeRequestResolver;
   @Mock
   private GrafeoSecurityContext securityContext;
+  @InjectMocks
+  private FactTypeUpdateDelegate delegate;
 
   private final FactTypeEntity retractionFactType = new FactTypeEntity()
           .setId(UUID.randomUUID())
           .setName("Retraction");
 
-  private FactTypeUpdateDelegate delegate;
-
-  @Before
+  @BeforeEach
   public void setup() {
-    initMocks(this);
-    when(factManager.saveFactType(any())).then(i -> i.getArgument(0));
-    when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
-    when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
-    when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
-    delegate = new FactTypeUpdateDelegate(
-      securityContext,
-      factManager,
-      factTypeHelper,
-      factTypeRequestResolver,
-      factTypeResponseConverter);
+    lenient().when(factManager.saveFactType(any())).then(i -> i.getArgument(0));
+    lenient().when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
+    lenient().when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
+    lenient().when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(retractionFactType);
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testUpdateFactTypeWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateGrafeoType);
-    delegate.handle(new UpdateFactTypeRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new UpdateFactTypeRequest()));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
+  @Test
   public void testUpdateFactTypeNotExisting() throws Exception {
     UUID id = UUID.randomUUID();
     when(factTypeRequestResolver.fetchExistingFactType(id)).thenThrow(ObjectNotFoundException.class);
-    delegate.handle(new UpdateFactTypeRequest().setId(id));
+    assertThrows(ObjectNotFoundException.class, () -> delegate.handle(new UpdateFactTypeRequest().setId(id)));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testUpdateRetractionFactTypeNotAllowed() throws Exception {
     when(factTypeRequestResolver.fetchExistingFactType(retractionFactType.getId())).thenReturn(retractionFactType);
-    delegate.handle(new UpdateFactTypeRequest().setId(retractionFactType.getId()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new UpdateFactTypeRequest().setId(retractionFactType.getId())));
   }
 
   @Test
@@ -114,7 +109,7 @@ public class FactTypeUpdateDelegateTest {
     }));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testUpdateFactTypeWithObjectBindingsFailsOnExistingFactBindings() throws Exception {
     UpdateFactTypeRequest request = new UpdateFactTypeRequest()
             .setId(UUID.randomUUID())
@@ -123,7 +118,7 @@ public class FactTypeUpdateDelegateTest {
             .addRelevantFactBinding(new FactTypeEntity.MetaFactBindingDefinition());
     when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
   @Test
@@ -145,7 +140,7 @@ public class FactTypeUpdateDelegateTest {
     }));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testUpdateFactTypeWithFactBindingsFailsOnExistingObjectBindings() throws Exception {
     UpdateFactTypeRequest request = new UpdateFactTypeRequest()
             .setId(UUID.randomUUID())
@@ -154,7 +149,7 @@ public class FactTypeUpdateDelegateTest {
             .addRelevantObjectBinding(new FactTypeEntity.FactObjectBindingDefinition());
     when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
   @Test
@@ -176,7 +171,7 @@ public class FactTypeUpdateDelegateTest {
     }));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testUpdateFactTypeWithBothObjectBindingsAndFactBindings() throws Exception {
     UpdateFactTypeRequest request = new UpdateFactTypeRequest()
             .setId(UUID.randomUUID())
@@ -185,6 +180,6 @@ public class FactTypeUpdateDelegateTest {
     FactTypeEntity existingEntity = new FactTypeEntity();
     when(factTypeRequestResolver.fetchExistingFactType(request.getId())).thenReturn(existingEntity);
 
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 }

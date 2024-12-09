@@ -5,14 +5,14 @@ import no.mnemonic.services.grafeo.api.request.v1.TimeFieldSearchRequest;
 import no.mnemonic.services.grafeo.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.IndexSelectCriteria;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static no.mnemonic.services.grafeo.service.implementation.converters.request.RequestConverterUtils.handleTimeFieldSearchRequest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class RequestConverterUtilsTest {
 

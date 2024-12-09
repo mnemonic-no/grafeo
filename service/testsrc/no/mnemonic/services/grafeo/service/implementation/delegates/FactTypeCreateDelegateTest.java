@@ -14,16 +14,18 @@ import no.mnemonic.services.grafeo.service.implementation.converters.response.Fa
 import no.mnemonic.services.grafeo.service.implementation.handlers.ValidatorHandler;
 import no.mnemonic.services.grafeo.service.implementation.helpers.FactTypeHelper;
 import no.mnemonic.services.grafeo.service.validators.Validator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactTypeCreateDelegateTest{
 
   @Mock
@@ -36,26 +38,13 @@ public class FactTypeCreateDelegateTest{
   private FactManager factManager;
   @Mock
   private FactTypeResponseConverter factTypeResponseConverter;
-
+  @InjectMocks
   private FactTypeCreateDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
-    when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
-    delegate = new FactTypeCreateDelegate(
-      securityContext,
-      factManager,
-      factTypeHelper,
-      factTypeResponseConverter,
-      validatorHandler);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateFactTypeWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoType);
-    delegate.handle(createFactTypeRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(createFactTypeRequest()));
   }
 
   @Test
@@ -92,6 +81,7 @@ public class FactTypeCreateDelegateTest{
     CreateFactTypeRequest request = createFactTypeRequest();
     FactTypeEntity newEntity = new FactTypeEntity();
     when(factManager.saveFactType(any())).thenReturn(newEntity);
+    when(factTypeHelper.convertFactObjectBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.FactObjectBindingDefinition()));
 
     delegate.handle(request);
     verify(factTypeHelper).assertFactTypeNotExists(request.getName());
@@ -110,6 +100,7 @@ public class FactTypeCreateDelegateTest{
     CreateFactTypeRequest request = createMetaFactTypeRequest();
     FactTypeEntity newEntity = new FactTypeEntity();
     when(factManager.saveFactType(any())).thenReturn(newEntity);
+    when(factTypeHelper.convertMetaFactBindingDefinitions(anyList())).thenReturn(SetUtils.set(new FactTypeEntity.MetaFactBindingDefinition()));
 
     delegate.handle(request);
     verify(factTypeHelper).assertFactTypeNotExists(request.getName());

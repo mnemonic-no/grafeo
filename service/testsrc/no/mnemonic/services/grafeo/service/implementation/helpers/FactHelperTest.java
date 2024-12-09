@@ -3,14 +3,14 @@ package no.mnemonic.services.grafeo.service.implementation.helpers;
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.services.grafeo.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.services.grafeo.service.implementation.helpers.FactHelper.withAcl;
 import static no.mnemonic.services.grafeo.service.implementation.helpers.FactHelper.withComment;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FactHelperTest {
 

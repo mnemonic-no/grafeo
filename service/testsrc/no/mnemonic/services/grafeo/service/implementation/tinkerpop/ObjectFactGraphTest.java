@@ -16,22 +16,22 @@ import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceFactory;
 import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceVertex;
 import org.apache.tinkerpop.gremlin.structure.util.star.StarGraph;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class ObjectFactGraphTest extends AbstractGraphTest {
 
-  @Test(expected = GraphOperationException.class)
+  @Test
   public void testFetchingAllVerticesNotAllowed() {
-    getGraph().vertices();
+    assertThrows(GraphOperationException.class, () -> getGraph().vertices());
   }
 
   @Test
@@ -48,9 +48,9 @@ public class ObjectFactGraphTest extends AbstractGraphTest {
     assertEquals(objectVertex, result.next());
   }
 
-  @Test(expected = GraphOperationException.class)
+  @Test
   public void testFetchingAllEdgesNotAllowed() {
-    getGraph().edges();
+    assertThrows(GraphOperationException.class, () -> getGraph().edges());
   }
 
   @Test
@@ -79,9 +79,9 @@ public class ObjectFactGraphTest extends AbstractGraphTest {
     assertTrue(getGraph().toString().matches(".*\\[.*\\]"));
   }
 
-  @Test(expected = NoSuchElementException.class)
+  @Test
   public void testHaveExceptionConsistencyWhenFindVertexByIdThatIsNonExistent() {
-    getGraph().vertices(UUID.randomUUID());
+    assertThrows(NoSuchElementException.class, () -> getGraph().vertices(UUID.randomUUID()));
   }
 
   @Test
@@ -152,9 +152,9 @@ public class ObjectFactGraphTest extends AbstractGraphTest {
     assertEquals(2, IteratorUtils.count(getGraph().vertices(vertex1.id().toString(), vertex2.id().toString())));
   }
 
-  @Test(expected = NoSuchElementException.class)
+  @Test
   public void testHaveExceptionConsistencyWhenFindEdgeByIdThatIsNonExistent() {
-    getGraph().edges(UUID.randomUUID());
+    assertThrows(NoSuchElementException.class, () -> getGraph().edges(UUID.randomUUID()));
   }
 
   @Test

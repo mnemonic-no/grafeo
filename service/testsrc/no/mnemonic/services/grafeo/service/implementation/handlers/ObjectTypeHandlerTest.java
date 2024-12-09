@@ -3,29 +3,25 @@ package no.mnemonic.services.grafeo.service.implementation.handlers;
 import no.mnemonic.services.grafeo.api.exceptions.InvalidArgumentException;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectTypeHandlerTest {
 
   @Mock
   private ObjectManager objectManager;
-
+  @InjectMocks
   private ObjectTypeHandler handler;
-
-  @Before
-  public void init() {
-    initMocks(this);
-    handler = new ObjectTypeHandler(objectManager);
-  }
 
   @Test
   public void testAssertObjectTypeExists() throws InvalidArgumentException {

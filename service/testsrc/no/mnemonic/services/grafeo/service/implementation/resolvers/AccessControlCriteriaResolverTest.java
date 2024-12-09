@@ -5,18 +5,21 @@ import no.mnemonic.services.grafeo.api.exceptions.AccessDeniedException;
 import no.mnemonic.services.grafeo.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class AccessControlCriteriaResolverTest {
 
   private final Set<UUID> currentUserIdentities = SetUtils.set(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
@@ -24,17 +27,13 @@ public class AccessControlCriteriaResolverTest {
 
   @Mock
   private SecurityContext securityContext;
-
+  @InjectMocks
   private AccessControlCriteriaResolver resolver;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
     when(securityContext.getCurrentUserIdentities()).thenReturn(currentUserIdentities);
     when(securityContext.getAvailableOrganizationID()).thenReturn(availableOrganizationID);
-
-    resolver = new AccessControlCriteriaResolver(securityContext);
   }
 
   @Test
@@ -53,7 +52,8 @@ public class AccessControlCriteriaResolverTest {
     UUID available = UUID.randomUUID();
     UUID unavailable = UUID.randomUUID();
     when(securityContext.getAvailableOrganizationID()).thenReturn(SetUtils.set(available, unavailable));
-    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(any(), eq(unavailable));
+    doNothing().when(securityContext).checkPermission(eq(FunctionConstants.viewGrafeoFact), eq(available)); // Without the test becomes unstable.
+    doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(FunctionConstants.viewGrafeoFact), eq(unavailable));
 
     AccessControlCriteria criteria = resolver.get();
     assertNotNull(criteria);

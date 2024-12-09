@@ -7,34 +7,34 @@ import no.mnemonic.services.grafeo.api.model.v1.Origin;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.NamespaceByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.OrganizationByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class OriginResponseConverterTest {
 
+  @Mock
+  private NamespaceByIdResponseResolver namespaceConverter;
+  @Mock
+  private OrganizationByIdResponseResolver organizationConverter;
+  @InjectMocks
   private OriginResponseConverter converter;
-
-  @Before
-  public void setUp() {
-    NamespaceByIdResponseResolver namespaceConverter = mock(NamespaceByIdResponseResolver.class);
-    when(namespaceConverter.apply(notNull())).thenAnswer(i -> Namespace.builder().setId(i.getArgument(0)).build());
-
-    OrganizationByIdResponseResolver organizationConverter = mock(OrganizationByIdResponseResolver.class);
-    when(organizationConverter.apply(notNull())).thenAnswer(i -> Organization.builder().setId(i.getArgument(0)).build());
-
-    converter = new OriginResponseConverter(namespaceConverter, organizationConverter);
-  }
 
   @Test
   public void testConvertOrigin() {
+    when(namespaceConverter.apply(notNull())).thenAnswer(i -> Namespace.builder().setId(i.getArgument(0)).build());
+    when(organizationConverter.apply(notNull())).thenAnswer(i -> Organization.builder().setId(i.getArgument(0)).build());
+
     OriginEntity entity = createEntity();
     assertModel(entity, converter.apply(entity));
   }

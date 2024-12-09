@@ -22,9 +22,14 @@ import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.Object
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.PropertyEntry;
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.PropertyHelper;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.Set;
@@ -32,11 +37,12 @@ import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class TraverseGraphHandlerTest {
 
   private final FactSearchCriteria factSearchCriteria = FactSearchCriteria.builder()
@@ -64,23 +70,14 @@ public class TraverseGraphHandlerTest {
   private FactRetractionHandler factRetractionHandler;
   @Mock
   private PropertyHelper propertyHelper;
-
+  @InjectMocks
   private TraverseGraphHandler handler;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    initMocks(this);
-
     when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
 
-    handler = new TraverseGraphHandler(
-            securityContext,
-            objectFactDao,
-            objectFactTypeResolver,
-            objectResponseConverter,
-            factResponseConverter,
-            factRetractionHandler,
-            propertyHelper).setScriptExecutionTimeout(5000);
+    handler.setScriptExecutionTimeout(5000);
   }
 
   @Test
@@ -93,7 +90,7 @@ public class TraverseGraphHandlerTest {
 
     List<?> result = ListUtils.list(resultSet.iterator());
     assertEquals(1, result.size());
-    assertTrue(result.get(0) instanceof Fact);
+    assertInstanceOf(Fact.class, result.get(0));
     assertEquals(factRecord.getId(), ((Fact) result.get(0)).getId());
   }
 
@@ -107,7 +104,7 @@ public class TraverseGraphHandlerTest {
 
     List<?> result = ListUtils.list(resultSet.iterator());
     assertEquals(1, result.size());
-    assertTrue(result.get(0) instanceof Object);
+    assertInstanceOf(Object.class, result.get(0));
     assertEquals(destination.getId(), ((Object) result.get(0)).getId());
   }
 
@@ -150,9 +147,8 @@ public class TraverseGraphHandlerTest {
     ObjectRecord destination = mockObjectRecord(mockObjectType(), "someOther");
     mockFact(source, destination);
 
-    assertThrows(InvalidArgumentException.class, () -> {
-      handler.traverse(set(source.getId()), "g.addE('notAllowed')", emptyTraverseParams);
-    });
+    assertThrows(InvalidArgumentException.class,
+            () -> handler.traverse(set(source.getId()), "g.addE('notAllowed')", emptyTraverseParams));
   }
 
   @Test
@@ -230,7 +226,7 @@ public class TraverseGraphHandlerTest {
     // Expect 1 edge due to the limit
     List<?> result = ListUtils.list(resultSet.iterator());
     assertEquals(1, result.size());
-    assertTrue(result.get(0) instanceof Fact);
+    assertInstanceOf(Fact.class, result.get(0));
     // One of the facts must be in the result
     assertTrue(set(fact1ID, fact2ID).contains(((Fact) result.get(0)).getId()));
   }

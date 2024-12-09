@@ -8,15 +8,18 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.ObjectTypeRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectTypeGetByIdDelegateTest {
 
   @Mock
@@ -25,29 +28,20 @@ public class ObjectTypeGetByIdDelegateTest {
   private ObjectTypeResponseConverter objectTypeResponseConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private ObjectTypeGetByIdDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new ObjectTypeGetByIdDelegate(
-      securityContext,
-      objectTypeResponseConverter,
-      objectTypeRequestResolver);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchObjectTypeWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoType);
-    delegate.handle(new GetObjectTypeByIdRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new GetObjectTypeByIdRequest()));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
+  @Test
   public void testFetchObjectTypeNotFound() throws Exception {
     UUID id = UUID.randomUUID();
     when(objectTypeRequestResolver.fetchExistingObjectType(id)).thenThrow(ObjectNotFoundException.class);
-    delegate.handle(new GetObjectTypeByIdRequest().setId(id));
+    assertThrows(ObjectNotFoundException.class, () -> delegate.handle(new GetObjectTypeByIdRequest().setId(id)));
   }
 
   @Test

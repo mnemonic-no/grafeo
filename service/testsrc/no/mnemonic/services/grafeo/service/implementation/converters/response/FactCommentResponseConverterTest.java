@@ -4,32 +4,25 @@ import no.mnemonic.services.grafeo.api.model.v1.FactComment;
 import no.mnemonic.services.grafeo.api.model.v1.Origin;
 import no.mnemonic.services.grafeo.dao.api.record.FactCommentRecord;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.OriginByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactCommentResponseConverterTest {
 
   @Mock
   private OriginByIdResponseResolver originConverter;
-
+  @InjectMocks
   private FactCommentResponseConverter converter;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-
-    when(originConverter.apply(notNull())).thenAnswer(i -> Origin.builder().setId(i.getArgument(0)).build());
-
-    converter = new FactCommentResponseConverter(originConverter);
-  }
 
   @Test
   public void testConvertNull() {
@@ -43,6 +36,8 @@ public class FactCommentResponseConverterTest {
 
   @Test
   public void testConvertFull() {
+    when(originConverter.apply(notNull())).thenAnswer(i -> Origin.builder().setId(i.getArgument(0)).build());
+
     FactCommentRecord record = createRecord();
     assertModel(record, converter.apply(record));
   }

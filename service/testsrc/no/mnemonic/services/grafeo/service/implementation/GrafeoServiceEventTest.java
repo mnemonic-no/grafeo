@@ -2,12 +2,12 @@ package no.mnemonic.services.grafeo.service.implementation;
 
 import no.mnemonic.services.triggers.pipeline.api.AccessMode;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEvent;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.service.implementation.GrafeoServiceEvent.EventName.FactAdded;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GrafeoServiceEventTest {
 
@@ -68,26 +68,26 @@ public class GrafeoServiceEventTest {
     assertEquals(42, event.getContextParameters().get("parameter2"));
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateServiceEventWithoutEvent() {
-    GrafeoServiceEvent.forEvent(null)
+    assertThrows(RuntimeException.class, () -> GrafeoServiceEvent.forEvent(null)
             .setOrganization(UUID.randomUUID())
             .setAccessMode(no.mnemonic.services.grafeo.api.model.v1.AccessMode.Public)
-            .build();
+            .build());
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateServiceEventWithoutOrganization() {
-    GrafeoServiceEvent.forEvent(FactAdded)
+    assertThrows(RuntimeException.class, () -> GrafeoServiceEvent.forEvent(FactAdded)
             .setAccessMode(no.mnemonic.services.grafeo.api.model.v1.AccessMode.Public)
-            .build();
+            .build());
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateServiceEventWithoutAccessMode() {
-    GrafeoServiceEvent.forEvent(FactAdded)
+    assertThrows(RuntimeException.class, () -> GrafeoServiceEvent.forEvent(FactAdded)
             .setOrganization(UUID.randomUUID())
-            .build();
+            .build());
   }
 
 }

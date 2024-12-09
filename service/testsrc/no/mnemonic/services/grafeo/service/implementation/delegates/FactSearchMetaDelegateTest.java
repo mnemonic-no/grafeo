@@ -15,17 +15,20 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.request.SearchMetaFactsRequestConverter;
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactSearchHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactSearchMetaDelegateTest {
 
   @Mock
@@ -36,28 +39,22 @@ public class FactSearchMetaDelegateTest {
   private SearchMetaFactsRequestConverter requestConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private FactSearchMetaDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new FactSearchMetaDelegate(securityContext, requestConverter, factRequestResolver, factSearchHandler);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testSearchMetaFactsWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
-    delegate.handle(new SearchMetaFactsRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchMetaFactsRequest()));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testSearchMetaFactsNoAccessToFact() throws Exception {
     SearchMetaFactsRequest request = new SearchMetaFactsRequest().setFact(UUID.randomUUID());
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
-    delegate.handle(request);
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
   }
 
   @Test

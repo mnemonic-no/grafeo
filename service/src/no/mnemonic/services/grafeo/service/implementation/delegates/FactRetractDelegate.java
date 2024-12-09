@@ -29,6 +29,8 @@ import java.util.UUID;
 
 public class FactRetractDelegate implements Delegate {
 
+  private final Clock clock = Clock.systemUTC();
+
   private final GrafeoSecurityContext securityContext;
   private final TriggerContext triggerContext;
   private final ObjectFactDao objectFactDao;
@@ -40,8 +42,6 @@ public class FactRetractDelegate implements Delegate {
   private FactTypeEntity retractionFactType;
   private OriginEntity requestedOrigin;
   private Organization requestedOrganization;
-
-  private Clock clock = Clock.systemUTC();
 
   @Inject
   public FactRetractDelegate(GrafeoSecurityContext securityContext,
@@ -116,12 +116,5 @@ public class FactRetractDelegate implements Delegate {
             .addContextParameter(GrafeoServiceEvent.ContextParameter.RetractedFact.name(), retractedFact)
             .build();
     triggerContext.registerTriggerEvent(event);
-  }
-
-  /* Setters used for unit testing */
-
-  FactRetractDelegate withClock(Clock clock) {
-    this.clock = clock;
-    return this;
   }
 }

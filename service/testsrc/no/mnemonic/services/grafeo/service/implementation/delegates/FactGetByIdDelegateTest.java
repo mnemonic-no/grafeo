@@ -7,15 +7,18 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.FactResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactGetByIdDelegateTest {
 
   @Mock
@@ -24,22 +27,16 @@ public class FactGetByIdDelegateTest {
   private FactResponseConverter factResponseConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private FactGetByIdDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new FactGetByIdDelegate(securityContext, factRequestResolver, factResponseConverter);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchFactWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
-    delegate.handle(new GetFactByIdRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new GetFactByIdRequest()));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchFactNoAccess() throws Exception {
     UUID id = UUID.randomUUID();
     FactRecord record = new FactRecord();
@@ -47,7 +44,7 @@ public class FactGetByIdDelegateTest {
     when(factRequestResolver.resolveFact(id)).thenReturn(record);
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(record);
 
-    delegate.handle(new GetFactByIdRequest().setId(id));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new GetFactByIdRequest().setId(id)));
   }
 
   @Test

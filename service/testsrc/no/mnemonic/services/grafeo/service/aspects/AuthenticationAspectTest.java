@@ -10,16 +10,18 @@ import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
 import no.mnemonic.services.grafeo.service.Service;
 import no.mnemonic.services.grafeo.service.TestSecurityContext;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 @SuppressWarnings("unchecked")
+@ExtendWith(MockitoExtension.class)
 public class AuthenticationAspectTest {
 
   @Mock
@@ -29,10 +31,8 @@ public class AuthenticationAspectTest {
 
   private RequestHeader rh;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
     rh = RequestHeader.builder()
             .setCredentials(credentials)
             .build();
@@ -64,10 +64,10 @@ public class AuthenticationAspectTest {
     verify(accessController).validate(credentials);
   }
 
-  @Test(expected = AuthenticationFailedException.class)
+  @Test
   public void testInvalidCredentialsThrowsAuthenticationFailed() throws Exception {
     doThrow(InvalidCredentialsException.class).when(accessController).validate(credentials);
-    createService().method(rh, "Called!");
+    assertThrows(AuthenticationFailedException.class, () -> createService().method(rh, "Called!"));
   }
 
   private TestService createService() {

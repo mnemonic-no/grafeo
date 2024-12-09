@@ -10,25 +10,21 @@ import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import no.mnemonic.services.grafeo.service.contexts.TriggerContext;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEvent;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class TriggerContextAspectTest {
 
   @Mock
   private TriggerEventConsumer triggerEventConsumer;
   @Mock
   private static TriggerEvent triggerEvent;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-  }
 
   @Test
   public void testInjectNewTriggerContext() {

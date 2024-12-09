@@ -9,12 +9,11 @@ import no.mnemonic.services.grafeo.auth.properties.model.FunctionIdentifier;
 import no.mnemonic.services.grafeo.auth.properties.model.OrganizationIdentifier;
 import no.mnemonic.services.grafeo.auth.properties.model.SubjectDescriptor;
 import no.mnemonic.services.grafeo.auth.properties.model.SubjectIdentifier;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PropertiesBasedIdentityResolverTest {
 
@@ -24,7 +23,7 @@ public class PropertiesBasedIdentityResolverTest {
   public void testResolveFunctionIdentity() {
     String name = "test";
     FunctionIdentity identity = resolver.resolveFunctionIdentity(name);
-    assertTrue(identity instanceof FunctionIdentifier);
+    assertInstanceOf(FunctionIdentifier.class, identity);
     assertEquals(name, FunctionIdentifier.class.cast(identity).getName());
   }
 
@@ -32,7 +31,7 @@ public class PropertiesBasedIdentityResolverTest {
   public void testResolveOrganizationIdentity() {
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
     OrganizationIdentity identity = resolver.resolveOrganizationIdentity(id);
-    assertTrue(identity instanceof OrganizationIdentifier);
+    assertInstanceOf(OrganizationIdentifier.class, identity);
     assertEquals(id, OrganizationIdentifier.class.cast(identity).getGlobalID());
   }
 
@@ -43,16 +42,16 @@ public class PropertiesBasedIdentityResolverTest {
     assertEquals(id, resolver.resolveOrganizationUUID(identity));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testResolveOrganizationUuidWithWrongIdentityType() {
-    resolver.resolveOrganizationUUID(new OrganizationIdentity() {});
+    assertThrows(IllegalArgumentException.class, () -> resolver.resolveOrganizationUUID(new OrganizationIdentity() {}));
   }
 
   @Test
   public void testResolveSubjectIdentity() {
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
     SubjectIdentity identity = resolver.resolveSubjectIdentity(id);
-    assertTrue(identity instanceof SubjectIdentifier);
+    assertInstanceOf(SubjectIdentifier.class, identity);
     assertEquals(id, SubjectIdentifier.class.cast(identity).getGlobalID());
   }
 
@@ -63,9 +62,9 @@ public class PropertiesBasedIdentityResolverTest {
     assertEquals(id, resolver.resolveSubjectUUID(identity));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testResolveSubjectUuidWithWrongIdentityType() {
-    resolver.resolveSubjectUUID(new SubjectIdentity() {});
+    assertThrows(IllegalArgumentException.class, () -> resolver.resolveSubjectUUID(new SubjectIdentity() {}));
   }
 
   @Test
@@ -76,8 +75,8 @@ public class PropertiesBasedIdentityResolverTest {
     assertEquals(id, resolver.resolveSubjectUUID(descriptor));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testResolveSubjectUuidFromSessionDescriptorWithWrongDescriptorType() {
-    resolver.resolveSubjectUUID(new SessionDescriptor() {});
+    assertThrows(IllegalArgumentException.class, () -> resolver.resolveSubjectUUID(new SessionDescriptor() {}));
   }
 }

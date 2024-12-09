@@ -2,10 +2,10 @@ package no.mnemonic.services.grafeo.service.implementation.delegates;
 
 import com.google.inject.Guice;
 import com.google.inject.Module;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 public class DelegateProviderTest {
 

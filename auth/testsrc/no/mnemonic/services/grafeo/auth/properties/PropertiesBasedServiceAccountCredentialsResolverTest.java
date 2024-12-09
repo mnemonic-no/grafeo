@@ -3,9 +3,9 @@ package no.mnemonic.services.grafeo.auth.properties;
 import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
 import no.mnemonic.services.grafeo.auth.properties.model.SubjectCredentials;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PropertiesBasedServiceAccountCredentialsResolverTest {
 
@@ -14,7 +14,7 @@ public class PropertiesBasedServiceAccountCredentialsResolverTest {
   @Test
   public void testResolveSubjectCredentials() {
     Credentials credentials = resolver.get();
-    assertTrue(credentials instanceof SubjectCredentials);
+    assertInstanceOf(SubjectCredentials.class, credentials);
     assertEquals(1, ((SubjectCredentials) credentials).getSubjectID());
   }
 

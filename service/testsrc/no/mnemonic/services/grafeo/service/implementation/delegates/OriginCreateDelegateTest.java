@@ -8,18 +8,20 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.OriginResponseConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OriginCreateDelegateTest {
 
   @Mock
@@ -28,40 +30,34 @@ public class OriginCreateDelegateTest {
   private OriginManager originManager;
   @Mock
   private OriginResponseConverter originResponseConverter;
-
+  @InjectMocks
   private OriginCreateDelegate delegate;
 
-  @Before
-  public void setUp() {
-    initMocks(this);
-    delegate = new OriginCreateDelegate(securityContext, originManager, originResponseConverter);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateOriginWithoutGeneralAddPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoOrigin);
-    delegate.handle(new CreateOriginRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new CreateOriginRequest()));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateOriginWithoutSpecificAddPermission() throws Exception {
     CreateOriginRequest request = new CreateOriginRequest().setOrganization(UUID.randomUUID());
     when(securityContext.getAvailableOrganizationID()).thenReturn(Collections.singleton(request.getOrganization()));
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoOrigin, request.getOrganization());
-    delegate.handle(request);
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testCreateOriginWithNonExistingOrganization() throws Exception {
+  @Test
+  public void testCreateOriginWithNonExistingOrganization() {
     CreateOriginRequest request = new CreateOriginRequest().setOrganization(UUID.randomUUID());
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testCreateOriginWithSameNameExists() throws Exception {
+  @Test
+  public void testCreateOriginWithSameNameExists() {
     CreateOriginRequest request = new CreateOriginRequest().setName("name");
     when(originManager.getOrigin(request.getName())).thenReturn(new OriginEntity());
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
   @Test

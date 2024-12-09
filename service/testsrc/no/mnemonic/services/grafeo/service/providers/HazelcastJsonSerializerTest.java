@@ -1,11 +1,11 @@
 package no.mnemonic.services.grafeo.service.providers;
 
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HazelcastJsonSerializerTest {
 

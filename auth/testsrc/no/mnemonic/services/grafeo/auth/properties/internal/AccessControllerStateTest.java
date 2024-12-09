@@ -1,11 +1,11 @@
 package no.mnemonic.services.grafeo.auth.properties.internal;
 
 import no.mnemonic.commons.utilities.collections.SetUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AccessControllerStateTest {
 

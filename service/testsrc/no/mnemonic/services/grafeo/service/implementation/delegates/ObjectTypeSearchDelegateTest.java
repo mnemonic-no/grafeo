@@ -10,16 +10,19 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.ObjectTypeResponseConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectTypeSearchDelegateTest {
 
   @Mock
@@ -28,20 +31,13 @@ public class ObjectTypeSearchDelegateTest {
   private ObjectTypeResponseConverter objectTypeResponseConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private ObjectTypeSearchDelegate delegate;
 
-
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new ObjectTypeSearchDelegate(securityContext, objectManager, objectTypeResponseConverter);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchObjectTypesWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoType);
-    delegate.handle(new SearchObjectTypeRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchObjectTypeRequest()));
   }
 
   @Test

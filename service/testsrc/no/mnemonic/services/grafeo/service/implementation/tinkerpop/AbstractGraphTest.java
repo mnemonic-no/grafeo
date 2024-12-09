@@ -12,16 +12,21 @@ import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.Object
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.PropertyHelper;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 abstract class AbstractGraphTest {
 
   final FactSearchCriteria factSearchCriteria = FactSearchCriteria.builder()
@@ -45,10 +50,8 @@ abstract class AbstractGraphTest {
 
   private ObjectFactGraph graph;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    initMocks(this);
-
     when(securityContext.hasReadPermission(any(FactRecord.class))).thenReturn(true);
 
     when(propertyHelper.getObjectProperties(any(), any())).thenReturn(list());

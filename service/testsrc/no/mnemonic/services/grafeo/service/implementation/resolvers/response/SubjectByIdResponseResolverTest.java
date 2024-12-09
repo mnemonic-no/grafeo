@@ -5,18 +5,20 @@ import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.grafeo.api.model.v1.Subject;
 import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
 import no.mnemonic.services.grafeo.auth.SubjectSPI;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class SubjectByIdResponseResolverTest {
 
   @Mock
@@ -27,11 +29,10 @@ public class SubjectByIdResponseResolverTest {
   private Map<UUID, Subject> responseCache;
   private SubjectByIdResponseResolver converter;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    initMocks(this);
+    lenient().when(credentialsResolver.get()).thenReturn(new Credentials() {});
     responseCache = new HashMap<>();
-    when(credentialsResolver.get()).thenReturn(new Credentials() {});
     converter = new SubjectByIdResponseResolver(subjectResolver, credentialsResolver, responseCache);
   }
 

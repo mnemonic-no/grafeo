@@ -19,21 +19,23 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.response.Ori
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.SubjectByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.TraverseParams;
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.ObjectFactTypeResolver.FactTypeStruct;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class PropertyHelperTest {
 
   private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
@@ -63,16 +65,8 @@ public class PropertyHelperTest {
   private OrganizationByIdResponseResolver organizationResolver;
   @Mock
   private OriginByIdResponseResolver originResolver;
-
+  @InjectMocks
   private PropertyHelper helper;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-    helper = new PropertyHelper(factRetractionHandler, objectFactDao, objectFactTypeResolver, securityContext,
-            subjectResolver, organizationResolver, originResolver);
-    when(factRetractionHandler.isRetracted(any())).thenReturn(false);
-  }
 
   @Test
   public void testOneLeggedFactsAsPropsNoOneLeggedFacts() {
@@ -507,7 +501,7 @@ public class PropertyHelperTest {
   private FactTypeStruct mockFactType(String name) {
     UUID typeId = UUID.randomUUID();
     FactTypeStruct factType = FactTypeStruct.builder().setId(typeId).setName(name).build();
-    when(objectFactTypeResolver.toFactTypeStruct(typeId)).thenReturn(factType);
+    lenient().when(objectFactTypeResolver.toFactTypeStruct(typeId)).thenReturn(factType);
     return factType;
   }
 

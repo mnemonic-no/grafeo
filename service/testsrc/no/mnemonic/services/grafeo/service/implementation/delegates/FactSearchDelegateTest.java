@@ -13,19 +13,21 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.request.SearchFactRequestConverter;
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactSearchHandler;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactSearchDelegateTest {
 
   private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
@@ -40,28 +42,8 @@ public class FactSearchDelegateTest {
   private SearchFactRequestConverter requestConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private FactSearchDelegate delegate;
-
-  @Before
-  public void setup() throws Exception {
-    initMocks(this);
-
-    when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
-            .setKeywords("Hello World!")
-            .setLimit(25)
-            .setAccessControlCriteria(accessControlCriteria)
-            .setIndexSelectCriteria(indexSelectCriteria)
-            .build());
-    when(factSearchHandler.search(any(), any())).thenReturn(StreamingResultSet.<Fact>builder()
-            .setLimit(25)
-            .setCount(100)
-            .setValues(Collections.singleton(Fact.builder().build()))
-            .build()
-    );
-
-    delegate = new FactSearchDelegate(securityContext, requestConverter, factSearchHandler);
-  }
 
   @Test
   public void testSearchFactsWithoutViewPermission() throws Exception {
@@ -81,6 +63,19 @@ public class FactSearchDelegateTest {
 
   @Test
   public void testSearchFacts() throws Exception {
+    when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
+            .setKeywords("Hello World!")
+            .setLimit(25)
+            .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
+            .build());
+    when(factSearchHandler.search(any(), any())).thenReturn(StreamingResultSet.<Fact>builder()
+            .setLimit(25)
+            .setCount(100)
+            .setValues(Collections.singleton(Fact.builder().build()))
+            .build()
+    );
+
     ResultSet<Fact> result = delegate.handle(new SearchFactRequest().setIncludeRetracted(true));
     assertEquals(25, result.getLimit());
     assertEquals(100, result.getCount());

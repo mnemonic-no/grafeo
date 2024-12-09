@@ -18,20 +18,23 @@ import no.mnemonic.services.grafeo.service.implementation.converters.request.Sea
 import no.mnemonic.services.grafeo.service.implementation.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.ObjectTypeByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectSearchDelegateTest {
 
   private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
@@ -52,31 +55,18 @@ public class ObjectSearchDelegateTest {
   private GrafeoSecurityContext securityContext;
   @Mock
   private AccessControlCriteriaResolver accessControlCriteriaResolver;
-
+  @InjectMocks
   private ObjectSearchDelegate delegate;
 
-  @Before
+  @BeforeEach
   public void setup() throws Exception {
-    initMocks(this);
-    // Mocks required for ElasticSearch access control.
-    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
-
     // Mocks required for request converter.
-    when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
+    lenient().when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setKeywords("Hello World!")
             .setLimit(25)
             .setAccessControlCriteria(accessControlCriteria)
             .setIndexSelectCriteria(indexSelectCriteria)
             .build());
-
-    delegate = new ObjectSearchDelegate(
-            securityContext,
-            accessControlCriteriaResolver,
-            objectFactDao,
-            requestConverter,
-            factTypeConverter,
-            objectTypeConverter
-    );
   }
 
   @Test
@@ -128,6 +118,7 @@ public class ObjectSearchDelegateTest {
     int count = 3;
     when(objectFactDao.searchObjects(any())).thenReturn(createSearchResult(count));
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
+    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
 
     ResultSet<Object> result = delegate.handle(new SearchObjectRequest().setIncludeStatistics(true));
     assertEquals(25, result.getLimit());
@@ -148,6 +139,7 @@ public class ObjectSearchDelegateTest {
     int count = 1001;
     when(objectFactDao.searchObjects(any())).thenReturn(createSearchResult(count));
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
+    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
 
     ResultSet<Object> result = delegate.handle(new SearchObjectRequest().setIncludeStatistics(true));
     assertEquals(count, result.getCount());
@@ -162,6 +154,7 @@ public class ObjectSearchDelegateTest {
     int count = 3;
     when(objectFactDao.searchObjects(any())).thenReturn(createSearchResult(count));
     when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
+    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
 
     SearchObjectRequest request = new SearchObjectRequest()
             .setIncludeStatistics(true)

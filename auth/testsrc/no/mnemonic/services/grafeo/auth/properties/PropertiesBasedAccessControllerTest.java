@@ -5,8 +5,8 @@ import no.mnemonic.services.common.auth.model.*;
 import no.mnemonic.services.grafeo.api.model.v1.Organization;
 import no.mnemonic.services.grafeo.api.model.v1.Subject;
 import no.mnemonic.services.grafeo.auth.properties.model.*;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.FileWriter;
 import java.nio.file.Files;
@@ -14,14 +14,14 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PropertiesBasedAccessControllerTest {
 
   private PropertiesBasedAccessController accessController;
   private Path propertiesFile;
 
-  @After
+  @AfterEach
   public void cleanUp() throws Exception {
     if (accessController != null) accessController.stopComponent();
     if (propertiesFile != null) Files.deleteIfExists(propertiesFile);
@@ -33,99 +33,101 @@ public class PropertiesBasedAccessControllerTest {
   public void testValidateWithValidCredentials() throws Exception {
     setup("subject.1.name = subject");
     SessionDescriptor descriptor = accessController.validate(createCredentials(1));
-    assertTrue(descriptor instanceof SubjectDescriptor);
+    assertInstanceOf(SubjectDescriptor.class, descriptor);
     assertEquals(1, ((SubjectDescriptor) descriptor).getIdentifier().getInternalID());
   }
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testValidateWithNullCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.validate(null);
+    assertThrows(InvalidCredentialsException.class, () -> accessController.validate(null));
   }
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testValidateWithCredentialsOfWrongType() throws Exception {
     setup("subject.1.name = subject");
-    accessController.validate(new Credentials() {});
+    assertThrows(InvalidCredentialsException.class, () -> accessController.validate(new Credentials() {}));
   }
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testValidateWithCredentialsForUnknownSubject() throws Exception {
     setup("subject.1.name = subject");
-    accessController.validate(createCredentials(42));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.validate(createCredentials(42)));
   }
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testValidateWithCredentialsForSubjectGroup() throws Exception {
-    setup("subject.1.name = subject\n" +
-            "subject.1.type = group");
-    accessController.validate(createCredentials(1));
+    String content = """
+            subject.1.name = subject
+            subject.1.type = group
+            """;
+    setup(content);
+    assertThrows(InvalidCredentialsException.class, () -> accessController.validate(createCredentials(1)));
   }
 
   /* hasPermission(credentials, function) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testHasPermissionFunctionIdentityWithInvalidCredentials() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(42), createFunctionIdentifier("function"));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.hasPermission(createCredentials(42), createFunctionIdentifier("function")));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionFunctionIdentityWithFunctionOfWrongType() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), new FunctionIdentity() {
-    });
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), new FunctionIdentity() {}));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionFunctionIdentityWithNullFunction() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), (FunctionIdentity) null);
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), (FunctionIdentity) null));
   }
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testHasPermissionNamedFunctionWithInvalidCredentials() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(42), () -> "function");
+    assertThrows(InvalidCredentialsException.class, () -> accessController.hasPermission(createCredentials(42), () -> "function"));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionNamedFunctionWithNullFunction() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), (NamedFunction) null);
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), (NamedFunction) null));
   }
 
   @Test
   public void testHasPermissionWithoutGrantedPermissions() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     assertFalse(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("no_grant")));
@@ -134,11 +136,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionWithoutAccessToFunction() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     assertFalse(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("no_access")));
@@ -147,13 +149,13 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionWithoutAccessToParentFunctionGroup() throws Exception {
-    String content = "" +
-            "function.group1.members = group2\n" +
-            "function.group2.members = function\n" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = group2" +
-            "";
+    String content = """
+            function.group1.members = group2
+            function.group2.members = function
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = group2
+            """;
     setup(content);
 
     assertFalse(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("group1")));
@@ -162,11 +164,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionWithDirectlyGrantedFunction() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function")));
@@ -175,12 +177,12 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionWithDirectlyGrantedFunctionGroup() throws Exception {
-    String content = "" +
-            "function.group.members = function\n" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = group" +
-            "";
+    String content = """
+            function.group.members = function
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = group
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("group")));
@@ -189,13 +191,13 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionWithIndirectlyGrantedFunction() throws Exception {
-    String content = "" +
-            "function.group1.members = group2\n" +
-            "function.group2.members = function\n" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = group1" +
-            "";
+    String content = """
+            function.group1.members = group2
+            function.group2.members = function
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = group1
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function")));
@@ -204,13 +206,13 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionWithIndirectlyGrantedFunctionGroup() throws Exception {
-    String content = "" +
-            "function.group1.members = group2\n" +
-            "function.group2.members = function\n" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = group1" +
-            "";
+    String content = """
+            function.group1.members = group2
+            function.group2.members = function
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = group1
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("group2")));
@@ -219,13 +221,13 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionAcrossMultipleOrganizations() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "subject.1.permission.1 = function1\n" +
-            "subject.1.permission.2 = function2" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            subject.1.permission.1 = function1
+            subject.1.permission.2 = function2
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function1")));
@@ -236,17 +238,17 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionInheritedFromSubjectGroup() throws Exception {
-    String content = "" +
-            "subject.1.name = subject1\n" +
-            "subject.2.name = subject2\n" +
-            "subject.2.type = group\n" +
-            "subject.2.members = 1\n" +
-            "subject.3.name = subject3\n" +
-            "subject.3.type = group\n" +
-            "subject.3.members = 2\n" +
-            "organization.1.name = organization\n" +
-            "subject.3.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject1
+            subject.2.name = subject2
+            subject.2.type = group
+            subject.2.members = 1
+            subject.3.name = subject3
+            subject.3.type = group
+            subject.3.members = 2
+            organization.1.name = organization
+            subject.3.permission.1 = function
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function")));
@@ -255,114 +257,111 @@ public class PropertiesBasedAccessControllerTest {
 
   /* hasPermission(credentials, function, organization) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testHasPermissionForOrganizationFunctionIdentityWithInvalidCredentials() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(42), createFunctionIdentifier("function"), createOrganizationIdentifier(1));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.hasPermission(createCredentials(42), createFunctionIdentifier("function"), createOrganizationIdentifier(1)));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionForOrganizationFunctionIdentityWithFunctionOfWrongType() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), new FunctionIdentity() {
-    }, createOrganizationIdentifier(1));
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), new FunctionIdentity() {}, createOrganizationIdentifier(1)));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionForOrganizationFunctionIdentityWithNullFunction() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), (FunctionIdentity) null, createOrganizationIdentifier(1));
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), (FunctionIdentity) null, createOrganizationIdentifier(1)));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionForOrganizationFunctionIdentityWithOrganizationOfWrongType() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), new OrganizationIdentity() {
-    });
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), new OrganizationIdentity() {}));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionForOrganizationFunctionIdentityWithNullOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), null);
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), null));
   }
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testHasPermissionForOrganizationNamedFunctionWithInvalidCredentials() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(42), () -> "function", createOrganizationIdentifier(1));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.hasPermission(createCredentials(42), () -> "function", createOrganizationIdentifier(1)));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionForOrganizationNamedFunctionWithNullFunction() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), (NamedFunction) null, createOrganizationIdentifier(1));
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), (NamedFunction) null, createOrganizationIdentifier(1)));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionForOrganizationNamedFunctionWithOrganizationOfWrongType() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), () -> "function", new OrganizationIdentity() {
-    });
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), () -> "function", new OrganizationIdentity() {}));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testHasPermissionForOrganizationNamedFunctionWithNullOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
-    accessController.hasPermission(createCredentials(1), () -> "function", null);
+    assertThrows(IllegalArgumentException.class, () -> accessController.hasPermission(createCredentials(1), () -> "function", null));
   }
 
   @Test
   public void testHasPermissionForOrganizationWithoutGrantedPermissions() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     assertFalse(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("no_grant"), createOrganizationIdentifier(1)));
@@ -371,11 +370,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithoutAccessToFunction() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     assertFalse(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("no_access"), createOrganizationIdentifier(1)));
@@ -384,13 +383,13 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithoutAccessToParentFunctionGroup() throws Exception {
-    String content = "" +
-            "function.group1.members = group2\n" +
-            "function.group2.members = function\n" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = group2" +
-            "";
+    String content = """
+            function.group1.members = group2
+            function.group2.members = function
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = group2
+            """;
     setup(content);
 
     assertFalse(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("group1"), createOrganizationIdentifier(1)));
@@ -399,12 +398,12 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithoutAccessToOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     assertFalse(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), createOrganizationIdentifier(2)));
@@ -413,15 +412,15 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithoutAccessToParentOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "organization.3.name = organization3\n" +
-            "organization.3.type = group\n" +
-            "organization.3.members = 1,2\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            organization.3.name = organization3
+            organization.3.type = group
+            organization.3.members = 1,2
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     assertFalse(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), createOrganizationIdentifier(2)));
@@ -430,11 +429,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithDirectlyGrantedFunction() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), createOrganizationIdentifier(1)));
@@ -443,12 +442,12 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForFunctionWithDirectlyGrantedFunctionGroup() throws Exception {
-    String content = "" +
-            "function.group.members = function\n" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = group" +
-            "";
+    String content = """
+            function.group.members = function
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = group
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("group"), createOrganizationIdentifier(1)));
@@ -457,13 +456,13 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithIndirectlyGrantedFunction() throws Exception {
-    String content = "" +
-            "function.group1.members = group2\n" +
-            "function.group2.members = function\n" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = group1" +
-            "";
+    String content = """
+            function.group1.members = group2
+            function.group2.members = function
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = group1
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), createOrganizationIdentifier(1)));
@@ -472,13 +471,13 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithIndirectlyGrantedFunctionGroup() throws Exception {
-    String content = "" +
-            "function.group1.members = group2\n" +
-            "function.group2.members = function\n" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = group1" +
-            "";
+    String content = """
+            function.group1.members = group2
+            function.group2.members = function
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = group1
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("group2"), createOrganizationIdentifier(1)));
@@ -487,17 +486,17 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithPermissionsInheritedFromSubjectGroup() throws Exception {
-    String content = "" +
-            "subject.1.name = subject1\n" +
-            "subject.2.name = subject2\n" +
-            "subject.2.type = group\n" +
-            "subject.2.members = 1\n" +
-            "subject.3.name = subject3\n" +
-            "subject.3.type = group\n" +
-            "subject.3.members = 2\n" +
-            "organization.1.name = organization\n" +
-            "subject.3.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject1
+            subject.2.name = subject2
+            subject.2.type = group
+            subject.2.members = 1
+            subject.3.name = subject3
+            subject.3.type = group
+            subject.3.members = 2
+            organization.1.name = organization
+            subject.3.permission.1 = function
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), createOrganizationIdentifier(1)));
@@ -506,17 +505,17 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testHasPermissionForOrganizationWithPermissionsInheritedFromOrganizationGroup() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "organization.2.type = group\n" +
-            "organization.2.members = 1\n" +
-            "organization.3.name = organization3\n" +
-            "organization.3.type = group\n" +
-            "organization.3.members = 2\n" +
-            "subject.1.permission.3 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            organization.2.type = group
+            organization.2.members = 1
+            organization.3.name = organization3
+            organization.3.type = group
+            organization.3.members = 2
+            subject.1.permission.3 = function
+            """;
     setup(content);
 
     assertTrue(accessController.hasPermission(createCredentials(1), createFunctionIdentifier("function"), createOrganizationIdentifier(1)));
@@ -525,10 +524,10 @@ public class PropertiesBasedAccessControllerTest {
 
   /* getSubjectIdentities(credentials) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testGetSubjectIdentitiesWithInvalidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.getSubjectIdentities(createCredentials(42));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.getSubjectIdentities(createCredentials(42)));
   }
 
   @Test
@@ -541,15 +540,15 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetSubjectIdentitiesReturnsParents() throws Exception {
-    String content = "" +
-            "subject.1.name = subject1\n" +
-            "subject.2.name = subject2\n" +
-            "subject.2.type = group\n" +
-            "subject.2.members = 1\n" +
-            "subject.3.name = subject3\n" +
-            "subject.3.type = group\n" +
-            "subject.3.members = 2" +
-            "";
+    String content = """
+            subject.1.name = subject1
+            subject.2.name = subject2
+            subject.2.type = group
+            subject.2.members = 1
+            subject.3.name = subject3
+            subject.3.type = group
+            subject.3.members = 2
+            """;
     setup(content);
 
     Set<SubjectIdentity> subjects = accessController.getSubjectIdentities(createCredentials(1));
@@ -561,16 +560,16 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetSubjectIdentitiesOmitsOtherSubjects() throws Exception {
-    String content = "" +
-            "subject.1.name = subject1\n" +
-            "subject.2.name = subject2\n" +
-            "subject.3.name = subject3\n" +
-            "subject.3.type = group\n" +
-            "subject.3.members = 1,2\n" +
-            "subject.4.name = subject4\n" +
-            "subject.4.type = group\n" +
-            "subject.4.members = 2" +
-            "";
+    String content = """
+            subject.1.name = subject1
+            subject.2.name = subject2
+            subject.3.name = subject3
+            subject.3.type = group
+            subject.3.members = 1,2
+            subject.4.name = subject4
+            subject.4.type = group
+            subject.4.members = 2
+            """;
     setup(content);
 
     Set<SubjectIdentity> subjects = accessController.getSubjectIdentities(createCredentials(1));
@@ -581,18 +580,18 @@ public class PropertiesBasedAccessControllerTest {
 
   /* getAvailableOrganizations(credentials) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testGetAvailableOrganizationsWithInvalidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.getAvailableOrganizations(createCredentials(42));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.getAvailableOrganizations(createCredentials(42)));
   }
 
   @Test
   public void testGetAvailableOrganizationsWithoutPermissions() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     assertEmpty(accessController.getAvailableOrganizations(createCredentials(1)));
@@ -600,11 +599,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetAvailableOrganizationsDirectlyAccessibleOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     Set<OrganizationIdentity> organizations = accessController.getAvailableOrganizations(createCredentials(1));
@@ -614,17 +613,17 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetAvailableOrganizationsIncludeChildOrganizations() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "organization.2.type = group\n" +
-            "organization.2.members = 1\n" +
-            "organization.3.name = organization3\n" +
-            "organization.3.type = group\n" +
-            "organization.3.members = 2\n" +
-            "subject.1.permission.3 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            organization.2.type = group
+            organization.2.members = 1
+            organization.3.name = organization3
+            organization.3.type = group
+            organization.3.members = 2
+            subject.1.permission.3 = function
+            """;
     setup(content);
 
     Set<OrganizationIdentity> organizations = accessController.getAvailableOrganizations(createCredentials(1));
@@ -636,17 +635,17 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetAvailableOrganizationsOmitsInaccessibleParent() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "organization.2.type = group\n" +
-            "organization.2.members = 1\n" +
-            "organization.3.name = organization3\n" +
-            "organization.3.type = group\n" +
-            "organization.3.members = 2\n" +
-            "subject.1.permission.2 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            organization.2.type = group
+            organization.2.members = 1
+            organization.3.name = organization3
+            organization.3.type = group
+            organization.3.members = 2
+            subject.1.permission.2 = function
+            """;
     setup(content);
 
     Set<OrganizationIdentity> organizations = accessController.getAvailableOrganizations(createCredentials(1));
@@ -657,17 +656,17 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetAvailableOrganizationsInheritedFromSubjectGroup() throws Exception {
-    String content = "" +
-            "subject.1.name = subject1\n" +
-            "subject.2.name = subject2\n" +
-            "subject.2.type = group\n" +
-            "subject.2.members = 1\n" +
-            "subject.3.name = subject3\n" +
-            "subject.3.type = group\n" +
-            "subject.3.members = 2\n" +
-            "organization.1.name = organization\n" +
-            "subject.3.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject1
+            subject.2.name = subject2
+            subject.2.type = group
+            subject.2.members = 1
+            subject.3.name = subject3
+            subject.3.type = group
+            subject.3.members = 2
+            organization.1.name = organization
+            subject.3.permission.1 = function
+            """;
     setup(content);
 
     Set<OrganizationIdentity> organizations = accessController.getAvailableOrganizations(createCredentials(1));
@@ -677,19 +676,19 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetAvailableOrganizationsOmitsDuplicates() throws Exception {
-    String content = "" +
-            "subject.1.name = subject1\n" +
-            "subject.2.name = subject2\n" +
-            "subject.2.type = group\n" +
-            "subject.2.members = 1\n" +
-            "subject.3.name = subject3\n" +
-            "subject.3.type = group\n" +
-            "subject.3.members = 2\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function1\n" +
-            "subject.2.permission.1 = function2\n" +
-            "subject.3.permission.1 = function3" +
-            "";
+    String content = """
+            subject.1.name = subject1
+            subject.2.name = subject2
+            subject.2.type = group
+            subject.2.members = 1
+            subject.3.name = subject3
+            subject.3.type = group
+            subject.3.members = 2
+            organization.1.name = organization
+            subject.1.permission.1 = function1
+            subject.2.permission.1 = function2
+            subject.3.permission.1 = function3
+            """;
     setup(content);
 
     Set<OrganizationIdentity> organizations = accessController.getAvailableOrganizations(createCredentials(1));
@@ -699,46 +698,45 @@ public class PropertiesBasedAccessControllerTest {
 
   /* getDescendingOrganizations(credentials, topLevelOrg) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testGetDescendingOrganizationsWithInvalidCredentials() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
-    accessController.getDescendingOrganizations(createCredentials(42), createOrganizationIdentifier(1));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.getDescendingOrganizations(createCredentials(42), createOrganizationIdentifier(1)));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testGetDescendingOrganizationsWithOrganizationOfWrongType() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
-    accessController.getDescendingOrganizations(createCredentials(1), new OrganizationIdentity() {
-    });
+    assertThrows(IllegalArgumentException.class, () -> accessController.getDescendingOrganizations(createCredentials(1), new OrganizationIdentity() {}));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testGetDescendingOrganizationsWithNullOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
-    accessController.getDescendingOrganizations(createCredentials(1), null);
+    assertThrows(IllegalArgumentException.class, () -> accessController.getDescendingOrganizations(createCredentials(1), null));
   }
 
   @Test
   public void testGetDescendingOrganizationsWithoutPermissions() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     assertEmpty(accessController.getDescendingOrganizations(createCredentials(1), createOrganizationIdentifier(1)));
@@ -746,14 +744,14 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetDescendingOrganizationsWithoutAccessToParent() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "organization.2.type = group\n" +
-            "organization.2.members = 1\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            organization.2.type = group
+            organization.2.members = 1
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     assertEmpty(accessController.getDescendingOrganizations(createCredentials(1), createOrganizationIdentifier(2)));
@@ -761,11 +759,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetDescendingOrganizationsDirectlyAccessibleOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "subject.1.permission.1 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            subject.1.permission.1 = function
+            """;
     setup(content);
 
     Set<OrganizationIdentity> organizations = accessController.getDescendingOrganizations(createCredentials(1), createOrganizationIdentifier(1));
@@ -775,17 +773,17 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetDescendingOrganizationsIncludeChildOrganizations() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "organization.2.type = group\n" +
-            "organization.2.members = 1\n" +
-            "organization.3.name = organization3\n" +
-            "organization.3.type = group\n" +
-            "organization.3.members = 2\n" +
-            "subject.1.permission.3 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            organization.2.type = group
+            organization.2.members = 1
+            organization.3.name = organization3
+            organization.3.type = group
+            organization.3.members = 2
+            subject.1.permission.3 = function
+            """;
     setup(content);
 
     Set<OrganizationIdentity> organizations = accessController.getDescendingOrganizations(createCredentials(1), createOrganizationIdentifier(3));
@@ -797,17 +795,17 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testGetDescendingOrganizationsReturnSubTree() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization1\n" +
-            "organization.2.name = organization2\n" +
-            "organization.2.type = group\n" +
-            "organization.2.members = 1\n" +
-            "organization.3.name = organization3\n" +
-            "organization.3.type = group\n" +
-            "organization.3.members = 2\n" +
-            "subject.1.permission.3 = function" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization1
+            organization.2.name = organization2
+            organization.2.type = group
+            organization.2.members = 1
+            organization.3.name = organization3
+            organization.3.type = group
+            organization.3.members = 2
+            subject.1.permission.3 = function
+            """;
     setup(content);
 
     Set<OrganizationIdentity> organizations = accessController.getDescendingOrganizations(createCredentials(1), createOrganizationIdentifier(2));
@@ -818,18 +816,18 @@ public class PropertiesBasedAccessControllerTest {
 
   /* resolveOrganization(credentials, id) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testResolveOrganizationWithInvalidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.resolveOrganization(createCredentials(42), UUID.randomUUID());
+    assertThrows(InvalidCredentialsException.class, () -> accessController.resolveOrganization(createCredentials(42), UUID.randomUUID()));
   }
 
   @Test
   public void testResolveOrganizationNotExistingOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     assertNull(accessController.resolveOrganization(createCredentials(1), UUID.fromString("00000000-0000-0000-0000-000000000002")));
@@ -837,10 +835,10 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testResolveOrganizationExistingOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -851,18 +849,18 @@ public class PropertiesBasedAccessControllerTest {
 
   /* resolveOrganization(credentials, name) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testResolveOrganizationByNameWithInvalidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.resolveOrganization(createCredentials(42), "something");
+    assertThrows(InvalidCredentialsException.class, () -> accessController.resolveOrganization(createCredentials(42), "something"));
   }
 
   @Test
   public void testResolveOrganizationByNameNotExistingOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     assertNull(accessController.resolveOrganization(createCredentials(1), "something"));
@@ -870,10 +868,10 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testResolveOrganizationByNameExistingOrganization() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     Organization organization = accessController.resolveOrganization(createCredentials(1), "organization");
@@ -883,19 +881,19 @@ public class PropertiesBasedAccessControllerTest {
 
   /* resolveCurrentUserAffiliation(credentials) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testResolveCurrentUserAffiliationWithInvalidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.resolveCurrentUserAffiliation(createCredentials(42));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.resolveCurrentUserAffiliation(createCredentials(42)));
   }
 
   @Test
   public void testResolveCurrentUserAffiliation() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "subject.1.affiliation = 1\n" +
-            "organization.1.name = organization\n" +
-            "";
+    String content = """
+            subject.1.name = subject
+            subject.1.affiliation = 1
+            organization.1.name = organization
+            """;
     setup(content);
 
     Organization organization = accessController.resolveCurrentUserAffiliation(createCredentials(1));
@@ -905,10 +903,10 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testResolveCurrentUserAffiliationSubjectWithoutAffiliation() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "organization.1.name = organization\n" +
-            "";
+    String content = """
+            subject.1.name = subject
+            organization.1.name = organization
+            """;
     setup(content);
 
     Organization organization = accessController.resolveCurrentUserAffiliation(createCredentials(1));
@@ -918,10 +916,10 @@ public class PropertiesBasedAccessControllerTest {
 
   /* resolveSubject(credentials, id) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testResolveSubjectWithInvalidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.resolveSubject(createCredentials(42), UUID.randomUUID());
+    assertThrows(InvalidCredentialsException.class, () -> accessController.resolveSubject(createCredentials(42), UUID.randomUUID()));
   }
 
   @Test
@@ -944,11 +942,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testResolveSubjectExistingSubjectWithAffiliation() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "subject.1.affiliation = 1\n" +
-            "organization.1.name = organization\n" +
-            "";
+    String content = """
+            subject.1.name = subject
+            subject.1.affiliation = 1
+            organization.1.name = organization
+            """;
     setup(content);
 
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -962,10 +960,10 @@ public class PropertiesBasedAccessControllerTest {
 
   /* resolveSubject(credentials, name) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testResolveSubjectByNameWithInvalidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.resolveSubject(createCredentials(42), "something");
+    assertThrows(InvalidCredentialsException.class, () -> accessController.resolveSubject(createCredentials(42), "something"));
   }
 
   @Test
@@ -987,11 +985,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testResolveSubjectByNameExistingSubjectWithAffiliation() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "subject.1.affiliation = 1\n" +
-            "organization.1.name = organization\n" +
-            "";
+    String content = """
+            subject.1.name = subject
+            subject.1.affiliation = 1
+            organization.1.name = organization
+            """;
     setup(content);
 
     UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -1005,10 +1003,10 @@ public class PropertiesBasedAccessControllerTest {
 
   /* resolveCurrentUser(credentials) */
 
-  @Test(expected = InvalidCredentialsException.class)
+  @Test
   public void testResolveCurrentUserWithInvalidCredentials() throws Exception {
     setup("subject.1.name = subject");
-    accessController.resolveCurrentUser(createCredentials(42));
+    assertThrows(InvalidCredentialsException.class, () -> accessController.resolveCurrentUser(createCredentials(42)));
   }
 
   @Test
@@ -1023,11 +1021,11 @@ public class PropertiesBasedAccessControllerTest {
 
   @Test
   public void testResolveCurrentUserWitAffiliation() throws Exception {
-    String content = "" +
-            "subject.1.name = subject\n" +
-            "subject.1.affiliation = 1\n" +
-            "organization.1.name = organization\n" +
-            "";
+    String content = """
+            subject.1.name = subject
+            subject.1.affiliation = 1
+            organization.1.name = organization
+            """;
     setup(content);
 
     Subject subject = accessController.resolveCurrentUser(createCredentials(1));

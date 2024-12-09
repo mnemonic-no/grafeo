@@ -8,15 +8,18 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.OriginResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.OriginResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OriginGetByIdDelegateTest {
 
   @Mock
@@ -25,27 +28,21 @@ public class OriginGetByIdDelegateTest {
   private OriginResolver originResolver;
   @Mock
   private OriginResponseConverter originResponseConverter;
-
+  @InjectMocks
   private OriginGetByIdDelegate delegate;
 
-  @Before
-  public void setUp() {
-    initMocks(this);
-    delegate = new OriginGetByIdDelegate(securityContext, originResolver, originResponseConverter);
+  @Test
+  public void testFetchOriginNotFound() {
+    assertThrows(ObjectNotFoundException.class, () -> delegate.handle(new GetOriginByIdRequest().setId(UUID.randomUUID())));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
-  public void testFetchOriginNotFound() throws Exception {
-    delegate.handle(new GetOriginByIdRequest().setId(UUID.randomUUID()));
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchOriginWithoutGeneralViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoOrigin);
-    delegate.handle(new GetOriginByIdRequest().setId(UUID.randomUUID()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new GetOriginByIdRequest().setId(UUID.randomUUID())));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchOriginWithoutSpecificViewPermission() throws Exception {
     OriginEntity origin = new OriginEntity()
             .setId(UUID.randomUUID())
@@ -53,7 +50,7 @@ public class OriginGetByIdDelegateTest {
     when(originResolver.apply(origin.getId())).thenReturn(origin);
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(origin);
 
-    delegate.handle(new GetOriginByIdRequest().setId(origin.getId()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new GetOriginByIdRequest().setId(origin.getId())));
   }
 
   @Test

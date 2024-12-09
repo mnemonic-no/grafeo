@@ -23,9 +23,12 @@ import no.mnemonic.services.grafeo.service.implementation.converters.response.Fa
 import no.mnemonic.services.grafeo.service.providers.LockProvider;
 import no.mnemonic.services.grafeo.service.validators.Validator;
 import no.mnemonic.services.grafeo.service.validators.ValidatorFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -35,12 +38,12 @@ import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactCreateHandlerTest {
 
   @Mock
@@ -63,23 +66,13 @@ public class FactCreateHandlerTest {
   private Credentials credentials;
   @Mock
   private Clock clock;
-
+  @InjectMocks
   private FactCreateHandler handler;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-    when(securityContext.getCredentials()).thenReturn(credentials);
-    handler = new FactCreateHandler(
-            securityContext,
-            subjectResolver,
-            organizationResolver,
-            originManager,
-            validatorFactory,
-            objectFactDao,
-            factResponseConverter,
-            lockProvider
-    ).withClock(clock);
+    lenient().when(securityContext.getCredentials()).thenReturn(credentials);
+    handler.withClock(clock);
   }
 
   @Test
@@ -264,6 +257,7 @@ public class FactCreateHandlerTest {
             .build();
     when(securityContext.getCurrentUserID()).thenReturn(currentUserID);
     when(subjectResolver.resolveCurrentUser(any())).thenReturn(currentUser);
+    when(originManager.getOrigin(isA(UUID.class))).thenReturn(null);
     when(originManager.getOrigin(currentUser.getName())).thenReturn(new OriginEntity()
             .setId(UUID.randomUUID())
             .setName(currentUser.getName()));
@@ -297,6 +291,7 @@ public class FactCreateHandlerTest {
 
   @Test
   public void testResolveSubjectsFailsOnUnresolved() throws Exception {
+    when(subjectResolver.resolveSubject(notNull(), isA(UUID.class))).thenReturn(null);
     when(subjectResolver.resolveSubject(notNull(), isA(String.class))).thenReturn(Subject.builder().build());
 
     List<String> acl = list(UUID.randomUUID().toString(), "name", UUID.randomUUID().toString());

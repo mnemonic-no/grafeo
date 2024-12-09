@@ -11,16 +11,18 @@ import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.Object
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.ObjectFactTypeResolver.ObjectTypeStruct;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ElementFactoryTest {
 
   @Mock
@@ -38,10 +40,8 @@ public class ElementFactoryTest {
 
   private ElementFactory elementFactory;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    initMocks(this);
-
     ObjectFactGraph graph = ObjectFactGraph.builder()
             .setObjectFactDao(objectFactDao)
             .setObjectTypeFactResolver(objectFactTypeResolver)

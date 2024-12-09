@@ -1,22 +1,22 @@
 package no.mnemonic.services.grafeo.service.providers;
 
 import no.mnemonic.commons.utilities.lambda.LambdaUtils;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HazelcastBasedLockProviderTest {
 
   private static HazelcastInstanceProvider hazelcastInstanceProvider;
   private HazelcastBasedLockProvider lockProvider;
 
-  @BeforeClass
+  @BeforeAll
   public static void initialize() {
     hazelcastInstanceProvider = new HazelcastInstanceProvider(
             UUID.randomUUID().toString(),
@@ -28,12 +28,12 @@ public class HazelcastBasedLockProviderTest {
     hazelcastInstanceProvider.startComponent();
   }
 
-  @AfterClass
+  @AfterAll
   public static void shutdown() {
     if (hazelcastInstanceProvider != null) hazelcastInstanceProvider.stopComponent();
   }
 
-  @Before
+  @BeforeEach
   public void setUp() {
     lockProvider = new HazelcastBasedLockProvider(hazelcastInstanceProvider.get())
             .setLockWaitTimeoutSeconds(1)

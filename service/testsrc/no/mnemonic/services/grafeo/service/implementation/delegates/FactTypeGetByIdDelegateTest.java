@@ -7,15 +7,18 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.FactTypeResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactTypeGetByIdDelegateTest {
 
   @Mock
@@ -24,22 +27,13 @@ public class FactTypeGetByIdDelegateTest {
   private FactTypeResponseConverter factTypeResponseConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private FactTypeGetByIdDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new FactTypeGetByIdDelegate(
-      securityContext,
-      factTypeResponseConverter,
-      factTypeRequestResolver);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchFactTypeWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoType);
-    delegate.handle(new GetFactTypeByIdRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new GetFactTypeByIdRequest()));
   }
 
   @Test

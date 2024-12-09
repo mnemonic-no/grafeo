@@ -13,9 +13,9 @@ import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
 import no.mnemonic.services.grafeo.service.Service;
 import no.mnemonic.services.grafeo.service.TestSecurityContext;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RuntimeExceptionHandlerAspectTest {
 

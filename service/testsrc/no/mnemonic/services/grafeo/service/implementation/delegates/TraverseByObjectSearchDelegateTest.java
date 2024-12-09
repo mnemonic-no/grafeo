@@ -17,20 +17,23 @@ import no.mnemonic.services.grafeo.service.implementation.converters.request.Sea
 import no.mnemonic.services.grafeo.service.implementation.handlers.TraverseGraphHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.AccessControlCriteriaResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.IndexSelectCriteriaResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Iterator;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class TraverseByObjectSearchDelegateTest {
 
   private final AccessControlCriteria accessControlCriteria = AccessControlCriteria.builder()
@@ -51,30 +54,13 @@ public class TraverseByObjectSearchDelegateTest {
   private AccessControlCriteriaResolver accessControlCriteriaResolver;
   @Mock
   private IndexSelectCriteriaResolver indexSelectCriteriaResolver;
-
+  @InjectMocks
   private TraverseByObjectSearchDelegate delegate;
 
-  @Before
+  @BeforeEach
   public void setup() throws Exception {
-    initMocks(this);
-
-    when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
-    when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any())).thenReturn(indexSelectCriteria);
-
-    // Mocks required for request converter.
-    when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
-            .setLimit(25)
-            .setAccessControlCriteria(accessControlCriteria)
-            .setIndexSelectCriteria(indexSelectCriteria)
-            .build());
-
-    delegate = new TraverseByObjectSearchDelegate(
-            securityContext,
-            traverseGraphHandler,
-            requestConverter,
-            objectFactDao,
-            accessControlCriteriaResolver,
-            indexSelectCriteriaResolver);
+    lenient().when(accessControlCriteriaResolver.get()).thenReturn(accessControlCriteria);
+    lenient().when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any())).thenReturn(indexSelectCriteria);
   }
 
   @Test
@@ -85,6 +71,11 @@ public class TraverseByObjectSearchDelegateTest {
 
   @Test
   public void testTraverseGraphByObjectSearchWithoutSearchResult() throws Exception {
+    when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
+            .setLimit(25)
+            .setAccessControlCriteria(accessControlCriteria)
+            .setIndexSelectCriteria(indexSelectCriteria)
+            .build());
     when(objectFactDao.searchObjects(any())).thenReturn(ResultContainer.<ObjectRecord>builder().build());
 
     ResultSet<?> result = delegate.handle(new TraverseGraphByObjectSearchRequest().setSearch(new SearchObjectRequest()));

@@ -10,18 +10,22 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.OriginResponseConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OriginSearchDelegateTest {
 
   @Mock
@@ -30,24 +34,20 @@ public class OriginSearchDelegateTest {
   private OriginManager originManager;
   @Mock
   private OriginResponseConverter originResponseConverter;
-
+  @InjectMocks
   private OriginSearchDelegate delegate;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
-    when(originManager.fetchOrigins()).thenReturn(createEntities());
-    when(originResponseConverter.apply(notNull())).thenReturn(Origin.builder().build());
-    when(securityContext.hasReadPermission(isA(OriginEntity.class))).thenReturn(true);
-
-    delegate = new OriginSearchDelegate(securityContext, originManager, originResponseConverter);
+    lenient().when(originManager.fetchOrigins()).thenReturn(createEntities());
+    lenient().when(originResponseConverter.apply(notNull())).thenReturn(Origin.builder().build());
+    lenient().when(securityContext.hasReadPermission(isA(OriginEntity.class))).thenReturn(true);
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testSearchOriginWithoutGeneralViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoOrigin);
-    delegate.handle(new SearchOriginRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchOriginRequest()));
   }
 
   @Test

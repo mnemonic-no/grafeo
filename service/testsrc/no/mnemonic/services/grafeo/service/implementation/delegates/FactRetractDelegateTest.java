@@ -18,20 +18,24 @@ import no.mnemonic.services.grafeo.service.implementation.converters.response.Fa
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactCreateHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import java.time.Clock;
 import java.util.Objects;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class FactRetractDelegateTest {
 
   @Mock
@@ -48,8 +52,8 @@ public class FactRetractDelegateTest {
   private GrafeoSecurityContext securityContext;
   @Mock
   private TriggerContext triggerContext;
-  @Mock
-  private Clock clock;
+  @InjectMocks
+  private FactRetractDelegate delegate;
 
   private final OriginEntity origin = new OriginEntity()
           .setId(UUID.randomUUID())
@@ -64,38 +68,20 @@ public class FactRetractDelegateTest {
           .setName("subject")
           .build();
 
-  private FactRetractDelegate delegate;
-
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new FactRetractDelegate(
-            securityContext,
-            triggerContext,
-            objectFactDao,
-            factTypeRequestResolver,
-            factRequestResolver,
-            factCreateHandler,
-            factResponseConverter
-    ).withClock(clock);
-
-    when(clock.millis()).thenReturn(1000L, 2000L, 3000L);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testRetractFactNoAccessToFact() throws Exception {
     RetractFactRequest request = mockRetractingFact();
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
-    delegate.handle(request);
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testRetractFactWithoutAddPermission() throws Exception {
     RetractFactRequest request = mockRetractingFact();
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.addGrafeoFact, organization.getId());
 
-    delegate.handle(request);
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
   }
 
   @Test

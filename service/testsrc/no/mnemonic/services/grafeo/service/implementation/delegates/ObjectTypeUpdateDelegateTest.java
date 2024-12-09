@@ -11,17 +11,18 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.handlers.ObjectTypeHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.ObjectTypeRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectTypeUpdateDelegateTest {
 
   @Mock
@@ -34,39 +35,27 @@ public class ObjectTypeUpdateDelegateTest {
   private ObjectTypeResponseConverter objectTypeResponseConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private ObjectTypeUpdateDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new ObjectTypeUpdateDelegate(
-      securityContext,
-      objectManager,
-      objectTypeResponseConverter,
-      objectTypeRequestResolver,
-      objectTypeHandler);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testUpdateObjectTypeWithoutPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateGrafeoType);
-    delegate.handle(createRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(createRequest()));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
+  @Test
   public void testUpdateObjectTypeNotExisting() throws Exception {
     UpdateObjectTypeRequest request = createRequest();
     when(objectTypeRequestResolver.fetchExistingObjectType(request.getId())).thenThrow(ObjectNotFoundException.class);
-    delegate.handle(request);
+    assertThrows(ObjectNotFoundException.class, () -> delegate.handle(request));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testUpdateObjectTypeWithExistingName() throws Exception {
     UpdateObjectTypeRequest request = createRequest();
-    when(objectManager.getObjectType(request.getId())).thenReturn(new ObjectTypeEntity());
     doThrow(InvalidArgumentException.class).when(objectTypeHandler).assertObjectTypeNotExists(request.getName());
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
   @Test

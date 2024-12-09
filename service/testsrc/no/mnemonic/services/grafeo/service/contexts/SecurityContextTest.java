@@ -12,19 +12,21 @@ import no.mnemonic.services.grafeo.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.services.grafeo.api.exceptions.UnexpectedAuthenticationFailedException;
 import no.mnemonic.services.grafeo.auth.IdentitySPI;
 import no.mnemonic.services.grafeo.service.TestSecurityContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.service.implementation.FunctionConstants.viewGrafeoFact;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 @SuppressWarnings("unchecked")
+@ExtendWith(MockitoExtension.class)
 public class SecurityContextTest {
 
   @Mock
@@ -42,36 +44,35 @@ public class SecurityContextTest {
 
   private SecurityContext context;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
     context = new TestSecurityContext(accessController, identityResolver, credentials);
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateContextWithoutAccessControllerThrowsException() {
-    new TestSecurityContext(null, identityResolver, credentials);
+    assertThrows(RuntimeException.class, () -> new TestSecurityContext(null, identityResolver, credentials));
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateContextWithoutIdentityResolverThrowsException() {
-    new TestSecurityContext(accessController, null, credentials);
+    assertThrows(RuntimeException.class, () -> new TestSecurityContext(accessController, null, credentials));
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreateContextWithoutCredentialsThrowsException() {
-    new TestSecurityContext(accessController, identityResolver, null);
+    assertThrows(RuntimeException.class, () -> new TestSecurityContext(accessController, identityResolver, null));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testGetContextNotSet() {
-    SecurityContext.get();
+    assertThrows(IllegalStateException.class, SecurityContext::get);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testSetContextTwice() {
     try (SecurityContext ignored = SecurityContext.set(context)) {
-      SecurityContext.set(context);
+      assertThrows(IllegalStateException.class, () -> SecurityContext.set(context));
     }
   }
 
@@ -109,16 +110,16 @@ public class SecurityContextTest {
     verify(accessController).hasPermission(credentials, viewGrafeoFact);
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCheckPermissionThrowsAccessDeniedException() throws Exception {
     when(accessController.hasPermission(credentials, viewGrafeoFact)).thenReturn(false);
-    context.checkPermission(viewGrafeoFact);
+    assertThrows(AccessDeniedException.class, () -> context.checkPermission(viewGrafeoFact));
   }
 
-  @Test(expected = AuthenticationFailedException.class)
+  @Test
   public void testCheckPermissionThrowsAuthenticationFailedException() throws Exception {
     when(accessController.hasPermission(credentials, viewGrafeoFact)).thenThrow(InvalidCredentialsException.class);
-    context.checkPermission(viewGrafeoFact);
+    assertThrows(AuthenticationFailedException.class, () -> context.checkPermission(viewGrafeoFact));
   }
 
   @Test
@@ -130,20 +131,20 @@ public class SecurityContextTest {
     verify(accessController).hasPermission(credentials, viewGrafeoFact, organization);
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCheckPermissionForOrganizationThrowsAccessDeniedException() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
     when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenReturn(false);
-    context.checkPermission(viewGrafeoFact, organizationID);
+    assertThrows(AccessDeniedException.class, () -> context.checkPermission(viewGrafeoFact, organizationID));
   }
 
-  @Test(expected = AuthenticationFailedException.class)
+  @Test
   public void testCheckPermissionForOrganizationThrowsAuthenticationFailedException() throws Exception {
     UUID organizationID = UUID.randomUUID();
     when(identityResolver.resolveOrganizationIdentity(organizationID)).thenReturn(organization);
     when(accessController.hasPermission(credentials, viewGrafeoFact, organization)).thenThrow(InvalidCredentialsException.class);
-    context.checkPermission(viewGrafeoFact, organizationID);
+    assertThrows(AuthenticationFailedException.class, () -> context.checkPermission(viewGrafeoFact, organizationID));
   }
 
   @Test
@@ -154,10 +155,10 @@ public class SecurityContextTest {
     assertEquals(currentUserID, context.getCurrentUserID());
   }
 
-  @Test(expected = UnexpectedAuthenticationFailedException.class)
+  @Test
   public void testGetCurrentUserIdThrowsUnexpectedAuthenticationFailedException() throws Exception {
     when(accessController.validate(credentials)).thenThrow(InvalidCredentialsException.class);
-    context.getCurrentUserID();
+    assertThrows(UnexpectedAuthenticationFailedException.class, () -> context.getCurrentUserID());
   }
 
   @Test
@@ -168,10 +169,10 @@ public class SecurityContextTest {
     assertEquals(SetUtils.set(subjectID), context.getCurrentUserIdentities());
   }
 
-  @Test(expected = UnexpectedAuthenticationFailedException.class)
+  @Test
   public void testGetCurrentUserIdentitiesThrowsUnexpectedAuthenticationFailedException() throws Exception {
     when(accessController.getSubjectIdentities(credentials)).thenThrow(InvalidCredentialsException.class);
-    context.getCurrentUserIdentities();
+    assertThrows(UnexpectedAuthenticationFailedException.class, () -> context.getCurrentUserIdentities());
   }
 
   @Test
@@ -182,10 +183,10 @@ public class SecurityContextTest {
     assertEquals(SetUtils.set(organizationID), context.getAvailableOrganizationID());
   }
 
-  @Test(expected = UnexpectedAuthenticationFailedException.class)
+  @Test
   public void testGetAvailableOrganizationIdThrowsUnexpectedAuthenticationFailedException() throws Exception {
     when(accessController.getAvailableOrganizations(credentials)).thenThrow(InvalidCredentialsException.class);
-    context.getAvailableOrganizationID();
+    assertThrows(UnexpectedAuthenticationFailedException.class, () -> context.getAvailableOrganizationID());
   }
 
 }

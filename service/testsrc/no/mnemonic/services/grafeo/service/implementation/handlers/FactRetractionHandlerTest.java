@@ -5,20 +5,23 @@ import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactRetractionHandlerTest {
 
   @Mock
@@ -27,21 +30,17 @@ public class FactRetractionHandlerTest {
   private GrafeoSecurityContext securityContext;
   @Mock
   private ObjectFactDao objectFactDao;
-
+  @InjectMocks
   private FactRetractionHandler handler;
 
   private final UUID retractionFactTypeID = UUID.randomUUID();
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
     // Common mocks used by most tests.
-    when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(retractionFactTypeID));
-    when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-    when(objectFactDao.retrieveMetaFacts(any())).thenReturn(Collections.emptyIterator());
-
-    handler = new FactRetractionHandler(factTypeRequestResolver, securityContext, objectFactDao);
+    lenient().when(factTypeRequestResolver.resolveRetractionFactType()).thenReturn(new FactTypeEntity().setId(retractionFactTypeID));
+    lenient().when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
+    lenient().when(objectFactDao.retrieveMetaFacts(any())).thenReturn(Collections.emptyIterator());
   }
 
   @Test

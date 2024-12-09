@@ -11,18 +11,21 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.AclEntryResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactGetAclDelegateTest {
 
   @Mock
@@ -31,31 +34,25 @@ public class FactGetAclDelegateTest {
   private AclEntryResponseConverter aclEntryResponseConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private FactGetAclDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new FactGetAclDelegate(securityContext, factRequestResolver, aclEntryResponseConverter);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testGetFactAclNoAccessToFact() throws Exception {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
-    delegate.handle(request);
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testGetFactAclNoViewPermission() throws Exception {
     GetFactAclRequest request = new GetFactAclRequest().setFact(UUID.randomUUID());
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(FunctionConstants.viewGrafeoFactAccess), any());
 
-    delegate.handle(request);
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
   }
 
   @Test

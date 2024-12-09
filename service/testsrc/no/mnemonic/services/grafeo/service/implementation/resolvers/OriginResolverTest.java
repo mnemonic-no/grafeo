@@ -8,16 +8,19 @@ import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
 import no.mnemonic.services.grafeo.auth.SubjectSPI;
 import no.mnemonic.services.grafeo.dao.cassandra.OriginManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OriginResolverTest {
 
   @Mock
@@ -26,7 +29,7 @@ public class OriginResolverTest {
   private SubjectSPI subjectResolver;
   @Mock
   private ServiceAccountSPI credentialsResolver;
-
+  @InjectMocks
   private OriginResolver resolver;
 
   private final OriginEntity groupOrigin = new OriginEntity()
@@ -38,11 +41,9 @@ public class OriginResolverTest {
           .setName("originalName")
           .setOrganizationID(UUID.randomUUID());
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-    when(credentialsResolver.get()).thenReturn(new Credentials() {});
-    resolver = new OriginResolver(originManager, subjectResolver, credentialsResolver);
+    lenient().when(credentialsResolver.get()).thenReturn(new Credentials() {});
   }
 
   @Test

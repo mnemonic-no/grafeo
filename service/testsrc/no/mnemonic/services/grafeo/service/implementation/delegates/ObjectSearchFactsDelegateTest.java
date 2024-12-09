@@ -17,17 +17,19 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.request.SearchObjectFactsRequestConverter;
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactSearchHandler;
 import no.mnemonic.services.grafeo.service.implementation.handlers.ObjectTypeHandler;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectSearchFactsDelegateTest {
 
   @Mock
@@ -40,38 +42,27 @@ public class ObjectSearchFactsDelegateTest {
   private ObjectTypeHandler objectTypeHandler;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private ObjectSearchFactsDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new ObjectSearchFactsDelegate(
-      securityContext,
-      objectFactDao,
-      requestConverter,
-      factSearchHandler,
-      objectTypeHandler);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testSearchObjectFactsWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
-    delegate.handle(new SearchObjectFactsRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new SearchObjectFactsRequest()));
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testSearchObjectFactsWithoutSpecifiedObject() throws Exception {
-    delegate.handle(new SearchObjectFactsRequest());
+  @Test
+  public void testSearchObjectFactsWithoutSpecifiedObject() {
+    assertThrows(IllegalArgumentException.class, () -> delegate.handle(new SearchObjectFactsRequest()));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testSearchObjectFactsWithNonExistingObjectType() throws Exception {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
 
     doThrow(InvalidArgumentException.class).when(objectTypeHandler).assertObjectTypeExists(request.getObjectType(), "objectType");
 
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
   @Test
@@ -79,12 +70,8 @@ public class ObjectSearchFactsDelegateTest {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectID(UUID.randomUUID());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
-    try {
-      delegate.handle(request);
-      fail();
-    } catch (AccessDeniedException ignored) {
-      verify(objectFactDao).getObject(request.getObjectID());
-    }
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
+    verify(objectFactDao).getObject(request.getObjectID());
   }
 
   @Test
@@ -92,17 +79,15 @@ public class ObjectSearchFactsDelegateTest {
     SearchObjectFactsRequest request = new SearchObjectFactsRequest().setObjectType("type").setObjectValue("value");
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
-    try {
-      delegate.handle(request);
-      fail();
-    } catch (AccessDeniedException ignored) {
-      verify(objectTypeHandler).assertObjectTypeExists(request.getObjectType(), "objectType");
-      verify(objectFactDao).getObject(request.getObjectType(), request.getObjectValue());
-    }
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
+    verify(objectTypeHandler).assertObjectTypeExists(request.getObjectType(), "objectType");
+    verify(objectFactDao).getObject(request.getObjectType(), request.getObjectValue());
   }
 
   @Test
   public void testSearchObjectFactsByIdPopulateCriteria() throws Exception {
+    when(objectFactDao.getObject(any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
+
     SearchObjectFactsRequest request = new SearchObjectFactsRequest()
             .setObjectID(UUID.randomUUID());
     testPopulateCriteria(request);
@@ -110,6 +95,8 @@ public class ObjectSearchFactsDelegateTest {
 
   @Test
   public void testSearchObjectFactsByTypeValuePopulateCriteria() throws Exception {
+    when(objectFactDao.getObject(any(), any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
+
     SearchObjectFactsRequest request = new SearchObjectFactsRequest()
             .setObjectType("type")
             .setObjectValue("value");
@@ -118,6 +105,8 @@ public class ObjectSearchFactsDelegateTest {
 
   @Test
   public void testSearchObjectFactsById() throws Exception {
+    when(objectFactDao.getObject(any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
+
     SearchObjectFactsRequest request = new SearchObjectFactsRequest()
             .setObjectID(UUID.randomUUID())
             .setIncludeRetracted(true);
@@ -126,6 +115,8 @@ public class ObjectSearchFactsDelegateTest {
 
   @Test
   public void testSearchObjectFactsByTypeValue() throws Exception {
+    when(objectFactDao.getObject(any(), any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
+
     SearchObjectFactsRequest request = new SearchObjectFactsRequest()
             .setObjectType("type")
             .setObjectValue("value")
@@ -158,9 +149,6 @@ public class ObjectSearchFactsDelegateTest {
   }
 
   private void mockSearchObjectFacts() throws Exception {
-    when(objectFactDao.getObject(any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
-    when(objectFactDao.getObject(any(), any())).thenReturn(new ObjectRecord().setId(UUID.randomUUID()));
-
     when(requestConverter.apply(any())).thenReturn(FactSearchCriteria.builder()
             .setAccessControlCriteria(AccessControlCriteria.builder()
                     .addCurrentUserIdentity(UUID.randomUUID())

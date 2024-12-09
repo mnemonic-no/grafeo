@@ -5,18 +5,20 @@ import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.grafeo.api.model.v1.Organization;
 import no.mnemonic.services.grafeo.auth.OrganizationSPI;
 import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OrganizationByIdResponseResolverTest {
 
   @Mock
@@ -27,10 +29,9 @@ public class OrganizationByIdResponseResolverTest {
   private Map<UUID, Organization> responseCache;
   private OrganizationByIdResponseResolver converter;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    initMocks(this);
-    when(credentialsResolver.get()).thenReturn(new Credentials() {});
+    lenient().when(credentialsResolver.get()).thenReturn(new Credentials() {});
     responseCache = new HashMap<>();
     converter = new OrganizationByIdResponseResolver(organizationResolver, credentialsResolver, responseCache);
   }

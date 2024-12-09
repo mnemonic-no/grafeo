@@ -13,20 +13,23 @@ import no.mnemonic.services.grafeo.dao.api.result.ResultContainer;
 import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.FactResponseConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactSearchHandlerTest {
 
   @Mock
@@ -37,17 +40,13 @@ public class FactSearchHandlerTest {
   private GrafeoSecurityContext securityContext;
   @Mock
   private FactResponseConverter factResponseConverter;
-
+  @InjectMocks
   private FactSearchHandler handler;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
-    when(factResponseConverter.apply(notNull())).thenReturn(Fact.builder().build());
-    when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
-
-    handler = new FactSearchHandler(retractionHandler, objectFactDao, securityContext, factResponseConverter);
+    lenient().when(factResponseConverter.apply(notNull())).thenReturn(Fact.builder().build());
+    lenient().when(securityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
   }
 
   @Test

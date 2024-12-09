@@ -3,14 +3,15 @@ package no.mnemonic.services.grafeo.service.scopes;
 import com.google.inject.Key;
 import com.google.inject.OutOfScopeException;
 import com.google.inject.Provider;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ServiceRequestScopeImplTest {
 
   @Mock
@@ -19,11 +20,6 @@ public class ServiceRequestScopeImplTest {
   private final ServiceRequestScopeImpl scope = new ServiceRequestScopeImpl();
   private final Key<Object> key = Key.get(Object.class);
   private final Object seed = new Object();
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-  }
 
   @Test
   public void testEnterAndExitScope() {
@@ -34,14 +30,14 @@ public class ServiceRequestScopeImplTest {
     assertFalse(scope.isInsideScope());
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testEnterScopeTwice() {
-    executeInsideScope(scope::enter);
+    assertThrows(IllegalStateException.class, () -> executeInsideScope(scope::enter));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testExitNotEnteredScope() {
-    scope.exit();
+    assertThrows(IllegalStateException.class, scope::exit);
   }
 
   @Test
@@ -73,22 +69,22 @@ public class ServiceRequestScopeImplTest {
     });
   }
 
-  @Test(expected = OutOfScopeException.class)
+  @Test
   public void testProviderNotEnteredScope() {
-    scope.scope(key, unscopedProvider).get();
+    assertThrows(OutOfScopeException.class, () -> scope.scope(key, unscopedProvider).get());
   }
 
-  @Test(expected = OutOfScopeException.class)
+  @Test
   public void testSeedNotEnteredScope() {
-    scope.seed(key, seed);
+    assertThrows(OutOfScopeException.class, () -> scope.seed(key, seed));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testSeedObjectTwice() {
-    executeInsideScope(() -> {
+    assertThrows(IllegalStateException.class, () -> executeInsideScope(() -> {
       scope.seed(key, seed);
       scope.seed(key, seed);
-    });
+    }));
   }
 
   private void executeInsideScope(Runnable test) {

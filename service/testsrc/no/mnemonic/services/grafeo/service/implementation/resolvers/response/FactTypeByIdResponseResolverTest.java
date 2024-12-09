@@ -4,18 +4,20 @@ import no.mnemonic.services.grafeo.api.model.v1.FactType;
 import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.FactTypeResponseConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactTypeByIdResponseResolverTest {
 
   @Mock
@@ -26,9 +28,8 @@ public class FactTypeByIdResponseResolverTest {
   private Map<UUID, FactType> responseCache;
   private FactTypeByIdResponseResolver converter;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    initMocks(this);
     responseCache = new HashMap<>();
     converter = new FactTypeByIdResponseResolver(factManager, factTypeResponseConverter, responseCache);
   }

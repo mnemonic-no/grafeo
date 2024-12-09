@@ -7,9 +7,9 @@ import com.google.inject.name.Names;
 import no.mnemonic.services.common.auth.AccessController;
 import no.mnemonic.services.grafeo.auth.OrganizationSPI;
 import no.mnemonic.services.grafeo.auth.SubjectSPI;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class PropertiesBasedAccessControllerModuleTest {
 

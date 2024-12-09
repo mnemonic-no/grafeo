@@ -10,17 +10,19 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.FactCommentResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactCreateCommentDelegateTest {
 
   @Mock
@@ -31,39 +33,33 @@ public class FactCreateCommentDelegateTest {
   private FactCommentResponseConverter factCommentResponseConverter;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private FactCreateCommentDelegate delegate;
 
-  @Before
-  public void setup() {
-    initMocks(this);
-    delegate = new FactCreateCommentDelegate(securityContext, objectFactDao, factRequestResolver, factCommentResponseConverter);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateFactCommentNoAccessToFact() throws Exception {
     CreateFactCommentRequest request = createFactCommentRequest();
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(isA(FactRecord.class));
 
-    delegate.handle(request);
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testCreateFactCommentNoAddPermission() throws Exception {
     CreateFactCommentRequest request = createFactCommentRequest();
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(new FactRecord());
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(eq(FunctionConstants.addGrafeoFactComment), any());
 
-    delegate.handle(request);
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test
   public void testCreateFactCommentReplyToNotExists() throws Exception {
     CreateFactCommentRequest request = createFactCommentRequest();
     when(factRequestResolver.resolveFact(request.getFact())).thenReturn(createFactRecord(request.getFact(), UUID.randomUUID()));
 
-    delegate.handle(request);
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
   }
 
   @Test

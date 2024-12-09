@@ -6,35 +6,27 @@ import no.mnemonic.services.grafeo.api.model.v1.Subject;
 import no.mnemonic.services.grafeo.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.OriginByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.SubjectByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class AclEntryResponseConverterTest {
 
   @Mock
   private OriginByIdResponseResolver originConverter;
   @Mock
   private SubjectByIdResponseResolver subjectConverter;
-
+  @InjectMocks
   private AclEntryResponseConverter converter;
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-
-    when(originConverter.apply(notNull())).thenAnswer(i -> Origin.builder().setId(i.getArgument(0)).build());
-    when(subjectConverter.apply(notNull())).thenAnswer(i -> Subject.builder().setId(i.getArgument(0)).build());
-
-    converter = new AclEntryResponseConverter(originConverter, subjectConverter);
-  }
 
   @Test
   public void testConvertNull() {
@@ -48,6 +40,9 @@ public class AclEntryResponseConverterTest {
 
   @Test
   public void testConvertFull() {
+    when(originConverter.apply(notNull())).thenAnswer(i -> Origin.builder().setId(i.getArgument(0)).build());
+    when(subjectConverter.apply(notNull())).thenAnswer(i -> Subject.builder().setId(i.getArgument(0)).build());
+
     FactAclEntryRecord record = createRecord();
     assertModel(record, converter.apply(record));
   }

@@ -2,9 +2,8 @@ package no.mnemonic.services.grafeo.auth.properties.internal;
 
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.FileWriter;
 import java.nio.file.Files;
@@ -12,27 +11,21 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PropertiesFileParserTest {
 
-  private PropertiesFileParser parser;
+  private final PropertiesFileParser parser = new PropertiesFileParser();
   private Path propertiesFile;
 
-  @Before
-  public void setUp() {
-    parser = new PropertiesFileParser();
-  }
-
-  @After
+  @AfterEach
   public void cleanUp() throws Exception {
     if (propertiesFile != null) Files.deleteIfExists(propertiesFile);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testParsePropertiesFileNotExists() throws Exception {
-    parser.parse("/non/existing/file.properties");
+  @Test
+  public void testParsePropertiesFileNotExists() {
+    assertThrows(IllegalArgumentException.class, () -> parser.parse("/non/existing/file.properties"));
   }
 
   @Test
@@ -77,56 +70,70 @@ public class PropertiesFileParserTest {
 
   @Test
   public void testParsingOrganizationGroup() throws Exception {
-    String content = "organization.123.name = test\n" +
-            "organization.123.type = group\n" +
-            "organization.123.members = 1,2,3";
+    String content = """
+            organization.123.name = test
+            organization.123.type = group
+            organization.123.members = 1,2,3
+            """;
     assertOrganization(parseOrganizations(content));
   }
 
   @Test
   public void testParsingOrganizationGroupTrimMembers() throws Exception {
-    String content = "organization.123.name = test\n" +
-            "organization.123.type = group\n" +
-            "organization.123.members = 1 , 2 , 3 ";
+    String content = """
+            organization.123.name = test
+            organization.123.type = group
+            organization.123.members = 1 , 2 , 3\s
+            """;
     assertOrganization(parseOrganizations(content));
   }
 
   @Test
   public void testParsingOrganizationGroupSkipEmptyMembers() throws Exception {
-    String content = "organization.123.name = test\n" +
-            "organization.123.type = group\n" +
-            "organization.123.members = ,1, ,2, ,3, ";
+    String content = """
+            organization.123.name = test
+            organization.123.type = group
+            organization.123.members = ,1, ,2, ,3,\s
+            """;
     assertOrganization(parseOrganizations(content));
   }
 
   @Test
   public void testParsingOrganizationGroupSkipNegativeMembers() throws Exception {
-    String content = "organization.123.name = test\n" +
-            "organization.123.type = group\n" +
-            "organization.123.members = 1,2,3,-4,-5";
+    String content = """
+            organization.123.name = test
+            organization.123.type = group
+            organization.123.members = 1,2,3,-4,-5
+            """;
     assertOrganization(parseOrganizations(content));
   }
 
   @Test
   public void testParsingOrganizationGroupSkipUnparseableMembers() throws Exception {
-    String content = "organization.123.name = test\n" +
-            "organization.123.type = group\n" +
-            "organization.123.members = 1,2,3,test,wrong";
+    String content = """
+            organization.123.name = test
+            organization.123.type = group
+            organization.123.members = 1,2,3,test,wrong
+            """;
     assertOrganization(parseOrganizations(content));
   }
 
   @Test
   public void testParsingOrganizationGroupWithEmptyMembers() throws Exception {
-    String content = "organization.123.name = test\n" +
-            "organization.123.type = group\n" +
-            "organization.123.members = ";
+    String content = """
+            organization.123.name = test
+            organization.123.type = group
+            organization.123.members =\s
+            """;
     assertEmptyOrganizationGroup(parseOrganizations(content));
   }
 
   @Test
   public void testParsingOrganizationGroupWithoutMembers() throws Exception {
-    String content = "organization.123.name = test\n" +
-            "organization.123.type = group";
+    String content = """
+            organization.123.name = test
+            organization.123.type = group
+            """;
     assertEmptyOrganizationGroup(parseOrganizations(content));
   }
 
@@ -147,100 +154,126 @@ public class PropertiesFileParserTest {
 
   @Test
   public void testParsingSubjectWithAffiliation() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.affiliation = 1";
+    String content = """
+            subject.123.name = test
+            subject.123.affiliation = 1
+            """;
     assertSubjectWithAffiliation(parseSubjects(content), 1);
   }
 
   @Test
   public void testParsingSubjectWithAffiliationTrimId() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.affiliation =    1   ";
+    String content = """
+            subject.123.name = test
+            subject.123.affiliation =    1\s\s\s
+            """;
     assertSubjectWithAffiliation(parseSubjects(content), 1);
   }
 
   @Test
   public void testParsingSubjectWithAffiliationSkipEmptyId() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.affiliation = ";
+    String content = """
+            subject.123.name = test
+            subject.123.affiliation =\s
+            """;
     assertSubjectWithAffiliation(parseSubjects(content), 0);
   }
 
   @Test
   public void testParsingSubjectWithAffiliationSkipNegativeId() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.affiliation = -1";
+    String content = """
+            subject.123.name = test
+            subject.123.affiliation = -1
+            """;
     assertSubjectWithAffiliation(parseSubjects(content), 0);
   }
 
   @Test
   public void testParsingSubjectWithAffiliationSkipUnparseableId() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.affiliation = wrong";
+    String content = """
+            subject.123.name = test
+            subject.123.affiliation = wrong
+            """;
     assertSubjectWithAffiliation(parseSubjects(content), 0);
   }
 
   @Test
   public void testParsingSubjectGroup() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.type = group\n" +
-            "subject.123.members = 1,2,3";
+    String content = """
+            subject.123.name = test
+            subject.123.type = group
+            subject.123.members = 1,2,3
+            """;
     assertSubject(parseSubjects(content));
   }
 
   @Test
   public void testParsingSubjectGroupTrimMembers() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.type = group\n" +
-            "subject.123.members = 1 , 2 , 3 ";
+    String content = """
+            subject.123.name = test
+            subject.123.type = group
+            subject.123.members = 1 , 2 , 3\s
+            """;
     assertSubject(parseSubjects(content));
   }
 
   @Test
   public void testParsingSubjectGroupSkipEmptyMembers() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.type = group\n" +
-            "subject.123.members = ,1, ,2, ,3, ";
+    String content = """
+            subject.123.name = test
+            subject.123.type = group
+            subject.123.members = ,1, ,2, ,3,\s
+            """;
     assertSubject(parseSubjects(content));
   }
 
   @Test
   public void testParsingSubjectGroupSkipNegativeMembers() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.type = group\n" +
-            "subject.123.members = 1,2,3,-4,-5";
+    String content = """
+            subject.123.name = test
+            subject.123.type = group
+            subject.123.members = 1,2,3,-4,-5
+            """;
     assertSubject(parseSubjects(content));
   }
 
   @Test
   public void testParsingSubjectGroupSkipUnparseableMembers() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.type = group\n" +
-            "subject.123.members = 1,2,3,test,wrong";
+    String content = """
+            subject.123.name = test
+            subject.123.type = group
+            subject.123.members = 1,2,3,test,wrong
+            """;
     assertSubject(parseSubjects(content));
   }
 
   @Test
   public void testParsingSubjectGroupWithEmptyMembers() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.type = group\n" +
-            "subject.123.members = ";
+    String content = """
+            subject.123.name = test
+            subject.123.type = group
+            subject.123.members =\s
+            """;
     assertEmptySubjectGroup(parseSubjects(content));
   }
 
   @Test
   public void testParsingSubjectGroupWithoutMembers() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.type = group";
+    String content = """
+            subject.123.name = test
+            subject.123.type = group
+            """;
     assertEmptySubjectGroup(parseSubjects(content));
   }
 
   @Test
   public void testParsingSubjectPermissions() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.permission.1 = function1,function2,function3\n" +
-            "subject.123.permission.2 = function1 , function2 , function3\n" +
-            "subject.123.permission.3 = ,function1, ,function2, ,function3, ";
+    String content = """
+            subject.123.name = test
+            subject.123.permission.1 = function1,function2,function3
+            subject.123.permission.2 = function1 , function2 , function3
+            subject.123.permission.3 = ,function1, ,function2, ,function3,\s
+            """;
 
     PropertiesSubject subject = parseSubjects(content).iterator().next();
     assertEquals(3, subject.getPermissions().size());
@@ -251,8 +284,10 @@ public class PropertiesFileParserTest {
 
   @Test
   public void testParsingSubjectPermissionsWithoutFunctions() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.permission.1 = ";
+    String content = """
+            subject.123.name = test
+            subject.123.permission.1 =\s
+            """;
 
     PropertiesSubject subject = parseSubjects(content).iterator().next();
     assertEquals(1, subject.getPermissions().size());
@@ -261,8 +296,10 @@ public class PropertiesFileParserTest {
 
   @Test
   public void testParsingSubjectPermissionsSkipNegativeOrganizationId() throws Exception {
-    String content = "subject.123.name = test\n" +
-            "subject.123.permission.-1 = function1,function2,function3";
+    String content = """
+            subject.123.name = test
+            subject.123.permission.-1 = function1,function2,function3
+            """;
 
     PropertiesSubject subject = parseSubjects(content).iterator().next();
     assertEquals(0, subject.getPermissions().size());

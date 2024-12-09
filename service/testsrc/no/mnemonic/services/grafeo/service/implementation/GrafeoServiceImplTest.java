@@ -7,14 +7,16 @@ import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
 import no.mnemonic.services.grafeo.auth.IdentitySPI;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.service.implementation.delegates.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class GrafeoServiceImplTest {
 
   @Mock
@@ -27,19 +29,8 @@ public class GrafeoServiceImplTest {
   private ObjectFactDao objectFactDao;
   @Mock
   private DelegateProvider delegateProvider;
-
+  @InjectMocks
   private GrafeoServiceImpl service;
-
-  @Before
-  public void initialize() {
-    initMocks(this);
-    service = new GrafeoServiceImpl(
-            accessController,
-            identityResolver,
-            objectFactDao,
-            delegateProvider
-    );
-  }
 
   @Test
   public void testCreateSecurityContext() {

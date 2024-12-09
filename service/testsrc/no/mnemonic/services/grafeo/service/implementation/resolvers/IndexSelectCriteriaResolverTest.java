@@ -2,20 +2,22 @@ package no.mnemonic.services.grafeo.service.implementation.resolvers;
 
 import no.mnemonic.services.grafeo.api.exceptions.InvalidArgumentException;
 import no.mnemonic.services.grafeo.dao.api.criteria.IndexSelectCriteria;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import static no.mnemonic.services.grafeo.service.implementation.resolvers.IndexSelectCriteriaResolver.MAXIMUM_INDEX_RETENTION_DAYS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class IndexSelectCriteriaResolverTest {
 
   private static final Instant NOW = Instant.parse("2022-01-01T12:00:00Z");
@@ -25,10 +27,8 @@ public class IndexSelectCriteriaResolverTest {
 
   private IndexSelectCriteriaResolver resolver;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
     when(clock.instant()).thenReturn(NOW);
 
     resolver = new IndexSelectCriteriaResolver().withClock(clock);

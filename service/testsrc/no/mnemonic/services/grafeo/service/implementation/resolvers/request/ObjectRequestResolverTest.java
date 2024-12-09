@@ -8,17 +8,19 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.service.providers.LockProvider;
 import no.mnemonic.services.grafeo.service.validators.Validator;
 import no.mnemonic.services.grafeo.service.validators.ValidatorFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectRequestResolverTest {
 
   @Mock
@@ -29,14 +31,8 @@ public class ObjectRequestResolverTest {
   private ValidatorFactory validatorFactory;
   @Mock
   private LockProvider lockProvider;
-
+  @InjectMocks
   private ObjectRequestResolver resolver;
-
-  @Before
-  public void initialize() {
-    initMocks(this);
-    resolver = new ObjectRequestResolver(objectManager, objectFactDao, validatorFactory, lockProvider);
-  }
 
   @Test
   public void testResolveObjectWithInvalidInput() throws Exception {
@@ -91,13 +87,10 @@ public class ObjectRequestResolverTest {
 
   @Test
   public void testCreateMissingObjectFailsOnMissingObjectType() {
-    try {
-      resolver.resolveObject("ObjectType/ObjectValue", "object");
-      fail();
-    } catch (InvalidArgumentException ex) {
-      assertEquals("object.type.not.exist", ex.getValidationErrors().iterator().next().getMessageTemplate());
-      verify(objectFactDao, never()).storeObject(any());
-    }
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
+            () -> resolver.resolveObject("ObjectType/ObjectValue", "object"));
+    assertEquals("object.type.not.exist", ex.getValidationErrors().iterator().next().getMessageTemplate());
+    verify(objectFactDao, never()).storeObject(any());
   }
 
   @Test
@@ -105,13 +98,10 @@ public class ObjectRequestResolverTest {
     ObjectTypeEntity type = mockFetchObjectType();
     mockValidator(false);
 
-    try {
-      resolver.resolveObject(String.format("%s/%s", type.getName(), "ObjectValue"), "object");
-      fail();
-    } catch (InvalidArgumentException ex) {
-      assertEquals("object.not.valid", ex.getValidationErrors().iterator().next().getMessageTemplate());
-      verify(objectFactDao, never()).storeObject(any());
-    }
+    InvalidArgumentException ex = assertThrows(InvalidArgumentException.class,
+            () -> resolver.resolveObject(String.format("%s/%s", type.getName(), "ObjectValue"), "object"));
+    assertEquals("object.not.valid", ex.getValidationErrors().iterator().next().getMessageTemplate());
+    verify(objectFactDao, never()).storeObject(any());
   }
 
   private void mockValidator(boolean valid) {

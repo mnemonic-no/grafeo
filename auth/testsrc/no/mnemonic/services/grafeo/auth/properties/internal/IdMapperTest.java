@@ -1,10 +1,11 @@
 package no.mnemonic.services.grafeo.auth.properties.internal;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class IdMapperTest {
 
@@ -13,9 +14,9 @@ public class IdMapperTest {
     assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), IdMapper.toGlobalID(1));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testToGlobalIdNegativeIdThrowsException() {
-    IdMapper.toGlobalID(-1);
+    assertThrows(IllegalArgumentException.class, () -> IdMapper.toGlobalID(-1));
   }
 
   @Test
@@ -23,19 +24,19 @@ public class IdMapperTest {
     assertEquals(1, IdMapper.toInternalID(UUID.fromString("00000000-0000-0000-0000-000000000001")));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testToInternalIdNullIdThrowsException() {
-    IdMapper.toInternalID(null);
+    assertThrows(IllegalArgumentException.class, () -> IdMapper.toInternalID(null));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testToInternalIdMostSignificantBitsSetThrowsException() {
-    IdMapper.toInternalID(new UUID(1, 1));
+    assertThrows(IllegalArgumentException.class, () -> IdMapper.toInternalID(new UUID(1, 1)));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testToInternalIdLeastSignificantBitsNegativeThrowsException() {
-    IdMapper.toInternalID(new UUID(0, -1));
+    assertThrows(IllegalArgumentException.class, () -> IdMapper.toInternalID(new UUID(0, -1)));
   }
 
 }

@@ -3,27 +3,24 @@ package no.mnemonic.services.grafeo.service.implementation.resolvers.request;
 import no.mnemonic.services.grafeo.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectTypeRequestResolverTest {
 
   @Mock
   private ObjectManager objectManager;
+  @InjectMocks
   private ObjectTypeRequestResolver resolver;
-
-  @Before
-  public void init() {
-    initMocks(this);
-    resolver = new ObjectTypeRequestResolver(objectManager);
-  }
 
   @Test
   public void testFetchExistingObjectType() throws ObjectNotFoundException {

@@ -10,17 +10,20 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.OriginResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.OriginResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OriginUpdateDelegateTest {
 
   @Mock
@@ -31,64 +34,58 @@ public class OriginUpdateDelegateTest {
   private OriginResolver originResolver;
   @Mock
   private OriginResponseConverter originResponseConverter;
-
+  @InjectMocks
   private OriginUpdateDelegate delegate;
 
-  @Before
-  public void setUp() {
-    initMocks(this);
-    delegate = new OriginUpdateDelegate(securityContext, originManager, originResolver, originResponseConverter);
+  @Test
+  public void testUpdateOriginNotExistingOrigin() {
+    assertThrows(ObjectNotFoundException.class, () -> delegate.handle(new UpdateOriginRequest().setId(UUID.randomUUID())));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
-  public void testUpdateOriginNotExistingOrigin() throws Exception {
-    delegate.handle(new UpdateOriginRequest().setId(UUID.randomUUID()));
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testUpdateOriginNoReadPermission() throws Exception {
     OriginEntity entity = new OriginEntity().setId(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(entity);
-    delegate.handle(new UpdateOriginRequest().setId(entity.getId()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new UpdateOriginRequest().setId(entity.getId())));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testUpdateOriginNoUpdatePermissionWithoutOrganization() throws Exception {
     OriginEntity entity = new OriginEntity().setId(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateGrafeoOrigin);
-    delegate.handle(new UpdateOriginRequest().setId(entity.getId()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new UpdateOriginRequest().setId(entity.getId())));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testUpdateOriginNoUpdatePermissionWithOrganization() throws Exception {
     OriginEntity entity = new OriginEntity()
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.updateGrafeoOrigin, entity.getOrganizationID());
-    delegate.handle(new UpdateOriginRequest().setId(entity.getId()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new UpdateOriginRequest().setId(entity.getId())));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testUpdateOriginDeleted() throws Exception {
+  @Test
+  public void testUpdateOriginDeleted() {
     OriginEntity entity = new OriginEntity()
             .setId(UUID.randomUUID())
             .addFlag(OriginEntity.Flag.Deleted);
     when(originResolver.apply(entity.getId())).thenReturn(entity);
-    delegate.handle(new UpdateOriginRequest().setId(entity.getId()));
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(new UpdateOriginRequest().setId(entity.getId())));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testUpdateOriginOrganizationNotExisting() throws Exception {
+  @Test
+  public void testUpdateOriginOrganizationNotExisting() {
     OriginEntity entity = new OriginEntity()
             .setId(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
-    delegate.handle(new UpdateOriginRequest()
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(new UpdateOriginRequest()
             .setId(entity.getId())
             .setOrganization(UUID.randomUUID())
-    );
+    ));
   }
 
   @Test
@@ -106,8 +103,8 @@ public class OriginUpdateDelegateTest {
     verify(originManager).saveOrigin(argThat(origin -> Objects.equals(request.getOrganization(), origin.getOrganizationID())));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testUpdateOriginNameExisting() throws Exception {
+  @Test
+  public void testUpdateOriginNameExisting() {
     OriginEntity existingOrigin = new OriginEntity()
             .setId(UUID.randomUUID());
     OriginEntity otherOrigin = new OriginEntity()
@@ -115,10 +112,10 @@ public class OriginUpdateDelegateTest {
             .setName("otherOrigin");
     when(originResolver.apply(existingOrigin.getId())).thenReturn(existingOrigin);
     when(originManager.getOrigin(otherOrigin.getName())).thenReturn(otherOrigin);
-    delegate.handle(new UpdateOriginRequest()
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(new UpdateOriginRequest()
             .setId(existingOrigin.getId())
             .setName(otherOrigin.getName())
-    );
+    ));
   }
 
   @Test

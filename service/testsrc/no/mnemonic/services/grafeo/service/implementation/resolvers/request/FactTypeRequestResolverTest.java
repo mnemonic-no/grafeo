@@ -5,31 +5,27 @@ import no.mnemonic.services.grafeo.api.exceptions.InvalidArgumentException;
 import no.mnemonic.services.grafeo.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.service.implementation.GrafeoServiceImpl.GLOBAL_NAMESPACE;
 import static no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver.RETRACTION_FACT_TYPE_ID;
 import static no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver.RETRACTION_FACT_TYPE_NAME;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactTypeRequestResolverTest {
 
   @Mock
   private FactManager factManager;
-
+  @InjectMocks
   private FactTypeRequestResolver resolver;
-
-  @Before
-  public void initialize() {
-    initMocks(this);
-    resolver = new FactTypeRequestResolver(factManager);
-  }
 
   @Test
   public void testFetchFactType() throws Exception {
@@ -70,21 +66,21 @@ public class FactTypeRequestResolverTest {
     verifyNoMoreInteractions(factManager);
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testResolveFactTypeByIdThrowsException() throws Exception {
-    resolver.resolveFactType(UUID.randomUUID().toString());
+  @Test
+  public void testResolveFactTypeByIdThrowsException() {
+    assertThrows(InvalidArgumentException.class, () -> resolver.resolveFactType(UUID.randomUUID().toString()));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testResolveFactTypeByNameThrowsException() throws Exception {
-    resolver.resolveFactType("FactType");
+  @Test
+  public void testResolveFactTypeByNameThrowsException() {
+    assertThrows(InvalidArgumentException.class, () -> resolver.resolveFactType("FactType"));
   }
 
-  @Test(expected = AccessDeniedException.class)
-  public void testResolveFactTypeRetractionThrowsException() throws Exception {
+  @Test
+  public void testResolveFactTypeRetractionThrowsException() {
     FactTypeEntity retraction = new FactTypeEntity().setId(RETRACTION_FACT_TYPE_ID);
     when(factManager.getFactType(retraction.getId())).thenReturn(retraction);
-    resolver.resolveFactType(retraction.getId().toString());
+    assertThrows(AccessDeniedException.class, () -> resolver.resolveFactType(retraction.getId().toString()));
   }
 
   @Test
@@ -112,6 +108,7 @@ public class FactTypeRequestResolverTest {
 
   @Test
   public void testCreateRetractionFactTypeAvoidNameCollision() {
+    when(factManager.getFactType(RETRACTION_FACT_TYPE_ID)).thenReturn(null);
     when(factManager.getFactType(RETRACTION_FACT_TYPE_NAME)).thenReturn(new FactTypeEntity());
     when(factManager.saveFactType(any())).thenAnswer(i -> i.getArgument(0));
 

@@ -9,17 +9,19 @@ import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import no.mnemonic.services.grafeo.service.contexts.TriggerContext;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.scopes.ServiceRequestScope;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 public class ServiceRequestScopeAspectTest {
 
   @Mock
@@ -29,15 +31,13 @@ public class ServiceRequestScopeAspectTest {
 
   private final static AtomicInteger initializationCounter = new AtomicInteger();
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
     GrafeoSecurityContext.set(securityContext);
     TriggerContext.set(triggerContext);
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     GrafeoSecurityContext.clear();
     TriggerContext.clear();

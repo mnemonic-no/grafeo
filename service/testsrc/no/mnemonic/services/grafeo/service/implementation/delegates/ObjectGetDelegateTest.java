@@ -16,17 +16,19 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.AccessContro
 import no.mnemonic.services.grafeo.service.implementation.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.ObjectTypeByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectGetDelegateTest {
 
   @Mock
@@ -43,35 +45,13 @@ public class ObjectGetDelegateTest {
   private AccessControlCriteriaResolver accessControlCriteriaResolver;
   @Mock
   private IndexSelectCriteriaResolver indexSelectCriteriaResolver;
-
+  @InjectMocks
   private ObjectGetDelegate delegate;
 
-  @Before
-  public void setup() throws Exception {
-    initMocks(this);
-    // Mocks required for ObjectConverter.
-    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
-            .addCurrentUserIdentity(UUID.randomUUID())
-            .addAvailableOrganizationID(UUID.randomUUID())
-            .build());
-    when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any()))
-            .thenReturn(IndexSelectCriteria.builder().build());
-    when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
-
-    delegate = new ObjectGetDelegate(
-            securityContext,
-            accessControlCriteriaResolver,
-            indexSelectCriteriaResolver,
-            objectFactDao,
-            factTypeConverter,
-            objectTypeConverter,
-            objectTypeHandler);
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchObjectByIdWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
-    delegate.handle(new GetObjectByIdRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new GetObjectByIdRequest()));
   }
 
   @Test
@@ -79,17 +59,15 @@ public class ObjectGetDelegateTest {
     GetObjectByIdRequest request = new GetObjectByIdRequest().setId(UUID.randomUUID());
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
-    try {
-      delegate.handle(request);
-      fail();
-    } catch (AccessDeniedException ignored) {
-      verify(objectFactDao).getObject(request.getId());
-      verifyNoMoreInteractions(objectFactDao);
-    }
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
+    verify(objectFactDao).getObject(request.getId());
+    verifyNoMoreInteractions(objectFactDao);
   }
 
   @Test
   public void testFetchObjectById() throws Exception {
+    mockObjectConverter();
+
     ObjectRecord object = new ObjectRecord().setId(UUID.randomUUID());
     when(objectFactDao.getObject(object.getId())).thenReturn(object);
 
@@ -105,6 +83,8 @@ public class ObjectGetDelegateTest {
 
   @Test
   public void testFetchObjectByIdIncludeTimeFilterInStatisticsCriteria() throws Exception {
+    mockObjectConverter();
+
     ObjectRecord object = new ObjectRecord().setId(UUID.randomUUID());
     GetObjectByIdRequest request = new GetObjectByIdRequest()
             .setId(object.getId())
@@ -121,10 +101,10 @@ public class ObjectGetDelegateTest {
     }));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testFetchObjectByTypeValueWithoutViewPermission() throws Exception {
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.viewGrafeoFact);
-    delegate.handle(new GetObjectByTypeValueRequest());
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new GetObjectByTypeValueRequest()));
   }
 
   @Test
@@ -133,12 +113,8 @@ public class ObjectGetDelegateTest {
 
     doThrow(InvalidArgumentException.class).when(objectTypeHandler).assertObjectTypeExists(request.getType(), "type");
 
-    try {
-      delegate.handle(request);
-      fail();
-    } catch (InvalidArgumentException ignored) {
-      verifyNoInteractions(objectFactDao);
-    }
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(request));
+    verifyNoInteractions(objectFactDao);
   }
 
   @Test
@@ -146,17 +122,15 @@ public class ObjectGetDelegateTest {
     GetObjectByTypeValueRequest request = new GetObjectByTypeValueRequest().setType("type").setValue("value");
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission((ObjectRecord) isNull());
 
-    try {
-      delegate.handle(request);
-      fail();
-    } catch (AccessDeniedException ignored) {
-      verify(objectFactDao).getObject(request.getType(), request.getValue());
-      verifyNoMoreInteractions(objectFactDao);
-    }
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(request));
+    verify(objectFactDao).getObject(request.getType(), request.getValue());
+    verifyNoMoreInteractions(objectFactDao);
   }
 
   @Test
   public void testFetchObjectByTypeValue() throws Exception {
+    mockObjectConverter();
+
     GetObjectByTypeValueRequest request = new GetObjectByTypeValueRequest().setType("type").setValue("value");
     ObjectRecord object = new ObjectRecord().setId(UUID.randomUUID());
 
@@ -174,6 +148,8 @@ public class ObjectGetDelegateTest {
 
   @Test
   public void testFetchObjectByTypeValueIncludeTimeFilterInStatisticsCriteria() throws Exception {
+    mockObjectConverter();
+
     GetObjectByTypeValueRequest request = new GetObjectByTypeValueRequest()
             .setType("type")
             .setValue("value")
@@ -188,5 +164,16 @@ public class ObjectGetDelegateTest {
       assertEquals(request.getBefore(), criteria.getEndTimestamp());
       return true;
     }));
+  }
+
+  private void mockObjectConverter() throws Exception {
+    // Mocks required for ObjectConverter.
+    when(accessControlCriteriaResolver.get()).thenReturn(AccessControlCriteria.builder()
+            .addCurrentUserIdentity(UUID.randomUUID())
+            .addAvailableOrganizationID(UUID.randomUUID())
+            .build());
+    when(indexSelectCriteriaResolver.validateAndCreateCriteria(any(), any()))
+            .thenReturn(IndexSelectCriteria.builder().build());
+    when(objectFactDao.calculateObjectStatistics(any())).thenReturn(ObjectStatisticsContainer.builder().build());
   }
 }

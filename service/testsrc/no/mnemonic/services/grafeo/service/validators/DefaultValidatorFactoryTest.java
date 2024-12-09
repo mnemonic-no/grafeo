@@ -1,27 +1,27 @@
 package no.mnemonic.services.grafeo.service.validators;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultValidatorFactoryTest {
 
   @Test
   public void testGetReturnsTrueValidator() {
     DefaultValidatorFactory factory = new DefaultValidatorFactory();
-    assertTrue(factory.get("TrueValidator", null) instanceof TrueValidator);
+    assertInstanceOf(TrueValidator.class, factory.get("TrueValidator", null));
   }
 
   @Test
   public void testGetReturnsRegexValidator() {
     DefaultValidatorFactory factory = new DefaultValidatorFactory();
-    assertTrue(factory.get("RegexValidator", "pattern") instanceof RegexValidator);
+    assertInstanceOf(RegexValidator.class, factory.get("RegexValidator", "pattern"));
   }
 
   @Test
   public void testGetReturnsNullValidator() {
     DefaultValidatorFactory factory = new DefaultValidatorFactory();
-    assertTrue(factory.get("NullValidator", null) instanceof NullValidator);
+    assertInstanceOf(NullValidator.class, factory.get("NullValidator", null));
   }
 
   @Test

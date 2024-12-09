@@ -10,14 +10,14 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.ListUtils.list;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
@@ -278,10 +278,10 @@ public class FactEdgeTest extends AbstractGraphTest {
     assertEquals(Property.empty(), property);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testGetValueThatIsNotPresentOnEdge() {
     Edge edge = createEdge();
-    edge.value("something");
+    assertThrows(IllegalStateException.class, () -> edge.value("something"));
   }
 
   @Test

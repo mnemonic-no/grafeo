@@ -12,18 +12,20 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.response.Fac
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.OrganizationByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.OriginByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.SubjectByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class FactResponseConverterTest {
 
   @Mock
@@ -42,28 +44,15 @@ public class FactResponseConverterTest {
   private ObjectFactDao objectFactDao;
   @Mock
   private GrafeoSecurityContext securityContext;
-
+  @InjectMocks
   private FactResponseConverter converter;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
-    when(factTypeConverter.apply(notNull())).thenAnswer(i -> FactType.builder().setId(i.getArgument(0)).build());
-    when(originConverter.apply(notNull())).thenAnswer(i -> Origin.builder().setId(i.getArgument(0)).build());
-    when(organizationConverter.apply(notNull())).thenAnswer(i -> Organization.builder().setId(i.getArgument(0)).build());
-    when(subjectConverter.apply(notNull())).thenAnswer(i -> Subject.builder().setId(i.getArgument(0)).build());
-
-    converter = new FactResponseConverter(
-            factTypeConverter,
-            originConverter,
-      objectResponseConverter,
-            organizationConverter,
-            subjectConverter,
-            factRetractionHandler,
-            objectFactDao,
-            securityContext
-    );
+    lenient().when(factTypeConverter.apply(notNull())).thenAnswer(i -> FactType.builder().setId(i.getArgument(0)).build());
+    lenient().when(originConverter.apply(notNull())).thenAnswer(i -> Origin.builder().setId(i.getArgument(0)).build());
+    lenient().when(organizationConverter.apply(notNull())).thenAnswer(i -> Organization.builder().setId(i.getArgument(0)).build());
+    lenient().when(subjectConverter.apply(notNull())).thenAnswer(i -> Subject.builder().setId(i.getArgument(0)).build());
   }
 
   @Test
@@ -101,6 +90,7 @@ public class FactResponseConverterTest {
   public void testConvertFactOnlySource() {
     ObjectRecord source = new ObjectRecord().setId(UUID.randomUUID());
     FactRecord record = createRecord().setSourceObject(source);
+    when(objectResponseConverter.apply(isNull())).thenReturn(null);
     when(objectResponseConverter.apply(source)).thenReturn(Object.builder().setId(source.getId()).build());
 
     Fact model = converter.apply(record);
@@ -115,6 +105,7 @@ public class FactResponseConverterTest {
   public void testConvertFactOnlyDestination() {
     ObjectRecord destination = new ObjectRecord().setId(UUID.randomUUID());
     FactRecord record = createRecord().setDestinationObject(destination);
+    when(objectResponseConverter.apply(isNull())).thenReturn(null);
     when(objectResponseConverter.apply(destination)).thenReturn(Object.builder().setId(destination.getId()).build());
 
     Fact model = converter.apply(record);

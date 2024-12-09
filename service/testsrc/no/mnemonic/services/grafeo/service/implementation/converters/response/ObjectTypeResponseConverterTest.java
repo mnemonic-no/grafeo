@@ -4,29 +4,30 @@ import no.mnemonic.services.grafeo.api.model.v1.Namespace;
 import no.mnemonic.services.grafeo.api.model.v1.ObjectType;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.NamespaceByIdResponseResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class ObjectTypeResponseConverterTest {
 
+  @Mock
+  private NamespaceByIdResponseResolver namespaceConverter;
+  @InjectMocks
   private ObjectTypeResponseConverter converter;
-
-  @Before
-  public void setUp() {
-    NamespaceByIdResponseResolver namespaceConverter = mock(NamespaceByIdResponseResolver.class);
-    when(namespaceConverter.apply(notNull())).thenAnswer(i -> Namespace.builder().setId(i.getArgument(0)).setName("Namespace").build());
-    converter = new ObjectTypeResponseConverter(namespaceConverter);
-  }
 
   @Test
   public void testConvertObjectType() {
+    when(namespaceConverter.apply(notNull())).thenAnswer(i -> Namespace.builder().setId(i.getArgument(0)).setName("Namespace").build());
+
     ObjectTypeEntity entity = createEntity();
     assertModel(entity, converter.apply(entity));
   }

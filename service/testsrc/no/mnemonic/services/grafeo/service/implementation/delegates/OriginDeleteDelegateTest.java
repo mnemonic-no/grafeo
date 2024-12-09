@@ -10,15 +10,18 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.OriginResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.OriginResolver;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class OriginDeleteDelegateTest {
 
   @Mock
@@ -29,53 +32,47 @@ public class OriginDeleteDelegateTest {
   private OriginResolver originResolver;
   @Mock
   private OriginResponseConverter originResponseConverter;
-
+  @InjectMocks
   private OriginDeleteDelegate delegate;
 
-  @Before
-  public void setUp() {
-    initMocks(this);
-    delegate = new OriginDeleteDelegate(securityContext, originManager, originResolver, originResponseConverter);
+  @Test
+  public void testDeleteOriginNotExistingOrigin() {
+    assertThrows(ObjectNotFoundException.class, () -> delegate.handle(new DeleteOriginRequest().setId(UUID.randomUUID())));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
-  public void testDeleteOriginNotExistingOrigin() throws Exception {
-    delegate.handle(new DeleteOriginRequest().setId(UUID.randomUUID()));
-  }
-
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testDeleteOriginNoReadPermission() throws Exception {
     OriginEntity entity = new OriginEntity().setId(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
     doThrow(AccessDeniedException.class).when(securityContext).checkReadPermission(entity);
-    delegate.handle(new DeleteOriginRequest().setId(entity.getId()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new DeleteOriginRequest().setId(entity.getId())));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testDeleteOriginNoDeletePermissionWithoutOrganization() throws Exception {
     OriginEntity entity = new OriginEntity().setId(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.deleteGrafeoOrigin);
-    delegate.handle(new DeleteOriginRequest().setId(entity.getId()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new DeleteOriginRequest().setId(entity.getId())));
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test
   public void testDeleteOriginNoDeletePermissionWithOrganization() throws Exception {
     OriginEntity entity = new OriginEntity()
             .setId(UUID.randomUUID())
             .setOrganizationID(UUID.randomUUID());
     when(originResolver.apply(entity.getId())).thenReturn(entity);
     doThrow(AccessDeniedException.class).when(securityContext).checkPermission(FunctionConstants.deleteGrafeoOrigin, entity.getOrganizationID());
-    delegate.handle(new DeleteOriginRequest().setId(entity.getId()));
+    assertThrows(AccessDeniedException.class, () -> delegate.handle(new DeleteOriginRequest().setId(entity.getId())));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testDeleteOriginAlreadyDeleted() throws Exception {
+  @Test
+  public void testDeleteOriginAlreadyDeleted() {
     OriginEntity entity = new OriginEntity()
             .setId(UUID.randomUUID())
             .addFlag(OriginEntity.Flag.Deleted);
     when(originResolver.apply(entity.getId())).thenReturn(entity);
-    delegate.handle(new DeleteOriginRequest().setId(entity.getId()));
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(new DeleteOriginRequest().setId(entity.getId())));
   }
 
   @Test
