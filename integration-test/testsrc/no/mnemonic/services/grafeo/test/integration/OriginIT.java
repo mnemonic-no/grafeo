@@ -3,12 +3,12 @@ package no.mnemonic.services.grafeo.test.integration;
 import no.mnemonic.services.grafeo.api.request.v1.CreateOriginRequest;
 import no.mnemonic.services.grafeo.api.request.v1.UpdateOriginRequest;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OriginIT extends AbstractIT {
 

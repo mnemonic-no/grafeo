@@ -15,9 +15,11 @@ import no.mnemonic.services.triggers.action.TriggerAction;
 import no.mnemonic.services.triggers.action.exceptions.ParameterException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerInitializationException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
@@ -29,11 +31,11 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class FactIT extends AbstractIT {
 
   @Mock
@@ -41,10 +43,9 @@ public class FactIT extends AbstractIT {
 
   private static CompletableFuture<Boolean> actionTriggered;
 
-  @Before
+  @BeforeEach
   public void setup() {
     super.setup();
-    initMocks(this);
 
     actionTriggered = new CompletableFuture<>();
   }

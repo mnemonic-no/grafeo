@@ -60,7 +60,6 @@
     <jakarta.validation.version>2.0.2</jakarta.validation.version>
     <jakarta.ws.rs.version>2.1.6</jakarta.ws.rs.version>
     <jetty.version>10.0.16</jetty.version>
-    <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.11.3</junit.jupiter.version>
     <log4j.version>2.20.0</log4j.version>
     <mockito.version>5.14.2</mockito.version>

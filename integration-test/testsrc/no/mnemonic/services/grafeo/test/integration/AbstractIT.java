@@ -8,8 +8,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import no.mnemonic.commons.container.ComponentContainer;
 import no.mnemonic.commons.container.providers.GuiceBeanProvider;
-import no.mnemonic.commons.junit.docker.CassandraDockerResource;
-import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
+import no.mnemonic.commons.jupiter.docker.CassandraDockerExtension;
+import no.mnemonic.commons.jupiter.docker.ElasticSearchDockerExtension;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
@@ -26,9 +26,9 @@ import no.mnemonic.services.grafeo.rest.modules.GrafeoClientModule;
 import no.mnemonic.services.grafeo.rest.modules.GrafeoRestModule;
 import no.mnemonic.services.grafeo.service.modules.GrafeoServerModule;
 import no.mnemonic.services.grafeo.service.modules.GrafeoServiceModule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class AbstractIT {
 
@@ -59,8 +59,8 @@ public abstract class AbstractIT {
   private FactManager factManager;
   private ObjectFactDao objectFactDao;
 
-  @ClassRule
-  public static final CassandraDockerResource cassandra = CassandraDockerResource.builder()
+  @RegisterExtension
+  public static final CassandraDockerExtension cassandra = CassandraDockerExtension.builder()
           .setImageName("cassandra")
           .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
@@ -69,8 +69,8 @@ public abstract class AbstractIT {
           .setTruncateScript("truncate.cql")
           .build();
 
-  @ClassRule
-  public static final ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
+  @RegisterExtension
+  public static final ElasticSearchDockerExtension elastic = ElasticSearchDockerExtension.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
           .setImageName("elasticsearch/elasticsearch:7.17.13")
@@ -79,9 +79,10 @@ public abstract class AbstractIT {
           .addApplicationPort(9200)
           .skipReachabilityCheck()
           .addEnvironmentVariable("discovery.type", "single-node")
+          .addDeleteIndex("_all")
           .build();
 
-  @Before
+  @BeforeEach
   public void setup() {
     // Start up service layer.
     GuiceBeanProvider serviceBeanProvider = new GuiceBeanProvider(new ServiceModuleIT());
@@ -106,15 +107,10 @@ public abstract class AbstractIT {
             .setTestEnvironment(true);
   }
 
-  @After
+  @AfterEach
   public void teardown() {
     restContainer.destroy();
     serviceContainer.destroy();
-
-    // Truncate database.
-    cassandra.truncate();
-    // Truncate indices.
-    elastic.deleteIndices();
   }
 
   /* Getters */

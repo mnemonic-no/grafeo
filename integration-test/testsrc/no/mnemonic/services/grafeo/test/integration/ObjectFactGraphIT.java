@@ -4,8 +4,8 @@ import com.google.inject.*;
 import com.google.inject.name.Names;
 import no.mnemonic.commons.container.ComponentContainer;
 import no.mnemonic.commons.container.providers.GuiceBeanProvider;
-import no.mnemonic.commons.junit.docker.CassandraDockerResource;
-import no.mnemonic.commons.junit.docker.ElasticSearchDockerResource;
+import no.mnemonic.commons.jupiter.docker.CassandraDockerExtension;
+import no.mnemonic.commons.jupiter.docker.ElasticSearchDockerExtension;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.FactSearchCriteria;
@@ -33,7 +33,11 @@ import no.mnemonic.services.grafeo.service.implementation.tinkerpop.utils.Proper
 import no.mnemonic.services.grafeo.service.scopes.ServiceRequestScope;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
-import org.junit.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -41,8 +45,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -74,8 +78,8 @@ public class ObjectFactGraphIT {
   private static ObjectRecord domain;
   private static ObjectRecord attack;
 
-  @ClassRule
-  public static CassandraDockerResource cassandra = CassandraDockerResource.builder()
+  @RegisterExtension
+  public static CassandraDockerExtension cassandra = CassandraDockerExtension.builder()
           .setImageName("cassandra")
           .setSkipPullDockerImage(true)
           .setExposedPortsRange("15000-25000")
@@ -83,8 +87,8 @@ public class ObjectFactGraphIT {
           .skipReachabilityCheck()
           .build();
 
-  @ClassRule
-  public static ElasticSearchDockerResource elastic = ElasticSearchDockerResource.builder()
+  @RegisterExtension
+  public static ElasticSearchDockerExtension elastic = ElasticSearchDockerExtension.builder()
           // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
           // Usually this should be the same version as the ElasticSearch client used.
           .setImageName("elasticsearch/elasticsearch:7.17.13")
@@ -95,7 +99,7 @@ public class ObjectFactGraphIT {
           .addEnvironmentVariable("discovery.type", "single-node")
           .build();
 
-  @BeforeClass
+  @BeforeAll
   public static void initialize() {
     // Employ ComponentContainer + Guice to instantiate and manage components.
     daoBeanProvider = new GuiceBeanProvider(new GraphModuleIT());
@@ -172,14 +176,14 @@ public class ObjectFactGraphIT {
     objectFactDao.storeFact(seen);
   }
 
-  @Before
+  @BeforeEach
   public void setup() {
     // Create a new SecurityContext instance with default mocking for every test.
     mockSecurityContext = mock(GrafeoSecurityContext.class);
     when(mockSecurityContext.hasReadPermission(isA(FactRecord.class))).thenReturn(true);
   }
 
-  @AfterClass
+  @AfterAll
   public static void teardown() {
     daoContainer.destroy();
   }

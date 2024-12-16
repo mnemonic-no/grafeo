@@ -16,10 +16,12 @@ import no.mnemonic.services.grafeo.seb.esengine.v1.handlers.FactHazelcastToElast
 import no.mnemonic.services.grafeo.seb.esengine.v1.handlers.FactKafkaToHazelcastHandler;
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
 import no.mnemonic.services.grafeo.service.providers.HazelcastInstanceProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -27,12 +29,12 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class ESEngineIT {
 
   @Mock
@@ -43,16 +45,14 @@ public class ESEngineIT {
   private FactKafkaToHazelcastHandler kafkaToHzHandler;
   private FactHazelcastToElasticSearchHandler hzToEsHandler;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    initMocks(this);
-
     Injector injector = Guice.createInjector(new TestModule());
     kafkaToHzHandler = injector.getInstance(FactKafkaToHazelcastHandler.class);
     hzToEsHandler = injector.getInstance(FactHazelcastToElasticSearchHandler.class);
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     ObjectUtils.ifNotNullDo(hzToEsHandler, FactHazelcastToElasticSearchHandler::stopComponent);
     ObjectUtils.ifNotNullDo(kafkaToHzHandler, FactKafkaToHazelcastHandler::stopComponent);

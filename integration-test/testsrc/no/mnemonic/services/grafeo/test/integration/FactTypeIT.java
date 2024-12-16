@@ -6,13 +6,13 @@ import no.mnemonic.services.grafeo.api.request.v1.FactObjectBindingDefinition;
 import no.mnemonic.services.grafeo.api.request.v1.MetaFactBindingDefinition;
 import no.mnemonic.services.grafeo.api.request.v1.UpdateFactTypeRequest;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class FactTypeIT extends AbstractIT {
 
