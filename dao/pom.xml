@@ -82,7 +82,7 @@
       <version>${jakarta.inject.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.datastax.oss</groupId>
+      <groupId>org.apache.cassandra</groupId>
       <artifactId>java-driver-core</artifactId>
       <version>${cassandra.version}</version>
       <exclusions>
@@ -120,7 +120,7 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.datastax.oss</groupId>
+      <groupId>org.apache.cassandra</groupId>
       <artifactId>java-driver-mapper-runtime</artifactId>
       <version>${cassandra.version}</version>
       <exclusions>
@@ -155,19 +155,6 @@
       <groupId>org.elasticsearch.client</groupId>
       <artifactId>elasticsearch-rest-high-level-client</artifactId>
       <version>${elastic.search.version}</version>
-    </dependency>
-    <!-- Force a newer version of commons-codec (used by ElasticSearch client) in order to fix SNYK-JAVA-COMMONSCODEC-561518. -->
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>${commons.codec.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <!-- Force a newer version of httpclient (used by ElasticSearch client) in order to fix CVE-2020-13956. -->
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>${httpclient.version}</version>
     </dependency>
     <!-- test jars -->
     <dependency>

@@ -41,37 +41,33 @@
     <jdk.version>17</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.4.25</mnemonic.commons.version>
-    <mnemonic.messaging.version>1.4.10</mnemonic.messaging.version>
-    <mnemonic.services.common.version>0.6.11</mnemonic.services.common.version>
-    <mnemonic.services.triggers.version>0.0.18</mnemonic.services.triggers.version>
+    <mnemonic.commons.version>0.5.1</mnemonic.commons.version>
+    <mnemonic.messaging.version>1.4.13</mnemonic.messaging.version>
+    <mnemonic.services.common.version>0.6.16</mnemonic.services.common.version>
+    <mnemonic.services.triggers.version>0.0.19</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
-    <cassandra.version>4.17.0</cassandra.version>
-    <disruptor.version>3.4.4</disruptor.version>
-    <elastic.search.version>7.17.13</elastic.search.version>
-    <guava.version>32.1.2-jre</guava.version>
+    <cassandra.version>4.18.1</cassandra.version>
+    <disruptor.version>4.0.0</disruptor.version>
+    <elastic.search.version>7.17.27</elastic.search.version>
+    <guava.version>33.4.0-jre</guava.version>
     <guice.version>5.1.0</guice.version>
-    <hazelcast.version>5.3.6</hazelcast.version>
+    <hazelcast.version>5.5.0</hazelcast.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
-    <jackson.version>2.15.2</jackson.version>
+    <jackson.version>2.18.2</jackson.version>
     <jakarta.el.version>3.0.4</jakarta.el.version>
     <jakarta.inject.version>1.0.5</jakarta.inject.version>
     <jakarta.validation.version>2.0.2</jakarta.validation.version>
     <jakarta.ws.rs.version>2.1.6</jakarta.ws.rs.version>
-    <jetty.version>10.0.16</jetty.version>
-    <junit.jupiter.version>5.11.3</junit.jupiter.version>
-    <log4j.version>2.20.0</log4j.version>
-    <mockito.version>5.14.2</mockito.version>
-    <picocli.version>4.7.5</picocli.version>
-    <resteasy.version>5.0.8.Final</resteasy.version>
-    <slf4j.version>2.0.9</slf4j.version>
-    <swagger.version>1.6.11</swagger.version>
-    <tinkerpop.version>3.7.0</tinkerpop.version>
-
-    <!-- force upgrade for transitive dependencies -->
-    <commons.codec.version>1.16.0</commons.codec.version>
-    <httpclient.version>4.5.14</httpclient.version>
+    <jetty.version>10.0.24</jetty.version>
+    <junit.jupiter.version>5.11.4</junit.jupiter.version>
+    <log4j.version>2.24.3</log4j.version>
+    <mockito.version>5.15.2</mockito.version>
+    <picocli.version>4.7.6</picocli.version>
+    <resteasy.version>5.0.9.Final</resteasy.version>
+    <slf4j.version>2.0.16</slf4j.version>
+    <swagger.version>1.6.15</swagger.version>
+    <tinkerpop.version>3.7.3</tinkerpop.version>
 
     <!-- build dependencies -->
     <maven.assembly.version>3.3.0</maven.assembly.version>
@@ -180,7 +176,7 @@
           <annotationProcessorPaths>
             <path>
               <!-- Needed to process annotations from the driver's object mapper. -->
-              <groupId>com.datastax.oss</groupId>
+              <groupId>org.apache.cassandra</groupId>
               <artifactId>java-driver-mapper-processor</artifactId>
               <version>${cassandra.version}</version>
             </path>
