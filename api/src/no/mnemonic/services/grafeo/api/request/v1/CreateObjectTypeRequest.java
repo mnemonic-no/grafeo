@@ -1,27 +1,28 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 
 import javax.validation.constraints.NotBlank;
 
-@ApiModel(description = "Create a new ObjectType.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Create a new ObjectType.")
 public class CreateObjectTypeRequest implements ValidatingRequest {
 
   public enum IndexOption {
     Daily, TimeGlobal
   }
 
-  @ApiModelProperty(value = "Name of new ObjectType. Needs to be unique per Namespace", example = "ip", required = true)
+  @Schema(description = "Name of new ObjectType. Needs to be unique per Namespace", example = "ip", requiredMode = REQUIRED)
   @NotBlank
   private String name;
-  @ApiModelProperty(value = "Validator used to validate new Objects of this type", example = "RegexValidator", required = true)
+  @Schema(description = "Validator used to validate new Objects of this type", example = "RegexValidator", requiredMode = REQUIRED)
   @NotBlank
   private String validator;
-  @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
+  @Schema(description = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private String validatorParameter;
-  @ApiModelProperty(value = "Specify how Facts bound to Objects of this type will be indexed (default 'Daily')", example = "TimeGlobal")
+  @Schema(description = "Specify how Facts bound to Objects of this type will be indexed (default 'Daily')", example = "TimeGlobal")
   private IndexOption indexOption = IndexOption.Daily;
 
   public String getName() {

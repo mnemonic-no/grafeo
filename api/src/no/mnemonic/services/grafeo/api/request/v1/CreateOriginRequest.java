@@ -1,8 +1,7 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.utilities.json.RoundingFloatDeserializer;
 
@@ -11,17 +10,19 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.UUID;
 
-@ApiModel(description = "Create a new Origin.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Create a new Origin.")
 public class CreateOriginRequest implements ValidatingRequest {
 
-  @ApiModelProperty(value = "Organization new Origin belongs to (takes Organization UUID)", example = "123e4567-e89b-12d3-a456-426655440000")
+  @Schema(description = "Organization new Origin belongs to (takes Organization UUID)", example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID organization;
-  @ApiModelProperty(value = "Name of new Origin. Needs to be unique per Namespace", example = "John Doe", required = true)
+  @Schema(description = "Name of new Origin. Needs to be unique per Namespace", example = "John Doe", requiredMode = REQUIRED)
   @NotBlank
   private String name;
-  @ApiModelProperty(value = "Longer description about new Origin", example = "John Doe from Doe Inc")
+  @Schema(description = "Longer description about new Origin", example = "John Doe from Doe Inc")
   private String description;
-  @ApiModelProperty(value = "How much new Origin is trusted (value between 0.0 and 1.0, default 0.8)", example = "0.8", required = true)
+  @Schema(description = "How much new Origin is trusted (value between 0.0 and 1.0, default 0.8)", example = "0.8", requiredMode = REQUIRED)
   @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)

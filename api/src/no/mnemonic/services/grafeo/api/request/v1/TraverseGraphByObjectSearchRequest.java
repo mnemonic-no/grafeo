@@ -1,21 +1,22 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-@ApiModel(description = "Traverse the Object/Fact graph starting at the Objects returned from an Object search.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Traverse the Object/Fact graph starting at the Objects returned from an Object search.")
 public class TraverseGraphByObjectSearchRequest implements ValidatingRequest {
 
-  @ApiModelProperty(value = "Object search to execute", required = true)
+  @Schema(description = "Object search to execute", requiredMode = REQUIRED)
   @Valid
   @NotNull
   private SearchObjectRequest search;
 
-  @ApiModelProperty(value = "Traversal from objects in the search result", required = true)
+  @Schema(description = "Traversal from objects in the search result", requiredMode = REQUIRED)
   @Valid
   @NotNull
   private TraverseGraphRequest traverse;

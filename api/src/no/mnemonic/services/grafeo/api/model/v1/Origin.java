@@ -1,8 +1,7 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.utilities.json.RoundingFloatSerializer;
@@ -11,7 +10,9 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-@ApiModel(description = "Every piece of information (i.e. Facts) put into the system is marked with an Origin " +
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Every piece of information (i.e. Facts) put into the system is marked with an Origin " +
         "in order to identify where the information came from."
 )
 public class Origin {
@@ -24,22 +25,22 @@ public class Origin {
     Deleted
   }
 
-  @ApiModelProperty(value = "Uniquely identifies the Origin", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+  @Schema(description = "Uniquely identifies the Origin", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
   private final UUID id;
-  @ApiModelProperty(value = "Namespace the Origin belongs to", required = true)
+  @Schema(description = "Namespace the Origin belongs to", requiredMode = REQUIRED)
   private final Namespace namespace;
-  @ApiModelProperty(value = "Organization the Origin belongs to")
+  @Schema(description = "Organization the Origin belongs to")
   private final Organization.Info organization;
-  @ApiModelProperty(value = "Name of the Origin", example = "John Doe", required = true)
+  @Schema(description = "Name of the Origin", example = "John Doe", requiredMode = REQUIRED)
   private final String name;
-  @ApiModelProperty(value = "Longer description about the Origin", example = "John Doe from Doe Inc")
+  @Schema(description = "Longer description about the Origin", example = "John Doe from Doe Inc")
   private final String description;
-  @ApiModelProperty(value = "How much the Origin is trusted", example = "0.8", required = true)
+  @Schema(description = "How much the Origin is trusted", example = "0.8", requiredMode = REQUIRED)
   @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float trust;
-  @ApiModelProperty(value = "Type of the Origin (group or individual user)", required = true)
+  @Schema(description = "Type of the Origin (group or individual user)", requiredMode = REQUIRED)
   private final Type type;
-  @ApiModelProperty(value = "Contains any flags set on the Origin")
+  @Schema(description = "Contains any flags set on the Origin")
   private final Set<Flag> flags;
 
   private Origin(UUID id, Namespace namespace, Organization.Info organization, String name, String description,
@@ -157,11 +158,11 @@ public class Origin {
     }
   }
 
-  @ApiModel(value = "OriginInfo", description = "Short summary of an Origin.")
+  @Schema(name = "OriginInfo", description = "Short summary of an Origin.")
   public static class Info {
-    @ApiModelProperty(value = "Uniquely identifies the Origin", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+    @Schema(description = "Uniquely identifies the Origin", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
     private final UUID id;
-    @ApiModelProperty(value = "Name of the Origin", example = "John Doe", required = true)
+    @Schema(description = "Name of the Origin", example = "John Doe", requiredMode = REQUIRED)
     private final String name;
 
     private Info(UUID id, String name) {

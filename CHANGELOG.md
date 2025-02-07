@@ -55,6 +55,7 @@ should be included in the response. The endpoint omits statistics by default now
 - (2020-06-26) Added configuration option `act.action.triggers.enabled` to enable/disable the action triggers framework.
 
 ### Changed
+- (2025-02-07) The application produces an OpenAPI 3.1 specification instead of a Swagger specification now (served as `/openapi.json`).
 - (2023-01-06) When searching for Facts by time `timeFieldStrategy` and `timeMatchStrategy` will only be applied to daily indices.
 When searching against the time global index only `endTimestamp` will be used (`startTimestamp` will be ignored) and the search
 will always filter on `timestamp`.

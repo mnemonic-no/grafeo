@@ -1,7 +1,6 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
@@ -9,18 +8,18 @@ import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import javax.validation.constraints.Min;
 import java.util.Set;
 
-@ApiModel(description = "Search for Origins.")
+@Schema(description = "Search for Origins.")
 public class SearchOriginRequest implements ValidatingRequest {
 
   public enum Type {
     Group, User
   }
 
-  @ApiModelProperty(value = "Only return Origins having a specific type")
+  @Schema(description = "Only return Origins having a specific type")
   private Set<Type> type;
-  @ApiModelProperty(value = "Include deleted Origins (default false)", example = "false")
+  @Schema(description = "Include deleted Origins (default false)", example = "false")
   private Boolean includeDeleted;
-  @ApiModelProperty(value = "Limit the number of returned Origins (default 25, 0 means all)", example = "25")
+  @Schema(description = "Limit the number of returned Origins (default 25, 0 means all)", example = "25")
   @Min(0)
   private Integer limit;
 

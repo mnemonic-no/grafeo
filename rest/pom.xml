@@ -22,6 +22,12 @@
           <include>LICENSE</include>
         </includes>
       </resource>
+      <resource>
+        <directory>resources</directory>
+        <includes>
+          <include>**/**</include>
+        </includes>
+      </resource>
     </resources>
   </build>
 
@@ -60,11 +66,6 @@
     <dependency>
       <groupId>no.mnemonic.services.common</groupId>
       <artifactId>service-proxy</artifactId>
-      <version>${mnemonic.services.common.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>no.mnemonic.services.common</groupId>
-      <artifactId>documentation</artifactId>
       <version>${mnemonic.services.common.version}</version>
     </dependency>
     <dependency>
@@ -126,12 +127,12 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>io.swagger</groupId>
-      <artifactId>swagger-jaxrs</artifactId>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-jaxrs2</artifactId>
       <version>${swagger.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.swagger</groupId>
+      <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-core</artifactId>
       <version>${swagger.version}</version>
     </dependency>

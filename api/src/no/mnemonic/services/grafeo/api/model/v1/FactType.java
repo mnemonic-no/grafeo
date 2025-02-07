@@ -1,8 +1,7 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.grafeo.utilities.json.RoundingFloatSerializer;
@@ -11,25 +10,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-@ApiModel(description = "A FactType defines how a Fact will be handled inside the system.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "A FactType defines how a Fact will be handled inside the system.")
 public class FactType {
 
-  @ApiModelProperty(value = "Uniquely identifies the FactType", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+  @Schema(description = "Uniquely identifies the FactType", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
   private final UUID id;
-  @ApiModelProperty(value = "Namespace the FactType belongs to", required = true)
+  @Schema(description = "Namespace the FactType belongs to", requiredMode = REQUIRED)
   private final Namespace namespace;
-  @ApiModelProperty(value = "Name of the FactType. Unique per Namespace", example = "ThreatActorAlias", required = true)
+  @Schema(description = "Name of the FactType. Unique per Namespace", example = "ThreatActorAlias", requiredMode = REQUIRED)
   private final String name;
-  @ApiModelProperty(value = "Confidence assigned by default to new Facts of this type", example = "0.9", required = true)
+  @Schema(description = "Confidence assigned by default to new Facts of this type", example = "0.9", requiredMode = REQUIRED)
   @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float defaultConfidence;
-  @ApiModelProperty(value = "Validator used to validate new Facts of this type", example = "RegexValidator", required = true)
+  @Schema(description = "Validator used to validate new Facts of this type", example = "RegexValidator", requiredMode = REQUIRED)
   private final String validator;
-  @ApiModelProperty(value = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
+  @Schema(description = "Parameters used to customize Validator", example = "(\\d+).(\\d+).(\\d+).(\\d+)")
   private final String validatorParameter;
-  @ApiModelProperty(value = "Defines to which Objects new Facts of this type can be linked")
+  @Schema(description = "Defines to which Objects new Facts of this type can be linked")
   private final List<FactObjectBindingDefinition> relevantObjectBindings;
-  @ApiModelProperty(value = "Defines to which Facts new meta Facts of this type can be linked")
+  @Schema(description = "Defines to which Facts new meta Facts of this type can be linked")
   private final List<MetaFactBindingDefinition> relevantFactBindings;
 
   private FactType(UUID id,
@@ -158,13 +159,13 @@ public class FactType {
     }
   }
 
-  @ApiModel(value = "FactObjectBindingDefinitionModel", description = "Defines to which Objects new Facts of a particular type can be linked.")
+  @Schema(name = "FactObjectBindingDefinitionModel", description = "Defines to which Objects new Facts of a particular type can be linked.")
   public static class FactObjectBindingDefinition {
-    @ApiModelProperty(value = "Specifies the type any Object must have when linked as source to a Fact (can be NULL)")
+    @Schema(description = "Specifies the type any Object must have when linked as source to a Fact (can be NULL)")
     private final ObjectType.Info sourceObjectType;
-    @ApiModelProperty(value = "Specifies the type any Object must have when linked as destination to a Fact (can be NULL)")
+    @Schema(description = "Specifies the type any Object must have when linked as destination to a Fact (can be NULL)")
     private final ObjectType.Info destinationObjectType;
-    @ApiModelProperty(value = "Specifies if the binding between source Object, Fact and destination Object must be bidirectional", required = true)
+    @Schema(description = "Specifies if the binding between source Object, Fact and destination Object must be bidirectional", requiredMode = REQUIRED)
     private final boolean bidirectionalBinding;
 
     public FactObjectBindingDefinition(ObjectType.Info sourceObjectType, ObjectType.Info destinationObjectType, boolean bidirectionalBinding) {
@@ -186,9 +187,9 @@ public class FactType {
     }
   }
 
-  @ApiModel(value = "MetaFactBindingDefinitionModel", description = "Defines to which Facts new meta Facts of a particular type can be linked.")
+  @Schema(name = "MetaFactBindingDefinitionModel", description = "Defines to which Facts new meta Facts of a particular type can be linked.")
   public static class MetaFactBindingDefinition {
-    @ApiModelProperty(value = "Specifies the type any Fact must have when referenced by a new meta Fact", required = true)
+    @Schema(description = "Specifies the type any Fact must have when referenced by a new meta Fact", requiredMode = REQUIRED)
     private final FactType.Info factType;
 
     public MetaFactBindingDefinition(FactType.Info factType) {
@@ -200,11 +201,11 @@ public class FactType {
     }
   }
 
-  @ApiModel(value = "FactTypeInfo", description = "Short summary of a FactType.")
+  @Schema(name = "FactTypeInfo", description = "Short summary of a FactType.")
   public static class Info {
-    @ApiModelProperty(value = "Uniquely identifies the FactType", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+    @Schema(description = "Uniquely identifies the FactType", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
     private final UUID id;
-    @ApiModelProperty(value = "Name of the FactType", example = "ThreatActorAlias", required = true)
+    @Schema(description = "Name of the FactType", example = "ThreatActorAlias", requiredMode = REQUIRED)
     private final String name;
 
     private Info(UUID id, String name) {

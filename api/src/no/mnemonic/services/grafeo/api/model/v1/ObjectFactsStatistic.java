@@ -1,23 +1,24 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.utilities.json.TimestampSerializer;
 
-@ApiModel(description = "Statistics about Facts of a specific type bound to one Object. Statistics are collected per FactType.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Statistics about Facts of a specific type bound to one Object. Statistics are collected per FactType.")
 public class ObjectFactsStatistic {
 
-  @ApiModelProperty(value = "Describes for which FactType the statistics are collected", required = true)
+  @Schema(description = "Describes for which FactType the statistics are collected", requiredMode = REQUIRED)
   private final FactType.Info type;
-  @ApiModelProperty(value = "Number of Facts of a specific FactType bound to the Object", example = "127", required = true)
+  @Schema(description = "Number of Facts of a specific FactType bound to the Object", example = "127", requiredMode = REQUIRED)
   private final int count;
-  @ApiModelProperty(value = "Timestamp when a Fact of a specific FactType was last added to the Object",
-          example = "2016-09-28T21:26:22Z", dataType = "string")
+  @Schema(description = "Timestamp when a Fact of a specific FactType was last added to the Object",
+          example = "2016-09-28T21:26:22Z", type = "string")
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long lastAddedTimestamp;
-  @ApiModelProperty(value = "Timestamp when a Fact of a specific FactType was last seen",
-          example = "2016-09-28T21:26:22Z", dataType = "string")
+  @Schema(description = "Timestamp when a Fact of a specific FactType was last seen",
+          example = "2016-09-28T21:26:22Z", type = "string")
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long lastSeenTimestamp;
 

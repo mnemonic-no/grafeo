@@ -1,7 +1,6 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 
@@ -9,16 +8,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-@ApiModel(value = "ObjectModel", description = "An Object represents a globally unique piece of information, e.g. an IP address or a domain.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(name = "ObjectModel", description = "An Object represents a globally unique piece of information, e.g. an IP address or a domain.")
 public class Object {
 
-  @ApiModelProperty(value = "Uniquely identifies the Object", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+  @Schema(description = "Uniquely identifies the Object", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
   private final UUID id;
-  @ApiModelProperty(value = "Type of the Object", required = true)
+  @Schema(description = "Type of the Object", requiredMode = REQUIRED)
   private final ObjectType.Info type;
-  @ApiModelProperty(value = "Contains the actual information", example = "27.13.4.125", required = true)
+  @Schema(description = "Contains the actual information", example = "27.13.4.125", requiredMode = REQUIRED)
   private final String value;
-  @ApiModelProperty(value = "Contains meta data about Facts bound to the Object")
+  @Schema(description = "Contains meta data about Facts bound to the Object")
   private final List<ObjectFactsStatistic> statistics;
 
   private Object(UUID id, ObjectType.Info type, String value, List<ObjectFactsStatistic> statistics) {
@@ -91,13 +92,13 @@ public class Object {
     }
   }
 
-  @ApiModel(value = "ObjectInfo", description = "Short summary of an Object.")
+  @Schema(name = "ObjectInfo", description = "Short summary of an Object.")
   public static class Info {
-    @ApiModelProperty(value = "Uniquely identifies the Object", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+    @Schema(description = "Uniquely identifies the Object", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
     private final UUID id;
-    @ApiModelProperty(value = "Type of the Object", required = true)
+    @Schema(description = "Type of the Object", requiredMode = REQUIRED)
     private final ObjectType.Info type;
-    @ApiModelProperty(value = "Contains the actual information", example = "27.13.4.125", required = true)
+    @Schema(description = "Contains the actual information", example = "27.13.4.125", requiredMode = REQUIRED)
     private final String value;
 
     private Info(UUID id, ObjectType.Info type, String value) {

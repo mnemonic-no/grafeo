@@ -1,8 +1,7 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
@@ -13,54 +12,54 @@ import javax.validation.constraints.Min;
 import java.util.Set;
 import java.util.UUID;
 
-@ApiModel(description = "Search for Objects.")
+@Schema(description = "Search for Objects.")
 public class SearchObjectRequest implements TimeFieldSearchRequest, ValidatingRequest {
 
-  @ApiModelProperty(value = "Only return Objects matching a keyword query")
+  @Schema(description = "Only return Objects matching a keyword query")
   private String keywords;
-  @ApiModelProperty(value = "Only return Objects identified by their UUID")
+  @Schema(description = "Only return Objects identified by their UUID")
   private Set<UUID> objectID;
-  @ApiModelProperty(value = "Only return Objects bound to specific Facts")
+  @Schema(description = "Only return Objects bound to specific Facts")
   private Set<UUID> factID;
-  @ApiModelProperty(value = "Only return Objects with a specific ObjectType")
+  @Schema(description = "Only return Objects with a specific ObjectType")
   private Set<String> objectType;
-  @ApiModelProperty(value = "Only return Objects with Facts having a specific FactType")
+  @Schema(description = "Only return Objects with Facts having a specific FactType")
   private Set<String> factType;
-  @ApiModelProperty(value = "Only return Objects matching a specific value")
+  @Schema(description = "Only return Objects matching a specific value")
   private Set<String> objectValue;
-  @ApiModelProperty(value = "Only return Objects with Facts matching a specific value")
+  @Schema(description = "Only return Objects with Facts matching a specific value")
   private Set<String> factValue;
-  @ApiModelProperty(value = "Only return Objects with Facts belonging to a specific Organization")
+  @Schema(description = "Only return Objects with Facts belonging to a specific Organization")
   private Set<String> organization;
-  @ApiModelProperty(value = "Only return Objects with Facts coming from a specific Origin")
+  @Schema(description = "Only return Objects with Facts coming from a specific Origin")
   private Set<String> origin;
-  @ApiModelProperty(value = "Only return Objects with Facts where the field specified by 'dimension' is above a specific value (value between 0.0 and 1.0)")
+  @Schema(description = "Only return Objects with Facts where the field specified by 'dimension' is above a specific value (value between 0.0 and 1.0)")
   @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)
   private Float minimum;
-  @ApiModelProperty(value = "Only return Objects with Facts where the field specified by 'dimension' is below a specific value (value between 0.0 and 1.0)")
+  @Schema(description = "Only return Objects with Facts where the field specified by 'dimension' is below a specific value (value between 0.0 and 1.0)")
   @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)
   private Float maximum;
-  @ApiModelProperty(value = "Specify the field used for minimum/maximum filters (default 'certainty')")
+  @Schema(description = "Specify the field used for minimum/maximum filters (default 'certainty')")
   private Dimension dimension;
   // Annotations are specified on the TimeFieldSearchRequest interface.
   private Long startTimestamp;
   private Long endTimestamp;
   private TimeMatchStrategy timeMatchStrategy;
   private Set<TimeFieldStrategy> timeFieldStrategy;
-  @ApiModelProperty(value = "Only return Objects where the amount of Facts after filtering is above a specific value (inclusive)")
+  @Schema(description = "Only return Objects where the amount of Facts after filtering is above a specific value (inclusive)")
   @Min(0)
   private Integer minimumFactsCount;
-  @ApiModelProperty(value = "Only return Objects where the amount of Facts after filtering is below a specific value (inclusive)")
+  @Schema(description = "Only return Objects where the amount of Facts after filtering is below a specific value (inclusive)")
   @Min(0)
   private Integer maximumFactsCount;
-  @ApiModelProperty(value = "Limit the number of returned Objects (default 25, 0 means all)", example = "25")
+  @Schema(description = "Limit the number of returned Objects (default 25, 0 means all)", example = "25")
   @Min(0)
   private Integer limit;
-  @ApiModelProperty(value = "Specify whether Object statistics should be included in the response (omitted by default)")
+  @Schema(description = "Specify whether Object statistics should be included in the response (omitted by default)")
   private boolean includeStatistics;
 
   public String getKeywords() {

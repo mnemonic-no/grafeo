@@ -1,23 +1,24 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.api.validation.constraints.ServiceNotNull;
 
 import javax.validation.constraints.NotBlank;
 import java.util.UUID;
 
-@ApiModel(description = "Add a comment to a Fact.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Add a comment to a Fact.")
 public class CreateFactCommentRequest implements ValidatingRequest {
 
-  @ApiModelProperty(hidden = true)
+  @Schema(hidden = true)
   @ServiceNotNull
   private UUID fact;
-  @ApiModelProperty(value = "Content of comment", example = "Hello World!", required = true)
+  @Schema(description = "Content of comment", example = "Hello World!", requiredMode = REQUIRED)
   @NotBlank
   private String comment;
-  @ApiModelProperty(value = "Set if new comment is a reply to an existing comment (takes comment UUID)",
+  @Schema(description = "Set if new comment is a reply to an existing comment (takes comment UUID)",
           example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID replyTo;
 

@@ -1,17 +1,18 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(description = "Actual evidence data corresponding to one or more EvidenceSubmissions.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Actual evidence data corresponding to one or more EvidenceSubmissions.")
 public class Evidence {
 
-  @ApiModelProperty(value = "Checksum of the evidence data using SHA-256. Uniquely identifies the evidence",
-          example = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", required = true)
+  @Schema(description = "Checksum of the evidence data using SHA-256. Uniquely identifies the evidence",
+          example = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", requiredMode = REQUIRED)
   private final String checksum;
   // Keep it simple for now and just return the data as stored in the database
   // We might want to do something similar as the case attachments in the future.
-  @ApiModelProperty(value = "Actual evidence data formatted using the media type of the corresponding EvidenceSubmission", required = true)
+  @Schema(description = "Actual evidence data formatted using the media type of the corresponding EvidenceSubmission", requiredMode = REQUIRED)
   private final String data;
 
   private Evidence(String checksum, String data) {

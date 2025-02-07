@@ -11,7 +11,7 @@ public class SwaggerApiListingResourceTest extends AbstractEndpointTest {
 
   @Test
   public void testFetchSwaggerJson() {
-    Response response = target("/swagger.json").request().get();
+    Response response = target("/openapi.json").request().get();
     assertEquals(200, response.getStatus());
   }
 

@@ -1,16 +1,17 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.UUID;
 
-@ApiModel(description = "Represents an Organization inside the system.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Represents an Organization inside the system.")
 public class Organization {
 
-  @ApiModelProperty(value = "Uniquely identifies the Organization", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+  @Schema(description = "Uniquely identifies the Organization", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
   private final UUID id;
-  @ApiModelProperty(value = "Name of the Organization", example = "mnemonic", required = true)
+  @Schema(description = "Name of the Organization", example = "mnemonic", requiredMode = REQUIRED)
   private final String name;
 
   private Organization(UUID id, String name) {
@@ -56,11 +57,11 @@ public class Organization {
     }
   }
 
-  @ApiModel(value = "OrganizationInfo", description = "Short summary of an Organization.")
+  @Schema(name = "OrganizationInfo", description = "Short summary of an Organization.")
   public static class Info {
-    @ApiModelProperty(value = "Uniquely identifies the Organization", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+    @Schema(description = "Uniquely identifies the Organization", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
     private final UUID id;
-    @ApiModelProperty(value = "Name of the Organization", example = "mnemonic", required = true)
+    @Schema(description = "Name of the Organization", example = "mnemonic", requiredMode = REQUIRED)
     private final String name;
 
     private Info(UUID id, String name) {

@@ -7,6 +7,7 @@ import no.mnemonic.services.grafeo.rest.api.auth.SubjectCredentialsResolver;
 import no.mnemonic.services.grafeo.rest.container.ApiServer;
 import no.mnemonic.services.grafeo.rest.providers.CorsFilterFeature;
 import no.mnemonic.services.grafeo.rest.resteasy.GuiceResteasyContextDataProvider;
+import no.mnemonic.services.grafeo.rest.swagger.SwaggerApiListingResource;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
@@ -23,9 +24,8 @@ public class GrafeoRestModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // Install modules for REST endpoints and Swagger.
+    // Install module for REST endpoints.
     install(new EndpointsModule());
-    install(new SwaggerModule());
 
     if (!skipDefaultCredentialsResolver) {
       // Bind class to resolve credentials sent to service back-end.
@@ -43,6 +43,8 @@ public class GrafeoRestModule extends AbstractModule {
     bind(UriInfo.class).toProvider(new GuiceResteasyContextDataProvider<>(UriInfo.class));
     bind(SecurityContext.class).toProvider(new GuiceResteasyContextDataProvider<>(SecurityContext.class));
 
+    // Bind endpoint serving the API documentation.
+    bind(SwaggerApiListingResource.class).in(Scopes.SINGLETON);
     // Bind class serving the REST API via HTTP.
     bind(ApiServer.class).in(Scopes.SINGLETON);
   }

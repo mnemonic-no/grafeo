@@ -1,8 +1,7 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.services.grafeo.utilities.json.RoundingFloatDeserializer;
@@ -11,20 +10,20 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.UUID;
 
-@ApiModel(description = "Update an existing Origin.")
+@Schema(description = "Update an existing Origin.")
 public class UpdateOriginRequest implements ValidatingRequest {
 
-  @ApiModelProperty(hidden = true)
+  @Schema(hidden = true)
   @ServiceNotNull
   private UUID id;
-  @ApiModelProperty(value = "If set updates the Organization of the Origin (takes Organization UUID)",
+  @Schema(description = "If set updates the Organization of the Origin (takes Organization UUID)",
           example = "123e4567-e89b-12d3-a456-426655440000")
   private UUID organization;
-  @ApiModelProperty(value = "If set updates the name of the Origin. Needs to be unique per Namespace", example = "John Doe")
+  @Schema(description = "If set updates the name of the Origin. Needs to be unique per Namespace", example = "John Doe")
   private String name;
-  @ApiModelProperty(value = "If set updates the description of the Origin.", example = "John Doe from Doe Inc")
+  @Schema(description = "If set updates the description of the Origin.", example = "John Doe from Doe Inc")
   private String description;
-  @ApiModelProperty(value = "If set updates the trust value of the Origin (value between 0.0 and 1.0)", example = "0.8")
+  @Schema(description = "If set updates the trust value of the Origin (value between 0.0 and 1.0)", example = "0.8")
   @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)

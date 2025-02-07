@@ -2,8 +2,7 @@ package no.mnemonic.services.grafeo.api.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.utilities.json.RoundingFloatSerializer;
@@ -13,7 +12,9 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-@ApiModel(description = "Facts provide additional information about an Object. " +
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Facts provide additional information about an Object. " +
         "One Fact can link one or two Objects together and thereby describes the relationship between those Objects."
 )
 public class Fact {
@@ -22,43 +23,43 @@ public class Fact {
     Retracted
   }
 
-  @ApiModelProperty(value = "Uniquely identifies the Fact", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+  @Schema(description = "Uniquely identifies the Fact", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
   private final UUID id;
-  @ApiModelProperty(value = "Type of the Fact", required = true)
+  @Schema(description = "Type of the Fact", requiredMode = REQUIRED)
   private final FactType.Info type;
-  @ApiModelProperty(value = "Contains the actual information", example = "APT1")
+  @Schema(description = "Contains the actual information", example = "APT1")
   private final String value;
-  @ApiModelProperty(value = "Links directly to another Fact")
+  @Schema(description = "Links directly to another Fact")
   private final Fact.Info inReferenceTo;
-  @ApiModelProperty(value = "Who owns the Fact", required = true)
+  @Schema(description = "Who owns the Fact", requiredMode = REQUIRED)
   private final Organization.Info organization;
-  @ApiModelProperty(value = "Who added the Fact", required = true)
+  @Schema(description = "Who added the Fact", requiredMode = REQUIRED)
   private final Subject.Info addedBy;
-  @ApiModelProperty(value = "Who saw the Fact last", required = true)
+  @Schema(description = "Who saw the Fact last", requiredMode = REQUIRED)
   private final Subject.Info lastSeenBy;
-  @ApiModelProperty(value = "Where the information came from", required = true)
+  @Schema(description = "Where the information came from", requiredMode = REQUIRED)
   private final Origin.Info origin;
-  @ApiModelProperty(value = "How much the Origin was trusted when the Fact was created", example = "0.8", required = true)
+  @Schema(description = "How much the Origin was trusted when the Fact was created", example = "0.8", requiredMode = REQUIRED)
   @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float trust;
-  @ApiModelProperty(value = "How much confidence was given that the Fact is true", example = "0.9", required = true)
+  @Schema(description = "How much confidence was given that the Fact is true", example = "0.9", requiredMode = REQUIRED)
   @JsonSerialize(using = RoundingFloatSerializer.class)
   private final float confidence;
-  @ApiModelProperty(value = "Who has access to the Fact", required = true)
+  @Schema(description = "Who has access to the Fact", requiredMode = REQUIRED)
   private final AccessMode accessMode;
-  @ApiModelProperty(value = "When the Fact was created", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
+  @Schema(description = "When the Fact was created", example = "2016-09-28T21:26:22Z", type = "string", requiredMode = REQUIRED)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
-  @ApiModelProperty(value = "When the Fact was last seen", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
+  @Schema(description = "When the Fact was last seen", example = "2016-09-28T21:26:22Z", type = "string", requiredMode = REQUIRED)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long lastSeenTimestamp;
-  @ApiModelProperty(value = "Object which is linked to Fact as source")
+  @Schema(description = "Object which is linked to Fact as source")
   private final Object.Info sourceObject;
-  @ApiModelProperty(value = "Object which is linked to Fact as destination")
+  @Schema(description = "Object which is linked to Fact as destination")
   private final Object.Info destinationObject;
-  @ApiModelProperty(value = "True if the binding between source Object, Fact and destination Object is bidirectional", required = true)
+  @Schema(description = "True if the binding between source Object, Fact and destination Object is bidirectional", requiredMode = REQUIRED)
   private final boolean bidirectionalBinding;
-  @ApiModelProperty(value = "Contains any flags set on the Fact")
+  @Schema(description = "Contains any flags set on the Fact")
   private final Set<Flag> flags;
 
   private Fact(UUID id,
@@ -137,7 +138,7 @@ public class Fact {
     return confidence;
   }
 
-  @ApiModelProperty(value = "Certainty = Trust x Confidence", example = "0.72", required = true)
+  @Schema(description = "Certainty = Trust x Confidence", example = "0.72", requiredMode = REQUIRED)
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   @JsonSerialize(using = RoundingFloatSerializer.class)
   public float getCertainty() {
@@ -298,13 +299,13 @@ public class Fact {
     }
   }
 
-  @ApiModel(value = "FactInfo", description = "Short summary of a Fact.")
+  @Schema(name = "FactInfo", description = "Short summary of a Fact.")
   public static class Info {
-    @ApiModelProperty(value = "Uniquely identifies the Fact", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+    @Schema(description = "Uniquely identifies the Fact", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
     private final UUID id;
-    @ApiModelProperty(value = "Type of the Fact", required = true)
+    @Schema(description = "Type of the Fact", requiredMode = REQUIRED)
     private final FactType.Info type;
-    @ApiModelProperty(value = "Contains the actual information", example = "APT1")
+    @Schema(description = "Contains the actual information", example = "APT1")
     private final String value;
 
     private Info(UUID id, FactType.Info type, String value) {

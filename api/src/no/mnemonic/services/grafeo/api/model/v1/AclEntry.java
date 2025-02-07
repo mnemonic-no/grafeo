@@ -1,22 +1,23 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.utilities.json.TimestampSerializer;
 
 import java.util.UUID;
 
-@ApiModel(description = "An entry inside an Access Control List.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "An entry inside an Access Control List.")
 public class AclEntry {
 
-  @ApiModelProperty(value = "Uniquely identifies the ACL entry", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+  @Schema(description = "Uniquely identifies the ACL entry", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
   private final UUID id;
-  @ApiModelProperty(value = "To whom access is granted", required = true)
+  @Schema(description = "To whom access is granted", requiredMode = REQUIRED)
   private final Subject.Info subject;
-  @ApiModelProperty(value = "Who granted access", required = true)
+  @Schema(description = "Who granted access", requiredMode = REQUIRED)
   private final Origin.Info origin;
-  @ApiModelProperty(value = "When access was granted", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
+  @Schema(description = "When access was granted", example = "2016-09-28T21:26:22Z", type = "string", requiredMode = REQUIRED)
   @JsonSerialize(using = TimestampSerializer.class)
   private final Long timestamp;
 

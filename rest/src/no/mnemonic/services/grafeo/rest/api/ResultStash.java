@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.common.api.ResultSet;
 import no.mnemonic.services.grafeo.rest.providers.ObjectMapperResolver;
@@ -19,19 +18,30 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-@ApiModel(description = "Container for all responses from the API.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Container for all responses from the API.")
 public class ResultStash<T> {
 
-  @ApiModelProperty(value = "Status code returned from API", example = "200", required = true)
+  @Schema(description = "Status code returned from API", example = "200", requiredMode = REQUIRED)
   private final int responseCode;
-  @ApiModelProperty(value = "Maximum number of returned results", example = "25", required = true)
+  @Schema(description = "Maximum number of returned results", example = "25", requiredMode = REQUIRED)
   private final int limit;
-  @ApiModelProperty(value = "Number of available results on server", example = "100", required = true)
+  @Schema(description = "Number of available results on server", example = "100", requiredMode = REQUIRED)
   private final int count;
-  @ApiModelProperty(value = "Contains messages returned from the API, usually error messages")
+  @Schema(description = "Contains messages returned from the API, usually error messages")
   private final List<ResultMessage> messages;
-  @ApiModelProperty(value = "Returned results (might be an array or a single object)", required = true)
+  @Schema(description = "Returned results (might be an array or a single object)", requiredMode = REQUIRED)
   private final T data;
+
+  /**
+   * Only ever needed for subclasses used to make Swagger recognize the correct response model.
+   * <p>
+   * DON'T USE FOR OTHER PURPOSES!
+   */
+  protected ResultStash() {
+    this(0, 0, 0, null, null);
+  }
 
   private ResultStash(int responseCode, int limit, int count, List<ResultMessage> messages, T data) {
     this.responseCode = responseCode;
@@ -55,7 +65,7 @@ public class ResultStash<T> {
 
   // This is needed to make the 'size' field visible in Swagger documentation. It's not actually used as the field
   // will be set by the custom ResultStashSerializer.
-  @ApiModelProperty(value = "Actual number of returned results", example = "25", required = true)
+  @Schema(description = "Actual number of returned results", example = "25", requiredMode = REQUIRED)
   public int getSize() {
     return -1;
   }

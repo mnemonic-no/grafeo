@@ -1,28 +1,29 @@
 package no.mnemonic.services.grafeo.rest.api;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.utilities.json.TimestampSerializer;
 
-@ApiModel(description = "Container for a message returned from the API server, usually an error message.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Container for a message returned from the API server, usually an error message.")
 public class ResultMessage {
 
   public enum Type {
     ActionError, FieldError
   }
 
-  @ApiModelProperty(value = "Type of the message", example = "FieldError", required = true)
+  @Schema(description = "Type of the message", example = "FieldError", requiredMode = REQUIRED)
   private final Type type;
-  @ApiModelProperty(value = "Non-translated message", example = "Name has an invalid format", required = true)
+  @Schema(description = "Non-translated message", example = "Name has an invalid format", requiredMode = REQUIRED)
   private final String message;
-  @ApiModelProperty(value = "Message template usable for translating messages", example = "validation.error", required = true)
+  @Schema(description = "Message template usable for translating messages", example = "validation.error", requiredMode = REQUIRED)
   private final String messageTemplate;
-  @ApiModelProperty(value = "Contains the field which caused an error (can usually be mapped to a field in the request)", example = "name")
+  @Schema(description = "Contains the field which caused an error (can usually be mapped to a field in the request)", example = "name")
   private final String field;
-  @ApiModelProperty(value = "Contains the parameter which caused an error (usually the field's value in the request)", example = "Non-Valid-Name")
+  @Schema(description = "Contains the parameter which caused an error (usually the field's value in the request)", example = "Non-Valid-Name")
   private final String parameter;
-  @ApiModelProperty(value = "When the message was generated", example = "2016-09-28T21:26:22Z", dataType = "string", required = true)
+  @Schema(description = "When the message was generated", example = "2016-09-28T21:26:22Z", type = "string", requiredMode = REQUIRED)
   @JsonSerialize(using = TimestampSerializer.class)
   private final long timestamp;
 

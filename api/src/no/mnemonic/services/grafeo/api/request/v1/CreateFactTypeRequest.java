@@ -1,8 +1,7 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
@@ -14,26 +13,28 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 
-@ApiModel(description = "Create a new FactType.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Create a new FactType.")
 public class CreateFactTypeRequest implements ValidatingRequest {
 
-  @ApiModelProperty(value = "Name of new FactType. Needs to be unique per Namespace", example = "ThreatActorAlias", required = true)
+  @Schema(description = "Name of new FactType. Needs to be unique per Namespace", example = "ThreatActorAlias", requiredMode = REQUIRED)
   @NotBlank
   private String name;
-  @ApiModelProperty(value = "Confidence assigned by default to new Facts of this type (value between 0.0 and 1.0, default 1.0)",
-          example = "0.9", required = true)
+  @Schema(description = "Confidence assigned by default to new Facts of this type (value between 0.0 and 1.0, default 1.0)",
+          example = "0.9", requiredMode = REQUIRED)
   @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)
   private float defaultConfidence = 1.0f;
-  @ApiModelProperty(value = "Validator used to validate new Facts of this type", example = "RegexValidator", required = true)
+  @Schema(description = "Validator used to validate new Facts of this type", example = "RegexValidator", requiredMode = REQUIRED)
   @NotBlank
   private String validator;
-  @ApiModelProperty(value = "Parameters used to customize Validator", example = "[^ ]+")
+  @Schema(description = "Parameters used to customize Validator", example = "[^ ]+")
   private String validatorParameter;
-  @ApiModelProperty(value = "Define to which Objects new Facts of this type can be linked")
+  @Schema(description = "Define to which Objects new Facts of this type can be linked")
   private List<@Valid FactObjectBindingDefinition> relevantObjectBindings;
-  @ApiModelProperty(value = "Define to which Facts new meta Facts of this type can be linked")
+  @Schema(description = "Define to which Facts new meta Facts of this type can be linked")
   private List<@Valid MetaFactBindingDefinition> relevantFactBindings;
 
   public String getName() {

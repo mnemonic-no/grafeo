@@ -1,6 +1,12 @@
 package no.mnemonic.services.grafeo.rest.api.v1;
 
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import no.mnemonic.services.grafeo.api.exceptions.AccessDeniedException;
 import no.mnemonic.services.grafeo.api.exceptions.AuthenticationFailedException;
 import no.mnemonic.services.grafeo.api.exceptions.InvalidArgumentException;
@@ -21,12 +27,13 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.rest.api.ResultStash.buildResponse;
 
 @Path("/v1/objectType")
-@Api(tags = {"development"})
+@Tag(name = "/v1/objectType")
 public class ObjectTypeEndpoint {
 
   private final CredentialsResolver credentialsResolver;
@@ -41,36 +48,41 @@ public class ObjectTypeEndpoint {
   @GET
   @Path("/uuid/{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Retrieve an ObjectType by its UUID.",
-          notes = "This operation returns an ObjectType identified by its UUID.",
-          response = ObjectType.class
+  @Operation(
+          summary = "Retrieve an ObjectType by its UUID.",
+          description = "This operation returns an ObjectType identified by its UUID."
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Requested ObjectType does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "200",
+                  description = "ObjectType was successfully retrieved.",
+                  content = @Content(schema = @Schema(implementation = ResultStashObjectType.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Requested ObjectType does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("viewGrafeoType")
   public Response getObjectTypeById(
-          @PathParam("id") @ApiParam(value = "UUID of the requested ObjectType.") @NotNull @Valid UUID id
+          @PathParam("id") @Parameter(description = "UUID of the requested ObjectType.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.getObjectType(credentialsResolver.getRequestHeader(), new GetObjectTypeByIdRequest().setId(id)));
   }
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "List available ObjectTypes.",
-          notes = "This operation returns all available ObjectTypes.",
-          response = ObjectType.class,
-          responseContainer = "list"
+  @Operation(
+          summary = "List available ObjectTypes.",
+          description = "This operation returns all available ObjectTypes."
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "200",
+                  description = "ObjectTypes were successfully retrieved.",
+                  content = @Content(schema = @Schema(implementation = ResultStashListObjectType.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("viewGrafeoType")
   public Response searchObjectTypes()
@@ -81,29 +93,36 @@ public class ObjectTypeEndpoint {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Create a new ObjectType.",
-          notes = "This operation creates a new ObjectType in the Namespace of the running instance.\n\n" +
-                  "An ObjectType defines what kind of Objects can exist in the system and Facts can only link to those " +
-                  "Objects. Objects are automatically created when Facts referencing them are added to the system. The " +
-                  "system verifies that a new Object satisfies the ObjectType definition by checking that the Object's " +
-                  "value passes the ObjectType's Validator.\n\n" +
-                  "The following Validators exist:\n\n" +
-                  "* TrueValidator: It accepts a value without any validation. Use carefully as the Validator cannot be " +
-                  "changed after the ObjectType has been created!\n" +
-                  "* RegexValidator: It matches a value against a regular expression. The regular expression must be " +
-                  "provided using the 'validatorParameter' field.",
-          response = ObjectType.class,
-          code = 201
+  @Operation(
+          summary = "Create a new ObjectType.",
+          description = """
+                  This operation creates a new ObjectType in the Namespace of the running instance.
+                  
+                  An ObjectType defines what kind of Objects can exist in the system and Facts can only link to those
+                  Objects. Objects are automatically created when Facts referencing them are added to the system. The
+                  system verifies that a new Object satisfies the ObjectType definition by checking that the Object's
+                  value passes the ObjectType's Validator.
+                  
+                  The following Validators exist:
+                  
+                  * TrueValidator: It accepts a value without any validation. Use carefully as the Validator cannot be
+                  changed after the ObjectType has been created!
+                  * RegexValidator: It matches a value against a regular expression. The regular expression must be
+                  provided using the 'validatorParameter' field.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "201",
+                  description = "ObjectType was successfully created.",
+                  content = @Content(schema = @Schema(implementation = ResultStashObjectType.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("addGrafeoType")
   public Response createObjectType(
-          @ApiParam(value = "Request to create ObjectType.") @NotNull @Valid CreateObjectTypeRequest request
+          @Parameter(description = "Request to create ObjectType.") @NotNull @Valid CreateObjectTypeRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
@@ -115,23 +134,31 @@ public class ObjectTypeEndpoint {
   @Path("/uuid/{id}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Update an existing ObjectType.",
-          notes = "This operation updates an existing ObjectType.",
-          response = ObjectType.class
+  @Operation(
+          summary = "Update an existing ObjectType.",
+          description = "This operation updates an existing ObjectType."
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "ObjectType does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "200",
+                  description = "ObjectType was successfully updated.",
+                  content = @Content(schema = @Schema(implementation = ResultStashObjectType.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "ObjectType does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("updateGrafeoType")
   public Response updateObjectType(
-          @PathParam("id") @ApiParam(value = "UUID of ObjectType.") @NotNull @Valid UUID id,
-          @ApiParam(value = "Request to update ObjectType.") @NotNull @Valid UpdateObjectTypeRequest request
+          @PathParam("id") @Parameter(description = "UUID of ObjectType.") @NotNull @Valid UUID id,
+          @Parameter(description = "Request to update ObjectType.") @NotNull @Valid UpdateObjectTypeRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.updateObjectType(credentialsResolver.getRequestHeader(), request.setId(id)));
   }
 
+  private static class ResultStashObjectType extends ResultStash<ObjectType> {
+  }
+
+  private static class ResultStashListObjectType extends ResultStash<List<ObjectType>> {
+  }
 }

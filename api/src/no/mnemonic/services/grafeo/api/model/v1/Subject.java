@@ -1,18 +1,19 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.UUID;
 
-@ApiModel(description = "Represents a Subject inside the system, e.g. a user.")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Represents a Subject inside the system, e.g. a user.")
 public class Subject {
 
-  @ApiModelProperty(value = "Uniquely identifies the Subject", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+  @Schema(description = "Uniquely identifies the Subject", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
   private final UUID id;
-  @ApiModelProperty(value = "Name of the Subject", example = "John Doe", required = true)
+  @Schema(description = "Name of the Subject", example = "John Doe", requiredMode = REQUIRED)
   private final String name;
-  @ApiModelProperty(value = "Organization the Subject belongs to")
+  @Schema(description = "Organization the Subject belongs to")
   private final Organization.Info organization;
 
   private Subject(UUID id, String name, Organization.Info organization) {
@@ -69,11 +70,11 @@ public class Subject {
     }
   }
 
-  @ApiModel(value = "SubjectInfo", description = "Short summary of a Subject.")
+  @Schema(name = "SubjectInfo", description = "Short summary of a Subject.")
   public static class Info {
-    @ApiModelProperty(value = "Uniquely identifies the Subject", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+    @Schema(description = "Uniquely identifies the Subject", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
     private final UUID id;
-    @ApiModelProperty(value = "Name of the Subject", example = "John Doe", required = true)
+    @Schema(description = "Name of the Subject", example = "John Doe", requiredMode = REQUIRED)
     private final String name;
 
     private Info(UUID id, String name) {

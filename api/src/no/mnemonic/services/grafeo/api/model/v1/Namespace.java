@@ -1,18 +1,19 @@
 package no.mnemonic.services.grafeo.api.model.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.UUID;
 
-@ApiModel(description = "Namespaces distinguish meta data imported from different system instances. " +
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Namespaces distinguish meta data imported from different system instances. " +
         "For example, namespaces resolve conflicts between same types defined in multiple instances."
 )
 public class Namespace {
 
-  @ApiModelProperty(value = "Uniquely identifies the Namespace", example = "123e4567-e89b-12d3-a456-426655440000", required = true)
+  @Schema(description = "Uniquely identifies the Namespace", example = "123e4567-e89b-12d3-a456-426655440000", requiredMode = REQUIRED)
   private final UUID id;
-  @ApiModelProperty(value = "Name of the Namespace", example = "mnemonic", required = true)
+  @Schema(description = "Name of the Namespace", example = "mnemonic", requiredMode = REQUIRED)
   private final String name;
 
   private Namespace(UUID id, String name) {

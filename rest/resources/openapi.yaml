@@ -1,0 +1,23 @@
+resourcePackages:
+  - no.mnemonic.services.grafeo.rest.api
+prettyPrint: true
+sortOutput: true
+cacheTTL: -1
+openAPI31: true
+openAPI:
+  info:
+    title: grafeo
+    description: Open platform for modelling, collection and exchange of knowledge
+    version: 0.1
+    contact:
+      name: mnemonic development team
+      email: opensource@mnemonic.no
+      url: https://github.com/mnemonic-no
+  components:
+    securitySchemes:
+      ApiKeyAuth:
+        type: apiKey
+        in: header
+        name: Grafeo-User-ID
+  security:
+    - ApiKeyAuth: []

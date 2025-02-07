@@ -1,6 +1,12 @@
 package no.mnemonic.services.grafeo.rest.api.v1;
 
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.services.grafeo.api.exceptions.AccessDeniedException;
@@ -26,12 +32,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.rest.api.ResultStash.buildResponse;
 
 @Path("/v1/fact")
-@Api(tags = {"development"})
+@Tag(name = "/v1/fact")
 public class FactEndpoint {
 
   private final CredentialsResolver credentialsResolver;
@@ -46,25 +53,31 @@ public class FactEndpoint {
   @GET
   @Path("/uuid/{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Retrieve a Fact by its UUID.",
-          notes = "This operation returns a Fact identified by its UUID. The request will be rejected with a 403 if a " +
-                  "user does not have access to the requested Fact.\n\n" +
-                  "If the access mode is Public the Fact will be available to everyone. If the access mode is Explicit " +
-                  "only users in the Fact's access control list will have access to the Fact. If the access mode is " +
-                  "RoleBased (the default mode) a user must be either in the Fact's ACL or have general role-based " +
-                  "access to the Organization owning the Fact. A user who created a Fact will always have access to it.",
-          response = Fact.class
+  @Operation(
+          summary = "Retrieve a Fact by its UUID.",
+          description = """
+                  This operation returns a Fact identified by its UUID. The request will be rejected with a 403 if a
+                  user does not have access to the requested Fact.
+                  
+                  If the access mode is Public the Fact will be available to everyone. If the access mode is Explicit
+                  only users in the Fact's access control list will have access to the Fact. If the access mode is
+                  RoleBased (the default mode) a user must be either in the Fact's ACL or have general role-based
+                  access to the Organization owning the Fact. A user who created a Fact will always have access to it.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Requested Fact does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "200",
+                  description = "Fact was successfully retrieved.",
+                  content = @Content(schema = @Schema(implementation = ResultStashFact.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Requested Fact does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("viewGrafeoFact")
   public Response getFactById(
-          @PathParam("id") @ApiParam(value = "UUID of the requested Fact.") @NotNull @Valid UUID id
+          @PathParam("id") @Parameter(description = "UUID of the requested Fact.") @NotNull @Valid UUID id
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.getFact(credentialsResolver.getRequestHeader(), new GetFactByIdRequest().setId(id)));
   }
@@ -73,40 +86,49 @@ public class FactEndpoint {
   @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Search for Facts.",
-          notes = "This operation searches for Facts and returns any matching Facts. With the request body the user can " +
-                  "specify which Facts will be returned. Searching against linked Objects will only be performed one " +
-                  "level deep, i.e. only Objects directly linked to a Fact will be searched. Only the Facts a user has " +
-                  "access to will be returned.\n\n" +
-                  "Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields: " +
-                  "Fact value and Object value. The 'keywords' parameter must match one of those fields. The following " +
-                  "search features are available when using this parameter.\n\n" +
-                  "* A simple query string supporting the query syntax provided by Elasticsearch [0].\n" +
-                  "* An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.\n" +
-                  "* A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.\n\n" +
-                  "Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search " +
-                  "or domain prefix search is interpreted as a simple query string, it can be useful to filter on " +
-                  "'factType' or 'objectType' in addition.\n\n" +
-                  "In contrast to the fuzzy search above other filter parameters such as 'objectValue' and 'factValue' " +
-                  "require an exact match. When searching on 'objectType', 'factType', 'organization' or 'origin' it is " +
-                  "possible to either specify the name or UUID of the referenced entity. Retracted Facts are excluded by " +
-                  "default from the search result but they are always included in the returned 'count' value (the total " +
-                  "number of Facts matching the search parameters). It is allowed to request an unlimited search result " +
-                  "(i.e. 'limit' parameter set to 0), however, the API will enforce a maximum upper limit in order to protect " +
-                  "system resources. In this case the search should be narrowed down using additional search parameters.\n\n" +
-                  "[0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html",
-          response = Fact.class,
-          responseContainer = "list"
+  @Operation(
+          summary = "Search for Facts.",
+          description = """
+                  This operation searches for Facts and returns any matching Facts. With the request body the user can
+                  specify which Facts will be returned. Searching against linked Objects will only be performed one
+                  level deep, i.e. only Objects directly linked to a Fact will be searched. Only the Facts a user has
+                  access to will be returned.
+                  
+                  Using the 'keywords' parameter in the request allows to perform a fuzzy match on the following fields:
+                  Fact value and Object value. The 'keywords' parameter must match one of those fields. The following
+                  search features are available when using this parameter.
+                  
+                  * A simple query string supporting the query syntax provided by Elasticsearch [0].
+                  * An IP range search, for example '1.2.3.0/24' will match all IP addresses inside the given subnet.
+                  * A domain prefix search, for example 'example.org' will also match all subdomains of 'example.org'.
+                  
+                  Tip: If searching by 'keywords' returns unexpected results as it might happen when an IP range search
+                  or domain prefix search is interpreted as a simple query string, it can be useful to filter on
+                  'factType' or 'objectType' in addition.
+                  
+                  In contrast to the fuzzy search above other filter parameters such as 'objectValue' and 'factValue'
+                  require an exact match. When searching on 'objectType', 'factType', 'organization' or 'origin' it is
+                  possible to either specify the name or UUID of the referenced entity. Retracted Facts are excluded by
+                  default from the search result but they are always included in the returned 'count' description (the total
+                  number of Facts matching the search parameters). It is allowed to request an unlimited search result
+                  (i.e. 'limit' parameter set to 0), however, the API will enforce a maximum upper limit in order to protect
+                  system resources. In this case the search should be narrowed down using additional search parameters.
+                  
+                  [0] https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "200",
+                  description = "Facts were successfully retrieved.",
+                  content = @Content(schema = @Schema(implementation = ResultStashListFact.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("viewGrafeoFact")
   public Response searchFacts(
-          @ApiParam(value = "Request to search for Facts.") @NotNull @Valid SearchFactRequest request
+          @Parameter(description = "Request to search for Facts.") @NotNull @Valid SearchFactRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return buildResponse(service.searchFacts(credentialsResolver.getRequestHeader(), request));
   }
@@ -114,32 +136,40 @@ public class FactEndpoint {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Create a new Fact.",
-          notes = "This operation creates and returns a new Fact which is bound to one or two Objects. The new Fact must " +
-                  "conform to the specified FactType, i.e. the value must pass the FactType's Validator and the binding " +
-                  "to Objects must respect the definition by the FactType.\n\n" +
-                  "Access to the new Fact can be controlled with the 'accessMode' and 'acl' parameters in the request body. " +
-                  "The 'accessMode' parameter can take one of these values:\n\n" +
-                  "* Public: Fact will be publicly available to all users.\n" +
-                  "* RoleBased: Fact will be accessible to users which have access to the owning organization of the Fact, " +
-                  "or if explicitly added to the Fact's ACL.\n" +
-                  "* Explicit: Only users given explict access to the Fact can view it, in addition to the user creating it.\n\n" +
-                  "If the new Fact links to an Object which does not exist yet the missing Object will be created " +
-                  "automatically with respect to the Object's ObjectType (need to pass the ObjectType's Validator).\n\n" +
-                  "If a Fact with the same type, value, organization, origin, confidence, access mode and bound Objects already " +
-                  "exists, no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.",
-          response = Fact.class,
-          code = 201
+  @Operation(
+          summary = "Create a new Fact.",
+          description = """
+                  This operation creates and returns a new Fact which is bound to one or two Objects. The new Fact must
+                  conform to the specified FactType, i.e. the value must pass the FactType's Validator and the binding
+                  to Objects must respect the definition by the FactType.
+                  
+                  Access to the new Fact can be controlled with the 'accessMode' and 'acl' parameters in the request body.
+                  The 'accessMode' parameter can take one of these values:
+                  
+                  * Public: Fact will be publicly available to all users.
+                  * RoleBased: Fact will be accessible to users which have access to the owning organization of the Fact,
+                  or if explicitly added to the Fact's ACL.
+                  * Explicit: Only users given explict access to the Fact can view it, in addition to the user creating it.
+                  
+                  If the new Fact links to an Object which does not exist yet the missing Object will be created
+                  automatically with respect to the Object's ObjectType (need to pass the ObjectType's Validator).
+                  
+                  If a Fact with the same type, value, organization, origin, confidence, access mode and bound Objects already
+                  exists, no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "201",
+                  description = "Fact was successfully created.",
+                  content = @Content(schema = @Schema(implementation = ResultStashFact.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("addGrafeoFact")
   public Response createFact(
-          @ApiParam(value = "Request to create Fact.") @NotNull @Valid CreateFactRequest request
+          @Parameter(description = "Request to create Fact.") @NotNull @Valid CreateFactRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
@@ -150,26 +180,30 @@ public class FactEndpoint {
   @GET
   @Path("/uuid/{fact}/meta")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Retrieve a Fact's meta Facts.",
-          notes = "This operation retrieves the meta Facts bound to another Fact. The request will be rejected with " +
-                  "a 403 if a user does not have access to the Fact for which meta Facts should be retrieved.",
-          response = Fact.class,
-          responseContainer = "list"
+  @Operation(
+          summary = "Retrieve a Fact's meta Facts.",
+          description = """
+                  This operation retrieves the meta Facts bound to another Fact. The request will be rejected with
+                  a 403 if a user does not have access to the Fact for which meta Facts should be retrieved.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Referenced Fact does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "200",
+                  description = "Meta Facts were successfully retrieved.",
+                  content = @Content(schema = @Schema(implementation = ResultStashListFact.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Referenced Fact does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("viewGrafeoFact")
   public Response getMetaFacts(
-          @PathParam("fact") @ApiParam(value = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
-          @QueryParam("includeRetracted") @ApiParam(value = "Include retracted meta Facts (default false)") Boolean includeRetracted,
-          @QueryParam("before") @ApiParam(value = "Only return meta Facts seen before a specific timestamp.") String before,
-          @QueryParam("after") @ApiParam(value = "Only return meta Facts seen after a specific timestamp.") String after,
-          @QueryParam("limit") @ApiParam(value = "Limit the number of returned meta Facts (default 25, 0 means all)") @Min(0) Integer limit
+          @PathParam("fact") @Parameter(description = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
+          @QueryParam("includeRetracted") @Parameter(description = "Include retracted meta Facts (default false)") Boolean includeRetracted,
+          @QueryParam("before") @Parameter(description = "Only return meta Facts seen before a specific timestamp.") String before,
+          @QueryParam("after") @Parameter(description = "Only return meta Facts seen after a specific timestamp.") String after,
+          @QueryParam("limit") @Parameter(description = "Limit the number of returned meta Facts (default 25, 0 means all)") @Min(0) Integer limit
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.searchMetaFacts(credentialsResolver.getRequestHeader(), new SearchMetaFactsRequest()
             .setFact(fact)
@@ -184,32 +218,39 @@ public class FactEndpoint {
   @Path("/uuid/{fact}/meta")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Create a new meta Fact.",
-          notes = "This operation creates and returns a new meta Fact, a Fact which is directly referencing another " +
-                  "existing Fact. The new meta Fact must conform to the specified FactType, i.e. the value must pass the " +
-                  "FactType's Validator and the FactType of the referenced Fact must fulfil the definition by the FactType " +
-                  "of the new meta Fact.\n\n" +
-                  "The access mode of a meta Fact can be more restricted than the access mode of the referenced Fact, " +
-                  "but never less restricted (Public < RoleBased < Explicit). If not specified the access mode of the " +
-                  "referenced Fact will be used.\n\n" +
-                  "If a meta Fact with the same type, value, organization, origin, confidence and access mode exists, no " +
-                  "new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.\n\n" +
-                  "The request will be rejected with a 403 if a user does not have access to the Fact for which the new " +
-                  "meta Fact should be created.",
-          response = Fact.class,
-          code = 201
+  @Operation(
+          summary = "Create a new meta Fact.",
+          description = """
+                  This operation creates and returns a new meta Fact, a Fact which is directly referencing another
+                  existing Fact. The new meta Fact must conform to the specified FactType, i.e. the value must pass the
+                  FactType's Validator and the FactType of the referenced Fact must fulfil the definition by the FactType
+                  of the new meta Fact.
+                  
+                  The access mode of a meta Fact can be more restricted than the access mode of the referenced Fact,
+                  but never less restricted (Public < RoleBased < Explicit). If not specified the access mode of the
+                  referenced Fact will be used.
+                  
+                  If a meta Fact with the same type, value, organization, origin, confidence and access mode exists,
+                  no new Fact will be created. Instead the lastSeenTimestamp of the existing Fact will be updated.
+                  
+                  The request will be rejected with a 403 if a user does not have access to the Fact for which the new
+                  meta Fact should be created.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Referenced Fact does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "201",
+                  description = "Meta Fact was successfully created.",
+                  content = @Content(schema = @Schema(implementation = ResultStashFact.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Referenced Fact does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("addGrafeoFact")
   public Response createMetaFact(
-          @PathParam("fact") @ApiParam(value = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
-          @ApiParam(value = "Request to create meta Fact.") @NotNull @Valid CreateMetaFactRequest request
+          @PathParam("fact") @Parameter(description = "UUID of referenced Fact.") @NotNull @Valid UUID fact,
+          @Parameter(description = "Request to create meta Fact.") @NotNull @Valid CreateMetaFactRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
@@ -221,28 +262,34 @@ public class FactEndpoint {
   @Path("/uuid/{fact}/retract")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Retract an existing Fact.",
-          notes = "This operation retracts an already existing Fact. It creates a new meta Fact with a special 'Retraction' " +
-                  "FactType which references the retracted Fact. Except of using a special FactType the new Fact is treated " +
-                  "the same as every other meta Fact.\n\n" +
-                  "The access mode of the retraction Fact can be more restricted than the access mode of the retracted Fact, " +
-                  "but never less restricted (Public < RoleBased < Explicit). If not specified the access mode of the " +
-                  "retracted Fact will be used.\n\n" +
-                  "The request will be rejected with a 403 if a user does not have access to the Fact to retract.",
-          response = Fact.class,
-          code = 201
+  @Operation(
+          summary = "Retract an existing Fact.",
+          description = """
+                  This operation retracts an already existing Fact. It creates a new meta Fact with a special 'Retraction'
+                  FactType which references the retracted Fact. Except of using a special FactType the new Fact is treated
+                  the same as every other meta Fact.
+                  
+                  The access mode of the retraction Fact can be more restricted than the access mode of the retracted Fact,
+                  but never less restricted (Public < RoleBased < Explicit). If not specified the access mode of the
+                  retracted Fact will be used.
+                  
+                  The request will be rejected with a 403 if a user does not have access to the Fact to retract.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Fact to retract does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "201",
+                  description = "Fact was successfully retracted.",
+                  content = @Content(schema = @Schema(implementation = ResultStashFact.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Fact to retract does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("addGrafeoFact")
   public Response retractFact(
-          @PathParam("fact") @ApiParam(value = "UUID of Fact to retract.") @NotNull @Valid UUID fact,
-          @ApiParam(value = "Request to retract a Fact.") @NotNull @Valid RetractFactRequest request
+          @PathParam("fact") @Parameter(description = "UUID of Fact to retract.") @NotNull @Valid UUID fact,
+          @Parameter(description = "Request to retract a Fact.") @NotNull @Valid RetractFactRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
@@ -253,23 +300,27 @@ public class FactEndpoint {
   @GET
   @Path("/uuid/{fact}/access")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Retrieve a Fact's ACL.",
-          notes = "This operation retrieves the access control list of a Fact, i.e. the list of users who were given " +
-                  "explicit access to a Fact. The request will be rejected with a 403 if a user does not have access " +
-                  "to the Fact.",
-          response = AclEntry.class,
-          responseContainer = "list"
+  @Operation(
+          summary = "Retrieve a Fact's ACL.",
+          description = """
+                  This operation retrieves the access control list of a Fact, i.e. the list of users who were given
+                  explicit access to a Fact. The request will be rejected with a 403 if a user does not have access
+                  to the Fact.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Fact does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "200",
+                  description = "ACL was successfully retrieved.",
+                  content = @Content(schema = @Schema(implementation = ResultStashListAclEntry.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Fact does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("viewGrafeoFactAccess")
   public Response getFactAcl(
-          @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact
+          @PathParam("fact") @Parameter(description = "UUID of Fact.") @NotNull @Valid UUID fact
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.getFactAcl(credentialsResolver.getRequestHeader(), new GetFactAclRequest().setFact(fact)));
   }
@@ -278,24 +329,28 @@ public class FactEndpoint {
   @Path("/uuid/{fact}/access/{subject}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Grant a Subject access to a Fact.",
-          notes = "This operation grants a Subject explicit access to a non-public Fact. The request will be rejected " +
-                  "with a 403 if a user does not have access to the Fact or is not allowed to grant further access.",
-          response = AclEntry.class,
-          code = 201
+  @Operation(
+          summary = "Grant a Subject access to a Fact.",
+          description = """
+                  This operation grants a Subject explicit access to a non-public Fact. The request will be rejected
+                  with a 403 if a user does not have access to the Fact or is not allowed to grant further access.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Fact does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "201",
+                  description = "Access was successfully granted.",
+                  content = @Content(schema = @Schema(implementation = ResultStashAclEntry.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Fact does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("grantGrafeoFactAccess")
   public Response grantFactAccess(
-          @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact,
-          @PathParam("subject") @ApiParam(value = "UUID or name of Subject.") @NotBlank String subject,
-          @ApiParam(hidden = true) @Valid GrantFactAccessRequest request
+          @PathParam("fact") @Parameter(description = "UUID of Fact.") @NotNull @Valid UUID fact,
+          @PathParam("subject") @Parameter(description = "UUID or name of Subject.") @NotBlank String subject,
+          @Parameter(hidden = true) @Valid GrantFactAccessRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     // Swagger won't send a request object because it's hidden from the API, thus, make sure that it's initialized.
     request = ObjectUtils.ifNull(request, new GrantFactAccessRequest());
@@ -309,24 +364,28 @@ public class FactEndpoint {
   @GET
   @Path("/uuid/{fact}/comments")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Retrieve a Fact's comments.",
-          notes = "This operation retrieves the comments of a Fact. The request will be rejected with a 403 " +
-                  "if a user does not have access to the Fact.",
-          response = FactComment.class,
-          responseContainer = "list"
+  @Operation(
+          summary = "Retrieve a Fact's comments.",
+          description = """
+                  This operation retrieves the comments of a Fact. The request will be rejected with a 403
+                  if a user does not have access to the Fact.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Fact does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "200",
+                  description = "Comments were successfully retrieved.",
+                  content = @Content(schema = @Schema(implementation = ResultStashListFactComment.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Fact does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("viewGrafeoFactComment")
   public Response getFactComments(
-          @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact,
-          @QueryParam("before") @ApiParam(value = "Only return comments added before the given timestamp.") String before,
-          @QueryParam("after") @ApiParam(value = "Only return comments added after the given timestamp.") String after
+          @PathParam("fact") @Parameter(description = "UUID of Fact.") @NotNull @Valid UUID fact,
+          @QueryParam("before") @Parameter(description = "Only return comments added before the given timestamp.") String before,
+          @QueryParam("after") @Parameter(description = "Only return comments added after the given timestamp.") String after
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return buildResponse(service.getFactComments(credentialsResolver.getRequestHeader(), new GetFactCommentsRequest()
             .setFact(fact)
@@ -339,23 +398,27 @@ public class FactEndpoint {
   @Path("/uuid/{fact}/comments")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(
-          value = "Add a comment to a Fact.",
-          notes = "This operation adds a comment to a Fact. The request will be rejected with a 403 " +
-                  "if a user does not have access to the Fact.",
-          response = FactComment.class,
-          code = 201
+  @Operation(
+          summary = "Add a comment to a Fact.",
+          description = """
+                  This operation adds a comment to a Fact. The request will be rejected with a 403
+                  if a user does not have access to the Fact.
+                  """
   )
   @ApiResponses({
-          @ApiResponse(code = 401, message = "User could not be authenticated."),
-          @ApiResponse(code = 403, message = "User is not allowed to perform this operation."),
-          @ApiResponse(code = 404, message = "Fact does not exist."),
-          @ApiResponse(code = 412, message = "Any parameter has an invalid format.")
+          @ApiResponse(
+                  responseCode = "201",
+                  description = "Commented was successfully added.",
+                  content = @Content(schema = @Schema(implementation = ResultStashFactComment.class))),
+          @ApiResponse(responseCode = "401", description = "User could not be authenticated."),
+          @ApiResponse(responseCode = "403", description = "User is not allowed to perform this operation."),
+          @ApiResponse(responseCode = "404", description = "Fact does not exist."),
+          @ApiResponse(responseCode = "412", description = "Any parameter has an invalid format.")
   })
   @RolesAllowed("addGrafeoFactComment")
   public Response createFactComment(
-          @PathParam("fact") @ApiParam(value = "UUID of Fact.") @NotNull @Valid UUID fact,
-          @ApiParam(value = "Request to add comment.") @NotNull @Valid CreateFactCommentRequest request
+          @PathParam("fact") @Parameter(description = "UUID of Fact.") @NotNull @Valid UUID fact,
+          @Parameter(description = "Request to add comment.") @NotNull @Valid CreateFactCommentRequest request
   ) throws AccessDeniedException, AuthenticationFailedException, InvalidArgumentException, ObjectNotFoundException {
     return ResultStash.builder()
             .setStatus(Response.Status.CREATED)
@@ -371,4 +434,21 @@ public class FactEndpoint {
     }
   }
 
+  private static class ResultStashAclEntry extends ResultStash<AclEntry> {
+  }
+
+  private static class ResultStashListAclEntry extends ResultStash<List<AclEntry>> {
+  }
+
+  static class ResultStashFact extends ResultStash<Fact> {
+  }
+
+  static class ResultStashListFact extends ResultStash<List<Fact>> {
+  }
+
+  private static class ResultStashFactComment extends ResultStash<FactComment> {
+  }
+
+  private static class ResultStashListFactComment extends ResultStash<List<FactComment>> {
+  }
 }

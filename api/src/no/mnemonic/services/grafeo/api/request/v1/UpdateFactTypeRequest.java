@@ -1,8 +1,7 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.ListUtils;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
@@ -16,23 +15,23 @@ import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
 
-@ApiModel(description = "Update an existing FactType.")
+@Schema(description = "Update an existing FactType.")
 public class UpdateFactTypeRequest implements ValidatingRequest {
 
-  @ApiModelProperty(hidden = true)
+  @Schema(hidden = true)
   @ServiceNotNull
   private UUID id;
-  @ApiModelProperty(value = "If set updates the name of the FactType", example = "ThreatActorAlias")
+  @Schema(description = "If set updates the name of the FactType", example = "ThreatActorAlias")
   @Size(min = 1)
   private String name;
-  @ApiModelProperty(value = "If set updates the default confidence of the FactType (value between 0.0 and 1.0)", example = "0.9")
+  @Schema(description = "If set updates the default confidence of the FactType (value between 0.0 and 1.0)", example = "0.9")
   @JsonDeserialize(using = RoundingFloatDeserializer.class)
   @Min(0)
   @Max(1)
   private Float defaultConfidence;
-  @ApiModelProperty(value = "If set adds additional possible links between Facts and Objects")
+  @Schema(description = "If set adds additional possible links between Facts and Objects")
   private List<@Valid FactObjectBindingDefinition> addObjectBindings;
-  @ApiModelProperty(value = "If set adds additional possible links for meta Facts")
+  @Schema(description = "If set adds additional possible links for meta Facts")
   private List<@Valid MetaFactBindingDefinition> addFactBindings;
 
   public UUID getId() {

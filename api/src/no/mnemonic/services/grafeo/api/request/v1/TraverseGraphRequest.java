@@ -1,7 +1,6 @@
 package no.mnemonic.services.grafeo.api.request.v1;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
@@ -10,20 +9,22 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
-@ApiModel(description = "Request for traversing an Object/Fact graph")
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
+@Schema(description = "Request for traversing an Object/Fact graph")
 public class TraverseGraphRequest implements TimeFieldSearchRequest, ValidatingRequest {
 
-  @ApiModelProperty(value = "Gremlin query to execute.", example = "g.out()", required = true)
+  @Schema(description = "Gremlin query to execute.", example = "g.out()", requiredMode = REQUIRED)
   @NotBlank
   private String query;
-  @ApiModelProperty(value = "Traverse retracted Facts (default false)", example = "false")
+  @Schema(description = "Traverse retracted Facts (default false)", example = "false")
   private Boolean includeRetracted;
   // Annotations are specified on the TimeFieldSearchRequest interface.
   private Long startTimestamp;
   private Long endTimestamp;
   private TimeMatchStrategy timeMatchStrategy;
   private Set<TimeFieldStrategy> timeFieldStrategy;
-  @ApiModelProperty(value = "Limit the result size (default 25, 0 means all)", example = "25")
+  @Schema(description = "Limit the result size (default 25, 0 means all)", example = "25")
   @Min(0)
   private Integer limit;
 
