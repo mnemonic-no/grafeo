@@ -14,7 +14,7 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.OriginResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.OriginResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class OriginUpdateDelegate implements Delegate {
 

@@ -9,8 +9,8 @@ import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.metrics.*;
 import no.mnemonic.commons.utilities.StringUtils;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;

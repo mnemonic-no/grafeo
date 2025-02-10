@@ -15,7 +15,7 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.response.Org
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.OriginByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.SubjectByIdResponseResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;

@@ -13,8 +13,8 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.FactEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;

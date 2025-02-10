@@ -12,9 +12,9 @@ import no.mnemonic.services.common.api.proxy.serializer.Serializer;
 import no.mnemonic.services.common.api.proxy.serializer.XStreamSerializer;
 import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;

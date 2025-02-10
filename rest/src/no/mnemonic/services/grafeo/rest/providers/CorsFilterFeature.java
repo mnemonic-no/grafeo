@@ -3,8 +3,8 @@ package no.mnemonic.services.grafeo.rest.providers;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.jboss.resteasy.plugins.interceptors.CorsFilter;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.Provider;

@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;

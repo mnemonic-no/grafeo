@@ -23,7 +23,7 @@ import no.mnemonic.services.grafeo.service.implementation.handlers.FactCreateHan
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.time.Clock;
 import java.util.UUID;
 

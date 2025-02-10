@@ -43,20 +43,20 @@
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.5.1</mnemonic.commons.version>
     <mnemonic.messaging.version>1.4.13</mnemonic.messaging.version>
-    <mnemonic.services.common.version>0.6.16</mnemonic.services.common.version>
-    <mnemonic.services.triggers.version>0.0.19</mnemonic.services.triggers.version>
+    <mnemonic.services.common.version>0.6.17</mnemonic.services.common.version>
+    <mnemonic.services.triggers.version>0.0.20</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
     <cassandra.version>4.18.1</cassandra.version>
     <disruptor.version>4.0.0</disruptor.version>
     <elastic.search.version>7.17.27</elastic.search.version>
     <guava.version>33.4.0-jre</guava.version>
-    <guice.version>5.1.0</guice.version>
+    <guice.version>7.0.0</guice.version>
     <hazelcast.version>5.5.0</hazelcast.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
     <jackson.version>2.18.2</jackson.version>
     <jakarta.el.version>3.0.4</jakarta.el.version>
-    <jakarta.inject.version>1.0.5</jakarta.inject.version>
+    <jakarta.inject.version>2.0.1</jakarta.inject.version>
     <jakarta.validation.version>2.0.2</jakarta.validation.version>
     <jakarta.ws.rs.version>2.1.6</jakarta.ws.rs.version>
     <jetty.version>10.0.24</jetty.version>

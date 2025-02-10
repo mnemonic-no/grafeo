@@ -12,7 +12,7 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectEntity;
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import no.mnemonic.services.grafeo.dao.elastic.document.ObjectDocument;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;

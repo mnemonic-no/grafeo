@@ -4,8 +4,8 @@ import com.hazelcast.core.HazelcastInstance;
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.service.providers.AbstractHazelcastMapProvider;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.util.UUID;
 
 @Singleton

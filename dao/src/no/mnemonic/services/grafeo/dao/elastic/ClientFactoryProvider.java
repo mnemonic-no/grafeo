@@ -2,9 +2,9 @@ package no.mnemonic.services.grafeo.dao.elastic;
 
 import no.mnemonic.commons.utilities.collections.SetUtils;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
 
 /**
  * Provider class for instantiating a configured {@link ClientFactory}.

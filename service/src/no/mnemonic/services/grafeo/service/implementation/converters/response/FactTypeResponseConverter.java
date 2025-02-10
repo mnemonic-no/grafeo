@@ -7,7 +7,7 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.NamespaceByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.ObjectTypeByIdResponseResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;

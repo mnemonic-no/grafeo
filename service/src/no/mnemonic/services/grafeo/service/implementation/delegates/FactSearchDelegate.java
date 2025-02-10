@@ -12,7 +12,7 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.request.SearchFactRequestConverter;
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactSearchHandler;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class FactSearchDelegate implements Delegate {
 

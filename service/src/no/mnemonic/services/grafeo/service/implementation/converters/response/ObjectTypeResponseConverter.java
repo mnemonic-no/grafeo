@@ -4,7 +4,7 @@ import no.mnemonic.services.grafeo.api.model.v1.ObjectType;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.NamespaceByIdResponseResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.function.Function;
 
 public class ObjectTypeResponseConverter implements Function<ObjectTypeEntity, ObjectType> {

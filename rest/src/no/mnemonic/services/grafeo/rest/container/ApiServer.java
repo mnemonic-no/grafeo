@@ -12,8 +12,8 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 public class ApiServer implements LifecycleAspect {
 

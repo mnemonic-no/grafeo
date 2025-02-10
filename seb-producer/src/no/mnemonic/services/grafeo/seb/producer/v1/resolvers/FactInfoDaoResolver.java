@@ -4,7 +4,7 @@ import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.seb.model.v1.FactInfoSEB;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 

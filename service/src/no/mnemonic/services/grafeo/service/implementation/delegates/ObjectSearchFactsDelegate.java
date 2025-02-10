@@ -16,7 +16,7 @@ import no.mnemonic.services.grafeo.service.implementation.converters.request.Sea
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactSearchHandler;
 import no.mnemonic.services.grafeo.service.implementation.handlers.ObjectTypeHandler;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class ObjectSearchFactsDelegate implements Delegate {
 

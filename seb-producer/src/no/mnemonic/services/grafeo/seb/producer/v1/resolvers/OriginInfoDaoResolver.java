@@ -4,7 +4,7 @@ import no.mnemonic.services.grafeo.dao.cassandra.OriginManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.seb.model.v1.OriginInfoSEB;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 

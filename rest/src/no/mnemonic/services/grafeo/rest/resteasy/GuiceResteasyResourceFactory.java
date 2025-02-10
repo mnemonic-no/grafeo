@@ -2,7 +2,7 @@ package no.mnemonic.services.grafeo.rest.resteasy;
 
 import org.jboss.resteasy.spi.*;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import java.util.concurrent.CompletionStage;
 
 /**

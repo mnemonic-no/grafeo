@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 import java.time.Duration;
 
 import static no.mnemonic.services.grafeo.seb.esengine.v1.handlers.FactKafkaToHazelcastHandler.FACT_HAZELCAST_QUEUE_NAME;

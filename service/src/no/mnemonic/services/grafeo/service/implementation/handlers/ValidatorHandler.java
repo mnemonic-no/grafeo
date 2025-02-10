@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.service.validators.Validator;
 import no.mnemonic.services.grafeo.service.validators.ValidatorConfigurationException;
 import no.mnemonic.services.grafeo.service.validators.ValidatorFactory;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class ValidatorHandler {
 

@@ -5,7 +5,7 @@ import no.mnemonic.services.grafeo.api.model.v1.Origin;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.OriginResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.OriginResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;

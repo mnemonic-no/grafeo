@@ -16,7 +16,7 @@ import no.mnemonic.services.common.api.proxy.server.ServiceInvocationHandler;
 import no.mnemonic.services.common.api.proxy.server.ServiceProxy;
 import no.mnemonic.services.grafeo.api.service.v1.GrafeoService;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 

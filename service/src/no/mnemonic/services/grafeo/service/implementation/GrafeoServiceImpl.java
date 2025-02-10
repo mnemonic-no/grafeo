@@ -15,7 +15,7 @@ import no.mnemonic.services.grafeo.service.Service;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.delegates.*;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 
 public class GrafeoServiceImpl implements GrafeoService, Service {

@@ -3,7 +3,7 @@ package no.mnemonic.services.grafeo.rest.swagger;
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

@@ -9,7 +9,7 @@ import no.mnemonic.services.grafeo.auth.OrganizationSPI;
 import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
 import no.mnemonic.services.grafeo.seb.model.v1.OrganizationInfoSEB;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;

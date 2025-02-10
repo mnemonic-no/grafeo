@@ -14,7 +14,7 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.response.Ori
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.SubjectByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.TraverseParams;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;

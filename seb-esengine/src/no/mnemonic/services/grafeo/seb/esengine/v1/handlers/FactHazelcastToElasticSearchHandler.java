@@ -5,9 +5,9 @@ import no.mnemonic.services.common.hazelcast.consumer.HazelcastTransactionalCons
 import no.mnemonic.services.common.hazelcast.consumer.TransactionalConsumer;
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import static no.mnemonic.services.grafeo.seb.esengine.v1.handlers.FactKafkaToHazelcastHandler.FACT_HAZELCAST_QUEUE_NAME;
 
@@ -21,7 +21,7 @@ public class FactHazelcastToElasticSearchHandler extends HazelcastTransactionalC
 
   @Inject
   public FactHazelcastToElasticSearchHandler(HazelcastInstance hazelcastInstance, Provider<TransactionalConsumer<FactSEB>> consumerProvider) {
-    super(hazelcastInstance, FACT_HAZELCAST_QUEUE_NAME, consumerProvider);
+    super(hazelcastInstance, FACT_HAZELCAST_QUEUE_NAME, consumerProvider::get);
     super.setWorkerCount(WORKER_COUNT);
   }
 }

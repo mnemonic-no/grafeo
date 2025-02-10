@@ -9,8 +9,8 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.FactEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactRefreshLogEntity;
 import no.mnemonic.services.grafeo.dao.elastic.FactSearchManager;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;

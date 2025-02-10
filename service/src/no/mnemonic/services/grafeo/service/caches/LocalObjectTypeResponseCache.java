@@ -4,8 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import no.mnemonic.services.grafeo.api.model.v1.ObjectType;
 
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;

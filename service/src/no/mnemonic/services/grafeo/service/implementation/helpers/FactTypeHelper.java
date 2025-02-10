@@ -8,7 +8,7 @@ import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;

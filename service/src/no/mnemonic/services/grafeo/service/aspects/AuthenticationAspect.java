@@ -9,7 +9,7 @@ import no.mnemonic.services.grafeo.service.Service;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import org.aopalliance.intercept.MethodInvocation;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * The AuthenticationAspect makes sure that a user is successfully authenticated and creates a SecurityContext.

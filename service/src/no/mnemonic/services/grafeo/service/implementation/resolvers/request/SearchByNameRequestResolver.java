@@ -17,7 +17,7 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;

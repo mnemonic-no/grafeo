@@ -8,7 +8,7 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.AccessContro
 import no.mnemonic.services.grafeo.service.implementation.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.SearchByNameRequestResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import static no.mnemonic.services.grafeo.service.implementation.converters.request.RequestConverterUtils.handleTimeFieldSearchRequest;
 

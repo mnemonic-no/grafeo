@@ -10,8 +10,8 @@ import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.mapper.OriginDao;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;

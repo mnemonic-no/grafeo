@@ -5,8 +5,8 @@ import no.mnemonic.messaging.documentchannel.DocumentSource;
 import no.mnemonic.services.common.hazelcast.consumer.KafkaToHazelcastHandler;
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 /**
  * Component which fetches {@link FactSEB} models from Kafka and forwards them to a Hazelcast queue.

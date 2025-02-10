@@ -5,7 +5,7 @@ import no.mnemonic.services.grafeo.api.model.v1.ObjectType;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.ObjectTypeResponseConverter;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;

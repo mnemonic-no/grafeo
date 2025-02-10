@@ -5,7 +5,7 @@ import no.mnemonic.services.grafeo.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 
 public class FactRequestResolver {

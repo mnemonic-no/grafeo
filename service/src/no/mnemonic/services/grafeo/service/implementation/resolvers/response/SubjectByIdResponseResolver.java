@@ -8,7 +8,7 @@ import no.mnemonic.services.grafeo.api.model.v1.Subject;
 import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
 import no.mnemonic.services.grafeo.auth.SubjectSPI;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;

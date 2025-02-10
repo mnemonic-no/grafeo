@@ -17,7 +17,7 @@ import no.mnemonic.services.grafeo.service.implementation.converters.response.Fa
 import no.mnemonic.services.grafeo.service.implementation.helpers.FactTypeHelper;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactTypeRequestResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Objects;
 
 public class FactTypeUpdateDelegate implements Delegate {

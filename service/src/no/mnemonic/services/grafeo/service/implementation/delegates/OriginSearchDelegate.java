@@ -16,7 +16,7 @@ import no.mnemonic.services.grafeo.service.implementation.FunctionConstants;
 import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.OriginResponseConverter;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;

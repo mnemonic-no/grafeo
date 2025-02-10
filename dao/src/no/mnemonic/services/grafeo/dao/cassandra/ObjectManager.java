@@ -15,8 +15,8 @@ import no.mnemonic.services.grafeo.dao.cassandra.exceptions.ImmutableViolationEx
 import no.mnemonic.services.grafeo.dao.cassandra.mapper.ObjectDao;
 import no.mnemonic.services.grafeo.dao.cassandra.mapper.ObjectTypeDao;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;

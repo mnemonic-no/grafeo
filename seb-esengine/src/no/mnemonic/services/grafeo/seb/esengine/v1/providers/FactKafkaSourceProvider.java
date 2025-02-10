@@ -8,10 +8,10 @@ import no.mnemonic.messaging.documentchannel.kafka.KafkaDocumentSource;
 import no.mnemonic.messaging.documentchannel.noop.NullDocumentSource;
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton

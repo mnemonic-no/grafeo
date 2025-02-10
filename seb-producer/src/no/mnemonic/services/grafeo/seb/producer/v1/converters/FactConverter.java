@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.dao.api.record.FactRecord;
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
 import no.mnemonic.services.grafeo.seb.producer.v1.resolvers.*;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.function.Function;
 
 public class FactConverter implements Function<FactRecord, FactSEB> {

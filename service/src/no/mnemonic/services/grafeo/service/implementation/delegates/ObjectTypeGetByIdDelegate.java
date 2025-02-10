@@ -11,7 +11,7 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.ObjectTypeResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.ObjectTypeRequestResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class ObjectTypeGetByIdDelegate implements Delegate {
 

@@ -9,7 +9,7 @@ import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import no.mnemonic.services.grafeo.seb.esengine.v1.converters.FactConverter;
 import no.mnemonic.services.grafeo.seb.model.v1.FactSEB;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Collection;
 
 import static no.mnemonic.services.grafeo.dao.elastic.FactSearchManager.TargetIndex.Daily;

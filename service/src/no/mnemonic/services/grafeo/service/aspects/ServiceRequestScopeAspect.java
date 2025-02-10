@@ -10,7 +10,7 @@ import no.mnemonic.services.grafeo.service.scopes.ServiceRequestScope;
 import no.mnemonic.services.grafeo.service.scopes.ServiceRequestScopeImpl;
 import org.aopalliance.intercept.MethodInvocation;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;

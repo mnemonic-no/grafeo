@@ -26,7 +26,7 @@ import no.mnemonic.services.grafeo.dao.facade.helpers.FactRecordHasher;
 import no.mnemonic.services.grafeo.dao.facade.resolvers.CachedFactResolver;
 import no.mnemonic.services.grafeo.dao.facade.resolvers.CachedObjectResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;

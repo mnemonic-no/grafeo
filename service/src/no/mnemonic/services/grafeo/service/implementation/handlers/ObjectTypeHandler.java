@@ -3,7 +3,7 @@ package no.mnemonic.services.grafeo.service.implementation.handlers;
 import no.mnemonic.services.grafeo.api.exceptions.InvalidArgumentException;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class ObjectTypeHandler {
 

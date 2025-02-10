@@ -15,7 +15,7 @@ import no.mnemonic.services.grafeo.service.implementation.converters.response.Ob
 import no.mnemonic.services.grafeo.service.implementation.handlers.ObjectTypeHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.ObjectTypeRequestResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class ObjectTypeUpdateDelegate implements Delegate {
 

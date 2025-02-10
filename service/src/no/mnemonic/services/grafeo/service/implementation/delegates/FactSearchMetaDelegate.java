@@ -13,7 +13,7 @@ import no.mnemonic.services.grafeo.service.implementation.converters.request.Sea
 import no.mnemonic.services.grafeo.service.implementation.handlers.FactSearchHandler;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class FactSearchMetaDelegate implements Delegate {
 

@@ -15,7 +15,7 @@ import no.mnemonic.services.grafeo.service.implementation.handlers.ValidatorHand
 import no.mnemonic.services.grafeo.service.implementation.helpers.FactTypeHelper;
 import no.mnemonic.services.grafeo.service.validators.Validator;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.service.implementation.GrafeoServiceImpl.GLOBAL_NAMESPACE;

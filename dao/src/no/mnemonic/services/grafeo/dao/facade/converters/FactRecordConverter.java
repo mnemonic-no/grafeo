@@ -14,7 +14,7 @@ import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import no.mnemonic.services.grafeo.dao.elastic.document.ObjectDocument;
 import no.mnemonic.services.grafeo.dao.facade.resolvers.CachedObjectResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.dao.cassandra.entity.Direction.FactIsDestination;

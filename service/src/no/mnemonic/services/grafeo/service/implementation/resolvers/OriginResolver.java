@@ -10,7 +10,7 @@ import no.mnemonic.services.grafeo.auth.SubjectSPI;
 import no.mnemonic.services.grafeo.dao.cassandra.OriginManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.OriginEntity;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;

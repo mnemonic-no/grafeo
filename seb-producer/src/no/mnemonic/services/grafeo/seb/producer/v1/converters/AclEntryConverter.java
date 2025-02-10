@@ -5,7 +5,7 @@ import no.mnemonic.services.grafeo.seb.model.v1.AclEntrySEB;
 import no.mnemonic.services.grafeo.seb.producer.v1.resolvers.OriginInfoDaoResolver;
 import no.mnemonic.services.grafeo.seb.producer.v1.resolvers.SubjectInfoServiceAccountResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.function.Function;
 
 public class AclEntryConverter implements Function<FactAclEntryRecord, AclEntrySEB> {

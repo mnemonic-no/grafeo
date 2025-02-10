@@ -2,7 +2,7 @@ package no.mnemonic.services.grafeo.rest.resteasy;
 
 import org.jboss.resteasy.core.ResteasyContext;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 /**
  * Simple {@link Provider} which makes data stored in {@link ResteasyContext} available for injection.

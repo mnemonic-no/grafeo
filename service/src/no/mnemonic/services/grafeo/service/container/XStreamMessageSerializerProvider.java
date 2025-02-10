@@ -5,7 +5,7 @@ import no.mnemonic.services.common.api.proxy.serializer.XStreamSerializer;
 import no.mnemonic.services.grafeo.api.service.v1.RequestHeader;
 import no.mnemonic.services.grafeo.auth.properties.model.SubjectCredentials;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;

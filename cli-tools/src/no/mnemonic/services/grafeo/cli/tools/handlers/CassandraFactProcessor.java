@@ -5,7 +5,7 @@ import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactEntity;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Consumer;

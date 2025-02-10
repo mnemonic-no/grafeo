@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.dao.bindings.DaoCache;
 import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.facade.converters.ObjectRecordConverter;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.UUID;
 

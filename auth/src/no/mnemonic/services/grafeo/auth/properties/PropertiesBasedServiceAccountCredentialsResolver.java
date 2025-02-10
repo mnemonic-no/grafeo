@@ -4,8 +4,8 @@ import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.grafeo.auth.ServiceAccountSPI;
 import no.mnemonic.services.grafeo.auth.properties.model.SubjectCredentials;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 /**
  * {@link ServiceAccountSPI} implementation for the PropertiesBasedAccessController which identifies the

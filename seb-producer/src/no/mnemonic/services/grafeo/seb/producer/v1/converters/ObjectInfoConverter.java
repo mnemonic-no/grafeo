@@ -4,7 +4,7 @@ import no.mnemonic.services.grafeo.dao.api.record.ObjectRecord;
 import no.mnemonic.services.grafeo.seb.model.v1.ObjectInfoSEB;
 import no.mnemonic.services.grafeo.seb.producer.v1.resolvers.ObjectTypeInfoDaoResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.function.Function;
 
 public class ObjectInfoConverter implements Function<ObjectRecord, ObjectInfoSEB> {

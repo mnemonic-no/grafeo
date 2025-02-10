@@ -20,7 +20,7 @@ import no.mnemonic.services.grafeo.service.implementation.GrafeoSecurityContext;
 import no.mnemonic.services.grafeo.service.implementation.converters.response.AclEntryResponseConverter;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.request.FactRequestResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 
 public class FactGrantAccessDelegate implements Delegate {

@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.api.model.v1.Origin;
 import no.mnemonic.services.grafeo.dao.api.record.FactCommentRecord;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.OriginByIdResponseResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.function.Function;
 
 public class FactCommentResponseConverter implements Function<FactCommentRecord, FactComment> {

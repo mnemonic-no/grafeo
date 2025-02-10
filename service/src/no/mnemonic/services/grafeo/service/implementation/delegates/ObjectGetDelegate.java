@@ -19,7 +19,7 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.IndexSelectC
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.ObjectTypeByIdResponseResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class ObjectGetDelegate implements Delegate {
 

@@ -19,7 +19,7 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.AccessContro
 import no.mnemonic.services.grafeo.service.implementation.resolvers.IndexSelectCriteriaResolver;
 import no.mnemonic.services.grafeo.service.implementation.tinkerpop.TraverseParams;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;

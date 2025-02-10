@@ -2,7 +2,7 @@ package no.mnemonic.services.grafeo.service.implementation.delegates;
 
 import com.google.inject.Injector;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Provider used to get delegate instances. It uses Guice and injects all dependencies into delegates.

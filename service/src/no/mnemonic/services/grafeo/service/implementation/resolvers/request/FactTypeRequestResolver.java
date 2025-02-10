@@ -7,7 +7,7 @@ import no.mnemonic.services.grafeo.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.services.grafeo.dao.cassandra.FactManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Objects;
 import java.util.UUID;
 

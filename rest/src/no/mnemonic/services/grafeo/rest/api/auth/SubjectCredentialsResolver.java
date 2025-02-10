@@ -4,7 +4,7 @@ import no.mnemonic.commons.utilities.StringUtils;
 import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.grafeo.auth.properties.model.SubjectCredentials;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
 
 /**

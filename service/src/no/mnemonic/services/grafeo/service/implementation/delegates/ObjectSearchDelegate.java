@@ -23,7 +23,7 @@ import no.mnemonic.services.grafeo.service.implementation.resolvers.AccessContro
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.FactTypeByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.ObjectTypeByIdResponseResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.*;
 import java.util.function.Function;
 

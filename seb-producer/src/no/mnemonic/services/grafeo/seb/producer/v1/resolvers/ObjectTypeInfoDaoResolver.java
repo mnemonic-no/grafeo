@@ -4,7 +4,7 @@ import no.mnemonic.services.grafeo.dao.cassandra.ObjectManager;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import no.mnemonic.services.grafeo.seb.model.v1.ObjectTypeInfoSEB;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 import java.util.function.Function;
 

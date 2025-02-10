@@ -4,9 +4,9 @@ import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService
 import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
 import no.mnemonic.services.triggers.pipeline.worker.InMemoryQueueWorker;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
 
 public class TriggerEventConsumerProvider implements Provider<TriggerEventConsumer> {
 

@@ -10,7 +10,7 @@ import no.mnemonic.services.grafeo.service.providers.LockProvider;
 import no.mnemonic.services.grafeo.service.validators.Validator;
 import no.mnemonic.services.grafeo.service.validators.ValidatorFactory;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

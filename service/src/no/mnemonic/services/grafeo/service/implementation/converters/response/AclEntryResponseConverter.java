@@ -8,7 +8,7 @@ import no.mnemonic.services.grafeo.dao.api.record.FactAclEntryRecord;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.OriginByIdResponseResolver;
 import no.mnemonic.services.grafeo.service.implementation.resolvers.response.SubjectByIdResponseResolver;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.function.Function;
 
 public class AclEntryResponseConverter implements Function<FactAclEntryRecord, AclEntry> {

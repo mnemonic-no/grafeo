@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.service.contexts.TriggerContext;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
 import org.aopalliance.intercept.MethodInvocation;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * The TriggerContextAspect creates a TriggerContext accessible during service calls and closes it
