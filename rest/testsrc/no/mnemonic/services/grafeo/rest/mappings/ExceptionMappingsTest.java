@@ -10,9 +10,9 @@ import no.mnemonic.services.grafeo.rest.AbstractEndpointTest;
 import no.mnemonic.services.grafeo.rest.api.ResultMessage;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.UUID;
 
@@ -108,7 +108,7 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
     CreateFactRequest request = new CreateFactRequest();
     Response response = target("/v1/fact").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "must not be blank", "{javax.validation.constraints.NotBlank.message}", "type", "NULL");
+    assertMessages(getMessages(response), "must not be blank", "{jakarta.validation.constraints.NotBlank.message}", "type", "NULL");
   }
 
   @Test
@@ -119,14 +119,14 @@ public class ExceptionMappingsTest extends AbstractEndpointTest {
             .addRelevantFactBinding(new MetaFactBindingDefinition());
     Response response = target("/v1/factType").request().post(Entity.json(request));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "relevantFactBindings[0].factType", "NULL");
+    assertMessages(getMessages(response), "must not be null", "{jakarta.validation.constraints.NotNull.message}", "relevantFactBindings[0].factType", "NULL");
   }
 
   @Test
   public void testFailedRequestValidationWithNullRequestReturns412() throws Exception {
     Response response = target("/v1/fact").request().post(Entity.json(null));
     assertEquals(412, response.getStatus());
-    assertMessages(getMessages(response), "must not be null", "{javax.validation.constraints.NotNull.message}", "request", "NULL");
+    assertMessages(getMessages(response), "must not be null", "{jakarta.validation.constraints.NotNull.message}", "request", "NULL");
   }
 
   @Test

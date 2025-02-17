@@ -8,8 +8,8 @@ import no.mnemonic.services.grafeo.api.service.v1.StreamingResultSet;
 import no.mnemonic.services.grafeo.rest.AbstractEndpointTest;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;

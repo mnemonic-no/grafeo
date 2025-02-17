@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.grafeo.rest.api.ResultStash;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 @Provider
 public class InvalidFormatMapper implements ExceptionMapper<InvalidFormatException> {

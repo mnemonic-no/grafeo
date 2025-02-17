@@ -6,7 +6,7 @@ import no.mnemonic.services.grafeo.api.request.v1.GetFactByIdRequest;
 import no.mnemonic.services.grafeo.rest.AbstractEndpointTest;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -9,9 +9,9 @@ import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import jakarta.inject.Inject;
-import javax.servlet.ServletContextEvent;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * A bridge between Guice and RESTEasy.

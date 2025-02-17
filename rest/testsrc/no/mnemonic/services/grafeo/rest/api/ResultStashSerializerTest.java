@@ -9,8 +9,8 @@ import no.mnemonic.services.grafeo.api.service.v1.StreamingResultSet;
 import no.mnemonic.services.grafeo.rest.providers.ObjectMapperResolver;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 

@@ -3,8 +3,8 @@ package no.mnemonic.services.grafeo.api.request.v1;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 

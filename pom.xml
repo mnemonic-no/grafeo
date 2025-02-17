@@ -43,7 +43,7 @@
     <!-- mnemonic dependencies -->
     <mnemonic.commons.version>0.5.1</mnemonic.commons.version>
     <mnemonic.messaging.version>1.4.13</mnemonic.messaging.version>
-    <mnemonic.services.common.version>0.6.17</mnemonic.services.common.version>
+    <mnemonic.services.common.version>0.6.18</mnemonic.services.common.version>
     <mnemonic.services.triggers.version>0.0.20</mnemonic.services.triggers.version>
 
     <!-- external dependencies -->
@@ -53,18 +53,18 @@
     <guava.version>33.4.0-jre</guava.version>
     <guice.version>7.0.0</guice.version>
     <hazelcast.version>5.5.0</hazelcast.version>
-    <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
+    <hibernate.validator.version>8.0.2.Final</hibernate.validator.version>
     <jackson.version>2.18.2</jackson.version>
-    <jakarta.el.version>3.0.4</jakarta.el.version>
+    <jakarta.el.version>5.0.0</jakarta.el.version>
     <jakarta.inject.version>2.0.1</jakarta.inject.version>
-    <jakarta.validation.version>2.0.2</jakarta.validation.version>
-    <jakarta.ws.rs.version>2.1.6</jakarta.ws.rs.version>
-    <jetty.version>10.0.24</jetty.version>
+    <jakarta.validation.version>3.0.2</jakarta.validation.version>
+    <jakarta.ws.rs.version>3.1.0</jakarta.ws.rs.version>
+    <jetty.version>12.0.16</jetty.version>
     <junit.jupiter.version>5.11.4</junit.jupiter.version>
     <log4j.version>2.24.3</log4j.version>
     <mockito.version>5.15.2</mockito.version>
     <picocli.version>4.7.6</picocli.version>
-    <resteasy.version>5.0.9.Final</resteasy.version>
+    <resteasy.version>6.2.11.Final</resteasy.version>
     <slf4j.version>2.0.16</slf4j.version>
     <swagger.version>2.2.28</swagger.version>
     <testcontainers.version>1.20.5</testcontainers.version>
@@ -357,6 +357,7 @@
             <includedLicense>Eclipse Public License 1.0</includedLicense>
             <includedLicense>Eclipse Public License - Version 1.0</includedLicense>
             <includedLicense>Eclipse Public License - v 2.0</includedLicense>
+            <includedLicense>Eclipse Public License v. 2.0</includedLicense>
             <includedLicense>Eclipse Public License v2.0</includedLicense>
             <includedLicense>Eclipse Public License 2.0</includedLicense>
             <!-- MIT and variants-->

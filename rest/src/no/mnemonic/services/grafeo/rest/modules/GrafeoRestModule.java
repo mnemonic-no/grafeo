@@ -9,10 +9,10 @@ import no.mnemonic.services.grafeo.rest.providers.CorsFilterFeature;
 import no.mnemonic.services.grafeo.rest.resteasy.GuiceResteasyContextDataProvider;
 import no.mnemonic.services.grafeo.rest.swagger.SwaggerApiListingResource;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Request;
+import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriInfo;
 
 /**
  * Module which configures the REST API including Swagger documentation of Grafeo.

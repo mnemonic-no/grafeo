@@ -5,7 +5,7 @@ import no.mnemonic.services.common.auth.model.Credentials;
 import no.mnemonic.services.grafeo.auth.properties.model.SubjectCredentials;
 
 import jakarta.inject.Inject;
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.HttpHeaders;
 
 /**
  * A {@link CredentialsResolver} implementation which identifies a user based on the "Grafeo-User-ID" HTTP header.

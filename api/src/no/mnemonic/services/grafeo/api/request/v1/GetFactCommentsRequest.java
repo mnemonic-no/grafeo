@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.utilities.json.TimestampDeserializer;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public class GetFactCommentsRequest implements ValidatingRequest {

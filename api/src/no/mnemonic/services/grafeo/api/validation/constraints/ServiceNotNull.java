@@ -3,8 +3,8 @@ package no.mnemonic.services.grafeo.api.validation.constraints;
 import no.mnemonic.services.grafeo.api.validation.implementation.DefaultServiceNotNullValidator;
 import no.mnemonic.services.grafeo.api.validation.implementation.ServiceNotNullValidator;
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

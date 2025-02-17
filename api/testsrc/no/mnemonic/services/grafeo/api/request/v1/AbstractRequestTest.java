@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeAll;
 
-import javax.validation.*;
+import jakarta.validation.*;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;

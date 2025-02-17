@@ -5,7 +5,7 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 
-import javax.validation.constraints.Min;
+import jakarta.validation.constraints.Min;
 import java.util.Set;
 
 @Schema(description = "Search for Origins.")

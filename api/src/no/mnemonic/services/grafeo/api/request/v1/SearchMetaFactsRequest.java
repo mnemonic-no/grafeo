@@ -8,8 +8,8 @@ import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.api.validation.constraints.ServiceNotNull;
 import no.mnemonic.services.grafeo.utilities.json.RoundingFloatDeserializer;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.Set;
 import java.util.UUID;
 

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.api.validation.constraints.ServiceNotNull;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
 
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;

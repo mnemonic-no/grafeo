@@ -5,9 +5,9 @@ import org.jboss.resteasy.plugins.interceptors.CorsFilter;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.FeatureContext;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Feature;
+import jakarta.ws.rs.core.FeatureContext;
+import jakarta.ws.rs.ext.Provider;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 

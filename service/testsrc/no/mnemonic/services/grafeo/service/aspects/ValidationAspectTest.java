@@ -11,9 +11,9 @@ import no.mnemonic.services.grafeo.service.TestSecurityContext;
 import no.mnemonic.services.grafeo.service.contexts.SecurityContext;
 import org.junit.jupiter.api.Test;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -79,7 +79,7 @@ public class ValidationAspectTest {
     assertEquals(1, ex.getValidationErrors().size());
     InvalidArgumentException.ValidationError error = ex.getValidationErrors().iterator().next();
     assertEquals("must be greater than or equal to 1", error.getMessage());
-    assertEquals("{javax.validation.constraints.Min.message}", error.getMessageTemplate());
+    assertEquals("{jakarta.validation.constraints.Min.message}", error.getMessageTemplate());
     assertEquals(property, error.getProperty());
     assertEquals("0", error.getValue());
   }
@@ -88,7 +88,7 @@ public class ValidationAspectTest {
     assertEquals(1, ex.getValidationErrors().size());
     InvalidArgumentException.ValidationError error = ex.getValidationErrors().iterator().next();
     assertEquals("must not be null", error.getMessage());
-    assertEquals("{javax.validation.constraints.NotNull.message}", error.getMessageTemplate());
+    assertEquals("{jakarta.validation.constraints.NotNull.message}", error.getMessageTemplate());
     assertEquals(property, error.getProperty());
     assertEquals("NULL", error.getValue());
   }

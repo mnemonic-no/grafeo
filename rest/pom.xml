@@ -65,7 +65,7 @@
     </dependency>
     <dependency>
       <groupId>no.mnemonic.services.common</groupId>
-      <artifactId>service-proxy</artifactId>
+      <artifactId>service-proxy-jakarta</artifactId>
       <version>${mnemonic.services.common.version}</version>
     </dependency>
     <dependency>
@@ -84,8 +84,8 @@
       <version>${jakarta.ws.rs.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.jaxrs</groupId>
-      <artifactId>jackson-jaxrs-json-provider</artifactId>
+      <groupId>com.fasterxml.jackson.jakarta.rs</groupId>
+      <artifactId>jackson-jakarta-rs-json-provider</artifactId>
       <version>${jackson.version}</version>
     </dependency>
     <dependency>
@@ -94,8 +94,8 @@
       <version>${jetty.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
+      <groupId>org.eclipse.jetty.ee10</groupId>
+      <artifactId>jetty-ee10-servlet</artifactId>
       <version>${jetty.version}</version>
     </dependency>
     <dependency>
@@ -113,7 +113,7 @@
       <artifactId>resteasy-validator-provider</artifactId>
       <version>${resteasy.version}</version>
     </dependency>
-    <!-- Need a javax.validation and javax.el implementation for request validation. -->
+    <!-- Need a jakarta.validation and jakarta.el implementation for request validation. -->
     <dependency>
       <groupId>org.hibernate.validator</groupId>
       <artifactId>hibernate-validator</artifactId>
@@ -121,19 +121,19 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.glassfish</groupId>
-      <artifactId>jakarta.el</artifactId>
+      <groupId>org.glassfish.expressly</groupId>
+      <artifactId>expressly</artifactId>
       <version>${jakarta.el.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
-      <artifactId>swagger-jaxrs2</artifactId>
+      <artifactId>swagger-jaxrs2-jakarta</artifactId>
       <version>${swagger.version}</version>
     </dependency>
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
-      <artifactId>swagger-core</artifactId>
+      <artifactId>swagger-core-jakarta</artifactId>
       <version>${swagger.version}</version>
     </dependency>
     <!-- test jars -->

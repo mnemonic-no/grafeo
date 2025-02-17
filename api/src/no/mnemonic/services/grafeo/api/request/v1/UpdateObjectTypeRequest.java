@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.api.validation.constraints.ServiceNotNull;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 @Schema(description = "Update an existing ObjectType.")

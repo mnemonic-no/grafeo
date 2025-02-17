@@ -9,7 +9,7 @@ import no.mnemonic.services.grafeo.dao.cassandra.entity.FactTypeEntity;
 import no.mnemonic.services.grafeo.dao.cassandra.entity.ObjectTypeEntity;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

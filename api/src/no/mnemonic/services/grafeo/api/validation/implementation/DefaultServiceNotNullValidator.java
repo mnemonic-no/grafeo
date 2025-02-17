@@ -2,8 +2,8 @@ package no.mnemonic.services.grafeo.api.validation.implementation;
 
 import no.mnemonic.services.grafeo.api.validation.constraints.ServiceNotNull;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 /**
  * Default validator implementation of the {@link ServiceNotNull} constraint which will always be valid.

@@ -2,7 +2,7 @@ package no.mnemonic.services.grafeo.api.request.v1;
 
 import org.junit.jupiter.api.Test;
 
-import javax.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolation;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

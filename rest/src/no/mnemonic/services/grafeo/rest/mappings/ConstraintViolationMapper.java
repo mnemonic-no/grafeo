@@ -3,13 +3,13 @@ package no.mnemonic.services.grafeo.rest.mappings;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.services.grafeo.rest.api.ResultStash;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.ElementKind;
-import javax.validation.Path;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ElementKind;
+import jakarta.validation.Path;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 @Provider
 public class ConstraintViolationMapper implements ExceptionMapper<ConstraintViolationException> {

@@ -4,8 +4,8 @@ import com.google.common.reflect.ClassPath;
 import com.google.inject.AbstractModule;
 import no.mnemonic.services.grafeo.rest.providers.ObjectMapperResolver;
 
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 
