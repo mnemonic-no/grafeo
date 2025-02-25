@@ -1,11 +1,15 @@
 package no.mnemonic.services.grafeo.dao.cassandra;
 
-import no.mnemonic.commons.jupiter.docker.CassandraDockerExtension;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.cassandra.CassandraContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.MountableFile;
 
+@Testcontainers
 public abstract class AbstractManagerTest {
 
   private static ClusterManager clusterManager;
@@ -13,22 +17,16 @@ public abstract class AbstractManagerTest {
   private ObjectManager objectManager;
   private OriginManager originManager;
 
-  @RegisterExtension
-  public static CassandraDockerExtension cassandra = CassandraDockerExtension.builder()
-          .setImageName("cassandra")
-          .setSkipPullDockerImage(true)
-          .setExposedPortsRange("15000-25000")
-          .addApplicationPort(9042)
-          .skipReachabilityCheck()
-          .setTruncateScript("truncate.cql")
-          .build();
+  @Container
+  public static final CassandraContainer cassandra = new CassandraContainer("cassandra")
+          .withCopyFileToContainer(MountableFile.forClasspathResource("truncate.cql"), "/tmp/");
 
   @BeforeAll
   public static void setup() {
     clusterManager = ClusterManager.builder()
-            .setDataCenter("datacenter1")
-            .setPort(cassandra.getExposedHostPort(9042))
-            .addContactPoint(cassandra.getExposedHost())
+            .setDataCenter(cassandra.getLocalDatacenter())
+            .setPort(cassandra.getMappedPort(9042))
+            .addContactPoint(cassandra.getHost())
             .build();
     clusterManager.startComponent();
   }
@@ -47,6 +45,12 @@ public abstract class AbstractManagerTest {
     factManager.startComponent();
     objectManager.startComponent();
     originManager.startComponent();
+  }
+
+  @AfterEach
+  public void cleanup() throws Exception {
+    // Clean up database after each run.
+    cassandra.execInContainer("cqlsh", "-f", "/tmp/truncate.cql");
   }
 
   protected FactManager getFactManager() {

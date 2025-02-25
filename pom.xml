@@ -67,6 +67,7 @@
     <resteasy.version>5.0.9.Final</resteasy.version>
     <slf4j.version>2.0.16</slf4j.version>
     <swagger.version>2.2.28</swagger.version>
+    <testcontainers.version>1.20.5</testcontainers.version>
     <tinkerpop.version>3.7.3</tinkerpop.version>
 
     <!-- build dependencies -->

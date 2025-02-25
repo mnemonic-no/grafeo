@@ -4,8 +4,6 @@ import com.google.inject.*;
 import com.google.inject.name.Names;
 import no.mnemonic.commons.container.ComponentContainer;
 import no.mnemonic.commons.container.providers.GuiceBeanProvider;
-import no.mnemonic.commons.jupiter.docker.CassandraDockerExtension;
-import no.mnemonic.commons.jupiter.docker.ElasticSearchDockerExtension;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
 import no.mnemonic.services.grafeo.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.FactSearchCriteria;
@@ -37,7 +35,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.cassandra.CassandraContainer;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -51,6 +52,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Testcontainers(parallel = true)
 public class ObjectFactGraphIT {
 
   private static final long NOW = Instant.parse("2022-01-01T12:00:00.000Z").toEpochMilli();
@@ -78,26 +80,12 @@ public class ObjectFactGraphIT {
   private static ObjectRecord domain;
   private static ObjectRecord attack;
 
-  @RegisterExtension
-  public static CassandraDockerExtension cassandra = CassandraDockerExtension.builder()
-          .setImageName("cassandra")
-          .setSkipPullDockerImage(true)
-          .setExposedPortsRange("15000-25000")
-          .addApplicationPort(9042)
-          .skipReachabilityCheck()
-          .build();
-
-  @RegisterExtension
-  public static ElasticSearchDockerExtension elastic = ElasticSearchDockerExtension.builder()
-          // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
-          // Usually this should be the same version as the ElasticSearch client used.
-          .setImageName("elasticsearch/elasticsearch:7.17.27")
-          .setSkipPullDockerImage(true)
-          .setExposedPortsRange("15000-25000")
-          .addApplicationPort(9200)
-          .skipReachabilityCheck()
-          .addEnvironmentVariable("discovery.type", "single-node")
-          .build();
+  @Container
+  public static final CassandraContainer cassandra = new CassandraContainer("cassandra");
+  // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
+  // Usually this should be the same version as the ElasticSearch client used.
+  @Container
+  public static final ElasticsearchContainer elastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.27");
 
   @BeforeAll
   public static void initialize() {
@@ -410,11 +398,11 @@ public class ObjectFactGraphIT {
       });
 
       // Configuration required for Cassandra + ElasticSearch
-      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.data.center")).toInstance("datacenter1");
-      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.contact.points")).toInstance(cassandra.getExposedHost());
-      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
-      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.contact.points")).toInstance(elastic.getExposedHost());
-      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.data.center")).toInstance(cassandra.getLocalDatacenter());
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.contact.points")).toInstance(cassandra.getHost());
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.port")).toInstance(String.valueOf(cassandra.getMappedPort(9042)));
+      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.contact.points")).toInstance(elastic.getHost());
+      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.port")).toInstance(String.valueOf(elastic.getMappedPort(9200)));
     }
   }
 }

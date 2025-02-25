@@ -8,8 +8,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import no.mnemonic.commons.container.ComponentContainer;
 import no.mnemonic.commons.container.providers.GuiceBeanProvider;
-import no.mnemonic.commons.jupiter.docker.CassandraDockerExtension;
-import no.mnemonic.commons.jupiter.docker.ElasticSearchDockerExtension;
 import no.mnemonic.commons.testtools.AvailablePortFinder;
 import no.mnemonic.services.grafeo.api.request.ValidatingRequest;
 import no.mnemonic.services.grafeo.dao.api.ObjectFactDao;
@@ -28,7 +26,11 @@ import no.mnemonic.services.grafeo.service.modules.GrafeoServerModule;
 import no.mnemonic.services.grafeo.service.modules.GrafeoServiceModule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.cassandra.CassandraContainer;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.MountableFile;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -41,6 +43,7 @@ import java.util.UUID;
 import static no.mnemonic.commons.utilities.collections.SetUtils.set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Testcontainers(parallel = true)
 public abstract class AbstractIT {
 
   private static final String ACL_FILE = ClassLoader.getSystemResource("acl.properties").getPath();
@@ -59,28 +62,13 @@ public abstract class AbstractIT {
   private FactManager factManager;
   private ObjectFactDao objectFactDao;
 
-  @RegisterExtension
-  public static final CassandraDockerExtension cassandra = CassandraDockerExtension.builder()
-          .setImageName("cassandra")
-          .setSkipPullDockerImage(true)
-          .setExposedPortsRange("15000-25000")
-          .addApplicationPort(9042)
-          .skipReachabilityCheck()
-          .setTruncateScript("truncate.cql")
-          .build();
-
-  @RegisterExtension
-  public static final ElasticSearchDockerExtension elastic = ElasticSearchDockerExtension.builder()
-          // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
-          // Usually this should be the same version as the ElasticSearch client used.
-          .setImageName("elasticsearch/elasticsearch:7.17.27")
-          .setSkipPullDockerImage(true)
-          .setExposedPortsRange("15000-25000")
-          .addApplicationPort(9200)
-          .skipReachabilityCheck()
-          .addEnvironmentVariable("discovery.type", "single-node")
-          .addDeleteIndex("_all")
-          .build();
+  @Container
+  public static final CassandraContainer cassandra = new CassandraContainer("cassandra")
+          .withCopyFileToContainer(MountableFile.forClasspathResource("truncate.cql"), "/tmp/");
+  // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
+  // Usually this should be the same version as the ElasticSearch client used.
+  @Container
+  public static final ElasticsearchContainer elastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.27");
 
   @BeforeEach
   public void setup() {
@@ -108,9 +96,13 @@ public abstract class AbstractIT {
   }
 
   @AfterEach
-  public void teardown() {
+  public void teardown() throws Exception {
     restContainer.destroy();
     serviceContainer.destroy();
+
+    // Clean up the databases.
+    elastic.execInContainer("curl", "--silent", "--show-error", "-XDELETE", "localhost:9200/_all");
+    cassandra.execInContainer("cqlsh", "-f", "/tmp/truncate.cql");
   }
 
   /* Getters */
@@ -317,11 +309,11 @@ public abstract class AbstractIT {
       bind(String.class).annotatedWith(Names.named("grafeo.access.controller.properties.service.account.user.id")).toInstance("3");
       bind(String.class).annotatedWith(Names.named("grafeo.action.triggers.enabled")).toInstance("true");
       bind(String.class).annotatedWith(Names.named("trigger.administration.service.configuration.directory")).toInstance(RESOURCES_FOLDER);
-      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.data.center")).toInstance("datacenter1");
-      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.contact.points")).toInstance(cassandra.getExposedHost());
-      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.port")).toInstance(String.valueOf(cassandra.getExposedHostPort(9042)));
-      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.contact.points")).toInstance(elastic.getExposedHost());
-      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.port")).toInstance(String.valueOf(elastic.getExposedHostPort(9200)));
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.data.center")).toInstance(cassandra.getLocalDatacenter());
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.contact.points")).toInstance(cassandra.getHost());
+      bind(String.class).annotatedWith(Names.named("grafeo.cassandra.port")).toInstance(String.valueOf(cassandra.getMappedPort(9042)));
+      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.contact.points")).toInstance(elastic.getHost());
+      bind(String.class).annotatedWith(Names.named("grafeo.elasticsearch.port")).toInstance(String.valueOf(elastic.getMappedPort(9200)));
       bind(String.class).annotatedWith(Names.named("grafeo.seb.kafka.port")).toInstance("9092");
       bind(String.class).annotatedWith(Names.named("grafeo.seb.kafka.contact.points")).toInstance("localhost");
       bind(String.class).annotatedWith(Names.named("grafeo.seb.kafka.producer.topic")).toInstance("ThreatIntel.Fact");

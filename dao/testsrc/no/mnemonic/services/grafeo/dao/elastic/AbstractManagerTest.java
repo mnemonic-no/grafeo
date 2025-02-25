@@ -1,20 +1,23 @@
 package no.mnemonic.services.grafeo.dao.elastic;
 
-import no.mnemonic.commons.jupiter.docker.ElasticSearchDockerExtension;
 import no.mnemonic.services.grafeo.dao.api.criteria.AccessControlCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.FactSearchCriteria;
 import no.mnemonic.services.grafeo.dao.api.criteria.IndexSelectCriteria;
 import no.mnemonic.services.grafeo.dao.elastic.document.FactDocument;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Instant;
 import java.util.UUID;
 
 import static no.mnemonic.services.grafeo.dao.elastic.DocumentTestUtils.createFactDocument;
 
+@Testcontainers
 public abstract class AbstractManagerTest {
 
   static final long DAY1 = Instant.parse("2022-01-01T12:00:00.000Z").toEpochMilli();
@@ -24,24 +27,16 @@ public abstract class AbstractManagerTest {
   private static ClientFactory clientFactory;
   private FactSearchManager factSearchManager;
 
-  @RegisterExtension
-  public static ElasticSearchDockerExtension elastic = ElasticSearchDockerExtension.builder()
-          // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
-          // Usually this should be the same version as the ElasticSearch client used.
-          .setImageName("elasticsearch/elasticsearch:7.17.27")
-          .setSkipPullDockerImage(true)
-          .setExposedPortsRange("15000-25000")
-          .addApplicationPort(9200)
-          .skipReachabilityCheck()
-          .addEnvironmentVariable("discovery.type", "single-node")
-          .addDeleteIndex("_all")
-          .build();
+  // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
+  // Usually this should be the same version as the ElasticSearch client used.
+  @Container
+  public static final ElasticsearchContainer elastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.27");
 
   @BeforeAll
   public static void setup() {
     clientFactory = ClientFactory.builder()
-            .setPort(elastic.getExposedHostPort(9200))
-            .addContactPoint(elastic.getExposedHost())
+            .setPort(elastic.getMappedPort(9200))
+            .addContactPoint(elastic.getHost())
             .build();
     clientFactory.startComponent();
   }
@@ -58,6 +53,12 @@ public abstract class AbstractManagerTest {
             .setSearchScrollExpiration("5s")
             .setSearchScrollSize(1);
     factSearchManager.startComponent();
+  }
+
+  @AfterEach
+  public void cleanup() throws Exception {
+    // Clean up all indices after each run.
+    elastic.execInContainer("curl", "--silent", "--show-error", "-XDELETE", "localhost:9200/_all");
   }
 
   protected FactSearchManager getFactSearchManager() {
