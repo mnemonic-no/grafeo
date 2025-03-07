@@ -375,9 +375,6 @@
             <includedLicense>Public Domain, per Creative Commons CC0</includedLicense>
             <!-- Others -->
             <includedLicense>Indiana University Extreme! Lab Software License</includedLicense>
-            <!-- The ElasticSearch client drags in server components, thus, we need to accept the license until the
-                 dependencies upon the server components are removed. The client is actually Apache 2 licensed. -->
-            <includedLicense>Elastic License 2.0</includedLicense>
           </includedLicenses>
         </configuration>
       </plugin>

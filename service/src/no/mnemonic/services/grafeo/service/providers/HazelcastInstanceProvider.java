@@ -24,6 +24,8 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
   private final boolean multicastEnabled;
   private final HazelcastServiceConfiguration serviceConfig;
 
+  private String loggingType = "log4j2";
+
   @Inject
   public HazelcastInstanceProvider(
           @Named("grafeo.hazelcast.instance.name") String instanceName,
@@ -67,7 +69,7 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
     cfg.setClusterName(groupName);
 
     // Specify log4j2 to collect the Hazelcast logs together with the service logs (instead of stdout).
-    cfg.setProperty("hazelcast.logging.type", "log4j2");
+    cfg.setProperty("hazelcast.logging.type", loggingType);
     // Disable Hazelcast's own shutdown hook because termination must be handled by the LifecycleAspect.
     cfg.setProperty("hazelcast.shutdownhook.enabled", "false");
 
@@ -86,5 +88,11 @@ public class HazelcastInstanceProvider implements LifecycleAspect, Provider<Haze
     serviceConfig.apply(cfg);
 
     return Hazelcast.getOrCreateHazelcastInstance(cfg);
+  }
+
+  // Required for testing as log4j2 isn't available during tests.
+  HazelcastInstanceProvider setLoggingType(String loggingType) {
+    this.loggingType = loggingType;
+    return this;
   }
 }

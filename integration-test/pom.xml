@@ -111,6 +111,31 @@
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- Dependencies required for logging. -->
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>logging-log4j</artifactId>
+      <version>${mnemonic.commons.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
+      <version>${log4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.lmax</groupId>
+      <artifactId>disruptor</artifactId>
+      <version>${disruptor.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>

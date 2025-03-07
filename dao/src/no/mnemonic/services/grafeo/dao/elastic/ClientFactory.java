@@ -1,5 +1,12 @@
 package no.mnemonic.services.grafeo.dao.elastic;
 
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.HealthStatus;
+import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import no.mnemonic.commons.component.ComponentException;
 import no.mnemonic.commons.component.LifecycleAspect;
 import no.mnemonic.commons.logging.Logger;
@@ -8,22 +15,14 @@ import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.commons.utilities.lambda.LambdaUtils;
 import org.apache.http.HttpHost;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.rest.RestStatus;
 
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
- * Class managing the connections to an ElasticSearch cluster using ElasticSearch's Java high-level REST client.
+ * Class managing the connections to an ElasticSearch cluster using ElasticSearch's Java API Client.
  */
 public class ClientFactory implements LifecycleAspect {
 
@@ -35,27 +34,34 @@ public class ClientFactory implements LifecycleAspect {
   private final int port;
   private final Set<String> contactPoints;
 
-  private RestHighLevelClient client;
+  private RestClient restClient;
+  private ElasticsearchClient client;
+  private ElasticsearchAsyncClient asyncClient;
 
   private ClientFactory(int port, Set<String> contactPoints) {
     if (port <= 0) throw new IllegalArgumentException("'port' is required!");
     if (CollectionUtils.isEmpty(contactPoints))
-      throw new IllegalArgumentException("At least on contact point is required!");
+      throw new IllegalArgumentException("At least one contact point is required!");
     this.port = port;
     this.contactPoints = contactPoints;
   }
 
   @Override
   public void startComponent() {
-    if (client == null) {
+    if (restClient == null) {
       // Create a connection for each contact point.
-      Set<HttpHost> hosts = contactPoints.stream()
+      HttpHost[] hosts = contactPoints.stream()
               .map(s -> new HttpHost(s, port))
-              .collect(Collectors.toSet());
-      // Initialize the high-level REST client which sends the actual requests to ElasticSearch.
-      client = new RestHighLevelClient(RestClient.builder(hosts.toArray(new HttpHost[contactPoints.size()]))
+              .toArray(HttpHost[]::new);
+      // The RestClient handles the low-level HTTP connections.
+      restClient = RestClient.builder(hosts)
               .setRequestConfigCallback(builder -> builder.setSocketTimeout((int) SOCKET_TIMEOUT))
-      );
+              .build();
+      // The Elasticsearch(Async)Client sends the actual requests to ElasticSearch.
+      // Both clients share the underlying transport and RestClient.
+      RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+      client = new ElasticsearchClient(transport);
+      asyncClient = new ElasticsearchAsyncClient(transport);
 
       // Wait until ElasticSearch becomes available.
       if (!waitForConnection(client)) {
@@ -73,16 +79,19 @@ public class ClientFactory implements LifecycleAspect {
     if (client != null) {
       LambdaUtils.tryTo(() -> client.close(), ex -> LOGGER.warning(ex, "Error while closing connections to ElasticSearch."));
     }
+    if (asyncClient != null) {
+      LambdaUtils.tryTo(() -> asyncClient.close(), ex -> LOGGER.warning(ex, "Error while closing connections to ElasticSearch."));
+    }
   }
 
-  private boolean waitForConnection(RestHighLevelClient client) {
+  private boolean waitForConnection(ElasticsearchClient client) {
     long timeout = System.currentTimeMillis() + INITIALIZATION_TIMEOUT;
     while (System.currentTimeMillis() < timeout) {
       try {
-        ClusterHealthResponse response = client.cluster().health(new ClusterHealthRequest(), RequestOptions.DEFAULT);
-        LOGGER.debug("ElasticSearch cluster (%s) status is %s.", response.getClusterName(), response.getStatus());
+        HealthResponse response = client.cluster().health();
+        LOGGER.debug("ElasticSearch cluster (%s) status is %s.", response.clusterName(), response.status());
         // If ElasticSearch is reachable and its status is at least 'yellow' return immediately.
-        if (response.status() == RestStatus.OK && response.getStatus() != ClusterHealthStatus.RED) return true;
+        if (!response.timedOut() && response.status() != HealthStatus.Red) return true;
       } catch (ElasticsearchException | IOException ex) {
         LOGGER.debug(ex, "Could not fetch ElasticSearch cluster health information.");
       }
@@ -101,8 +110,25 @@ public class ClientFactory implements LifecycleAspect {
     return false;
   }
 
-  public RestHighLevelClient getClient() {
+  /**
+   * Return the low-level REST client. Useful if access to the underlying plain HTTP connection is required.
+   */
+  public RestClient getRestClient() {
+    return restClient;
+  }
+
+  /**
+   * Return the high-level ElasticSearch client which models the API of ElasticSearch.
+   */
+  public ElasticsearchClient getClient() {
     return client;
+  }
+
+  /**
+   * Return the high-level ElasticSearch client which models the API of ElasticSearch (asynchronous variant).
+   */
+  public ElasticsearchAsyncClient getAsyncClient() {
+    return asyncClient;
   }
 
   public static Builder builder() {
