@@ -16,7 +16,7 @@ Grafeo exposes a set of REST APIs. See this [guideline](https://github.com/mnemo
 * Java 17 or newer for running the application.
 * Maven for managing dependencies, building the code, running the unit tests, etc.
 * An installation of [Apache Cassandra](https://cassandra.apache.org/) for storage. Any version of Apache Cassandra 3.x or 4.x is supported.
-* An installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch) for indexing. Version 7.17 of Elasticsearch is required.
+* An installation of [Elasticsearch](https://www.elastic.co/products/elasticsearch) for indexing. Version 8.17 of Elasticsearch is required.
 * (Optional) An installation of [Apache Kafka](https://kafka.apache.org/) for data centre replication.
 * (Optional) An installation of [Docker](https://www.docker.com/) for running the integration tests.
 
@@ -27,8 +27,6 @@ Grafeo exposes a set of REST APIs. See this [guideline](https://github.com/mnemo
 
 ##### Testing
 
-* Download a Cassandra image by `docker pull cassandra`.
-* Download an Elasticsearch image by `docker pull docker.elastic.co/elasticsearch/elasticsearch:7.17.27`.
 * Execute `mvn clean install` for running all tests including integration tests.
 * Execute `mvn clean install -DskipSlowTests` for skipping the integration tests.
 * By default the integration tests will try to connect to Docker on localhost and port 2375. Set the $DOCKER_HOST environment variable to override this behaviour.

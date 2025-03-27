@@ -7,7 +7,6 @@ import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.elasticsearch.core.search.TotalHits;
-import co.elastic.clients.json.JsonData;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -517,10 +516,8 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
     return new SearchRequest.Builder()
             .index(selectIndices(criteria))
             // ALLOW_NO_INDICES and IGNORE_UNAVAILABLE are required in case the user specifies a time period where no indices exist.
-            // IGNORE_THROTTLED is added to avoid a deprecation warning on every request. It's safe because grafeo doesn't use frozen indices.
             .allowNoIndices(true)
             .ignoreUnavailable(true)
-            .ignoreThrottled(true)
             // Every index is explicitly selected, thus, now wildcard expansion is required.
             .expandWildcards(ExpandWildcard.None);
   }
@@ -614,9 +611,9 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private void applyNumberSearchQuery(FactSearchCriteria criteria, BoolQuery.Builder rootQuery) {
     if (criteria.getMinNumber() == null && criteria.getMaxNumber() == null) return;
     applyFieldStrategy(rootQuery, field -> RangeQuery.of(q -> q
-            .field(field)
-            .gte(JsonData.of(criteria.getMinNumber()))
-            .lte(JsonData.of(criteria.getMaxNumber()))
+            .number(n -> n.field(field)
+                    .gte(ObjectUtils.ifNotNull(criteria.getMinNumber(), Number::doubleValue))
+                    .lte(ObjectUtils.ifNotNull(criteria.getMaxNumber(), Number::doubleValue)))
     )._toQuery(), criteria.getNumberFieldStrategy(), criteria.getNumberMatchStrategy());
   }
 
@@ -656,9 +653,9 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
   private Query createFieldQuery(String field, Long startTimestamp, Long endTimestamp) {
     // Negative timestamps are omitted by providing NULL to from() and to().
     return RangeQuery.of(q -> q
-            .field(field)
-            .gte(startTimestamp != null && startTimestamp > 0 ? JsonData.of(startTimestamp) : null)
-            .lte(endTimestamp != null && endTimestamp > 0 ? JsonData.of(endTimestamp) : null)
+            .date(d -> d.field(field)
+                    .gte(startTimestamp != null && startTimestamp > 0 ? String.valueOf(startTimestamp) : null)
+                    .lte(endTimestamp != null && endTimestamp > 0 ? String.valueOf(endTimestamp) : null))
     )._toQuery();
   }
 
@@ -732,8 +729,7 @@ public class FactSearchManager implements LifecycleAspect, MetricAspect {
                             .bucketsPath(path -> path
                                     .dict(Collections.singletonMap("count", REVERSED_FACTS_AGGREGATION_NAME + ">" + FACTS_COUNT_AGGREGATION_NAME)))
                             .script(script -> script
-                                    .inline(i -> i
-                                            .source(String.format("params.count >= %d && params.count <= %d", min, max))))));
+                                    .source(String.format("params.count >= %d && params.count <= %d", min, max)))));
   }
 
   private Query buildObjectsQuery(FactSearchCriteria criteria) {

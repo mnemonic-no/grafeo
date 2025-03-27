@@ -68,7 +68,10 @@ public abstract class AbstractIT {
   // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
   // Usually this should be the same version as the ElasticSearch client used.
   @Container
-  public static final ElasticsearchContainer elastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.27");
+  public static final ElasticsearchContainer elastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:8.17.4")
+          .withEnv("xpack.security.enabled", "false")
+          // Required for deleting all indices at once using "_all".
+          .withEnv("action.destructive_requires_name", "false");
 
   @BeforeEach
   public void setup() {

@@ -49,7 +49,7 @@
     <!-- external dependencies -->
     <cassandra.version>4.18.1</cassandra.version>
     <disruptor.version>4.0.0</disruptor.version>
-    <elastic.search.version>7.17.27</elastic.search.version>
+    <elastic.search.version>8.17.4</elastic.search.version>
     <guava.version>33.4.0-jre</guava.version>
     <guice.version>7.0.0</guice.version>
     <hazelcast.version>5.5.0</hazelcast.version>
