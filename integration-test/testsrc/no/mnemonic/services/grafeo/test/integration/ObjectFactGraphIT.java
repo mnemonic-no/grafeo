@@ -39,6 +39,7 @@ import org.testcontainers.cassandra.CassandraContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -82,10 +83,14 @@ public class ObjectFactGraphIT {
 
   @Container
   public static final CassandraContainer cassandra = new CassandraContainer("cassandra");
+
   // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
   // Usually this should be the same version as the ElasticSearch client used.
+  private static final DockerImageName ELASTIC_IMAGE = DockerImageName.parse("elasticsearch/elasticsearch:8.17.4")
+          .asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch");
+
   @Container
-  public static final ElasticsearchContainer elastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:8.17.4")
+  public static final ElasticsearchContainer elastic = new ElasticsearchContainer(ELASTIC_IMAGE)
           .withEnv("xpack.security.enabled", "false");
 
   @BeforeAll

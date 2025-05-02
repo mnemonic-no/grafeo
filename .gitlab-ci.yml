@@ -1,0 +1,58 @@
+variables:
+  SERVICE_SLUG: "grafeo"
+  JIRA_COMPONENT: "joss/grafeo"
+
+include:
+  - project: development/cicd/gitlab-templates
+    ref: main
+    file: Misc/Rules.yml
+  - project: development/backend/cicd-pipelines
+    ref: main
+    file:
+      ###--------SETUP-----------###
+      - CI/Common.Variables.yml
+      - CI/Common.Pipeline.Setup.yml
+      ###--------STAGES----------###
+      - CI/Stage/Setup.yml
+      - CI/Stage/Build.UnitTest.yml
+      - CI/Stage/Upload.Metrics.yml
+      - CI/Stage/Release.yml
+      - CI/Stage/Post.Release.Maven.Artifactory.yml
+      - CI/Stage/Deploy.yml
+
+stages: # List of stages for jobs, and their order of execution
+  - setup
+  - unit-test
+  - release
+  - post-release
+  - deploy
+
+deploy-to-dev:
+  variables:
+    DEPLOY_HOST_PREFIX: "osl-argusdev-act"
+
+# We only have a DEV environment, deactivate the PROD deployment trigger.
+trigger-deploy-to-osl:
+  rules:
+    - when: never
+trigger-deploy-to-svg:
+  rules:
+    - when: never
+
+# Job to trigger a sync to GitHub. Actual execution will be done on osl-gitsync1.
+# TODO: Set up dedicated runner instead of osl-gitsync1, and control build in this pipeline spec
+trigger-github-sync:
+  stage: post-release
+  tags:
+    - development
+  rules:
+    # do not run in forked repos
+    - if: $CI_PROJECT_UPSTREAM_BOOL != "true"
+      when: never
+    # only run on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  before_script:
+    # protect the keyfile
+    - chmod 600 ${GITSYNC_KEY}
+  script:
+    - ssh -T -o StrictHostKeychecking=no -o IdentitiesOnly=yes -i ${GITSYNC_KEY} gitsync@osl-gitsync1 gitsync https://git:${GITSYNC_TOKEN}@gitlab.mnemonic.no/development/backend/joss/grafeo.git https://github.com/mnemonic-no/grafeo.git

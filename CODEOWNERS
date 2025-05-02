@@ -1,0 +1,4 @@
+* @development/backend
+
+CODEOWNERS @access-groups/development-access-groups/core-services-squad-backend @konstantin @joakim
+.gitlab-ci.yml @access-groups/development-access-groups/core-services-squad-backend @konstantin @joakim
