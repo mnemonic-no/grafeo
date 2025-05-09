@@ -86,7 +86,7 @@ public class ObjectFactGraphIT {
 
   // Need to specify the exact version here because Elastic doesn't publish images with the 'latest' tag.
   // Usually this should be the same version as the ElasticSearch client used.
-  private static final DockerImageName ELASTIC_IMAGE = DockerImageName.parse("elasticsearch/elasticsearch:8.17.4")
+  private static final DockerImageName ELASTIC_IMAGE = DockerImageName.parse("elasticsearch/elasticsearch:8.17.6")
           .asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch");
 
   @Container

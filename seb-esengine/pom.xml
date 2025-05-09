@@ -53,9 +53,9 @@
       <version>${mnemonic.commons.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.mnemonic.messaging</groupId>
+      <groupId>no.mnemonic.services.common</groupId>
       <artifactId>documentchannel-kafka</artifactId>
-      <version>${mnemonic.messaging.version}</version>
+      <version>${mnemonic.services.common.version}</version>
     </dependency>
     <dependency>
       <groupId>no.mnemonic.services.common</groupId>
